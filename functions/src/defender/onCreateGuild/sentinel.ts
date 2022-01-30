@@ -4,6 +4,8 @@ import GuildFactoryABI from "../../abi/GuildFactory.json";
 
 const { SentinelClient } = require("defender-sentinel-client");
 
+const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_GUILD_CREATE;
+
 const creds = {
   apiKey: process.env.DEFENDER_API_KEY,
   apiSecret: process.env.DEFENDER_API_SECRET,
@@ -29,9 +31,9 @@ const sentinel = {
   // optional
   functionConditions: [],
   // optional
-  txCondition: "gasPrice > 0",
+  txCondition: "",
   // optional
-  autotaskCondition: "d8adb6cd-3b86-437b-91b4-546df422382c",
+  autotaskCondition: AUTO_TASK_ID,
   // optional
   autotaskTrigger: undefined,
   // optional
@@ -44,9 +46,7 @@ const sentinel = {
   notificationChannels: [],
 };
 
-const createSentinel = async () => {
+export const createSentinel = async () => {
   console.log("Creating sentinel...");
-  await client.create(sentinel);
+  return await client.create(sentinel);
 };
-
-createSentinel();

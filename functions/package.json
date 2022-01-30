@@ -6,9 +6,8 @@
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log",
-    "defender:autotask": "bash /Users/kangzeroo/Projects/GuildFX/cloudfn/functions/src/defender/autotask.sh"
+    "deploy:firebase": "firebase deploy --only functions",
+    "deploy:defender": "bash ./upload-defender.sh"
   },
   "engines": {
     "node": "14"
@@ -17,6 +16,7 @@
   "dependencies": {
     "@google-cloud/storage": "^5.18.1",
     "@guildfx/helpers": "^0.0.31",
+    "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-sentinel-client": "^1.13.0",
     "firebase": "^9.6.5",

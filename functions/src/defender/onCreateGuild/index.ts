@@ -3,29 +3,15 @@ const {
   DefenderRelaySigner,
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
+const axios = require("axios");
 
 // Entrypoint for the Autotask
 exports.handler = async function (event: any) {
-  // Load value provided in the webhook payload (not available in schedule or sentinel invocations)
-  const { value } = event.request.body;
-
-  // Compare it with a local secret
-  if (value !== event.secrets.expectedValue) return;
-
-  // Initialize defender relayer provider and signer
-  const provider = new DefenderRelayProvider(event);
-  const signer = new DefenderRelaySigner(event, provider, { speed: "fast" });
-
-  console.log(signer);
-  console.log(`Signer address: ${signer.address}`);
-  return signer.address;
-
-  // // Create contract instance from the signer and use it to send a tx
-  // const contract = new ethers.Contract(ADDRESS, ABI, signer);
-  // if (await contract.canExecute()) {
-  //   const tx = await contract.execute();
-  //   console.log(`Called execute in ${tx.hash}`);
-  //   return { tx: tx.hash };
+  console.log(event);
+  // try {
+  //   await axios.post("https://enq29lu51itmtc4.m.pipedream.net", event);
+  // } catch (e) {
+  //   console.log(e);
   // }
 };
 
