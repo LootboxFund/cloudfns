@@ -3,7 +3,7 @@ import GuildFactoryABI from "../../abi/GuildFactory.json";
 
 const { SentinelClient } = require("defender-sentinel-client");
 
-const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_GUILD_CREATE;
+const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CREATE_GUILD;
 
 const creds = {
   apiKey: process.env.DEFENDER_API_KEY,
@@ -46,6 +46,14 @@ const sentinel = {
 };
 
 export const createSentinel = async () => {
-  console.log("Creating onCreateGuild sentinel...");
-  return await client.create(sentinel);
+  console.log(`
+
+--- onCreateGuild sentinel ---
+AutoTask ID: ${AUTO_TASK_ID}
+Address: ${process.env.ADDR_GUILD_FACTORY}
+
+`);
+  const x = await client.create(sentinel);
+  console.log(x);
+  return;
 };

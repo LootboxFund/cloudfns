@@ -8,7 +8,7 @@ const main = async () => {
     console.log(e);
   }
   try {
-    await createSentinel();
+    // await createSentinel();
   } catch (e) {
     console.log(e);
   }

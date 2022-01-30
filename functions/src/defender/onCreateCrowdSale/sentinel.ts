@@ -4,7 +4,7 @@ import CrowdSaleFactoryABI from "../../abi/CrowdSaleFactory.json";
 
 const { SentinelClient } = require("defender-sentinel-client");
 
-const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CROWDSALE_CREATE;
+const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CREATE_CROWDSALE;
 
 const creds = {
   apiKey: process.env.DEFENDER_API_KEY,
@@ -24,15 +24,7 @@ const sentinel = {
   // optional
   eventConditions: [
     {
-      eventSignature: `CrowdSaleCreated(
-        address,
-        address,
-        address,
-        address, 
-        address,
-        uint256,
-        address
-    )`,
+      eventSignature: `CrowdSaleCreated(address,address,address,address,address,uint256,address)`,
     },
   ],
   // optional
@@ -54,6 +46,14 @@ const sentinel = {
 };
 
 export const createSentinel = async () => {
-  console.log("Creating onCreateCrowdSale sentinel...");
-  return await client.create(sentinel);
+  console.log(`
+
+  --- onCreateCrowdSale sentinel ---
+  AutoTask ID: ${AUTO_TASK_ID}
+  Address: ${process.env.ADDR_CROWDSALE_FACTORY}
+
+  `);
+  const x = await client.create(sentinel);
+  console.log(x);
+  return;
 };
