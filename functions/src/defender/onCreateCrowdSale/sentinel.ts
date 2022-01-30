@@ -1,9 +1,10 @@
 require("dotenv").config();
-import GuildFactoryABI from "../../abi/GuildFactory.json";
+
+import CrowdSaleFactoryABI from "../../abi/CrowdSaleFactory.json";
 
 const { SentinelClient } = require("defender-sentinel-client");
 
-const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_GUILD_CREATE;
+const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CROWDSALE_CREATE;
 
 const creds = {
   apiKey: process.env.DEFENDER_API_KEY,
@@ -15,16 +16,23 @@ const sentinel = {
   network: "bsctest",
   // optional
   confirmLevel: 1, // if not set, we pick the blockwatcher for the chosen network with the lowest offset
-  name: "onGuildCreated",
-  address: process.env.ADDR_GUILD_FACTORY,
-  abi: JSON.stringify(GuildFactoryABI.abi),
+  name: "onCrowdSaleCreated",
+  address: process.env.ADDR_CROWDSALE_FACTORY,
+  abi: JSON.stringify(CrowdSaleFactoryABI.abi),
   // optional
   paused: false,
   // optional
   eventConditions: [
     {
-      eventSignature:
-        "GuildCreated(address,string,string,address,address,address,address)",
+      eventSignature: `CrowdSaleCreated(
+        address,
+        address,
+        address,
+        address, 
+        address,
+        uint256,
+        address
+    )`,
     },
   ],
   // optional
@@ -46,6 +54,6 @@ const sentinel = {
 };
 
 export const createSentinel = async () => {
-  console.log("Creating onCreateGuild sentinel...");
+  console.log("Creating onCreateCrowdSale sentinel...");
   return await client.create(sentinel);
 };
