@@ -7,7 +7,8 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy:firebase": "firebase deploy --only functions",
-    "deploy:defender": "bash ./upload-defender.sh"
+    "deploy:defender": "bash ./upload-defender.sh",
+    "deploy:pipedream": "bash ./upload-pipedream.sh"
   },
   "engines": {
     "node": "14"

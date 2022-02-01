@@ -1,4 +1,6 @@
 require("dotenv").config();
+
+// @ts-ignore-next-line
 import GuildFactoryABI from "../../abi/GuildFactory.json";
 
 const { SentinelClient } = require("defender-sentinel-client");

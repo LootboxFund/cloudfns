@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+// @ts-ignore-next-line
 import CrowdSaleFactoryABI from "../../abi/CrowdSaleFactory.json";
 
 const { SentinelClient } = require("defender-sentinel-client");

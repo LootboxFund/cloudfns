@@ -1,5 +1,5 @@
 import { uploadAutoTask } from "./autotask";
-import { createSentinel } from "./sentinel";
+// import { createSentinel } from "./sentinel";
 
 const main = async () => {
   try {
