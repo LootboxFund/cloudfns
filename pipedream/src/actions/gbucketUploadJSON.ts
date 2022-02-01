@@ -2,7 +2,7 @@ export default {
   name: "GBucket - Upload JSON to Route",
   description: "Uploads a JSON file to a GBucket route",
   key: "gbucket_uploadJsonToRoute",
-  version: "1.0.11",
+  version: "1.0.12",
   type: "action",
   props: {
     googleCloud: {

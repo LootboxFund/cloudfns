@@ -2,7 +2,7 @@ export default {
   name: "GBucket - Index JSON on Route",
   description: "Indexes a GBucket route with its known addresses",
   key: "gbucket_IndexJsonToRoute",
-  version: "1.0.1",
+  version: "1.0.2",
   type: "action",
   props: {
     googleCloud: {
