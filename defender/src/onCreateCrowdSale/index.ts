@@ -3,7 +3,7 @@
 //   DefenderRelaySigner,
 //   DefenderRelayProvider,
 // } = require("defender-relay-client/lib/ethers");
-const axios = require("axios");
+import axios from "axios";
 
 // Entrypoint for the Autotask
 exports.handler = async function (event: any) {

@@ -1,15 +1,16 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 // @ts-ignore-next-line
-import CrowdSaleFactoryABI from "../../abi/CrowdSaleFactory.json";
+import CrowdSaleFactoryABI from "../abi/CrowdSaleFactory.json";
 
-const { SentinelClient } = require("defender-sentinel-client");
+import { SentinelClient } from "defender-sentinel-client";
 
-const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CREATE_CROWDSALE;
+const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CREATE_CROWDSALE || "";
 
 const creds = {
-  apiKey: process.env.DEFENDER_API_KEY,
-  apiSecret: process.env.DEFENDER_API_SECRET,
+  apiKey: process.env.DEFENDER_API_KEY || "",
+  apiSecret: process.env.DEFENDER_API_SECRET || "",
 };
 const client = new SentinelClient(creds);
 
@@ -18,7 +19,7 @@ const sentinel = {
   // optional
   confirmLevel: 1, // if not set, we pick the blockwatcher for the chosen network with the lowest offset
   name: "onCrowdSaleCreated",
-  address: process.env.ADDR_CROWDSALE_FACTORY,
+  address: process.env.ADDR_CROWDSALE_FACTORY || "",
   abi: JSON.stringify(CrowdSaleFactoryABI.abi),
   // optional
   paused: false,

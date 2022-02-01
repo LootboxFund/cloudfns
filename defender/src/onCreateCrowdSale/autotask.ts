@@ -1,11 +1,12 @@
-require("dotenv").config();
-const { AutotaskClient } = require("defender-autotask-client");
+import dotenv from "dotenv";
+dotenv.config();
+import { AutotaskClient } from "defender-autotask-client";
 
-const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CREATE_CROWDSALE;
+const AUTO_TASK_ID = process.env.DEFENDER_AUTOTASK_ON_CREATE_CROWDSALE || "";
 
 const creds = {
-  apiKey: process.env.DEFENDER_API_KEY,
-  apiSecret: process.env.DEFENDER_API_SECRET,
+  apiKey: process.env.DEFENDER_API_KEY || "",
+  apiSecret: process.env.DEFENDER_API_SECRET || "",
 };
 const client = new AutotaskClient(creds);
 

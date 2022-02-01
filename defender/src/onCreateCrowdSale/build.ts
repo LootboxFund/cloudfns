@@ -1,5 +1,5 @@
 import { uploadAutoTask } from "./autotask";
-// import { createSentinel } from "./sentinel";
+import { createSentinel } from "./sentinel";
 
 const main = async () => {
   try {
@@ -8,7 +8,7 @@ const main = async () => {
     console.log(e);
   }
   try {
-    // await createSentinel();
+    await createSentinel();
   } catch (e) {
     console.log(e);
   }
