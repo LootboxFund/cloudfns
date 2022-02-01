@@ -8,7 +8,6 @@
 // @ts-nocheck
 import http from "../../http.app.mjs";
 import get from "lodash.get";
-import { entries } from "lodash";
 
 // Core HTTP component
 export default {

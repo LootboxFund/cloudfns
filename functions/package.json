@@ -6,9 +6,7 @@
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy:firebase": "firebase deploy --only functions",
-    "deploy:defender": "bash ./upload-defender.sh",
-    "deploy:pipedream": "bash ./upload-pipedream.sh"
+    "deploy:firebase": "firebase deploy --only functions"
   },
   "engines": {
     "node": "14"
