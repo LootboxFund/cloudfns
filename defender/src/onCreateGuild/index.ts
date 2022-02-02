@@ -1,7 +1,12 @@
 import axios from "axios";
+import { AutotaskEvent, BlockTriggerEvent } from "defender-autotask-utils";
 
 // Entrypoint for the Autotask
-exports.handler = async function (event: any) {
+exports.handler = async function (event: AutotaskEvent) {
+  if (event.request && event.request.body) {
+    const match = event.request.body as BlockTriggerEvent;
+    const logs = match.transaction.logs;
+  }
   console.log("Hitting the autotask endpoint");
   console.log(event);
   const PIPEDREAM_GBUCKET_JSON_TOKEN_UPLOADER =
