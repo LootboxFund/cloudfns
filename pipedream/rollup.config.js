@@ -53,6 +53,51 @@ if (process.env.NODE_ENV === "production") {
   configAction_gbucketIndexJSON.plugins.push(terser()); // enable minification
 }
 
+const configAction_gbucketGuildTxt = {
+  input: "src/actions/gbucketUploadGuildTXT.ts",
+  output: {
+    file: "lib/actions/gbucketUploadGuildTXT.js",
+    format: "cjs",
+    sourcemap: true,
+    exports: "default",
+  },
+  plugins: [
+    commonjs(), // enable CommonJS modules
+    nodePolyfills(), // enable NodeJS polyfills
+    resolve({ preferBuiltins: true, browser: true }), // enable importing from node_modules
+    typescript(), // enable TypeScript
+    json(), // enable JSON
+    globals(), // allows globals to be imported (process.env)
+    builtins(), // allows builtins to be imported via require/import
+  ],
+  external: ["react"],
+};
+if (process.env.NODE_ENV === "production") {
+  configAction_gbucketGuildTxt.plugins.push(terser()); // enable minification
+}
+
+const configAction_gbucketCrowdSaleTxt = {
+  input: "src/actions/gbucketUploadCrowdSaleTXT.ts",
+  output: {
+    file: "lib/actions/gbucketUploadCrowdSaleTXT.js",
+    format: "cjs",
+    sourcemap: true,
+    exports: "default",
+  },
+  plugins: [
+    commonjs(), // enable CommonJS modules
+    nodePolyfills(), // enable NodeJS polyfills
+    resolve({ preferBuiltins: true, browser: true }), // enable importing from node_modules
+    typescript(), // enable TypeScript
+    json(), // enable JSON
+    globals(), // allows globals to be imported (process.env)
+    builtins(), // allows builtins to be imported via require/import
+  ],
+  external: ["react"],
+};
+if (process.env.NODE_ENV === "production") {
+  configAction_gbucketCrowdSaleTxt.plugins.push(terser()); // enable minification
+}
 // const configSource = {
 //   input: "src/sources/hellosource.ts",
 //   output: {
@@ -76,4 +121,9 @@ if (process.env.NODE_ENV === "production") {
 //   configSource.plugins.push(terser()); // enable minification
 // }
 
-export default [configAction_gbucketUploadJSON, configAction_gbucketIndexJSON];
+export default [
+  // configAction_gbucketUploadJSON,
+  // configAction_gbucketIndexJSON,
+  // configAction_gbucketGuildTxt,
+  configAction_gbucketCrowdSaleTxt,
+];
