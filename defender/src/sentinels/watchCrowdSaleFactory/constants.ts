@@ -4,15 +4,16 @@ import ABI from "../../abi/DAI.json";
 export const constants = {
   NAME: "watchCrowdSaleFactory",
   CHAIN_ALIAS: "rinkeby",
-  AUTO_TASK_ID: "_________________",
-  SENTINAL_WATCH_ADDRESS: "_________________",
+  AUTO_TASK_ID: "097950fa-6dce-4009-8280-19b9ed74fe0e",
+  SENTINAL_WATCH_ADDRESS: "0xafdAAFc812fC1145cE04f800400ebbcaD4283257",
   ABI,
   EVENT_SIGNATURES: [
     {
-      eventSignature: "Transfer(address,address,uint256)",
+      eventSignature:
+        "GuildCreated(address,string,string,address,address,address,address)",
     },
   ],
-  PIPEDREAM_WEBHOOK: "https://___________________.m.pipedream.net",
+  PIPEDREAM_WEBHOOK: "https://enq29lu51itmtc4.m.pipedream.net",
 };
 
 export const sentinel = {
