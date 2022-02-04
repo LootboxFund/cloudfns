@@ -1,13 +1,7 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
-import { ethers } from "ethers";
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { generateRandomLogo } from "../../api/helpers";
-import {
-  ABIUtilRepresenation,
-  Event_CrowdSaleCreated,
-  Event_GuildCreated,
-} from "../../types";
+import { ABIUtilRepresenation, Event_CrowdSaleCreated } from "../../types";
 import { decodeEVMLogs } from "../../api/evm";
 
 export default defineAction({

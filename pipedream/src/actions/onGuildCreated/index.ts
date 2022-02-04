@@ -1,12 +1,9 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
-import { ethers } from "ethers";
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { generateRandomLogo } from "../../api/helpers";
 import { ABIUtilRepresenation, Event_GuildCreated } from "../../types";
 import { decodeEVMLogs } from "../../api/evm";
-
-const eventParams = ["from", "to", "value"];
 
 export default defineAction({
   name: "onGuildCreated",

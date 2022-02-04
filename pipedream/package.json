@@ -4,6 +4,9 @@
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",
+  "engines": {
+    "node": "14"
+  },
   "files": [
     "lib"
   ],
