@@ -43,6 +43,7 @@ export default defineAction({
 
     // decode events from the EVM logs
     const decodedLogs = decodeEVMLogs<Event_GuildCreated>({
+      eventName: "GuildCreated",
       logs: transaction.logs,
       abiReps,
     });

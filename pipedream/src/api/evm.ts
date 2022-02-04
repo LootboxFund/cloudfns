@@ -3,9 +3,11 @@ import { ethers } from "ethers";
 import { ABIUtilRepresenation } from "../types";
 
 export const decodeEVMLogs = <T>({
+  eventName,
   logs,
   abiReps,
 }: {
+  eventName: string;
   logs: EthLog[];
   abiReps: ABIUtilRepresenation[];
 }) => {
@@ -19,7 +21,7 @@ export const decodeEVMLogs = <T>({
   const decodedLogs = logs
     .map((log: any) => {
       try {
-        const data = iface.decodeEventLog("Transfer", log.data, log.topics);
+        const data = iface.decodeEventLog(eventName, log.data, log.topics);
         return allKeys.reduce(
           (acc, key) => ({
             ...acc,

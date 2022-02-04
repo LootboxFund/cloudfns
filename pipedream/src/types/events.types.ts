@@ -15,15 +15,6 @@ export interface Event_GuildCreated {
   developer: Address;
   creator: Address;
   guildFactory: Address;
-  paramsKeys: [
-    "contractAddress",
-    "guildTokenName",
-    "guildTokenSymbol",
-    "dao",
-    "developer",
-    "creator",
-    "guildFactory"
-  ];
 }
 
 export interface Event_CrowdSaleCreated {

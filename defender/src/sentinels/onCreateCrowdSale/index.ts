@@ -1,11 +1,12 @@
 import axios from "axios";
 import { AutotaskEvent, SentinelTriggerEvent } from "defender-autotask-utils";
+import { constants } from "./constants";
 
 // Entrypoint for the Autotask
 exports.handler = async function (event: AutotaskEvent) {
   if (event.request && event.request.body) {
     const transaction = event.request.body as SentinelTriggerEvent;
-    await axios.post("https://enq29lu51itmtc4.m.pipedream.net", transaction);
+    await axios.post(constants.PIPEDREAM_WEBHOOK, transaction);
   }
 };
 

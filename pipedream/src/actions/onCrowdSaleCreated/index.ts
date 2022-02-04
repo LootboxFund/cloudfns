@@ -42,6 +42,7 @@ export default defineAction({
 
     // decode events from the EVM logs
     const decodedLogs = decodeEVMLogs<Event_CrowdSaleCreated>({
+      eventName: "CrowdSaleCreated",
       logs: transaction.logs,
       abiReps,
     });
