@@ -2,7 +2,7 @@ export default {
   name: "GBucket - Upload CrowdSale TXT to Route",
   description: "Uploads a TXT file about a CrowdSale to a GBucket route",
   key: "gbucket_uploadCrowdSaleTxtRoute",
-  version: "1.0.2",
+  version: "1.0.3",
   type: "action",
   props: {
     googleCloud: {

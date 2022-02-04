@@ -1,3 +1,5 @@
+import parseEvmLogs from "./src/actions/parseEvmLogs/rollup.config.js";
+
 import typescript from "rollup-plugin-typescript2";
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
@@ -125,5 +127,6 @@ export default [
   // configAction_gbucketUploadJSON,
   // configAction_gbucketIndexJSON,
   // configAction_gbucketGuildTxt,
-  configAction_gbucketCrowdSaleTxt,
+  // configAction_gbucketCrowdSaleTxt,
+  parseEvmLogs,
 ];
