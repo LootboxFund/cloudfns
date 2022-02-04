@@ -6,11 +6,11 @@ import { ERC20_TransferEvent } from "../../types";
 
 const EventParams = ["from", "to", "value"];
 
-export default {
+const action = defineAction({
   name: "Parse EVM Logs",
   description: "Parses OZ Autotask event to find & return EVM event logs",
   key: "parseEVMLogs",
-  version: "1.0.31",
+  version: "1.0.32",
   type: "action",
   props: {
     googleCloud: {
@@ -62,4 +62,6 @@ export default {
 
     console.log(encodeURISafe(""));
   },
-};
+});
+
+export = action;

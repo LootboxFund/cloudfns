@@ -5,7 +5,7 @@ import { generateRandomLogo } from "../../api/helpers";
 import { ABIUtilRepresenation, Event_GuildCreated } from "../../types";
 import { decodeEVMLogs } from "../../api/evm";
 
-export default defineAction({
+const action = defineAction({
   name: "onGuildCreated",
   description: `
     Pipeline for handling GuildCreated event
@@ -16,7 +16,7 @@ export default defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onGuildCreated",
-  version: "0.0.6",
+  version: "0.0.10",
   type: "action",
   props: {
     googleCloud: {
@@ -116,3 +116,5 @@ export default defineAction({
     };
   },
 });
+
+export = action;

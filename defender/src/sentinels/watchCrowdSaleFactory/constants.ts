@@ -1,17 +1,15 @@
 // @ts-ignore-next-line
-import ABI from "../../abi/GuildFactory.json";
+import ABI from "../../abi/DAI.json";
 
 export const constants = {
-  NAME: "onCreateGuild",
-  CHAIN_ALIAS: "bsctest",
+  NAME: "watchCrowdSaleFactory",
+  CHAIN_ALIAS: "rinkeby",
   AUTO_TASK_ID: "_________________",
-  AUTO_TASK_NAME: "onCreateGuild",
   SENTINAL_WATCH_ADDRESS: "_________________",
   ABI,
   EVENT_SIGNATURES: [
     {
-      eventSignature:
-        "GuildCreated(address,string,string,address,address,address,address)",
+      eventSignature: "Transfer(address,address,uint256)",
     },
   ],
   PIPEDREAM_WEBHOOK: "https://___________________.m.pipedream.net",

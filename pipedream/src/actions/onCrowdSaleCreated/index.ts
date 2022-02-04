@@ -4,7 +4,7 @@ import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { ABIUtilRepresenation, Event_CrowdSaleCreated } from "../../types";
 import { decodeEVMLogs } from "../../api/evm";
 
-export default defineAction({
+const action = defineAction({
   name: "onCrowdSaleCreated",
   description: `
     Pipeline for handling CrowdSaleCreated event
@@ -15,7 +15,7 @@ export default defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onCrowdSaleCreated",
-  version: "0.0.6",
+  version: "0.0.7",
   type: "action",
   props: {
     googleCloud: {
@@ -113,3 +113,5 @@ export default defineAction({
     };
   },
 });
+
+export = action;

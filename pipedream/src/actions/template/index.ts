@@ -1,6 +1,6 @@
 import { defineAction } from "ironpipe";
 
-export default defineAction({
+const action = defineAction({
   name: "Template Action",
   description: "Template Action for Pipedream Typescript",
   key: "templateAction",
@@ -19,3 +19,5 @@ export default defineAction({
     console.log(this.$props);
   },
 });
+
+export = action;

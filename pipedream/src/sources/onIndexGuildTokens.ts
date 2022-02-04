@@ -10,13 +10,12 @@ import http from "../../http.app.mjs";
 import get from "lodash.get";
 
 // Core HTTP component
-export default {
+const source = {
   key: "webhook_onIndexGuildTokens",
   name: "Webhook - onIndexGuildTokens",
   description:
     "Webhook entry point for indexing all JSON files on a GBucket route",
   version: "0.1.1",
-  type: "source",
   props: {
     httpInterface: {
       type: "$.interface.http",
@@ -85,3 +84,5 @@ export default {
     }
   },
 };
+
+export = source;

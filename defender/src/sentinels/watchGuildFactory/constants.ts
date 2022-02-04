@@ -1,17 +1,15 @@
 // @ts-ignore-next-line
-import ABI from "../../abi/CrowdSaleFactory.json";
+import ABI from "../../abi/DAI.json";
 
 export const constants = {
-  NAME: "onCreateCrowdSale",
-  CHAIN_ALIAS: "bsctest",
+  NAME: "watchGuildFactory",
+  CHAIN_ALIAS: "rinkeby",
   AUTO_TASK_ID: "_________________",
-  AUTO_TASK_NAME: "onCreateCrowdSale",
   SENTINAL_WATCH_ADDRESS: "_________________",
   ABI,
   EVENT_SIGNATURES: [
     {
-      eventSignature:
-        "event CrowdSaleCreated(address indexed crowdsaleAddress, address indexed guildToken, address indexed dao, address developer, address treasury, uint256 startingPrice, address deployer)",
+      eventSignature: "Transfer(address,address,uint256)",
     },
   ],
   PIPEDREAM_WEBHOOK: "https://___________________.m.pipedream.net",

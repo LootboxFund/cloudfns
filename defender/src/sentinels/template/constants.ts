@@ -3,9 +3,8 @@ import ABI from "../../abi/DAI.json";
 
 export const constants = {
   NAME: "templateSentinal",
-  CHAIN_ALIAS: "bsctest",
+  CHAIN_ALIAS: "rinkeby",
   AUTO_TASK_ID: "_________________",
-  AUTO_TASK_NAME: "templateSentinal",
   SENTINAL_WATCH_ADDRESS: "_________________",
   ABI,
   EVENT_SIGNATURES: [

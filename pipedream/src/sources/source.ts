@@ -5,22 +5,20 @@
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
 
-// @ts-nocheck
-// import { defineComponent } from "ironpipe";
-
-// Core HTTP component
-export default {
+const source = {
   key: "sandbox_source",
   name: "Sandbox - Source",
   description:
     "Webhook entry point for creating an index of all JSON files stored on GBucket route",
-  version: "0.1.3",
-  type: "source",
+  version: "0.1.5",
   props: {},
   async run() {
-    this.$emit(event, {
-      summary,
-    });
+    (this as any).$emit(
+      {},
+      {
+        hello: "world",
+      }
+    );
     // const { headers } = event;
     // const secret = get(headers, "secret");
     // if (secret !== this.secret) {
@@ -50,3 +48,5 @@ export default {
     // }
   },
 };
+
+export = source;
