@@ -1,4 +1,5 @@
 echo "Deploying Pipedream..."
-yarn build
-NODE_ENV=production pd publish ./lib/actions/gbucketUploadJSON.js
-NODE_ENV=production pd publish ./lib/actions/gbucketIndexJSON.js
+tsc
+NODE_ENV=production pd publish ./lib/actions/defineEventABIs/index.js
+NODE_ENV=production pd publish ./lib/actions/onGuildCreated/index.js
+NODE_ENV=production pd publish ./lib/actions/onCrowdSaleCreated/index.js
