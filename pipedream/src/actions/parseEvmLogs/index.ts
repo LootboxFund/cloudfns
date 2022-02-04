@@ -9,7 +9,7 @@ export default defineAction({
   name: "Parse EVM Logs",
   description: "Parses OZ Autotask event to find & return EVM event logs",
   key: "parseEVMLogs",
-  version: "1.0.28",
+  version: "1.0.29",
   type: "action",
   props: {
     googleCloud: {
@@ -21,8 +21,7 @@ export default defineAction({
     },
   },
   async run() {
-    const { transaction } = (this as any).webhookTrigger
-      .object as BlockTriggerEvent;
+    const { transaction } = (this as any).webhookTrigger as BlockTriggerEvent;
 
     console.log(`
     
