@@ -54,7 +54,13 @@ export default {
       },
     });
 
-    // prefix = 'tokens' | 'crowdsales'
+    /**
+     * /tokens/*.json = JSON data for FE Widgets
+     * /crowdsales/*.json = JSON data for crowdsales FE Widgets
+     * /guilds/*.txt = TEXT data for guilds OZ Defender
+     * /crowdsales/*.txt = TEXT data for crowdsales OZ Defender
+     */
+    // prefix = 'tokens' | 'crowdsales' | 'guilds' | 'crowdsales'
     const { data, semvar, chainIdHex, prefix, bucket } = (this as any)
       .webhookTrigger.object;
     const filePath = `v/${semvar}/${chainIdHex}/${prefix}/${data.guildDao}.txt`;

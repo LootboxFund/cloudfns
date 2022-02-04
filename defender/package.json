@@ -35,6 +35,7 @@
     "@ethersproject/abi": "^5.5.0",
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
+    "defender-autotask-utils": "^1.13.0",
     "defender-sentinel-client": "^1.13.0",
     "dotenv": "^15.0.0",
     "ethers": "5.4.1",

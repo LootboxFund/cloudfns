@@ -2679,6 +2679,11 @@ defender-autotask-client@^1.12.1:
     lodash "^4.17.19"
     node-fetch "^2.6.0"
 
+defender-autotask-utils@^1.13.0:
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/defender-autotask-utils/-/defender-autotask-utils-1.13.0.tgz#07209e91e9d2f6280f7adf98686243a4100c7fbf"
+  integrity sha512-TsZja+trI07/fFQ1gSBVtDO+RGBGWELwrRq0lJ9SOTgPhi6Rl+HZirWWpe6Zs2/mLBc4b3xUVq2QkkXAmE5tuw==
+
 defender-base-client@^1.12.1:
   version "1.12.1"
   resolved "https://registry.yarnpkg.com/defender-base-client/-/defender-base-client-1.12.1.tgz#cc87b9913e6a40de2c3584b8707e8010f06a626a"
