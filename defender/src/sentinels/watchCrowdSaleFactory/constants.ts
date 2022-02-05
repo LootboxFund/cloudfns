@@ -1,16 +1,15 @@
 // @ts-ignore-next-line
-import ABI from "../../abi/DAI.json";
+import { abi } from "../../abi/CrowdSaleFactory.json";
 
 export const constants = {
-  NAME: "watchCrowdSaleFactory",
+  NAME: "Watch CrowdSale Factory",
   CHAIN_ALIAS: "rinkeby",
   AUTO_TASK_ID: "097950fa-6dce-4009-8280-19b9ed74fe0e",
   SENTINAL_WATCH_ADDRESS: "0xafdAAFc812fC1145cE04f800400ebbcaD4283257",
-  ABI,
+  ABI: abi,
   EVENT_SIGNATURES: [
     {
-      eventSignature:
-        "GuildCreated(address,string,string,address,address,address,address)",
+      eventSignature: `CrowdSaleCreated(address,address,address,address,address,uint256,address)`,
     },
   ],
   PIPEDREAM_WEBHOOK: "https://enq29lu51itmtc4.m.pipedream.net",
@@ -32,9 +31,9 @@ export const sentinel = {
   // optional
   txCondition: 'status == "success"',
   // optional
-  autotaskCondition: constants.AUTO_TASK_ID,
+  autotaskCondition: undefined,
   // optional
-  autotaskTrigger: undefined,
+  autotaskTrigger: constants.AUTO_TASK_ID,
   // optional
   // alertThreshold: {
   //   amount: 2,

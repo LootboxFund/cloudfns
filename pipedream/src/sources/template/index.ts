@@ -4,15 +4,12 @@
  * It depends on Pipedream env dependencies. The only reason why this file is here is for git source control records
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
-import { defineComponent } from "ironpipe";
 import get from "lodash/get";
 
-// Core HTTP component
 const source = {
-  key: "webhook_onCreateGuildToken",
-  name: "Webhook - onCreateGuildToken",
-  description:
-    "Webhook entry point for creating an index of all JSON files stored on GBucket route",
+  key: "template_source",
+  name: "Template - Source",
+  description: "Template webhook entry point to Pipedream",
   version: "0.0.1",
   props: {
     httpInterface: {
@@ -24,14 +21,14 @@ const source = {
       label: "Body Only",
       description:
         "This source emits an event representing the full HTTP request by default. Select `true` to emit the body only.",
-      optional: true,
-      default: false,
+      optional: false,
+      default: true,
     },
     resStatusCode: {
       type: "string",
       label: "Response Status Code",
       description: "The status code to return in the HTTP response",
-      optional: true,
+      optional: false,
       default: "200",
     },
     resContentType: {
@@ -49,7 +46,6 @@ const source = {
       optional: true,
       default: '{ "success": true }',
     },
-    // http,
     secret: "string",
   },
   async run(event: any) {

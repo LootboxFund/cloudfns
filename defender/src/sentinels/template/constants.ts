@@ -1,12 +1,12 @@
 // @ts-ignore-next-line
-import ABI from "../../abi/DAI.json";
+import { abi } from "../../abi/DAI.json";
 
 export const constants = {
   NAME: "templateSentinal",
   CHAIN_ALIAS: "rinkeby",
   AUTO_TASK_ID: "_________________",
   SENTINAL_WATCH_ADDRESS: "_________________",
-  ABI,
+  ABI: abi,
   EVENT_SIGNATURES: [
     {
       eventSignature: "Transfer(address,address,uint256)",
@@ -31,9 +31,9 @@ export const sentinel = {
   // optional
   txCondition: 'status == "success"',
   // optional
-  autotaskCondition: constants.AUTO_TASK_ID,
+  autotaskCondition: undefined,
   // optional
-  autotaskTrigger: undefined,
+  autotaskTrigger: constants.AUTO_TASK_ID,
   // optional
   // alertThreshold: {
   //   amount: 2,

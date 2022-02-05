@@ -6,7 +6,11 @@ import { constants } from "./constants";
 exports.handler = async function (event: AutotaskEvent) {
   if (event.request && event.request.body) {
     const transaction = event.request.body as SentinelTriggerEvent;
-    await axios.post(constants.PIPEDREAM_WEBHOOK, transaction);
+    await axios.post(constants.PIPEDREAM_WEBHOOK, transaction, {
+      headers: {
+        secret: constants.SECRET,
+      },
+    });
   }
 };
 
