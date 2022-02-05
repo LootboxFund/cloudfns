@@ -1,12 +1,12 @@
 import { defineAction } from "ironpipe";
 import { ABIUtilRepresenation } from "../../types";
 
-export default defineAction({
+const action = defineAction({
   name: "Define on-chain Event ABIs",
   description:
     "Define the ABI of on-chain events that get emitted by GuildFX smart contracts",
   key: "defineEventABIs",
-  version: "0.0.3",
+  version: "0.0.4",
   type: "action",
   props: {},
   async run() {
@@ -83,3 +83,5 @@ event GuildCreated(
     "guildFactory",
   ],
 };
+
+export = action;

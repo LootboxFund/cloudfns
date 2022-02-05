@@ -4,19 +4,13 @@
  * It depends on Pipedream env dependencies. The only reason why this file is here is for git source control records
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
+import get from "lodash/get";
 
-// @ts-nocheck
-import http from "../../http.app.mjs";
-import get from "lodash.get";
-
-// Core HTTP component
-export default {
-  key: "webhook_onCreateGuildToken",
-  name: "Webhook - onCreateGuildToken",
-  description:
-    "Webhook entry point for creating an index of all JSON files stored on GBucket route",
-  version: "0.1.1",
-  type: "source",
+const source = {
+  key: "template_source",
+  name: "Template - Source",
+  description: "Template webhook entry point to Pipedream",
+  version: "0.0.1",
   props: {
     httpInterface: {
       type: "$.interface.http",
@@ -27,14 +21,14 @@ export default {
       label: "Body Only",
       description:
         "This source emits an event representing the full HTTP request by default. Select `true` to emit the body only.",
-      optional: true,
-      default: false,
+      optional: false,
+      default: true,
     },
     resStatusCode: {
       type: "string",
       label: "Response Status Code",
       description: "The status code to return in the HTTP response",
-      optional: true,
+      optional: false,
       default: "200",
     },
     resContentType: {
@@ -52,36 +46,37 @@ export default {
       optional: true,
       default: '{ "success": true }',
     },
-    http,
     secret: "string",
   },
-  async run(event) {
+  async run(event: any) {
     const { headers } = event;
     const secret = get(headers, "secret");
-    if (secret !== this.secret) {
-      this.http.respond({
+    if (secret !== (this as any).secret) {
+      (this as any).http.respond({
         status: 400,
       });
     }
 
     const summary = `${event.method} ${event.path}`;
 
-    this.httpInterface.respond({
-      status: this.resStatusCode,
-      body: this.resBody,
+    (this as any).httpInterface.respond({
+      status: (this as any).resStatusCode,
+      body: (this as any).resBody,
       headers: {
-        "content-type": this.resContentType,
+        "content-type": (this as any).resContentType,
       },
     });
 
-    if (this.emitBodyOnly) {
-      this.$emit(event.body, {
+    if ((this as any).emitBodyOnly) {
+      (this as any).$emit(event.body, {
         summary,
       });
     } else {
-      this.$emit(event, {
+      (this as any).$emit(event, {
         summary,
       });
     }
   },
 };
+
+export = source;
