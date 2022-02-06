@@ -16,7 +16,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onGuildCreated",
-  version: "0.0.10",
+  version: "0.0.12",
   type: "action",
   props: {
     googleCloud: {
@@ -53,6 +53,7 @@ const action = defineAction({
     const savedTokenFragments = await Promise.all(
       decodedLogs.map(async (ev) => {
         return saveFileToGBucket({
+          alias: `JSON for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.json`,
           semvar: "0.0.1-sandbox",
@@ -92,6 +93,7 @@ const action = defineAction({
           Timestamp: ${new Date().toISOString()}
         `;
         return await saveFileToGBucket({
+          alias: `TXT for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.txt`,
           semvar: "0.0.1-sandbox",
@@ -104,6 +106,7 @@ const action = defineAction({
     );
     // index the rest of the guildtokens
     await indexGBucketRoute({
+      alias: `Index guild tokens triggered by tx hash ${transaction.transactionHash}`,
       credentials,
       semvar: "0.0.1-sandbox",
       chainIdHex: "0x61",

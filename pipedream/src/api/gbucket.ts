@@ -7,6 +7,7 @@ type GBucketCreds = {
   private_key: string;
 };
 interface GBucketSaveFragProps {
+  alias: string;
   credentials: GBucketCreds;
   fileName: string;
   data: any;
@@ -16,6 +17,7 @@ interface GBucketSaveFragProps {
   bucket: TerraSemvar["gcloud"]["bucketName"];
 }
 export const saveFileToGBucket = async ({
+  alias,
   credentials,
   fileName,
   data,
@@ -38,7 +40,7 @@ export const saveFileToGBucket = async ({
     filePath
   )}?alt=media \n`;
   console.log(
-    `⏳ Uploading ${data.symbol} to Cloud Storage Bucket as ${downloadablePath}`
+    `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
   await storage.bucket(bucket).file(filePath).save(data);
   await storage.bucket(bucket).file(filePath).makePublic();
@@ -47,6 +49,7 @@ export const saveFileToGBucket = async ({
 };
 
 export const indexGBucketRoute = async ({
+  alias,
   credentials,
   semvar,
   chainIdHex,
@@ -85,7 +88,7 @@ export const indexGBucketRoute = async ({
       routes.push(file.name);
     });
   console.log(
-    `⏳ Uploading index to Cloud Storage Bucket as ${downloadablePath} \n`
+    `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath} \n`
   );
   await storage.bucket(bucket).file(filePath).save(JSON.stringify(routes));
   await storage.bucket(bucket).file(filePath).makePublic();

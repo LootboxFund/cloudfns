@@ -15,7 +15,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onCrowdSaleCreated",
-  version: "0.0.7",
+  version: "0.0.9",
   type: "action",
   props: {
     googleCloud: {
@@ -52,6 +52,7 @@ const action = defineAction({
     const savedCrowdSaleJSONFragments = await Promise.all(
       decodedLogs.map(async (ev) => {
         return saveFileToGBucket({
+          alias: `JSON for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.json`,
           semvar: "0.0.1-sandbox",
@@ -89,6 +90,7 @@ const action = defineAction({
         Timestamp: ${new Date().toISOString()}
         `;
         return await saveFileToGBucket({
+          alias: `TXT for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.txt`,
           semvar: "0.0.1-sandbox",
@@ -101,6 +103,7 @@ const action = defineAction({
     );
     // index the rest of the crowdsales
     await indexGBucketRoute({
+      alias: `CrowdSale Index triggered by tx hash ${transaction.transactionHash}`,
       credentials,
       semvar: "0.0.1-sandbox",
       chainIdHex: "0x61",
