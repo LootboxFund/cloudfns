@@ -4,5 +4,6 @@
 
 ```
 $ cp .env.example > .env
-$ yarn deploy:defender
+$ yarn deploy:tasks
+$ yarn deploy:sentinels
 ```
