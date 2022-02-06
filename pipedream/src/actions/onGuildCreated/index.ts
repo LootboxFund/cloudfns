@@ -16,7 +16,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onGuildCreated",
-  version: "0.0.12",
+  version: "0.0.14",
   type: "action",
   props: {
     googleCloud: {
@@ -56,7 +56,7 @@ const action = defineAction({
           alias: `JSON for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.json`,
-          semvar: "0.0.1-sandbox",
+          semvar: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "tokens",
           bucket: "guildfx-exchange.appspot.com",
@@ -96,7 +96,7 @@ const action = defineAction({
           alias: `TXT for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.txt`,
-          semvar: "0.0.1-sandbox",
+          semvar: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "tokens",
           bucket: "guildfx-exchange.appspot.com",
@@ -108,7 +108,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index guild tokens triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semvar: "0.0.1-sandbox",
+      semvar: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "tokens",
       bucket: "guildfx-exchange.appspot.com",

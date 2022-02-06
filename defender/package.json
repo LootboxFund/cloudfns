@@ -30,7 +30,8 @@
     "build": "tsc --skipLibCheck",
     "test": "jest --verbose --watch",
     "deploy:sentinels": "bash ./deploy/upload-sentinels.sh",
-    "deploy:tasks": "bash ./deploy/upload-tasks.sh"
+    "deploy:tasks": "bash ./deploy/upload-tasks.sh",
+    "deploy:defender": "bash upload-defender.sh"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",

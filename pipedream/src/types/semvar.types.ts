@@ -1,4 +1,4 @@
-export type SemanticVersion = "0.0.1-sandbox" | "0.0.1-staging";
+export type SemanticVersion = "0.0.1-sandbox" | "0.1.0-demo";
 export type GBucketName = "guildfx-exchange.appspot.com";
 
 export interface TerraSemvar {
