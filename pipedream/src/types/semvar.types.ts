@@ -10,4 +10,4 @@ export interface GCloud_Config {
   prefixes: GBucketPrefixes;
   semvar: SemanticVersion;
 }
-export type GBucketPrefixes = "tokens" | "crowdsales" | "guilds";
+export type GBucketPrefixes = "tokens" | "crowdsales" | "guilds" | "abi";
