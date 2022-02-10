@@ -1,6 +1,6 @@
 {
   "name": "@guildfx/pipedream",
-  "version": "0.0.32",
+  "version": "0.1.0-demo",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",
