@@ -1,6 +1,6 @@
 {
   "name": "@guildfx/oz-defender",
-  "version": "0.0.32",
+  "version": "0.1.0-demo",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",
@@ -29,7 +29,9 @@
   "scripts": {
     "build": "tsc --skipLibCheck",
     "test": "jest --verbose --watch",
-    "deploy:defender": "bash ./upload-defender.sh"
+    "deploy:sentinels": "bash ./deploy/upload-sentinels.sh",
+    "deploy:tasks": "bash ./deploy/upload-tasks.sh",
+    "deploy:defender": "bash upload-defender.sh"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",

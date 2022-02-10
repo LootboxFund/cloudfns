@@ -1,6 +1,6 @@
 export const constants = {
-  PIPEDREAM_WEBHOOK: "https://e9a8a389fbc9fb970cae91c7f94ba623.m.pipedream.net",
-  AUTO_TASK_ID: "a7f13376-0e3f-45a1-823f-b1dc25a6429f",
+  PIPEDREAM_WEBHOOK: "https://9a919fb0e24b73b1619051fb1b76d762.m.pipedream.net",
+  AUTO_TASK_ID: "85134511-d6c5-4953-91a9-60fceb35c0a7",
   FOLDER_NAME: "handleGuildCreatedEvent",
   SECRET: "mysecret",
 };

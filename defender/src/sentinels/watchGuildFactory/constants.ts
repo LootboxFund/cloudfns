@@ -4,15 +4,15 @@ import { abi } from "../../abi/GuildFactory.json";
 export const constants = {
   NAME: "Watch GuildFactory",
   CHAIN_ALIAS: "rinkeby",
-  AUTO_TASK_ID: "a7f13376-0e3f-45a1-823f-b1dc25a6429f",
-  SENTINAL_WATCH_ADDRESS: "0x828195351362F5781d08Ec15Ad1122aFf298F7bb",
+  AUTO_TASK_ID: "85134511-d6c5-4953-91a9-60fceb35c0a7",
+  SENTINAL_WATCH_ADDRESS: "0xa73b86A33D187221139721d9d0aDD15503ccF11f",
   ABI: abi,
   EVENT_SIGNATURES: [
     {
       eventSignature: `GuildCreated(address,string,string,address,address,address,address)`,
     },
   ],
-  PIPEDREAM_WEBHOOK: "https://enq29lu51itmtc4.m.pipedream.net",
+  PIPEDREAM_WEBHOOK: "https://3984ba81f5670bb7803b6cc3e440dc0a.m.pipedream.net",
 };
 
 export const sentinel = {

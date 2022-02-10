@@ -9,7 +9,7 @@ const action = defineAction({
     Saves an ABI.json to GCloud
   `,
   key: "onUploadABI",
-  version: "0.0.1",
+  version: "0.0.3",
   type: "action",
   props: {
     googleCloud: {
@@ -52,7 +52,7 @@ const action = defineAction({
       alias: `Saving ABI for ${metadata.alias}`,
       credentials,
       fileName: `${metadata.alias}.json`,
-      semvar: "0.0.1-sandbox",
+      semvar: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "abi",
       bucket: "guildfx-exchange.appspot.com",
@@ -63,7 +63,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index ABIs triggered by upload of ${metadata.alias} ABI`,
       credentials,
-      semvar: "0.0.1-sandbox",
+      semvar: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "abi",
       bucket: "guildfx-exchange.appspot.com",

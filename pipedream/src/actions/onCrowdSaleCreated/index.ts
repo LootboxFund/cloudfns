@@ -15,7 +15,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onCrowdSaleCreated",
-  version: "0.0.9",
+  version: "0.0.11",
   type: "action",
   props: {
     googleCloud: {
@@ -55,7 +55,7 @@ const action = defineAction({
           alias: `JSON for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.json`,
-          semvar: "0.0.1-sandbox",
+          semvar: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "crowdsales",
           bucket: "guildfx-exchange.appspot.com",
@@ -93,7 +93,7 @@ const action = defineAction({
           alias: `TXT for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.txt`,
-          semvar: "0.0.1-sandbox",
+          semvar: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "crowdsales",
           bucket: "guildfx-exchange.appspot.com",
@@ -105,7 +105,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `CrowdSale Index triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semvar: "0.0.1-sandbox",
+      semvar: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "crowdsales",
       bucket: "guildfx-exchange.appspot.com",

@@ -4,15 +4,15 @@ import { abi } from "../../abi/CrowdSaleFactory.json";
 export const constants = {
   NAME: "Watch CrowdSale Factory",
   CHAIN_ALIAS: "rinkeby",
-  AUTO_TASK_ID: "097950fa-6dce-4009-8280-19b9ed74fe0e",
-  SENTINAL_WATCH_ADDRESS: "0xafdAAFc812fC1145cE04f800400ebbcaD4283257",
+  AUTO_TASK_ID: "ff66a3a5-38d0-4dc6-a1a0-1e55a0de656c",
+  SENTINAL_WATCH_ADDRESS: "0x74e434Eec316B46b1073A3Ec4490afa391e69d63",
   ABI: abi,
   EVENT_SIGNATURES: [
     {
       eventSignature: `CrowdSaleCreated(address,address,address,address,address,uint256,address)`,
     },
   ],
-  PIPEDREAM_WEBHOOK: "https://enq29lu51itmtc4.m.pipedream.net",
+  PIPEDREAM_WEBHOOK: "https://6758ed811f7df5e347aee0e91edcadbc.m.pipedream.net",
 };
 
 export const sentinel = {
