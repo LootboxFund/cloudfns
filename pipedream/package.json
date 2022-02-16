@@ -39,7 +39,8 @@
     "deploy:sources:onCreateCrowdSale": "bash ./deploy/upload-source-onCreateCrowdSale.sh",
     "deploy:sources:onCreateGuildToken": "bash ./deploy/upload-source-onCreateGuildToken.sh",
     "deploy:sources:abi": "bash ./deploy/upload-source-abi.sh",
-    "deploy:actions": "bash ./deploy/upload-actions.sh"
+    "deploy:actions": "bash ./deploy/upload-actions.sh",
+    "deploy:lootbox": "bash ./upload-pipedream.sh"
   },
   "dependencies": {
     "axios": "^0.25.0",

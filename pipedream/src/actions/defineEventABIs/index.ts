@@ -6,7 +6,7 @@ const action = defineAction({
   description:
     "Define the ABI of on-chain events that get emitted by GuildFX smart contracts",
   key: "defineEventABIs",
-  version: "0.0.7",
+  version: "0.0.8",
   type: "action",
   props: {},
   async run() {
@@ -14,6 +14,7 @@ const action = defineAction({
       GuildFactory: [GuildCreated],
       CrowdSaleFactory: [CrowdSaleCreated],
       ERC20: [Transfer, Approval],
+      LootboxFactory: [LootboxCreated]
     };
   },
 });
@@ -81,6 +82,27 @@ event GuildCreated(
     "developer",
     "creator",
     "guildFactory",
+  ],
+};
+
+const LootboxCreated: ABIUtilRepresenation = {
+  abi: `
+event LootboxCreated(
+  string lootboxName,
+  address indexed lootbox,
+  address indexed issuer,
+  address indexed treasury,
+  uint256 maxSharesSold,
+  uint256 sharePriceUSD
+)
+`,
+  keys: [
+    "lootboxName",
+    "lootbox",
+    "issuer",
+    "treasury",
+    "maxSharesSold",
+    "sharePriceUSD"
   ],
 };
 

@@ -26,3 +26,13 @@ export interface Event_CrowdSaleCreated {
   startingPrice: BigNumber;
   deployer: Address;
 }
+
+
+export interface Event_LootboxCreated {
+  lootboxName: string;
+  lootbox: Address;
+  issuer: Address;
+  treasury: Address;
+  maxSharesSold: BigNumber;
+  sharePriceUSD: BigNumber;
+}
