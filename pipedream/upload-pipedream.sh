@@ -2,9 +2,8 @@ echo "Deploying Pipedream..."
 tsc
 
 # ------ ACTIVE ------ #
-NODE_ENV=production pd publish ./lib/actions/onLootboxCreated/index.js
-NODE_ENV=production pd publish ./lib/actions/defineEventABIs/index.js
-NODE_ENV=production pd deploy ./lib/sources/onCreateLootbox/index.js
+NODE_ENV=production pd publish ./lib/actions/onLootboxURI/index.js
+NODE_ENV=production pd deploy ./lib/sources/onLootboxURI/index.js
 
 
 # ------ DEPRECATED ------ #
