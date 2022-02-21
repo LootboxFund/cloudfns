@@ -1,4 +1,4 @@
-export type SemanticVersion = "0.0.1-sandbox" | "0.1.0-demo";
+export type SemanticVersion = "0.0.1-sandbox" | "0.1.0-demo" | "0.2.0-sandbox";
 export type GBucketName = "guildfx-exchange.appspot.com";
 
 export interface TerraSemvar {
@@ -10,4 +10,4 @@ export interface GCloud_Config {
   prefixes: GBucketPrefixes;
   semvar: SemanticVersion;
 }
-export type GBucketPrefixes = "tokens" | "crowdsales" | "guilds" | "abi" | "lootbox";
+export type GBucketPrefixes = "tokens" | "crowdsales" | "guilds" | "abi" | "lootbox" | "lootbox-uri";
