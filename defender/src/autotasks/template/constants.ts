@@ -1,4 +1,4 @@
-// import { Manifest } from "../../index";
+// import { Manifest } from "./manifest";
 // const manifest = Manifest.default;
 
 export const constants = {

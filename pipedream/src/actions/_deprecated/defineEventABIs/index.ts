@@ -6,7 +6,7 @@ const action = defineAction({
   description:
     "Define the ABI of on-chain events that get emitted by GuildFX smart contracts",
   key: "defineEventABIs",
-  version: "0.0.8",
+  version: "0.0.9",
   type: "action",
   props: {},
   async run() {

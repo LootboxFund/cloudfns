@@ -1605,28 +1605,28 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@lootboxfund/helpers@0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.5.tgz#9d02016636131c9ab103e9b39624512aa9f7cb08"
-  integrity sha512-7CM/U3rSCID1VfI6H/aHsLDietUV8o2BAD5cFdvyKUAEUILEWnXP6BYbTmc9DUXXd5VDuRevyS9flaxLG+8oxQ==
+"@lootboxfund/helpers@0.0.10":
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.10.tgz#44a0ff84bdb441544d1e26f8bfc431f9c43cf24c"
+  integrity sha512-5FB0+cZJdx4Va8TcfvWYwll4A8UZWKmOn/BtLgGTDxQar/k2bYPmL9rOzoKAjaOQV9vTp+BmcZXm+Q5Q8etYHQ==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@lootboxfund/helpers@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.3.tgz#f5e5dad83155d88d2c47c2cc4472e577706aa550"
-  integrity sha512-WbIwLKFGrqKvGvRz/XLTye2bYl2IBfRH15tQkePSgLoxK1ZFVDF4ermEdOSShOY5Sus8uIYYPeeqFfLugCvuSQ==
+"@lootboxfund/helpers@0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.9.tgz#949537a80b5cc2eafbb919149404ca49ff1c58f9"
+  integrity sha512-8jrZBgZ1tzX3iG2o7CHYjB7e+bZK7vqBhGQtsmza7Esllbd11tBzZ+Qyincs8foVGuziBqHDhgb1x+iDaUtgMQ==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@lootboxfund/manifest@0.2.14":
-  version "0.2.14"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.14.tgz#2a6c5416046ed0814690a20fc9856871162c6108"
-  integrity sha512-NRGejdZxAE/lx1KCnzl5V9zyvo4ONpezgyptzjQKvB6K1KzpdOyKL62OT+17fql8id+4e8TaXctkRoHFl8LNqA==
+"@lootboxfund/manifest@0.2.20":
+  version "0.2.20"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.20.tgz#79d0edcfbe6c04961748cb5b98b9efbedd6d58de"
+  integrity sha512-Phu6IlYW9TUum3HAWqjtRt2nOldWDii3grHgqAZsQT2RgUAKmL4whxx48O0kESWuB2ax5XDqwJywq5sK0GeUdQ==
   dependencies:
-    "@lootboxfund/helpers" "^0.0.3"
+    "@lootboxfund/helpers" "0.0.9"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

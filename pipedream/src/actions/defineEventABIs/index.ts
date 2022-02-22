@@ -9,7 +9,7 @@ const action = defineAction({
   description:
     "Define the ABI of on-chain events that get emitted by GuildFX smart contracts",
   key: manifest.pipedream.actions.defineEventABIs.slug,
-  version: "0.0.10",
+  version: "0.0.11",
   type: "action",
   props: {},
   async run() {

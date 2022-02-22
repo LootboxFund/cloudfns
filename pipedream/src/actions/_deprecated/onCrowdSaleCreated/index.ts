@@ -5,8 +5,8 @@ import { ABIUtilRepresenation } from "@lootboxfund/helpers"
 import { decodeEVMLogs } from "../../../api/evm";
 import { Address } from '@lootboxfund/helpers';
 import { BigNumber } from "ethers";
-
-
+import { Manifest } from "../../../index"; 
+const manifest = Manifest.default
 
 interface Event_CrowdSaleCreated {
   crowdsaleAddress: Address;
@@ -30,7 +30,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onCrowdSaleCreated",
-  version: "0.0.11",
+  version: "0.0.12",
   type: "action",
   props: {
     googleCloud: {
@@ -70,14 +70,14 @@ const action = defineAction({
           alias: `JSON for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.json`,
-          semver: "0.1.0-demo",
-          chainIdHex: "0x61",
+          semver: manifest.googleCloud.bucket.folderSemver,
+          chainIdHex: manifest.chain.chainIDHex,
           prefix: "crowdsales",
-          bucket: "guildfx-exchange.appspot.com",
+          bucket: manifest.googleCloud.bucket.id,
           data: JSON.stringify({
             address: ev.crowdsaleAddress,
             tokenAddress: ev.guildToken,
-            chainIdHex: "0x61",
+            chainIdHex: manifest.chain.chainIDHex,
             chainIdDecimal: "97",
           }),
         });
@@ -108,10 +108,10 @@ const action = defineAction({
           alias: `TXT for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.txt`,
-          semver: "0.1.0-demo",
-          chainIdHex: "0x61",
+          semver: manifest.googleCloud.bucket.folderSemver,
+          chainIdHex: manifest.chain.chainIDHex,
           prefix: "crowdsales",
-          bucket: "guildfx-exchange.appspot.com",
+          bucket: manifest.googleCloud.bucket.id,
           data: note,
         });
       })
@@ -120,10 +120,10 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `CrowdSale Index triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semver: "0.1.0-demo",
-      chainIdHex: "0x61",
+      semver: manifest.googleCloud.bucket.folderSemver,
+      chainIdHex: manifest.chain.chainIDHex,
       prefix: "crowdsales",
-      bucket: "guildfx-exchange.appspot.com",
+      bucket: manifest.googleCloud.bucket.id,
     });
     return {
       crowdsaleJSON: savedCrowdSaleJSONFragments,

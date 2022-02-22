@@ -3,9 +3,9 @@ import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 
 import { decodeEVMLogs } from "../../api/evm";
-import { Manifest } from "../../index"; 
-import { Address, ABIUtilRepresenation } from '@lootboxfund/helpers';
+import { Address, ABIUtilRepresenation, GBucketPrefixesEnum, convertHexToDecimal } from '@lootboxfund/helpers';
 import { BigNumber } from "ethers";
+import { Manifest } from "../../index"; 
 const manifest = Manifest.default
 
 interface Event_LootboxCreated {
@@ -29,7 +29,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
-  version: "0.0.12",
+  version: "0.0.13",
   type: "action",
   props: {
     googleCloud: {
@@ -69,15 +69,15 @@ const action = defineAction({
           alias: `JSON for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.lootbox}.json`,
-          semver: "0.1.0-demo",
-          chainIdHex: "0x61",
-          prefix: "lootbox",
-          bucket: "guildfx-exchange.appspot.com",
+          semver: manifest.googleCloud.bucket.folderSemver,
+          chainIdHex: manifest.chain.chainIDHex,
+          prefix: GBucketPrefixesEnum.lootbox,
+          bucket: manifest.googleCloud.bucket.id,
           data: JSON.stringify({
             address: ev.lootbox,
             title: ev.lootboxName,
-            chainIdHex: "0x61",
-            chainIdDecimal: "97",
+            chainIdHex: manifest.chain.chainIDHex,
+            chainIdDecimal: convertHexToDecimal(manifest.chain.chainIDHex),
           }),
         });
       })
@@ -108,10 +108,10 @@ const action = defineAction({
           alias: `TXT for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.lootbox}.txt`,
-          semver: "0.1.0-demo",
-          chainIdHex: "0x61",
-          prefix: "lootbox",
-          bucket: "guildfx-exchange.appspot.com",
+          semver: manifest.googleCloud.bucket.folderSemver,
+          chainIdHex: manifest.chain.chainIDHex,
+          prefix: GBucketPrefixesEnum.lootbox,
+          bucket: manifest.googleCloud.bucket.id,
           data: note,
         });
       })
@@ -120,10 +120,10 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Lootbox Index triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semver: "0.1.0-demo",
-      chainIdHex: "0x61",
-      prefix: "lootbox",
-      bucket: "guildfx-exchange.appspot.com",
+      semver: manifest.googleCloud.bucket.folderSemver,
+      chainIdHex: manifest.chain.chainIDHex,
+      prefix: GBucketPrefixesEnum.lootbox,
+      bucket: manifest.googleCloud.bucket.id,
     });
     return {
       json: savedFragmentJSON,

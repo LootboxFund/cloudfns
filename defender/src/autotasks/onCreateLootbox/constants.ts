@@ -1,5 +1,4 @@
-import { Manifest } from "../../index";
-const manifest = Manifest.default;
+import manifest from "./manifest.json";
 
 export const constants = {
   PIPEDREAM_WEBHOOK: manifest.openZeppelin.autoTasks.onCreateLootbox.webhookEndpoint,

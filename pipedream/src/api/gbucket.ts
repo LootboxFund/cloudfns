@@ -1,4 +1,4 @@
-import { ChainIDHex, SemanticVersion, Terrasemver } from "@lootboxfund/helpers"
+import { ChainIDHex, SemanticVersion, GBucketPrefixes, GCloudBucket } from "@lootboxfund/helpers"
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {
@@ -13,8 +13,8 @@ interface GBucketSaveFragProps {
   data: any;
   semver: SemanticVersion;
   chainIdHex: ChainIDHex;
-  prefix: Terrasemver["gcloud"]["prefixes"];
-  bucket: Terrasemver["gcloud"]["bucketName"];
+  prefix: GBucketPrefixes;
+  bucket: GCloudBucket;
 }
 export const saveFileToGBucket = async ({
   alias,
