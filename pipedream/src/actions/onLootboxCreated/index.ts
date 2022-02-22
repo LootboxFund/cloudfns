@@ -5,7 +5,7 @@ import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { decodeEVMLogs } from "../../api/evm";
 import { Address, ABIUtilRepresenation, GBucketPrefixesEnum, convertHexToDecimal } from '@lootboxfund/helpers';
 import { BigNumber } from "ethers";
-import { Manifest } from "../../index"; 
+import { Manifest } from "../../manifest"; 
 const manifest = Manifest.default
 
 interface Event_LootboxCreated {

@@ -1,7 +1,7 @@
 import { defineAction } from "ironpipe";
 import { ABIUtilRepresenation } from "@lootboxfund/helpers"
 
-import { Manifest } from "../../index"; 
+import { Manifest } from "../../manifest"; 
 const manifest = Manifest.default
 
 const action = defineAction({
