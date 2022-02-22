@@ -1,19 +1,18 @@
-// @ts-ignore-next-line
+import { Manifest } from "../../index";
+const manifest = Manifest.default;
 import { abi } from "../../abi/LootboxFactory.json";
-
       
 export const constants = {
-  NAME: "Watch Lootbox Factory",
-  CHAIN_ALIAS: "bsctest",
-  AUTO_TASK_ID: "92575d25-3244-4107-ad03-c71455cd85ca",
-  SENTINAL_WATCH_ADDRESS: "0x390cf9617D4c7e07863F3482736D05FC1dC0406E",
+  NAME: manifest.openZeppelin.sentinels.onCreateLootbox.alias,
+  CHAIN_ALIAS: manifest.openZeppelin.sentinels.onCreateLootbox.ozChainSlug,
+  AUTO_TASK_ID: manifest.openZeppelin.sentinels.onCreateLootbox.autoTaskHandlerID,
+  SENTINAL_WATCH_ADDRESS: manifest.openZeppelin.sentinels.onCreateLootbox.contractWatchAddress,
   ABI: abi,
   EVENT_SIGNATURES: [
     {
       eventSignature: `LootboxCreated(string,address,address,address,uint256,uint256)`,
     },
   ],
-  PIPEDREAM_WEBHOOK: "https://36d700b09bcc4ce31a06ca8b8e62a783.m.pipedream.net",
 };
 
 export const sentinel = {

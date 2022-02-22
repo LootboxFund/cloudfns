@@ -36,11 +36,11 @@
     "watch": "tsc -w",
     "build": "tsc",
     "test": "jest --verbose --watch",
-    "deploy:sources:onCreateCrowdSale": "bash ./deploy/upload-source-onCreateCrowdSale.sh",
-    "deploy:sources:onCreateGuildToken": "bash ./deploy/upload-source-onCreateGuildToken.sh",
-    "deploy:sources:abi": "bash ./deploy/upload-source-abi.sh",
+    "deploy:sources:onCreateLootbox": "bash ./deploy/upload-source-onCreateLootbox.sh",
+    "deploy:sources:onLootboxURI": "bash ./deploy/upload-source-onLootboxURI.sh",
+    "deploy:sources:onUploadABI": "bash ./deploy/upload-source-onUploadABI.sh",
     "deploy:actions": "bash ./deploy/upload-actions.sh",
-    "deploy:lootbox": "bash ./upload-pipedream.sh"
+    "deploy:dev": "bash ./upload-pipedream.sh"
   },
   "dependencies": {
     "@lootboxfund/helpers": "0.0.5",

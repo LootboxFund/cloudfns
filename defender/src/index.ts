@@ -1,1 +1,1 @@
-export const placeholder = "Need to export something from package.json";
+export { Manifest_v0_2_0_sandbox as Manifest } from '@lootboxfund/manifest'

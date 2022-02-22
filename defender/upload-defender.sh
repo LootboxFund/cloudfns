@@ -2,7 +2,7 @@ echo "Deploying OZ Defender..."
 yarn build
 
 # ------ ACTIVE ------ #
-NODE_ENV=production node ./lib/tasks/handleLootboxCreatedEvent/build.js 
+NODE_ENV=production node ./lib/tasks/onCreateLootbox/build.js 
 NODE_ENV=production node ./lib/sentinels/watchLootboxFactory/build.js
 
 # ------ DEPRECATED ------ #

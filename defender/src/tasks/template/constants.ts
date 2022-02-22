@@ -1,6 +1,9 @@
+// import { Manifest } from "../../index";
+// const manifest = Manifest.default;
+
 export const constants = {
-  PIPEDREAM_WEBHOOK: "https://enq29lu51itmtc4.m.pipedream.net",
-  AUTO_TASK_ID: "",
+  PIPEDREAM_WEBHOOK: "manifest.pipedream.sources.____.webhookEndpoint",
+  AUTO_TASK_ID: "manifest.openZeppelin.autoTasks.id",
   FOLDER_NAME: "template",
   SECRET: "mysecret",
 };
