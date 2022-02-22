@@ -1,15 +1,17 @@
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { SemanticVersion } from "../../types/semvar.types";
-import { ABIGenericInterface, ChainIDHex } from "../../types/base.types";
+import { SemanticVersion, GBucketPrefixesEnum } from '@lootboxfund/helpers';
+import { ABIGenericInterface, ChainIDHex } from "@lootboxfund/helpers"
+import { Manifest } from "../../index"; 
+const manifest = Manifest.default
 
 const action = defineAction({
-  name: "onUploadABI",
+  key: manifest.pipedream.actions.onUploadABI.slug,
   description: `
     Saves an ABI.json to GCloud
   `,
-  key: "onUploadABI",
-  version: "0.0.3",
+  name: manifest.pipedream.actions.onUploadABI.alias,
+  version: "0.0.6",
   type: "action",
   props: {
     googleCloud: {
@@ -25,7 +27,7 @@ const action = defineAction({
     interface ABIWithMetadata {
       metadata: {
         bucket: string;
-        semvar: SemanticVersion;
+        semver: SemanticVersion;
         chainIdHex: ChainIDHex;
         alias: string;
       };
@@ -52,10 +54,10 @@ const action = defineAction({
       alias: `Saving ABI for ${metadata.alias}`,
       credentials,
       fileName: `${metadata.alias}.json`,
-      semvar: "0.1.0-demo",
-      chainIdHex: "0x61",
-      prefix: "abi",
-      bucket: "guildfx-exchange.appspot.com",
+      semver: manifest.googleCloud.bucket.folderSemver,
+      chainIdHex: manifest.chain.chainIDHex,
+      prefix: GBucketPrefixesEnum.abi,
+      bucket: manifest.googleCloud.bucket.id,
       data: JSON.stringify(abi),
     });
 
@@ -63,10 +65,10 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index ABIs triggered by upload of ${metadata.alias} ABI`,
       credentials,
-      semvar: "0.1.0-demo",
-      chainIdHex: "0x61",
-      prefix: "abi",
-      bucket: "guildfx-exchange.appspot.com",
+      semver: manifest.googleCloud.bucket.folderSemver,
+      chainIdHex: manifest.chain.chainIDHex,
+      prefix: GBucketPrefixesEnum.abi,
+      bucket: manifest.googleCloud.bucket.id,
     });
 
     return;

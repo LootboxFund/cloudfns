@@ -1,9 +1,22 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { generateRandomLogo } from "../../api/helpers";
-import { ABIUtilRepresenation, Event_GuildCreated } from "../../types";
-import { decodeEVMLogs } from "../../api/evm";
+import { indexGBucketRoute, saveFileToGBucket } from "../../../api/gbucket";
+import { generateRandomLogo } from "../../../api/helpers";
+import { ABIUtilRepresenation } from "@lootboxfund/helpers"
+import { decodeEVMLogs } from "../../../api/evm";
+import { Address } from '@lootboxfund/helpers';
+import { Manifest } from "../../../index"; 
+const manifest = Manifest.default
+
+interface Event_GuildCreated {
+  contractAddress: Address;
+  guildTokenName: string;
+  guildTokenSymbol: string;
+  dao: Address;
+  developer: Address;
+  creator: Address;
+  guildFactory: Address;
+}
 
 const action = defineAction({
   name: "onGuildCreated",
@@ -16,7 +29,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: "onGuildCreated",
-  version: "0.0.14",
+  version: "0.0.15",
   type: "action",
   props: {
     googleCloud: {
@@ -56,16 +69,16 @@ const action = defineAction({
           alias: `JSON for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.json`,
-          semvar: "0.1.0-demo",
-          chainIdHex: "0x61",
+          semver: manifest.googleCloud.bucket.folderSemver,
+          chainIdHex: manifest.chain.chainIDHex,
           prefix: "tokens",
-          bucket: "guildfx-exchange.appspot.com",
+          bucket: manifest.googleCloud.bucket.id,
           data: JSON.stringify({
             address: ev.contractAddress,
             decimals: 18,
             name: ev.guildTokenName,
             symbol: ev.guildTokenSymbol,
-            chainIdHex: "0x61",
+            chainIdHex: manifest.chain.chainIDHex,
             chainIdDecimal: "97",
             logoURI: generateRandomLogo(),
             priceOracle: "",
@@ -96,10 +109,10 @@ const action = defineAction({
           alias: `TXT for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.txt`,
-          semvar: "0.1.0-demo",
-          chainIdHex: "0x61",
+          semver: manifest.googleCloud.bucket.folderSemver,
+          chainIdHex: manifest.chain.chainIDHex,
           prefix: "tokens",
-          bucket: "guildfx-exchange.appspot.com",
+          bucket: manifest.googleCloud.bucket.id,
           data: note,
         });
       })
@@ -108,10 +121,10 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index guild tokens triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semvar: "0.1.0-demo",
-      chainIdHex: "0x61",
+      semver: manifest.googleCloud.bucket.folderSemver,
+      chainIdHex: manifest.chain.chainIDHex,
       prefix: "tokens",
-      bucket: "guildfx-exchange.appspot.com",
+      bucket: manifest.googleCloud.bucket.id,
     });
     return {
       token: savedTokenFragments,

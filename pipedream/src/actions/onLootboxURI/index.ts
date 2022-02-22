@@ -1,15 +1,16 @@
 import { defineAction } from "ironpipe";
+import { ITicketMetadata, GBucketPrefixesEnum } from '@lootboxfund/helpers';
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { SemanticVersion } from "../../types/semvar.types";
-import { ABIGenericInterface, ChainIDHex } from "../../types/base.types";
+import { Manifest } from "../../index"; 
+const manifest = Manifest.default
 
 const action = defineAction({
-  name: "onLootboxURI",
+  name: manifest.pipedream.actions.onLootboxURI.alias,
   description: `
     Saves a Lootbox URI.json to GCloud
   `,
-  key: "onLootboxURI",
-  version: "0.0.1",
+  key: manifest.pipedream.actions.onLootboxURI.slug,
+  version: "0.0.13",
   type: "action",
   props: {
     googleCloud: {
@@ -36,10 +37,10 @@ const action = defineAction({
       alias: `Saving ABI for ${lootboxURIData.name}`,
       credentials,
       fileName: `${lootboxURIData.address}.json`,
-      semvar: "0.2.0-sandbox",
-      chainIdHex: "0x61",
-      prefix: "lootbox-uri",
-      bucket: "guildfx-exchange.appspot.com",
+      semver: "0.2.0-sandbox",
+      chainIdHex: manifest.chain.chainIDHex,
+      prefix: GBucketPrefixesEnum["lootbox-uri"],
+      bucket: manifest.googleCloud.bucket.id,
       data: JSON.stringify(lootboxURIData),
     });
 
@@ -47,10 +48,10 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
       credentials,
-      semvar: "0.2.0-sandbox",
-      chainIdHex: "0x61",
-      prefix: "lootbox-uri",
-      bucket: "guildfx-exchange.appspot.com",
+      semver: "0.2.0-sandbox",
+      chainIdHex: manifest.chain.chainIDHex,
+      prefix: GBucketPrefixesEnum["lootbox-uri"],
+      bucket: manifest.googleCloud.bucket.id,
     });
 
     return;
@@ -59,38 +60,3 @@ const action = defineAction({
 
 export = action;
 
-
-interface ITicketMetadata {
-  address: string;
-  name: string | undefined
-  description: string | undefined
-  image: string | undefined
-  backgroundColor: string | undefined
-  backgroundImage: string | undefined
-  lootbox?: {
-    address: string
-    chainIdHex: string
-    chainIdDecimal: string
-    chainName: string
-    targetPaybackDate: Date
-    fundraisingTarget: string
-    basisPointsReturnTarget: string
-    returnAmountTarget: string
-    pricePerShare: string
-    lootboxThemeColor: string
-    transactionHash: string
-    blockNumber: string
-  },
-  socials?: {
-    twitter: string;
-    email: string;
-    instagram: string;
-    tiktok: string;
-    facebook: string;
-    discord: string;
-    youtube: string;
-    snapchat: string;
-    twitch: string;
-    web:string;
-  }
-}

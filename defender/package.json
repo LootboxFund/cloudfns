@@ -1,6 +1,6 @@
 {
-  "name": "@guildfx/oz-defender",
-  "version": "0.1.0-demo",
+  "name": "@lootboxfund/oz-defender",
+  "version": "0.2.0-sandbox",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",
@@ -29,12 +29,12 @@
   "scripts": {
     "build": "tsc --skipLibCheck",
     "test": "jest --verbose --watch",
-    "deploy:sentinels": "bash ./deploy/upload-sentinels.sh",
-    "deploy:tasks": "bash ./deploy/upload-tasks.sh",
-    "deploy:defender": "bash upload-defender.sh"
+    "deploy": "bash ./upload-defender.sh"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",
+    "@lootboxfund/helpers": "0.0.5",
+    "@lootboxfund/manifest": "0.2.16",
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-autotask-utils": "^1.13.0",

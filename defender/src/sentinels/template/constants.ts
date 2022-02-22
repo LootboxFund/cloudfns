@@ -1,11 +1,13 @@
 // @ts-ignore-next-line
 import { abi } from "../../abi/DAI.json";
+// import { Manifest } from "../../index";
+// const manifest = Manifest.default;
 
 export const constants = {
-  NAME: "templateSentinal",
-  CHAIN_ALIAS: "rinkeby",
-  AUTO_TASK_ID: "_________________",
-  SENTINAL_WATCH_ADDRESS: "_________________",
+  NAME: "manifest.openZeppelin.sentinels.onCreateLootbox.alias",
+  CHAIN_ALIAS: "manifest.openZeppelin.sentinels.onCreateLootbox.ozChainSlug",
+  AUTO_TASK_ID: "manifest.openZeppelin.sentinels.onCreateLootbox.autoTaskHandlerID",
+  SENTINAL_WATCH_ADDRESS: "manifest.openZeppelin.sentinels.onCreateLootbox.contractWatchAddress",
   ABI: abi,
   EVENT_SIGNATURES: [
     {

@@ -5,13 +5,15 @@
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
 import get from "lodash/get";
+import { Manifest } from "../../index"; 
+const manifest = Manifest.default
 
 const source = {
-  key: "webhook_onCreateLootbox",
-  name: "Webhook - onCreateLootbox",
+  key: manifest.pipedream.sources.onCreateLootbox.slug,
+  name: manifest.pipedream.sources.onCreateLootbox.alias,
   description:
     "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
-  version: "0.0.1",
+  version: "0.0.2",
   props: {
     httpInterface: {
       type: "$.interface.http",
