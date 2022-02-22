@@ -6,12 +6,12 @@ import { Manifest } from "../../index";
 const manifest = Manifest.default
 
 const action = defineAction({
-  key: manifest.pipedream.actions.defineEventABIs.slug,
+  key: manifest.pipedream.actions.onUploadABI.slug,
   description: `
     Saves an ABI.json to GCloud
   `,
-  name: manifest.pipedream.actions.defineEventABIs.alias,
-  version: "0.0.3",
+  name: manifest.pipedream.actions.onUploadABI.alias,
+  version: "0.0.5",
   type: "action",
   props: {
     googleCloud: {

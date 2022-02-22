@@ -29,15 +29,12 @@
   "scripts": {
     "build": "tsc --skipLibCheck",
     "test": "jest --verbose --watch",
-    "deploy:sentinels": "bash ./deploy/upload-sentinels.sh",
-    "deploy:tasks": "bash ./deploy/upload-tasks.sh",
-    "deploy:prod": "yarn deploy:sentinels && yarn deploy:tasks",
-    "deploy:dev": "bash ./uploader-defender.sh"
+    "deploy": "bash ./upload-defender.sh"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",
     "@lootboxfund/helpers": "0.0.5",
-    "@lootboxfund/manifest": "0.2.12",
+    "@lootboxfund/manifest": "0.2.16",
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-autotask-utils": "^1.13.0",

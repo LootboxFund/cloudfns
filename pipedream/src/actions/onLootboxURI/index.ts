@@ -5,12 +5,12 @@ import { Manifest } from "../../index";
 const manifest = Manifest.default
 
 const action = defineAction({
-  name: manifest.pipedream.sources.onLootboxURI.alias,
+  name: manifest.pipedream.actions.onLootboxURI.alias,
   description: `
     Saves a Lootbox URI.json to GCloud
   `,
-  key: manifest.pipedream.sources.onLootboxURI.slug,
-  version: "0.0.1",
+  key: manifest.pipedream.actions.onLootboxURI.slug,
+  version: "0.0.12",
   type: "action",
   props: {
     googleCloud: {

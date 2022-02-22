@@ -5,11 +5,11 @@ import { Manifest } from "../../index";
 const manifest = Manifest.default
 
 const action = defineAction({
-  name: manifest.pipedream.sources.onLootboxURI.alias,
+  name: manifest.pipedream.actions.defineEventABIs.alias,
   description:
     "Define the ABI of on-chain events that get emitted by GuildFX smart contracts",
-  key: manifest.pipedream.sources.onLootboxURI.slug,
-  version: "0.0.8",
+  key: manifest.pipedream.actions.defineEventABIs.slug,
+  version: "0.0.10",
   type: "action",
   props: {},
   async run() {

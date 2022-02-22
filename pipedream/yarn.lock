@@ -1621,10 +1621,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@lootboxfund/manifest@^0.2.10":
-  version "0.2.10"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.10.tgz#e561cd496016b13a973bb97cab6b038df3d3e91c"
-  integrity sha512-WAtrv3uRas1Zd/Z+22JBuIcZTG9ansz3G+O4S5hCjHLqU1CWAvxEPJhB8fKibVXPVqIeNJtpt4touWa2p6Wm4w==
+"@lootboxfund/manifest@0.2.14":
+  version "0.2.14"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.14.tgz#2a6c5416046ed0814690a20fc9856871162c6108"
+  integrity sha512-NRGejdZxAE/lx1KCnzl5V9zyvo4ONpezgyptzjQKvB6K1KzpdOyKL62OT+17fql8id+4e8TaXctkRoHFl8LNqA==
   dependencies:
     "@lootboxfund/helpers" "^0.0.3"
 

@@ -2,7 +2,7 @@ import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../../api/gbucket";
 import { generateRandomLogo } from "../../../api/helpers";
-import { ABIUtilRepresenation } from "../../../types";
+import { ABIUtilRepresenation } from "@lootboxfund/helpers"
 import { decodeEVMLogs } from "../../../api/evm";
 import { Address } from '@lootboxfund/helpers';
 

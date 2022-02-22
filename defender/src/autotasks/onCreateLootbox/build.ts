@@ -13,12 +13,12 @@ const main = async () => {
   try {
     console.log(`
   
-  --- ⏳ Uploading auto task template()...
+  --- ⏳ Uploading auto task handleFactories()...
   
   `);
     const x = await autoTaskClient.updateCodeFromFolder(
       constants.AUTO_TASK_ID,
-      `${process.env.DEFENDER_PATH_TO_LIB_FOLDER}/lib/tasks/${constants.FOLDER_NAME}`
+      `${process.env.DEFENDER_PATH_TO_LIB_FOLDER}/lib/autotasks/${constants.FOLDER_NAME}`
     );
     console.log(x);
     console.log(`

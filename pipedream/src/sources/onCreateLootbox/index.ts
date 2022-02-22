@@ -13,7 +13,7 @@ const source = {
   name: manifest.pipedream.sources.onCreateLootbox.alias,
   description:
     "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
-  version: "0.0.1",
+  version: "0.0.2",
   props: {
     httpInterface: {
       type: "$.interface.http",

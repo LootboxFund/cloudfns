@@ -1,15 +1,15 @@
-# @guildfx/cloudfns
+# @lootboxfund/cloudfns
 
-GuildFX has the following cloud function environments:
+Lootbox has the following cloud function environments:
 
 - OpenZeppelin AutoTask
 - Pipedream Workflows
 
 To properly deploy this, following these steps:
 
-1. `$ cd pipedream && yarn deploy:pipedream && cd ..`
-2. Check Pipedream and create a pipe using one of the sources. Copy the webhook url to its corresponding OZ autotask.
-3. Visit OpenZeppelin and manually create 2 autotasks. Copy the autotask ID and paste it into the `defender/(sentinels|tasks)/**/constants.ts`. Same with other fields.
-4. `$ cd defender && yarn deploy:defender && cd ..`
-5. Test creating a guild token and check if the sentinel & autotask catches the event. Visit the GBucket route for the txt file.
-6. Continue testing with crowdsale factory. You'll need your guild token address which is in the txt file.
+1. Create an OZ account & Pipedream account
+2. Upload the pipedream sources & actions (you may need to login from cli). Then login to Pipedream and get the webhook urls for all the sources. Add them to `@lootboxfund/manifest` & `yarn build && npm publish`
+3. Create an OZ Autotask with default settings so we can get the ID. Copy & paste the OZ Autotask ID to `@lootboxfund/manifest`. Also import the Contract into OZ and save the contract address to manifest. Then upload the OZ Defender files.
+
+### Note:
+Pipedream is not compatible with private NPM libraries, so as a terrible workaround, we make our `@lootboxfund/helpers` and `@lootboxfund/manifest` repos public while deploying.
