@@ -1,4 +1,5 @@
-import { ChainIDHex, SemanticVersion, TerraSemvar } from "../types";
+import { ChainIDHex, SemanticVersion } from "@lootboxfund/helpers"
+import { Terrasemver } from "../types/semver.types";
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {
@@ -11,17 +12,17 @@ interface GBucketSaveFragProps {
   credentials: GBucketCreds;
   fileName: string;
   data: any;
-  semvar: SemanticVersion;
+  semver: SemanticVersion;
   chainIdHex: ChainIDHex;
-  prefix: TerraSemvar["gcloud"]["prefixes"];
-  bucket: TerraSemvar["gcloud"]["bucketName"];
+  prefix: Terrasemver["gcloud"]["prefixes"];
+  bucket: Terrasemver["gcloud"]["bucketName"];
 }
 export const saveFileToGBucket = async ({
   alias,
   credentials,
   fileName,
   data,
-  semvar,
+  semver,
   chainIdHex,
   prefix,
   bucket,
@@ -35,7 +36,7 @@ export const saveFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${semvar}/${chainIdHex}/${prefix}/${fileName}`;
+  const filePath = `v/${semver}/${chainIdHex}/${prefix}/${fileName}`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
@@ -51,7 +52,7 @@ export const saveFileToGBucket = async ({
 export const indexGBucketRoute = async ({
   alias,
   credentials,
-  semvar,
+  semver,
   chainIdHex,
   prefix,
   bucket,
@@ -65,14 +66,14 @@ export const indexGBucketRoute = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${semvar}/${chainIdHex}/${prefix}/index.json`;
+  const filePath = `v/${semver}/${chainIdHex}/${prefix}/index.json`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
 
   // Lists files in the bucket, filtered by a prefix
   const options = {
-    prefix: `v/${semvar}/${chainIdHex}/${prefix}/`,
+    prefix: `v/${semver}/${chainIdHex}/${prefix}/`,
     delimiter: "/",
   };
   const result = await storage.bucket(bucket).getFiles(options);

@@ -1,8 +1,8 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { ABIUtilRepresenation, Event_CrowdSaleCreated } from "../../types";
-import { decodeEVMLogs } from "../../api/evm";
+import { indexGBucketRoute, saveFileToGBucket } from "../../../api/gbucket";
+import { ABIUtilRepresenation, Event_CrowdSaleCreated } from "../../../types";
+import { decodeEVMLogs } from "../../../api/evm";
 
 const action = defineAction({
   name: "onCrowdSaleCreated",
@@ -55,7 +55,7 @@ const action = defineAction({
           alias: `JSON for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.json`,
-          semvar: "0.1.0-demo",
+          semver: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "crowdsales",
           bucket: "guildfx-exchange.appspot.com",
@@ -93,7 +93,7 @@ const action = defineAction({
           alias: `TXT for crowdsale ${ev.crowdsaleAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.crowdsaleAddress}.txt`,
-          semvar: "0.1.0-demo",
+          semver: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "crowdsales",
           bucket: "guildfx-exchange.appspot.com",
@@ -105,7 +105,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `CrowdSale Index triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semvar: "0.1.0-demo",
+      semver: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "crowdsales",
       bucket: "guildfx-exchange.appspot.com",

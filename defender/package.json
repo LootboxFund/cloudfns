@@ -1,6 +1,6 @@
 {
-  "name": "@guildfx/oz-defender",
-  "version": "0.1.0-demo",
+  "name": "@lootboxfund/oz-defender",
+  "version": "0.2.0-sandbox",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",

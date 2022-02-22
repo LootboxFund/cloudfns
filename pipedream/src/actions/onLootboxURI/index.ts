@@ -1,6 +1,6 @@
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { SemanticVersion } from "../../types/semvar.types";
+import { SemanticVersion } from "../../types/semver.types";
 import { ABIGenericInterface, ChainIDHex } from "../../types/base.types";
 
 const action = defineAction({
@@ -36,7 +36,7 @@ const action = defineAction({
       alias: `Saving ABI for ${lootboxURIData.name}`,
       credentials,
       fileName: `${lootboxURIData.address}.json`,
-      semvar: "0.2.0-sandbox",
+      semver: "0.2.0-sandbox",
       chainIdHex: "0x61",
       prefix: "lootbox-uri",
       bucket: "guildfx-exchange.appspot.com",
@@ -47,7 +47,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
       credentials,
-      semvar: "0.2.0-sandbox",
+      semver: "0.2.0-sandbox",
       chainIdHex: "0x61",
       prefix: "lootbox-uri",
       bucket: "guildfx-exchange.appspot.com",

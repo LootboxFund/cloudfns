@@ -1,9 +1,9 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { generateRandomLogo } from "../../api/helpers";
-import { ABIUtilRepresenation, Event_GuildCreated } from "../../types";
-import { decodeEVMLogs } from "../../api/evm";
+import { indexGBucketRoute, saveFileToGBucket } from "../../../api/gbucket";
+import { generateRandomLogo } from "../../../api/helpers";
+import { ABIUtilRepresenation, Event_GuildCreated } from "../../../types";
+import { decodeEVMLogs } from "../../../api/evm";
 
 const action = defineAction({
   name: "onGuildCreated",
@@ -56,7 +56,7 @@ const action = defineAction({
           alias: `JSON for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.json`,
-          semvar: "0.1.0-demo",
+          semver: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "tokens",
           bucket: "guildfx-exchange.appspot.com",
@@ -96,7 +96,7 @@ const action = defineAction({
           alias: `TXT for guild token ${ev.contractAddress} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.contractAddress}.txt`,
-          semvar: "0.1.0-demo",
+          semver: "0.1.0-demo",
           chainIdHex: "0x61",
           prefix: "tokens",
           bucket: "guildfx-exchange.appspot.com",
@@ -108,7 +108,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index guild tokens triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semvar: "0.1.0-demo",
+      semver: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "tokens",
       bucket: "guildfx-exchange.appspot.com",

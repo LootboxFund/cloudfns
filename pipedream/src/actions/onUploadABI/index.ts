@@ -1,7 +1,7 @@
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { SemanticVersion } from "../../types/semvar.types";
-import { ABIGenericInterface, ChainIDHex } from "../../types/base.types";
+import { SemanticVersion } from "@lootboxfund/helpers"
+import { ABIGenericInterface, ChainIDHex } from "@lootboxfund/helpers"
 
 const action = defineAction({
   name: "onUploadABI",
@@ -25,7 +25,7 @@ const action = defineAction({
     interface ABIWithMetadata {
       metadata: {
         bucket: string;
-        semvar: SemanticVersion;
+        semver: SemanticVersion;
         chainIdHex: ChainIDHex;
         alias: string;
       };
@@ -52,7 +52,7 @@ const action = defineAction({
       alias: `Saving ABI for ${metadata.alias}`,
       credentials,
       fileName: `${metadata.alias}.json`,
-      semvar: "0.1.0-demo",
+      semver: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "abi",
       bucket: "guildfx-exchange.appspot.com",
@@ -63,7 +63,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index ABIs triggered by upload of ${metadata.alias} ABI`,
       credentials,
-      semvar: "0.1.0-demo",
+      semver: "0.1.0-demo",
       chainIdHex: "0x61",
       prefix: "abi",
       bucket: "guildfx-exchange.appspot.com",

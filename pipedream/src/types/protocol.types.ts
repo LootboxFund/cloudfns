@@ -1,5 +1,6 @@
-import { Address, ChainIDDecimal, ChainIDHex, Url } from "./base.types";
-import { TerraSemvar, SemanticVersion } from "./semvar.types";
+import { Address, ChainIDDecimal, ChainIDHex, Url } from "@lootboxfund/helpers";
+import { Terrasemver } from "./semver.types";
+import { SemanticVersion } from '@lootboxfund/helpers';
 
 export interface TokenData {
   address: Address;
@@ -13,10 +14,10 @@ export interface TokenData {
 }
 
 export interface GCloudBucketFragment {
-  semvar: SemanticVersion;
+  semver: SemanticVersion;
   chainIDHex: ChainIDHex;
   prefix: string;
-  bucket: TerraSemvar["gcloud"]["bucketName"];
+  bucket: Terrasemver["gcloud"]["bucketName"];
   data: TokenData;
 }
 
