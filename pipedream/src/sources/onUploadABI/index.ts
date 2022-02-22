@@ -5,7 +5,7 @@
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
 import get from "lodash/get";
-import { Manifest } from "../../index"; 
+import { Manifest } from "../../manifest"; 
 const manifest = Manifest.default
 
 const source = {

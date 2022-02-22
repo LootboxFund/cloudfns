@@ -5,7 +5,7 @@ import { generateRandomLogo } from "../../../api/helpers";
 import { ABIUtilRepresenation } from "@lootboxfund/helpers"
 import { decodeEVMLogs } from "../../../api/evm";
 import { Address } from '@lootboxfund/helpers';
-import { Manifest } from "../../../index"; 
+import { Manifest } from "../../../manifest"; 
 const manifest = Manifest.default
 
 interface Event_GuildCreated {
