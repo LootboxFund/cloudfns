@@ -2,8 +2,20 @@ import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../../api/gbucket";
 import { generateRandomLogo } from "../../../api/helpers";
-import { ABIUtilRepresenation, Event_GuildCreated } from "../../../types";
+import { ABIUtilRepresenation } from "../../../types";
 import { decodeEVMLogs } from "../../../api/evm";
+import { Address } from '@lootboxfund/helpers';
+
+
+interface Event_GuildCreated {
+  contractAddress: Address;
+  guildTokenName: string;
+  guildTokenSymbol: string;
+  dao: Address;
+  developer: Address;
+  creator: Address;
+  guildFactory: Address;
+}
 
 const action = defineAction({
   name: "onGuildCreated",

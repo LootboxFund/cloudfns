@@ -2,13 +2,15 @@ import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { SemanticVersion } from "@lootboxfund/helpers"
 import { ABIGenericInterface, ChainIDHex } from "@lootboxfund/helpers"
+import { Manifest } from "../../index"; 
+const manifest = Manifest.default
 
 const action = defineAction({
-  name: "onUploadABI",
+  key: manifest.pipedream.actions.defineEventABIs.slug,
   description: `
     Saves an ABI.json to GCloud
   `,
-  key: "onUploadABI",
+  name: manifest.pipedream.actions.defineEventABIs.alias,
   version: "0.0.3",
   type: "action",
   props: {

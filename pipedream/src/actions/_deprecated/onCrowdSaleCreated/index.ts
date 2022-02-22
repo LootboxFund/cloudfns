@@ -1,8 +1,23 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../../api/gbucket";
-import { ABIUtilRepresenation, Event_CrowdSaleCreated } from "../../../types";
+import { ABIUtilRepresenation } from "../../../types";
 import { decodeEVMLogs } from "../../../api/evm";
+import { Address } from '@lootboxfund/helpers';
+import { BigNumber } from "ethers";
+
+
+
+interface Event_CrowdSaleCreated {
+  crowdsaleAddress: Address;
+  guildToken: Address;
+  dao: Address;
+  developer: Address;
+  treasury: Address;
+  startingPrice: BigNumber;
+  deployer: Address;
+}
+
 
 const action = defineAction({
   name: "onCrowdSaleCreated",

@@ -1605,13 +1605,28 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@lootboxfund/helpers@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.1.tgz#552953ce8d5b40a5718793a3322a2ada71cf162a"
-  integrity sha512-O9U81vzEowLAwWiuPEU6CnDCFiWIn9KSuhWTZysr4v63P234Hmcl6K15XNgdJYJUcRzRaB2E5w5miS6I+CEHIw==
+"@lootboxfund/helpers@0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.5.tgz#9d02016636131c9ab103e9b39624512aa9f7cb08"
+  integrity sha512-7CM/U3rSCID1VfI6H/aHsLDietUV8o2BAD5cFdvyKUAEUILEWnXP6BYbTmc9DUXXd5VDuRevyS9flaxLG+8oxQ==
   dependencies:
-    axios "^0.25.0"
-    lodash "^4.17.21"
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@lootboxfund/helpers@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.3.tgz#f5e5dad83155d88d2c47c2cc4472e577706aa550"
+  integrity sha512-WbIwLKFGrqKvGvRz/XLTye2bYl2IBfRH15tQkePSgLoxK1ZFVDF4ermEdOSShOY5Sus8uIYYPeeqFfLugCvuSQ==
+  dependencies:
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@lootboxfund/manifest@^0.2.10":
+  version "0.2.10"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.10.tgz#e561cd496016b13a973bb97cab6b038df3d3e91c"
+  integrity sha512-WAtrv3uRas1Zd/Z+22JBuIcZTG9ansz3G+O4S5hCjHLqU1CWAvxEPJhB8fKibVXPVqIeNJtpt4touWa2p6Wm4w==
+  dependencies:
+    "@lootboxfund/helpers" "^0.0.3"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -2167,19 +2182,19 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.11.0.tgz#d61f46d83b2519250e2784daf5b09479a8b41c59"
   integrity sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==
 
+axios@0.25.0, axios@^0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.25.0.tgz#349cfbb31331a9b4453190791760a8d35b093e0a"
+  integrity sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==
+  dependencies:
+    follow-redirects "^1.14.7"
+
 axios@^0.19.0:
   version "0.19.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.19.2.tgz#3ea36c5d8818d0d5f8a8a97a6d36b86cdc00cb27"
   integrity sha512-fjgm5MvRHLhx+osE2xoekY70AhARk3a6hkN+3Io1jc00jtquGvxYlKlsFUhmUET0V5te6CcZI7lcv2Ym61mjHA==
   dependencies:
     follow-redirects "1.5.10"
-
-axios@^0.25.0:
-  version "0.25.0"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.25.0.tgz#349cfbb31331a9b4453190791760a8d35b093e0a"
-  integrity sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==
-  dependencies:
-    follow-redirects "^1.14.7"
 
 babel-jest@^27.5.0:
   version "27.5.0"
@@ -4986,7 +5001,7 @@ lodash.merge@^4.6.2:
   resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
 
-lodash@^4.17.15, lodash@^4.17.21, lodash@^4.7.0:
+lodash@4.17.21, lodash@^4.17.15, lodash@^4.17.21, lodash@^4.7.0:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==

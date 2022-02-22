@@ -1,8 +1,16 @@
 /// <reference path="../../api/helpers.ts"/>
 import { BlockTriggerEvent } from "defender-autotask-utils";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { defineAction } from "ironpipe";
-import { ERC20_TransferEvent } from "../../types";
+import { Address } from '@lootboxfund/helpers';
+
+interface ERC20_TransferEvent {
+  from: Address;
+  to: Address;
+  value: BigNumber;
+}
+
+
 
 const EventParams = ["from", "to", "value"];
 

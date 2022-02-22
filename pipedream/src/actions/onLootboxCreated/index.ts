@@ -1,11 +1,25 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { ABIUtilRepresenation, Event_LootboxCreated } from "../../types";
+
 import { decodeEVMLogs } from "../../api/evm";
+import { Manifest } from "../../index"; 
+import { Address, ABIUtilRepresenation } from '@lootboxfund/helpers';
+import { BigNumber } from "ethers";
+const manifest = Manifest.default
+
+interface Event_LootboxCreated {
+  lootboxName: string;
+  lootbox: Address;
+  issuer: Address;
+  treasury: Address;
+  maxSharesSold: BigNumber;
+  sharePriceUSD: BigNumber;
+}
+
 
 const action = defineAction({
-  name: "onLootboxCreated",
+  name: manifest.pipedream.sources.onLootboxURI.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -14,7 +28,7 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: "onLootboxCreated",
+  key: manifest.pipedream.sources.onLootboxURI.slug,
   version: "0.0.1",
   type: "action",
   props: {

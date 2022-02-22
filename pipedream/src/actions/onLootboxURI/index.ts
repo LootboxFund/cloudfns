@@ -1,14 +1,15 @@
 import { defineAction } from "ironpipe";
+import { ITicketMetadata } from "@lootboxfund/helpers"
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { SemanticVersion } from "../../types/semver.types";
-import { ABIGenericInterface, ChainIDHex } from "../../types/base.types";
+import { Manifest } from "../../index"; 
+const manifest = Manifest.default
 
 const action = defineAction({
-  name: "onLootboxURI",
+  name: manifest.pipedream.sources.onLootboxURI.alias,
   description: `
     Saves a Lootbox URI.json to GCloud
   `,
-  key: "onLootboxURI",
+  key: manifest.pipedream.sources.onLootboxURI.slug,
   version: "0.0.1",
   type: "action",
   props: {
@@ -59,38 +60,3 @@ const action = defineAction({
 
 export = action;
 
-
-interface ITicketMetadata {
-  address: string;
-  name: string | undefined
-  description: string | undefined
-  image: string | undefined
-  backgroundColor: string | undefined
-  backgroundImage: string | undefined
-  lootbox?: {
-    address: string
-    chainIdHex: string
-    chainIdDecimal: string
-    chainName: string
-    targetPaybackDate: Date
-    fundraisingTarget: string
-    basisPointsReturnTarget: string
-    returnAmountTarget: string
-    pricePerShare: string
-    lootboxThemeColor: string
-    transactionHash: string
-    blockNumber: string
-  },
-  socials?: {
-    twitter: string;
-    email: string;
-    instagram: string;
-    tiktok: string;
-    facebook: string;
-    discord: string;
-    youtube: string;
-    snapchat: string;
-    twitch: string;
-    web:string;
-  }
-}

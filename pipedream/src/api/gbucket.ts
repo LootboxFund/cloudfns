@@ -1,5 +1,4 @@
-import { ChainIDHex, SemanticVersion } from "@lootboxfund/helpers"
-import { Terrasemver } from "../types/semver.types";
+import { ChainIDHex, SemanticVersion, Terrasemver } from "@lootboxfund/helpers"
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {
