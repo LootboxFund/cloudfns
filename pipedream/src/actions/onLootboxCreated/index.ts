@@ -3,10 +3,15 @@ import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 
 import { decodeEVMLogs } from "../../api/evm";
-import { Address, ABIUtilRepresenation, GBucketPrefixesEnum, convertHexToDecimal } from '@lootboxfund/helpers';
+import {
+  Address,
+  ABIUtilRepresenation,
+  GBucketPrefixesEnum,
+  convertHexToDecimal,
+} from "@lootboxfund/helpers";
 import { BigNumber } from "ethers";
-import { Manifest } from "../../manifest"; 
-const manifest = Manifest.default
+import { Manifest } from "../../manifest";
+const manifest = Manifest.default;
 
 interface Event_LootboxCreated {
   lootboxName: string;
@@ -16,7 +21,6 @@ interface Event_LootboxCreated {
   maxSharesSold: BigNumber;
   sharePriceUSD: BigNumber;
 }
-
 
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxCreated.alias,
@@ -29,7 +33,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
-  version: "0.0.13",
+  version: "0.0.15",
   type: "action",
   props: {
     googleCloud: {
@@ -62,9 +66,14 @@ const action = defineAction({
     });
     console.log(decodedLogs);
 
+    let lootboxName = "";
+    let lootboxAddr = "";
+
     // save the crowdsale.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
+        lootboxName = ev.lootboxName;
+        lootboxAddr = ev.lootbox;
         return saveFileToGBucket({
           alias: `JSON for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
@@ -91,9 +100,7 @@ const action = defineAction({
         Add its address below to your OpenZeppelin Defender:
         
         ${ev.lootboxName} \n
-        Address: ${
-          ev.lootbox
-        } (import this contract address to OZ Defender) \n
+        Address: ${ev.lootbox} (import this contract address to OZ Defender) \n
 
         lootboxName:      ${ev.lootboxName} \n
         lootbox:          ${ev.lootbox} \n  
@@ -128,6 +135,8 @@ const action = defineAction({
     return {
       json: savedFragmentJSON,
       txt: savedFragmentTXT,
+      name: lootboxName,
+      publicUrl: `https://www.lootbox.fund/demo/0-2-0-demo/lootbox?lootbox=${lootboxAddr}`,
     };
   },
 });
