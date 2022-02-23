@@ -1,8 +1,8 @@
 import { defineAction } from "ironpipe";
-import { ITicketMetadata, GBucketPrefixesEnum } from '@lootboxfund/helpers';
+import { ITicketMetadata, GBucketPrefixesEnum } from "@lootboxfund/helpers";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { Manifest } from "../../index"; 
-const manifest = Manifest.default
+import { Manifest } from "../../manifest";
+const manifest = Manifest.default;
 
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxURI.alias,
@@ -59,4 +59,3 @@ const action = defineAction({
 });
 
 export = action;
-
