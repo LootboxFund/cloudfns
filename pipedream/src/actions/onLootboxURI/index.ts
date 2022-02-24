@@ -10,7 +10,7 @@ const action = defineAction({
     Saves a Lootbox URI.json to GCloud
   `,
   key: manifest.pipedream.actions.onLootboxURI.slug,
-  version: "0.0.13",
+  version: "0.0.17",
   type: "action",
   props: {
     googleCloud: {
@@ -18,6 +18,7 @@ const action = defineAction({
       app: "google_cloud",
     },
     webhookTrigger: {
+      // {{steps.trigger.event}}
       type: "object",
     },
   },
@@ -37,7 +38,7 @@ const action = defineAction({
       alias: `Saving ABI for ${lootboxURIData.name}`,
       credentials,
       fileName: `${lootboxURIData.address}.json`,
-      semver: "0.2.0-sandbox",
+      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum["lootbox-uri"],
       bucket: manifest.googleCloud.bucket.id,
@@ -48,7 +49,7 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
       credentials,
-      semver: "0.2.0-sandbox",
+      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum["lootbox-uri"],
       bucket: manifest.googleCloud.bucket.id,
