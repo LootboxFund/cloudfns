@@ -34,7 +34,7 @@
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",
     "@lootboxfund/helpers": "0.0.5",
-    "@lootboxfund/manifest": "0.2.16",
+    "@lootboxfund/manifest": "0.2.27",
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-autotask-utils": "^1.13.0",

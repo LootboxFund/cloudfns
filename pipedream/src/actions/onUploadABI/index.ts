@@ -1,9 +1,9 @@
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { SemanticVersion, GBucketPrefixesEnum } from '@lootboxfund/helpers';
-import { ABIGenericInterface, ChainIDHex } from "@lootboxfund/helpers"
-import { Manifest } from "../../manifest"; 
-const manifest = Manifest.default
+import { SemanticVersion, GBucketPrefixesEnum } from "@lootboxfund/helpers";
+import { ABIGenericInterface, ChainIDHex } from "@lootboxfund/helpers";
+import { Manifest } from "../../manifest";
+const manifest = Manifest.default;
 
 const action = defineAction({
   key: manifest.pipedream.actions.onUploadABI.slug,
@@ -11,7 +11,7 @@ const action = defineAction({
     Saves an ABI.json to GCloud
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
-  version: "0.0.6",
+  version: "0.0.7",
   type: "action",
   props: {
     googleCloud: {
@@ -19,6 +19,7 @@ const action = defineAction({
       app: "google_cloud",
     },
     webhookTrigger: {
+      // {{steps.trigger.event}}
       type: "object",
     },
   },

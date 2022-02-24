@@ -11,14 +11,17 @@ const autoTaskClient = new AutotaskClient(creds);
 
 const main = async () => {
   try {
+    const pathToFolder = `${process.env.DEFENDER_PATH_TO_LIB_FOLDER}/lib/autotasks/${constants.FOLDER_NAME}`;
     console.log(`
   
   --- ⏳ Uploading auto task handleFactories()...
   
+  ${pathToFolder}
   `);
+
     const x = await autoTaskClient.updateCodeFromFolder(
       constants.AUTO_TASK_ID,
-      `${process.env.DEFENDER_PATH_TO_LIB_FOLDER}/lib/autotasks/${constants.FOLDER_NAME}`
+      pathToFolder
     );
     console.log(x);
     console.log(`
