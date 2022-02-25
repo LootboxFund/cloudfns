@@ -7,7 +7,7 @@ const manifest = Manifest.default;
 const action = defineAction({
   name: manifest.pipedream.actions.defineEventABIs.alias,
   description:
-    "Define the ABI of on-chain events that get emitted by GuildFX smart contracts",
+    "Define the ABI of on-chain events that get emitted by  smart contracts",
   key: manifest.pipedream.actions.defineEventABIs.slug,
   version: "0.0.12",
   type: "action",
