@@ -1605,28 +1605,20 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@lootboxfund/helpers@0.0.10":
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.10.tgz#44a0ff84bdb441544d1e26f8bfc431f9c43cf24c"
-  integrity sha512-5FB0+cZJdx4Va8TcfvWYwll4A8UZWKmOn/BtLgGTDxQar/k2bYPmL9rOzoKAjaOQV9vTp+BmcZXm+Q5Q8etYHQ==
+"@lootboxfund/helpers@0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.15.tgz#f3e96bad78e43a84448b401496bff1ff2602820f"
+  integrity sha512-Sm7pN8nRk1Ja7beln5DbpKluhoUXZLpURXU4sNLn3tNOCkwiSlsDSlAoajY9BXgh+lDUfEKNXMtJn66KMSnWig==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@lootboxfund/helpers@0.0.12":
-  version "0.0.12"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.12.tgz#64a845aa86271310a5b5ca5ffd24002cd0c4c04d"
-  integrity sha512-lmawAQdIpAwkOcgQh2wpXIZZON8nbD25c8yxA1ttlf+UfwJ5bQRIF/VLx6wf4sCcIjkpD8aw7LHve/kJEXVZfg==
+"@lootboxfund/manifest@0.2.31":
+  version "0.2.31"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.31.tgz#54c484196aa6ec1d078de3471de690aa0c5da908"
+  integrity sha512-KFPwXBYnVRlfWp99HFCVacK6IvYJiM04xLsd3+JSn6MCf/GqyGjV8CoGTT0Yy+Vn1GxwoSt0jkWkqD331S2DRw==
   dependencies:
-    axios "0.25.0"
-    lodash "4.17.21"
-
-"@lootboxfund/manifest@0.2.29":
-  version "0.2.29"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.29.tgz#532fe8c52113e698ba3da395973a97752e55e11e"
-  integrity sha512-5TLeQLjYpb8kalZHnQNJ2K6mfpDNYjVbsbvTYnz+o3NC+1rG8EfNGWWsEFT/XFNpE5YJAgNK3TbIYyfQVwwMGA==
-  dependencies:
-    "@lootboxfund/helpers" "0.0.12"
+    "@lootboxfund/helpers" "0.0.15"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

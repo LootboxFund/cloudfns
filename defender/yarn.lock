@@ -1776,28 +1776,20 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lootboxfund/helpers@0.0.12":
-  version "0.0.12"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.12.tgz#64a845aa86271310a5b5ca5ffd24002cd0c4c04d"
-  integrity sha512-lmawAQdIpAwkOcgQh2wpXIZZON8nbD25c8yxA1ttlf+UfwJ5bQRIF/VLx6wf4sCcIjkpD8aw7LHve/kJEXVZfg==
+"@lootboxfund/helpers@0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.15.tgz#f3e96bad78e43a84448b401496bff1ff2602820f"
+  integrity sha512-Sm7pN8nRk1Ja7beln5DbpKluhoUXZLpURXU4sNLn3tNOCkwiSlsDSlAoajY9BXgh+lDUfEKNXMtJn66KMSnWig==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@lootboxfund/helpers@0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.5.tgz#9d02016636131c9ab103e9b39624512aa9f7cb08"
-  integrity sha512-7CM/U3rSCID1VfI6H/aHsLDietUV8o2BAD5cFdvyKUAEUILEWnXP6BYbTmc9DUXXd5VDuRevyS9flaxLG+8oxQ==
+"@lootboxfund/manifest@0.2.31":
+  version "0.2.31"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.31.tgz#54c484196aa6ec1d078de3471de690aa0c5da908"
+  integrity sha512-KFPwXBYnVRlfWp99HFCVacK6IvYJiM04xLsd3+JSn6MCf/GqyGjV8CoGTT0Yy+Vn1GxwoSt0jkWkqD331S2DRw==
   dependencies:
-    axios "0.25.0"
-    lodash "4.17.21"
-
-"@lootboxfund/manifest@0.2.27":
-  version "0.2.27"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.27.tgz#78c98fb836413f4b7ac6419053f9e8c832577349"
-  integrity sha512-pJmd4s56WbXn+EQS8NrqFbAw0mGP9bC+QiYawrpa8P6yNIWxgwudom48shWo0QnwbZorNtTiX20F3Ewb6VQPFg==
-  dependencies:
-    "@lootboxfund/helpers" "0.0.12"
+    "@lootboxfund/helpers" "0.0.15"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
