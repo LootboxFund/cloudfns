@@ -10,19 +10,40 @@ import {
   chainIdHexToName,
   ChainSlugs,
 } from "@lootboxfund/helpers";
-import { $Horizontal } from "../Generics";
 
-export interface TicketProps {
-  backgroundImage: Url;
-  logoImage: Url;
-  themeColor: string;
-  name: string;
-  ticketID: string;
-  lootboxAddress: ContractAddress;
-  chainIdHex: ChainIDHex;
-  numShares: string;
-}
-export const Ticket = (props: TicketProps) => {
+const SPACING_VALS = [4, 8, 16, 24, 48];
+
+const $Horizontal = styled.div`
+  display: flex;
+  ${(props) => props.flex && `flex: ${props.flex};`};
+  ${(props) =>
+    props.justifyContent && `justify-content: ${props.justifyContent};`};
+  ${(props) => props.verticalCenter && "align-items: center;"};
+  ${(props) => props.baseline && "align-items: baseline;"};
+  ${(props) => props.flexWrap && "flex-wrap: wrap;"};
+  ${(props) => props.alignItems && `align-items: ${props.alignItems};`};
+  ${(props) => props.height && `height: ${props.height};`}
+  ${(props) => props.width && `width: ${props.width};`}
+  ${(props) => props.overflowHidden && `overflow: hidden;`}
+  ${(props) => props.position && `position: ${props.position};`}
+  
+  & > *:not(:last-child) {
+    margin-right: ${(props) =>
+      props.spacing && `${SPACING_VALS[props.spacing - 1]}px`};
+  }
+`;
+
+// interface TicketProps {
+//   backgroundImage: Url;
+//   logoImage: Url;
+//   themeColor: string;
+//   name: string;
+//   ticketID: string;
+//   lootboxAddress: ContractAddress;
+//   chainIdHex: ChainIDHex;
+//   numShares: string;
+// }
+const Ticket = (props) => {
   const {
     backgroundImage,
     logoImage,
@@ -34,7 +55,7 @@ export const Ticket = (props: TicketProps) => {
     themeColor,
   } = props;
   const networkLogo =
-    BLOCKCHAINS[chainIdHexToSlug(chainIdHex) as ChainSlugs].currentNetworkLogo;
+    BLOCKCHAINS[chainIdHexToSlug(chainIdHex)].currentNetworkLogo;
   const networkName = chainIdHexToName(chainIdHex);
   return (
     <section style={StyleTicketContainer({ backgroundImage })}>
@@ -71,18 +92,14 @@ export const Ticket = (props: TicketProps) => {
   );
 };
 
-const StyleTicketContainer = ({
-  backgroundImage,
-}: {
-  backgroundImage: string;
-}) => ({
+const StyleTicketContainer = ({ backgroundImage }) => ({
   height: "100%",
   width: "100%",
   maxHeight: "700px",
   maxWidth: "500px",
-  display: "flex" as "flex",
-  flexDirection: "column" as "column",
-  justifyContent: "center" as "center",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
   gap: "10px",
   border: "0px solid transparent",
   borderRadius: "20px",
@@ -94,13 +111,7 @@ const StyleTicketContainer = ({
   backgroundPosition: "center",
 });
 
-const StyleTicketLogo = ({
-  backgroundImage,
-  backgroundShadowColor,
-}: {
-  backgroundImage: string;
-  backgroundShadowColor: string;
-}) => ({
+const StyleTicketLogo = ({ backgroundImage, backgroundShadowColor }) => ({
   width: "100%",
   height: "100%",
   maxWidth: "300px",
@@ -113,15 +124,15 @@ const StyleTicketLogo = ({
   filter: `drop-shadow(0px 0px 22px ${backgroundShadowColor})`,
   backgroundSize: "cover",
   backgroundPosition: "center",
-  display: "flex" as "flex",
-  flexDirection: "column" as "column",
-  justifyContent: "center" as "center",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
 });
 
 const StyleTicketTag = () => ({
   width: "85%",
-  display: "flex" as "flex",
-  flexDirection: "row" as "row",
+  display: "flex",
+  flexDirection: "row",
   justifyContent: "space-around",
   background: "rgba(0, 0, 0, 0.5)",
   borderRadius: "10px",
@@ -136,8 +147,8 @@ const StyleTagText = () => ({
   fontWeight: 800,
   fontSize: "2rem",
   lineHeight: "2.2rem",
-  textAlign: "center" as "center",
-  position: "relative" as "relative",
+  textAlign: "center",
+  position: "relative",
   color: "#ffffff",
   width: "100%",
   maxWidth: "50%",
@@ -147,7 +158,7 @@ const StyleTagText = () => ({
 
 const StyleTicketInfo = () => ({
   display: "flex",
-  flexDirection: "column" as "column",
+  flexDirection: "column",
   justifyContent: "space-evenly",
   alignItems: "center",
   flex: 1,
@@ -160,8 +171,8 @@ const StyleTicketIDText = () => ({
   fontWeight: 800,
   fontSize: "3rem",
   lineHeight: "3rem",
-  textAlign: "center" as "center",
-  position: "relative" as "relative",
+  textAlign: "center",
+  position: "relative",
   color: "#ffffff",
   width: "100%",
   maxWidth: "50%",
@@ -173,8 +184,8 @@ const StyleTagInfoText = () => ({
   fontWeight: 600,
   fontSize: "1.2rem",
   lineHeight: "1.3rem",
-  textAlign: "center" as "center",
-  position: "relative" as "relative",
+  textAlign: "center",
+  position: "relative",
   color: "#ffffff",
   width: "100%",
 });
@@ -187,9 +198,9 @@ const StyleTagAddressFooter = () => ({
   color: "rgba(256, 256, 256, 0.6)",
   height: "auto",
   display: "flex",
-  flexDirection: "column" as "column",
-  justifyContent: "space-evenly" as "space-evenly",
-  alignItems: "center" as "center",
+  flexDirection: "column",
+  justifyContent: "space-evenly",
+  alignItems: "center",
   backgroundColor: "rgba(0, 0, 0, 0.5)",
   padding: "5px",
 });
@@ -200,4 +211,4 @@ const StyleDivider = () => ({
   height: "100%",
 });
 
-export default Ticket;
+module.exports = Ticket;

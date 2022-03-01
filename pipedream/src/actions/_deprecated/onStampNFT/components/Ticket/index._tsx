@@ -10,9 +10,49 @@ import {
   chainIdHexToName,
   ChainSlugs,
 } from "@lootboxfund/helpers";
-import { $Horizontal } from "../Generics";
 
-export interface TicketProps {
+interface HorizontalProps {
+  readonly justifyContent?:
+    | "flex-start"
+    | "center"
+    | "space-evenly"
+    | "space-between"
+    | "flex-end";
+  readonly verticalCenter?: boolean;
+  readonly baseline?: boolean;
+  readonly spacing?: 1 | 2 | 3 | 4 | 5;
+  readonly flex?: number;
+  readonly flexWrap?: boolean;
+  readonly alignItems?: "flex-start" | "center" | "flex-end";
+  readonly height?: string;
+  readonly width?: string;
+  readonly overflowHidden?: boolean;
+  readonly position?: "absolute" | "relative";
+}
+const SPACING_VALS = [4, 8, 16, 24, 48];
+
+const $Horizontal = styled.div<HorizontalProps>`
+  display: flex;
+  ${(props) => props.flex && `flex: ${props.flex};`};
+  ${(props) =>
+    props.justifyContent && `justify-content: ${props.justifyContent};`};
+  ${(props) => props.verticalCenter && "align-items: center;"};
+  ${(props) => props.baseline && "align-items: baseline;"};
+  ${(props) => props.flexWrap && "flex-wrap: wrap;"};
+  ${(props) => props.alignItems && `align-items: ${props.alignItems};`};
+  ${(props) => props.height && `height: ${props.height};`}
+  ${(props) => props.width && `width: ${props.width};`}
+  ${(props) => props.overflowHidden && `overflow: hidden;`}
+  ${(props) => props.position && `position: ${props.position};`}
+  
+
+  & > *:not(:last-child) {
+    margin-right: ${(props) =>
+      props.spacing && `${SPACING_VALS[props.spacing - 1]}px`};
+  }
+`;
+
+interface TicketProps {
   backgroundImage: Url;
   logoImage: Url;
   themeColor: string;
@@ -22,7 +62,7 @@ export interface TicketProps {
   chainIdHex: ChainIDHex;
   numShares: string;
 }
-export const Ticket = (props: TicketProps) => {
+const Ticket = (props: TicketProps) => {
   const {
     backgroundImage,
     logoImage,
@@ -200,4 +240,4 @@ const StyleDivider = () => ({
   height: "100%",
 });
 
-export default Ticket;
+export = Ticket;

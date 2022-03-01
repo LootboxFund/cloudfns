@@ -1,5 +1,5 @@
-const express = require("express");
-const puppeteer = require("puppeteer");
+import express from "express";
+import puppeteer from "puppeteer";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const BROWSERLESS_API = process.env.BROWSERLESS_API;
 
@@ -14,7 +14,7 @@ const getBrowser = () =>
     : // Run the browser locally while in development
       puppeteer.launch();
 
-app.get("/image", async (req, res) => {
+app.get("/image", async (req: express.Request, res: express.Response) => {
   let browser = null;
 
   try {

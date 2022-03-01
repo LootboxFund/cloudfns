@@ -1,4 +1,9 @@
-import { ChainIDHex, SemanticVersion, GBucketPrefixes, GCloudBucket } from "@lootboxfund/helpers"
+import {
+  ChainIDHex,
+  SemanticVersion,
+  GBucketPrefixes,
+  GCloudBucket,
+} from "@lootboxfund/helpers";
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {
@@ -16,6 +21,52 @@ interface GBucketSaveFragProps {
   prefix: GBucketPrefixes;
   bucket: GCloudBucket;
 }
+interface GBucketSaveLocalProps {
+  alias: string;
+  localFilePath: string;
+  credentials: GBucketCreds;
+  fileName: string;
+  semver: SemanticVersion;
+  chainIdHex: ChainIDHex;
+  prefix: GBucketPrefixes;
+  bucket: GCloudBucket;
+}
+
+export const saveLocalFileToGBucket = async ({
+  alias,
+  credentials,
+  localFilePath,
+  fileName,
+  semver,
+  chainIdHex,
+  prefix,
+  bucket,
+}: GBucketSaveLocalProps) => {
+  const { Storage } = require("@google-cloud/storage");
+  const storage = new Storage({
+    projectId: credentials.project_id,
+    credentials: {
+      client_email: credentials.client_email,
+      private_key: credentials.private_key,
+    },
+  });
+  const filePath = `v/${semver}/${chainIdHex}/${prefix}/${fileName}`;
+  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
+    filePath
+  )}?alt=media \n`;
+  console.log(
+    `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
+  );
+  await storage.bucket(bucket).upload(localFilePath, {
+    destination: filePath,
+  });
+  console.log(`
+  
+  ✅ File uploaded
+  
+  `);
+};
+
 export const saveFileToGBucket = async ({
   alias,
   credentials,

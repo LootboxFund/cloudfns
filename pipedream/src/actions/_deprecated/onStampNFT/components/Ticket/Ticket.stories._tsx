@@ -1,6 +1,5 @@
 import React from "react";
 import Ticket from ".";
-import { $CardViewport } from "../Generics";
 import { useEffect } from "react";
 import { ContractAddress } from "@lootboxfund/helpers";
 
@@ -20,7 +19,7 @@ const Template = () => {
   }, []);
 
   return (
-    <$CardViewport width="500px" height="700px">
+    <div style={{ width: "500px", height: "700px" }}>
       <Ticket
         ticketID={ticketID}
         backgroundImage="https://i.pinimg.com/originals/81/58/59/8158595c37f199953cf6a13d7034d258.png"
@@ -31,7 +30,7 @@ const Template = () => {
         chainIdHex="0x38"
         numShares="180.02"
       />
-    </$CardViewport>
+    </div>
   );
 };
 
