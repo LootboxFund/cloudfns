@@ -22,6 +22,8 @@
     "@types/lodash": "^4.14.178",
     "@types/react": "^17.0.15",
     "@types/react-dom": "^17.0.11",
+    "@types/styled-components": "^5.1.23",
+    "@types/tmp": "^0.2.3",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
     "babel-loader": "^8.2.2",
@@ -39,17 +41,22 @@
     "deploy:sources:onCreateLootbox": "bash ./deploy/upload-source-onCreateLootbox.sh",
     "deploy:sources:onLootboxURI": "bash ./deploy/upload-source-onLootboxURI.sh",
     "deploy:sources:onUploadABI": "bash ./deploy/upload-source-onUploadABI.sh",
+    "deploy:sources:onStampNFT": "bash ./deploy/upload-source-onStampNFT.sh",
     "deploy:actions": "bash ./deploy/upload-actions.sh",
     "deploy:dev": "bash ./upload-pipedream.sh"
   },
   "dependencies": {
-    "@lootboxfund/helpers": "0.0.15",
-    "@lootboxfund/manifest": "0.2.31",
+    "@lootboxfund/helpers": "0.0.18",
+    "@lootboxfund/manifest": "0.2.35",
     "axios": "^0.25.0",
     "defender-autotask-utils": "^1.13.0",
     "eslint": "^8.8.0",
     "ethers": "^5.5.4",
+    "import": "^0.0.6",
     "lodash": "^4.17.21",
+    "node-html-to-image": "^3.2.4",
+    "styled-components": "^5.3.3",
+    "tmp-promise": "^3.0.3",
     "web3": "^1.7.0"
   }
 }
