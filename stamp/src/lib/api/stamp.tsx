@@ -49,7 +49,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
     const imagePath = await saveLocalFileToGBucket({
       alias: `Image for ${props.name}`,
       localFilePath: path,
-      fileName: `${props.name}.txt`,
+      fileName: `${props.lootboxAddress}.png`,
       semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum.lootbox,

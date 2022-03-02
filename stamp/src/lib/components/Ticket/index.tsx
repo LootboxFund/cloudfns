@@ -64,7 +64,7 @@ export const Ticket = (props: TicketProps) => {
           {lootboxAddress}
           <img
             src={networkLogo}
-            style={{ width: "1.3rem", height: "1.3rem", marginLeft: "5px" }}
+            style={{ width: "1.2rem", height: "1.2rem", marginLeft: "5px" }}
           />
         </$Horizontal>
       </div>
@@ -183,8 +183,8 @@ const StyleTagInfoText = () => ({
 const StyleTagAddressFooter = () => ({
   fontFamily: "sans-serif",
   fontStyle: "normal",
-  fontWeight: 500,
-  fontSize: "1.2rem",
+  fontWeight: 600,
+  fontSize: "1rem",
   color: "rgba(256, 256, 256, 0.6)",
   height: "auto",
   display: "flex",

@@ -1,26 +1,16 @@
-import path from "path";
-import { countLengthOfApp } from "./App";
 import * as express from "express";
 import { generateImage } from "./lib/api/stamp";
 import { ContractAddress } from "@lootboxfund/helpers";
+import { TicketProps } from "./lib/components/Ticket";
 
 const router = express.Router();
 
-router.get("/api/hello", (req, res, next) => {
-  res.json("World");
+router.get("/", (req, res, next) => {
+  res.json("Hello World");
 });
 
-router.get("/demo/render", (req, res, next) => {
-  const charCount = countLengthOfApp();
-  res.json({
-    message: "You hit the render endpoint",
-    length: charCount,
-  });
-});
-
-router.get("/demo/snap", async (req, res, next) => {
+router.get("/demo", async (req, res, next) => {
   const tempLocalPath = `/tmp/image.png`;
-  // const tempLocalPath = "./image.png";
   const linkToImage = await generateImage(tempLocalPath, {
     ticketID: "0",
     backgroundImage:
@@ -39,5 +29,42 @@ router.get("/demo/snap", async (req, res, next) => {
     image: linkToImage,
   });
 });
+
+router.post(
+  "/stamp/new/lootbox",
+  async (req: express.Request, res: express.Response, next) => {
+    const { secret } = req.headers;
+    if (secret !== "mysecret") {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+    const tempLocalPath = `/tmp/image.png`;
+    const {
+      ticketID,
+      backgroundImage,
+      logoImage,
+      themeColor,
+      name,
+      lootboxAddress,
+      chainIdHex,
+      numShares,
+    }: TicketProps = req.body;
+    const linkToImage = await generateImage(tempLocalPath, {
+      ticketID,
+      backgroundImage,
+      logoImage,
+      themeColor,
+      name,
+      lootboxAddress,
+      chainIdHex,
+      numShares,
+    });
+    res.json({
+      message: "You hit the snap endpoint",
+      stamp: linkToImage,
+    });
+  }
+);
 
 export default router;
