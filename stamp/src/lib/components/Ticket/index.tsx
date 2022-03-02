@@ -1,4 +1,4 @@
-import react from "react";
+import * as React from "react";
 import styled from "styled-components";
 import {
   ContractAddress,
@@ -11,6 +11,7 @@ import {
   ChainSlugs,
 } from "@lootboxfund/helpers";
 import { $Horizontal } from "../Generics";
+import ReactDOMServer from "react-dom/server";
 
 export interface TicketProps {
   backgroundImage: Url;
