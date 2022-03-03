@@ -1,9 +1,9 @@
 import {
   ChainIDHex,
-  SemanticVersion,
   GBucketPrefixes,
   GCloudBucket,
 } from "@lootboxfund/helpers";
+import { SemanticVersion } from "@lootboxfund/manifest";
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {
@@ -37,7 +37,6 @@ export const saveLocalFileToGBucket = async ({
   credentials,
   localFilePath,
   fileName,
-  semver,
   chainIdHex,
   prefix,
   bucket,
@@ -50,7 +49,7 @@ export const saveLocalFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${semver}/${chainIdHex}/${prefix}/${fileName}`;
+  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
@@ -72,7 +71,6 @@ export const saveFileToGBucket = async ({
   credentials,
   fileName,
   data,
-  semver,
   chainIdHex,
   prefix,
   bucket,
@@ -86,7 +84,7 @@ export const saveFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${semver}/${chainIdHex}/${prefix}/${fileName}`;
+  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
@@ -102,7 +100,6 @@ export const saveFileToGBucket = async ({
 export const indexGBucketRoute = async ({
   alias,
   credentials,
-  semver,
   chainIdHex,
   prefix,
   bucket,
@@ -116,14 +113,14 @@ export const indexGBucketRoute = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${semver}/${chainIdHex}/${prefix}/index.json`;
+  const filePath = `v/${chainIdHex}/${prefix}/index.json`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
 
   // Lists files in the bucket, filtered by a prefix
   const options = {
-    prefix: `v/${semver}/${chainIdHex}/${prefix}/`,
+    prefix: `v/${chainIdHex}/${prefix}/`,
     delimiter: "/",
   };
   const result = await storage.bucket(bucket).getFiles(options);

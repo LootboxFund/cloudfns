@@ -29,12 +29,12 @@
   "scripts": {
     "build": "tsc --skipLibCheck",
     "test": "jest --verbose --watch",
-    "deploy": "bash ./upload-defender.sh"
+    "deploy": "yarn build && bash ./upload-defender.sh"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",
-    "@lootboxfund/helpers": "0.0.15",
-    "@lootboxfund/manifest": "0.2.31",
+    "@lootboxfund/helpers": "0.0.25",
+    "@lootboxfund/manifest": "0.2.42",
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-autotask-utils": "^1.13.0",

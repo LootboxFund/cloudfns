@@ -11,6 +11,7 @@ import {
 } from "@lootboxfund/helpers";
 import { BigNumber } from "ethers";
 import { Manifest } from "../../manifest";
+import { encodeURISafe } from "../../api/helpers";
 const manifest = Manifest.default;
 
 interface Event_LootboxCreated {
@@ -33,7 +34,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
-  version: "0.0.16",
+  version: "0.0.18",
   type: "action",
   props: {
     googleCloud: {
@@ -41,9 +42,11 @@ const action = defineAction({
       app: "google_cloud",
     },
     webhookTrigger: {
+      // {{steps.trigger.event}}
       type: "object",
     },
     eventABI: {
+      // {{steps.defineEventABIs.$return_value.LootboxFactory}}
       type: "object",
     },
   },
@@ -132,11 +135,17 @@ const action = defineAction({
       prefix: GBucketPrefixesEnum.lootbox,
       bucket: manifest.googleCloud.bucket.id,
     });
+    // Lootbox NFT ticket image
+    const filePath = `v/${manifest.chain.chainIDHex}/nft-ticket-stamp/${lootboxAddr}.png`;
+    const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${
+      manifest.googleCloud.bucket.id
+    }/o/${encodeURISafe(filePath)}?alt=media`;
     return {
       json: savedFragmentJSON,
       txt: savedFragmentTXT,
       name: lootboxName,
-      publicUrl: `https://www.lootbox.fund/demo/0-2-0-demo/lootbox?lootbox=${lootboxAddr}`,
+      publicUrl: `https://www.lootbox.fund/demo/0-2-3-demo/lootbox?lootbox=${lootboxAddr}`,
+      image: downloadablePath,
     };
   },
 });
