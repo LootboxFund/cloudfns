@@ -1800,10 +1800,10 @@
   dependencies:
     "@lootboxfund/helpers" "0.0.20"
 
-"@lootboxfund/manifest@0.2.42":
-  version "0.2.42"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.42.tgz#d395f2fc299ddf51eacb7aface3994b990d27ff9"
-  integrity sha512-KSJwoUEt06teSaaeaOepo6x/hjfaXSvaHxvdQ3tqlgVKcUuS85/YK55tTx3ZaFroM8hR0crYdx3WoIttQukzxQ==
+"@lootboxfund/manifest@0.2.44":
+  version "0.2.44"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.44.tgz#06e6d1bfff980a52431fe2eb27d57aaf34b65be8"
+  integrity sha512-LJy/ZnyYVOMuQ2b5IJsZo7JOcvOyscxAmuQibQARwksuJEboB7bzU2vYoiaaHZyRITeCT4E6vRIv1LuKM3GUxg==
   dependencies:
     "@lootboxfund/helpers" "0.0.25"
 
