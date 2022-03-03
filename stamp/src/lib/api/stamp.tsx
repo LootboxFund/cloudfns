@@ -52,7 +52,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
       fileName: `${props.lootboxAddress}.png`,
       semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum.lootbox,
+      prefix: GBucketPrefixesEnum["nft-ticket-stamp"],
       bucket: manifest.googleCloud.bucket.id,
     });
     return imagePath;

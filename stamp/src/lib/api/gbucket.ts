@@ -1,19 +1,14 @@
 import {
   ChainIDHex,
-  SemanticVersion,
   GBucketPrefixes,
   GCloudBucket,
 } from "@lootboxfund/helpers";
+import { SemanticVersion } from "@lootboxfund/manifest";
 const { Storage } = require("@google-cloud/storage");
 
 const encodeURISafe = (stringFragment: string) =>
   encodeURIComponent(stringFragment).replace(/'/g, "%27").replace(/"/g, "%22");
 
-// type GBucketCreds = {
-//   project_id: string;
-//   client_email: string;
-//   private_key: string;
-// };
 interface GBucketSaveLocalProps {
   alias: string;
   localFilePath: string;
@@ -33,15 +28,8 @@ export const saveLocalFileToGBucket = async ({
   prefix,
   bucket,
 }: GBucketSaveLocalProps) => {
-  // const storage = new Storage({
-  //   projectId: credentials.project_id,
-  //   credentials: {
-  //     client_email: credentials.client_email,
-  //     private_key: credentials.private_key,
-  //   },
-  // });
   const storage = new Storage();
-  const filePath = `v/${semver}/${chainIdHex}/${prefix}/${fileName}`;
+  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media`;

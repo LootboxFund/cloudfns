@@ -1776,20 +1776,36 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lootboxfund/helpers@0.0.15":
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.15.tgz#f3e96bad78e43a84448b401496bff1ff2602820f"
-  integrity sha512-Sm7pN8nRk1Ja7beln5DbpKluhoUXZLpURXU4sNLn3tNOCkwiSlsDSlAoajY9BXgh+lDUfEKNXMtJn66KMSnWig==
+"@lootboxfund/helpers@0.0.20":
+  version "0.0.20"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.20.tgz#ae3d2c869c0e7b0e50e48eac69e5e76f42f490fc"
+  integrity sha512-5ExsiJi9+27wQ4jzYz/9cZlEQ/CYSjfGwd/8kSgVS06Z+zli7VsyNms69VPrIfvRvUnkrokkOG+ssIL2+KhyMg==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@lootboxfund/manifest@0.2.31":
-  version "0.2.31"
-  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.31.tgz#54c484196aa6ec1d078de3471de690aa0c5da908"
-  integrity sha512-KFPwXBYnVRlfWp99HFCVacK6IvYJiM04xLsd3+JSn6MCf/GqyGjV8CoGTT0Yy+Vn1GxwoSt0jkWkqD331S2DRw==
+"@lootboxfund/helpers@0.0.25":
+  version "0.0.25"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/helpers/-/helpers-0.0.25.tgz#3c6743da616f2d8ff5aaccf8584339b3cbcf78f0"
+  integrity sha512-o/GonTET0Uzk8+/g1AGxseK15uVIieFlSvc/scC38MM0Wu89p/0PSCluY24xyMHWDcZyeuYvpx0CEUMgISe+6g==
   dependencies:
-    "@lootboxfund/helpers" "0.0.15"
+    "@lootboxfund/manifest" "0.2.38"
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@lootboxfund/manifest@0.2.38":
+  version "0.2.38"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.38.tgz#4753adbe4f46f00cf8e63e73cccf75a379e14b94"
+  integrity sha512-Ps2Ah0UKrq3H3aMLFNuFt4gLCvFXKuffngT7AeN/uJE1GqxM6CvOFAVA9v3nMWlIkVQpS/dP7mLcvoPs4J9ctw==
+  dependencies:
+    "@lootboxfund/helpers" "0.0.20"
+
+"@lootboxfund/manifest@0.2.42":
+  version "0.2.42"
+  resolved "https://registry.yarnpkg.com/@lootboxfund/manifest/-/manifest-0.2.42.tgz#d395f2fc299ddf51eacb7aface3994b990d27ff9"
+  integrity sha512-KSJwoUEt06teSaaeaOepo6x/hjfaXSvaHxvdQ3tqlgVKcUuS85/YK55tTx3ZaFroM8hR0crYdx3WoIttQukzxQ==
+  dependencies:
+    "@lootboxfund/helpers" "0.0.25"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

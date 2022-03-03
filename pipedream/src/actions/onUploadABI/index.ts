@@ -1,8 +1,9 @@
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { SemanticVersion, GBucketPrefixesEnum } from "@lootboxfund/helpers";
+import { GBucketPrefixesEnum } from "@lootboxfund/helpers";
 import { ABIGenericInterface, ChainIDHex } from "@lootboxfund/helpers";
 import { Manifest } from "../../manifest";
+import { SemanticVersion } from "@lootboxfund/manifest";
 const manifest = Manifest.default;
 
 const action = defineAction({
