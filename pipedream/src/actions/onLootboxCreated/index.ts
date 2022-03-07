@@ -34,7 +34,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
-  version: "0.0.18",
+  version: "0.0.19",
   type: "action",
   props: {
     googleCloud: {
@@ -140,12 +140,19 @@ const action = defineAction({
     const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${
       manifest.googleCloud.bucket.id
     }/o/${encodeURISafe(filePath)}?alt=media`;
+    // Lootbox URI
+    const path = encodeURISafe(
+      `v/${manifest.chain.chainIDHex}/lootbox-uri/${lootboxAddr}.json`
+    );
+    const pathToUri = `https://firebasestorage.googleapis.com/v0/b/guildfx-exchange.appspot.com/o/${path}?alt=media`;
     return {
       json: savedFragmentJSON,
       txt: savedFragmentTXT,
       name: lootboxName,
       publicUrl: `https://www.lootbox.fund/demo/0-2-3-demo/lootbox?lootbox=${lootboxAddr}`,
       image: downloadablePath,
+      address: lootboxAddr,
+      lootboxUri: pathToUri,
     };
   },
 });
