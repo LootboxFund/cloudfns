@@ -1,6 +1,6 @@
 import { EthLog } from "defender-autotask-utils";
 import { ethers } from "ethers";
-import { ABIUtilRepresenation } from '@lootboxfund/helpers';
+import { ABIUtilRepresenation } from '@wormgraph/helpers';
 
 export const decodeEVMLogs = <T>({
   eventName,

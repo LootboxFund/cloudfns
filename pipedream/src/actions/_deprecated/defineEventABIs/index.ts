@@ -1,5 +1,5 @@
 import { defineAction } from "ironpipe";
-import { ABIUtilRepresenation } from "@lootboxfund/helpers"
+import { ABIUtilRepresenation } from "@wormgraph/helpers"
 
 const action = defineAction({
   name: "defineEventABIs",

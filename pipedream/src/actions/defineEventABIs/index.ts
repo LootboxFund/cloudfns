@@ -1,5 +1,5 @@
 import { defineAction } from "ironpipe";
-import { ABIUtilRepresenation } from "@lootboxfund/helpers";
+import { ABIUtilRepresenation } from "@wormgraph/helpers";
 
 import { Manifest } from "../../manifest";
 const manifest = Manifest.default;

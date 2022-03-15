@@ -1,5 +1,5 @@
 import { defineAction } from "ironpipe";
-import { ITicketMetadata, GBucketPrefixesEnum } from "@lootboxfund/helpers";
+import { ITicketMetadata, GBucketPrefixesEnum } from "@wormgraph/helpers";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { Manifest } from "../../manifest";
 const manifest = Manifest.default;

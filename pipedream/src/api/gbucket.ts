@@ -2,8 +2,8 @@ import {
   ChainIDHex,
   GBucketPrefixes,
   GCloudBucket,
-} from "@lootboxfund/helpers";
-import { SemanticVersion } from "@lootboxfund/manifest";
+} from "@wormgraph/helpers";
+import { SemanticVersion } from "@wormgraph/manifest";
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {

@@ -1,9 +1,9 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { indexGBucketRoute, saveFileToGBucket } from "../../../api/gbucket";
-import { ABIUtilRepresenation } from "@lootboxfund/helpers"
+import { ABIUtilRepresenation } from "@wormgraph/helpers"
 import { decodeEVMLogs } from "../../../api/evm";
-import { Address } from '@lootboxfund/helpers';
+import { Address } from '@wormgraph/helpers';
 import { BigNumber } from "ethers";
 import { Manifest } from "../../../manifest"; 
 const manifest = Manifest.default

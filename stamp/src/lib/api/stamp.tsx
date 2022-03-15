@@ -4,7 +4,7 @@ import * as ReactDOM from "react-dom";
 import axios from "axios";
 import nodeHtmlToImage from "node-html-to-image";
 import Ticket, { TicketProps } from "../components/Ticket";
-import { ContractAddress, GBucketPrefixesEnum } from "@lootboxfund/helpers";
+import { ContractAddress, GBucketPrefixesEnum } from "@wormgraph/helpers";
 import { saveLocalFileToGBucket } from "./gbucket";
 import { manifest } from "../../manifest";
 

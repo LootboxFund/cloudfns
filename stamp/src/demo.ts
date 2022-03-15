@@ -1,4 +1,4 @@
-import { ContractAddress } from "@lootboxfund/helpers";
+import { ContractAddress } from "@wormgraph/helpers";
 import { generateImage } from "./lib/api/stamp";
 
 const demo = async () => {

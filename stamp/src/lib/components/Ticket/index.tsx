@@ -9,7 +9,7 @@ import {
   chainIdHexToSlug,
   chainIdHexToName,
   ChainSlugs,
-} from "@lootboxfund/helpers";
+} from "@wormgraph/helpers";
 import { $Horizontal } from "../Generics";
 import ReactDOMServer from "react-dom/server";
 

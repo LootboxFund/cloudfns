@@ -1,1 +1,1 @@
-export { latest as Manifest } from "@lootboxfund/manifest";
+export { latest as Manifest } from "@wormgraph/manifest";

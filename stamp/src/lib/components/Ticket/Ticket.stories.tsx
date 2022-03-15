@@ -2,7 +2,7 @@ import React from "react";
 import Ticket from ".";
 import { $CardViewport } from "../Generics";
 import { useEffect } from "react";
-import { ContractAddress } from "@lootboxfund/helpers";
+import { ContractAddress } from "@wormgraph/helpers";
 
 export default {
   title: "Ticket",
