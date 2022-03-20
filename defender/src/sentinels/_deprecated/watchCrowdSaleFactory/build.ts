@@ -24,6 +24,7 @@ AutoTask ID: ${constants.AUTO_TASK_ID}
 Address: ${constants.SENTINAL_WATCH_ADDRESS}
 
 `);
+    // @ts-ignore
     const x = await sentinelClient.create(sentinel);
     console.log(x);
   } catch (e) {

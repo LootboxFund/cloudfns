@@ -19,7 +19,7 @@ const main = async () => {
   `);
     console.log(`
 
---- watchCrowdSaleFactory sentinel ---
+--- watchOnCreateLootbox sentinel ---
 AutoTask ID: ${constants.AUTO_TASK_ID}
 Address: ${constants.SENTINAL_WATCH_ADDRESS}
 
