@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@wormgraph/helpers": "0.0.30",
-    "@wormgraph/manifest": "^0.2.52",
+    "@wormgraph/manifest": "^0.2.63",
     "axios": "^0.25.0",
     "defender-autotask-utils": "^1.13.0",
     "eslint": "^8.8.0",
