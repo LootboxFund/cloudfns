@@ -34,7 +34,7 @@
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",
     "@wormgraph/helpers": "0.0.30",
-    "@wormgraph/manifest": "0.2.59",
+    "@wormgraph/manifest": "0.2.63",
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-autotask-utils": "^1.13.0",
