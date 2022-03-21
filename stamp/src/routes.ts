@@ -1,6 +1,6 @@
 import * as express from "express";
 import { generateImage } from "./lib/api/stamp";
-import { ContractAddress } from "@lootboxfund/helpers";
+import { ContractAddress } from "@wormgraph/helpers";
 import { TicketProps } from "./lib/components/Ticket";
 
 const router = express.Router();

@@ -1,5 +1,6 @@
 // @ts-ignore-next-line
 import { abi } from "../../abi/DAI.json";
+import { ExternalCreateSubscriberRequest } from "defender-sentinel-client/lib/models/subscriber";
 // import { Manifest } from "../../index";
 // const manifest = Manifest.default;
 
@@ -17,12 +18,13 @@ export const constants = {
   PIPEDREAM_WEBHOOK: "https://___________________.m.pipedream.net",
 };
 
-export const sentinel = {
+export const sentinel: ExternalCreateSubscriberRequest = {
   network: constants.CHAIN_ALIAS,
   // optional
   confirmLevel: 1, // if not set, we pick the blockwatcher for the chosen network with the lowest offset
   name: constants.NAME,
-  address: constants.SENTINAL_WATCH_ADDRESS,
+  addresses: [constants.SENTINAL_WATCH_ADDRESS],
+  type: "BLOCK",
   abi: JSON.stringify(constants.ABI),
   // optional
   paused: false,

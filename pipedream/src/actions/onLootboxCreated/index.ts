@@ -8,7 +8,7 @@ import {
   ABIUtilRepresenation,
   GBucketPrefixesEnum,
   convertHexToDecimal,
-} from "@lootboxfund/helpers";
+} from "@wormgraph/helpers";
 import { BigNumber } from "ethers";
 import { Manifest } from "../../manifest";
 import { encodeURISafe } from "../../api/helpers";

@@ -9,7 +9,7 @@ import {
   chainIdHexToSlug,
   chainIdHexToName,
   ChainSlugs,
-} from "@lootboxfund/helpers";
+} from "@wormgraph/helpers";
 import { $Horizontal } from "../Generics";
 import ReactDOMServer from "react-dom/server";
 
@@ -141,7 +141,7 @@ const StyleTagText = () => ({
   position: "relative" as "relative",
   color: "#ffffff",
   width: "100%",
-  maxWidth: "50%",
+  // maxWidth: "50%",
   padding: "5px",
   flex: 1,
 });
@@ -165,7 +165,7 @@ const StyleTicketIDText = () => ({
   position: "relative" as "relative",
   color: "#ffffff",
   width: "100%",
-  maxWidth: "50%",
+  // maxWidth: "50%",
 });
 
 const StyleTagInfoText = () => ({
