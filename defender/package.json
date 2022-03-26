@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@ethersproject/abi": "^5.5.0",
+    "@google-cloud/secret-manager": "^3.11.0",
     "@wormgraph/helpers": "0.0.30",
     "@wormgraph/manifest": "0.2.63",
     "axios": "^0.25.0",
