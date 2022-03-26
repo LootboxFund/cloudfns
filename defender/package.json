@@ -38,7 +38,7 @@
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-autotask-utils": "^1.13.0",
-    "defender-sentinel-client": "^1.13.0",
+    "defender-sentinel-client": "1.18.0",
     "dotenv": "^15.0.0",
     "ethers": "5.4.1",
     "lodash": "^4.17.21"
