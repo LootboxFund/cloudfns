@@ -1,7 +1,7 @@
 /**
  * This file is only used to deploy the onCreateLootbox autotask locally
  *
- * Dependencies that it uses (i.e. ../../services/secrets) dont get included in the bundle
+ * Dependencies that it uses (i.e. ../../services/secrets) dont get included in the bundle atm
  */
 
 import dotenv from "dotenv";

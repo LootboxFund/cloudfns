@@ -1,11 +1,7 @@
 /**
- * PLEASE READ:
- *
  * This code should only be used for local deployments (files like `autotasks/onCreateLootbox/build.ts`)
  * (i.e. by calling $yarn deploy)
- * Because it calls external dependencies that might not be bundled into the autotask / sentinel code
- *
- * Thats because ATM, defender does not support private npm packages ? maybe (tbd)
+ * Because, atm, its not bundled into the autotask code...
  *
  * Scripts takes credentials from GCP [DEFAULT_APPLCIATION_CREDENTIALS], authentication should be
  * via gcloud CLI with:
@@ -45,10 +41,10 @@ export const getDefenderApiCredentials = async (): Promise<
   DefenderCredentials | undefined
 > => {
   const apiKeyConfig = manifest.secretManager.secrets.find(
-    (secret) => secret.name === "defenderApiKey"
+    (secret) => secret.name === "OZ_DEFENDER_API_KEY"
   );
   const apiSecretConfig = manifest.secretManager.secrets.find(
-    (secret) => secret.name === "defenderApiSecret"
+    (secret) => secret.name === "OZ_DEFENDER_API_SECRET"
   );
 
   if (!apiKeyConfig || !apiSecretConfig) {
@@ -61,14 +57,14 @@ export const getDefenderApiCredentials = async (): Promise<
       client.accessSecretVersion({
         name: buildSecretsPath(
           manifest.googleCloud.projectID,
-          "defenderApiKey",
+          "OZ_DEFENDER_API_KEY",
           apiKeyConfig.version
         ),
       }),
       client.accessSecretVersion({
         name: buildSecretsPath(
           manifest.googleCloud.projectID,
-          "defenderApiSecret",
+          "OZ_DEFENDER_API_SECRET",
           apiSecretConfig.version
         ),
       }),
