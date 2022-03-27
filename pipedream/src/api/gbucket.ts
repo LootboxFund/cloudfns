@@ -1,4 +1,8 @@
-import { ChainIDHex, GBucketPrefixes, GCloudBucket } from "@wormgraph/helpers";
+import {
+  ChainIDHex,
+  GBucketPrefixes,
+  GCloudBucketsEnum,
+} from "@wormgraph/helpers";
 import { latest as Manifest, SemanticVersion } from "@wormgraph/manifest";
 import { encodeURISafe } from "./helpers";
 
@@ -17,7 +21,7 @@ interface GBucketSaveFragProps {
   semver: SemanticVersion;
   chainIdHex: ChainIDHex;
   prefix: GBucketPrefixes;
-  bucket: GCloudBucket;
+  bucket: GCloudBucketsEnum;
 }
 interface GBucketSaveLocalProps {
   alias: string;
@@ -27,7 +31,7 @@ interface GBucketSaveLocalProps {
   semver: SemanticVersion;
   chainIdHex: ChainIDHex;
   prefix: GBucketPrefixes;
-  bucket: GCloudBucket;
+  bucket: GCloudBucketsEnum;
 }
 
 export const saveLocalFileToGBucket = async ({
