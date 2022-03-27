@@ -2025,7 +2025,15 @@
     "@typescript-eslint/types" "5.15.0"
     eslint-visitor-keys "^3.0.0"
 
-"@wormgraph/helpers@0.0.30", "@wormgraph/helpers@^0.0.30":
+"@wormgraph/helpers@0.0.31":
+  version "0.0.31"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.0.31.tgz#230b5c3f4f27fd3c4a471098ee0cf110da8e362b"
+  integrity sha512-2x9pAxVPX6LTA17U+6PaCCh8gcHrl+4YeuZWBq2McjJH7HGqDOBTl0KfAVqb5wayrW/zm1MYyEbL12VcC2JKtA==
+  dependencies:
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@wormgraph/helpers@^0.0.30":
   version "0.0.30"
   resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.0.30.tgz#292465dde385a58f078190d03071de778e5bb921"
   integrity sha512-87HRc8g1ug8SV83Km/a4oussMR99YCTBVC550Fi+ZBQSYNwQeIE5m9hMIw+i/JzFNfjxWbOv19SHv4Ai7DQKQQ==

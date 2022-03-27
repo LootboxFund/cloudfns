@@ -45,7 +45,7 @@
     "deploy:dev": "bash ./upload-pipedream.sh"
   },
   "dependencies": {
-    "@wormgraph/helpers": "0.0.30",
+    "@wormgraph/helpers": "0.0.31",
     "@wormgraph/manifest": "^0.2.75",
     "axios": "^0.25.0",
     "defender-autotask-utils": "^1.13.0",
