@@ -5,14 +5,14 @@
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
 import get from "lodash/get";
-import { Manifest } from "../../manifest"; 
-const manifest = Manifest.default
+import { Manifest } from "../../manifest";
+const manifest = Manifest.default;
 
 const source = {
   key: manifest.pipedream.sources.onLootboxURI.slug,
   name: manifest.pipedream.sources.onLootboxURI.alias,
   description: "Webhook entry point to upload Lootbox URI to GBucket",
-  version: "0.0.2",
+  version: manifest.pipedream.sources.onLootboxURI.semver,
   props: {
     httpInterface: {
       type: "$.interface.http",

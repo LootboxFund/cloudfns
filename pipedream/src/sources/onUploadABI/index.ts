@@ -12,7 +12,7 @@ const source = {
   key: manifest.pipedream.sources.onUploadABI.slug,
   name: manifest.pipedream.sources.onUploadABI.alias,
   description: "Webhook entry point to upload ABI to GBucket",
-  version: manifest.pipedream.sources.onUploadABI.version,
+  version: manifest.pipedream.sources.onUploadABI.semver,
   props: {
     httpInterface: {
       type: "$.interface.http",
