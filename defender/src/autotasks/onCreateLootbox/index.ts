@@ -4,11 +4,19 @@ import { constants } from "./constants";
 
 // Entrypoint for the Autotask
 exports.handler = async function (event: AutotaskEvent) {
+  const { PD_ONCREATE_LOOTBOX_SECRET } = event.secrets || {};
+
+  if (!PD_ONCREATE_LOOTBOX_SECRET) {
+    throw new Error("PD_ONCREATE_LOOTBOX_SECRET not configured");
+  }
+
   if (event.request && event.request.body) {
     const transaction = event.request.body as SentinelTriggerEvent;
+
+    // Get pipedream secret from GCP Secret Manager API
     await axios.post(constants.PIPEDREAM_WEBHOOK, transaction, {
       headers: {
-        secret: constants.SECRET,
+        secret: PD_ONCREATE_LOOTBOX_SECRET,
       },
     });
   }
