@@ -1,15 +1,24 @@
+/**
+ * This file is only used to deploy autotasks locally
+ *
+ * Dependencies that it uses (i.e. ../../services/secrets) dont get included in the autotask bundle atm
+ */
+
 import dotenv from "dotenv";
 dotenv.config();
 import { AutotaskClient } from "defender-autotask-client";
 import { constants } from "./constants";
-
-const creds = {
-  apiKey: process.env.DEFENDER_API_KEY || "",
-  apiSecret: process.env.DEFENDER_API_SECRET || "",
-};
-const autoTaskClient = new AutotaskClient(creds);
+import { getDefenderApiCredentials } from "../../services/secrets"; // This file is not actually bundled into the autotask
 
 const main = async () => {
+  const credentials = await getDefenderApiCredentials();
+
+  if (!credentials) {
+    return;
+  }
+
+  const autoTaskClient = new AutotaskClient(credentials);
+
   try {
     console.log(`
   
