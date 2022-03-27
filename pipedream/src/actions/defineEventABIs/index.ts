@@ -9,7 +9,7 @@ const action = defineAction({
   description:
     "Define the ABI of on-chain events that get emitted by  smart contracts",
   key: manifest.pipedream.actions.defineEventABIs.slug,
-  version: "0.0.12",
+  version: manifest.pipedream.actions.defineEventABIs.pipedreamSemver,
   type: "action",
   props: {},
   async run() {

@@ -34,7 +34,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
-  version: "0.0.18",
+  version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
   type: "action",
   props: {
     googleCloud: {

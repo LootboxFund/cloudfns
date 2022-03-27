@@ -12,7 +12,7 @@ const action = defineAction({
     Saves an ABI.json to GCloud
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
-  version: "0.0.7",
+  version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
   type: "action",
   props: {
     googleCloud: {

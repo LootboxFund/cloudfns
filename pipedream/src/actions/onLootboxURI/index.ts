@@ -10,7 +10,7 @@ const action = defineAction({
     Saves a Lootbox URI.json to GCloud
   `,
   key: manifest.pipedream.actions.onLootboxURI.slug,
-  version: "0.0.17",
+  version: manifest.pipedream.actions.onLootboxURI.pipedreamSemver,
   type: "action",
   props: {
     googleCloud: {
