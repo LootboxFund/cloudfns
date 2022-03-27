@@ -137,9 +137,10 @@ const action = defineAction({
     });
     // Lootbox NFT ticket image
     const filePath = `nft-ticket-stamp/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
-    const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${
+    const downloadablePath = `${manifest.storage.downloadUrl}/${
       manifest.googleCloud.bucket.id
     }/o/${encodeURISafe(filePath)}?alt=media`;
+
     return {
       json: savedFragmentJSON,
       txt: savedFragmentTXT,

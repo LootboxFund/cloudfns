@@ -1,6 +1,8 @@
 import { ChainIDHex, GBucketPrefixes, GCloudBucket } from "@wormgraph/helpers";
-import { SemanticVersion } from "@wormgraph/manifest";
+import { latest as Manifest, SemanticVersion } from "@wormgraph/manifest";
 import { encodeURISafe } from "./helpers";
+
+const manifest = Manifest.snapshot;
 
 type GBucketCreds = {
   project_id: string;
@@ -46,9 +48,9 @@ export const saveLocalFileToGBucket = async ({
     },
   });
   const filePath = `${prefix}/${chainIdHex}/${fileName}`;
-  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
-    filePath
-  )}?alt=media \n`;
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
@@ -81,9 +83,9 @@ export const saveFileToGBucket = async ({
     },
   });
   const filePath = `${prefix}/${chainIdHex}/${fileName}`;
-  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
-    filePath
-  )}?alt=media \n`;
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
@@ -110,9 +112,9 @@ export const indexGBucketRoute = async ({
     },
   });
   const filePath = `${prefix}/${chainIdHex}/index.json`;
-  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
-    filePath
-  )}?alt=media \n`;
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
 
   // Lists files in the bucket, filtered by a prefix
   const options = {
