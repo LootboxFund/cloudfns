@@ -136,7 +136,7 @@ const action = defineAction({
       bucket: manifest.googleCloud.bucket.id,
     });
     // Lootbox NFT ticket image
-    const filePath = `v/${manifest.chain.chainIDHex}/nft-ticket-stamp/${lootboxAddr}.png`;
+    const filePath = `nft-ticket-stamp/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
     const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${
       manifest.googleCloud.bucket.id
     }/o/${encodeURISafe(filePath)}?alt=media`;

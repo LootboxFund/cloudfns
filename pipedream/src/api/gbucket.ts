@@ -1,8 +1,4 @@
-import {
-  ChainIDHex,
-  GBucketPrefixes,
-  GCloudBucket,
-} from "@wormgraph/helpers";
+import { ChainIDHex, GBucketPrefixes, GCloudBucket } from "@wormgraph/helpers";
 import { SemanticVersion } from "@wormgraph/manifest";
 import { encodeURISafe } from "./helpers";
 
@@ -49,7 +45,7 @@ export const saveLocalFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
+  const filePath = `${prefix}/${chainIdHex}/${fileName}`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
@@ -84,7 +80,7 @@ export const saveFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
+  const filePath = `${prefix}/${chainIdHex}/${fileName}`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
@@ -113,14 +109,14 @@ export const indexGBucketRoute = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${chainIdHex}/${prefix}/index.json`;
+  const filePath = `${prefix}/${chainIdHex}/index.json`;
   const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
     filePath
   )}?alt=media \n`;
 
   // Lists files in the bucket, filtered by a prefix
   const options = {
-    prefix: `v/${chainIdHex}/${prefix}/`,
+    prefix: `${prefix}/${chainIdHex}/`,
     delimiter: "/",
   };
   const result = await storage.bucket(bucket).getFiles(options);
