@@ -22,6 +22,13 @@ interface Event_LootboxCreated {
   sharePriceUSD: BigNumber;
 }
 
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.onLootboxCreated.slug} (aka ${manifest.pipedream.actions.onLootboxCreated.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.onLootboxCreated.pipedreamSemver}`
+);
+
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxCreated.alias,
   description: `

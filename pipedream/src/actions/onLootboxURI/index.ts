@@ -4,6 +4,13 @@ import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { Manifest, GBucketPrefixesEnum } from "../../manifest";
 const manifest = Manifest.default;
 
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.onLootboxURI.slug} (aka ${manifest.pipedream.actions.onLootboxURI.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.onLootboxURI.pipedreamSemver}`
+);
+
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxURI.alias,
   description: `

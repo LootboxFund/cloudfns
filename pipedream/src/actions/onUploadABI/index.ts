@@ -5,6 +5,13 @@ import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { Manifest } from "../../manifest";
 const manifest = Manifest.default;
 
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.onUploadABI.slug} (aka ${manifest.pipedream.actions.onUploadABI.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.onUploadABI.pipedreamSemver}`
+);
+
 const action = defineAction({
   key: manifest.pipedream.actions.onUploadABI.slug,
   description: `

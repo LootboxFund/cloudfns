@@ -4,6 +4,13 @@ import { ABIUtilRepresenation } from "@wormgraph/helpers";
 import { Manifest } from "../../manifest";
 const manifest = Manifest.default;
 
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.defineEventABIs.slug} (aka ${manifest.pipedream.actions.defineEventABIs.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.defineEventABIs.pipedreamSemver}`
+);
+
 const action = defineAction({
   name: manifest.pipedream.actions.defineEventABIs.alias,
   description:
