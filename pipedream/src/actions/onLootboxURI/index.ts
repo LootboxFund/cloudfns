@@ -1,15 +1,8 @@
 import { defineAction } from "ironpipe";
 import { ITicketMetadata } from "@wormgraph/helpers";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
+import { saveFileToGBucket } from "../../api/gbucket";
 import { Manifest, GBucketPrefixesEnum } from "../../manifest";
 const manifest = Manifest.default;
-
-console.log(
-  `Deploying Action ${manifest.pipedream.actions.onLootboxURI.slug} (aka ${manifest.pipedream.actions.onLootboxURI.alias})`
-);
-console.log(
-  `Version ${manifest.pipedream.actions.onLootboxURI.pipedreamSemver}`
-);
 
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxURI.alias,
@@ -17,7 +10,8 @@ const action = defineAction({
     Saves a Lootbox URI.json to GCloud
   `,
   key: manifest.pipedream.actions.onLootboxURI.slug,
-  version: manifest.pipedream.actions.onLootboxURI.pipedreamSemver,
+  // version: manifest.pipedream.actions.onLootboxURI.pipedreamSemver,
+  version: "0.14.0",
   type: "action",
   props: {
     googleCloud: {
@@ -59,14 +53,14 @@ const action = defineAction({
       data: JSON.stringify(lootboxURIData),
     });
 
-    // index the rest of the guildtokens
-    await indexGBucketRoute({
-      alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
-      credentials,
-      chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum["lootbox-uri"],
-      bucket: storageBucket.id,
-    });
+    // // index the rest of the guildtokens
+    // await indexGBucketRoute({
+    //   alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
+    //   credentials,
+    //   chainIdHex: manifest.chain.chainIDHex,
+    //   prefix: GBucketPrefixesEnum["lootbox-uri"],
+    //   bucket: storageBucket.id,
+    // });
 
     return;
   },

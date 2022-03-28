@@ -1,6 +1,6 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
+import { saveFileToGBucket } from "../../api/gbucket";
 
 import { decodeEVMLogs } from "../../api/evm";
 import {
@@ -22,13 +22,6 @@ interface Event_LootboxCreated {
   sharePriceUSD: BigNumber;
 }
 
-console.log(
-  `Deploying Action ${manifest.pipedream.actions.onLootboxCreated.slug} (aka ${manifest.pipedream.actions.onLootboxCreated.alias})`
-);
-console.log(
-  `Version ${manifest.pipedream.actions.onLootboxCreated.pipedreamSemver}`
-);
-
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxCreated.alias,
   description: `
@@ -40,7 +33,8 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
-  version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
+  // version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
+  version: "0.14.0",
   type: "action",
   props: {
     googleCloud: {
@@ -139,14 +133,14 @@ const action = defineAction({
         });
       })
     );
-    // index the rest of the crowdsales
-    await indexGBucketRoute({
-      alias: `Lootbox Index triggered by tx hash ${transaction.transactionHash}`,
-      credentials,
-      chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum.lootbox,
-      bucket: storageBucket.id,
-    });
+    // // index the rest of the crowdsales
+    // await indexGBucketRoute({
+    //   alias: `Lootbox Index triggered by tx hash ${transaction.transactionHash}`,
+    //   credentials,
+    //   chainIdHex: manifest.chain.chainIDHex,
+    //   prefix: GBucketPrefixesEnum.lootbox,
+    //   bucket: storageBucket.id,
+    // });
     // Lootbox NFT ticket image
     const filePath = `nft-ticket-stamp/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
     const downloadablePath = `${manifest.storage.downloadUrl}/${
