@@ -2,10 +2,12 @@
 
 [How to deploy Pipedream](https://share.vidyard.com/watch/173UWaLR7pNmHdRhPVUx9h)
 
-1. (@deprecated - env file no longer needed in this repo)
+1. Authenticate with gcloud CLI for local deployment
 
    ```
-   $ cp .env.example > .env
+   $ NO ENVIRONMENT FILES cp .env.example > .env
+   // Instead,
+   $ gcloud auth application-default login
    ```
 
 2. ```
@@ -60,3 +62,7 @@
 10. Deploy factory contracts (deploy script)
 
 11. Deploy OZ sentinels (see [README](../defender/README.md))
+
+```
+
+```
