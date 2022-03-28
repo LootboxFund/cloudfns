@@ -1,8 +1,15 @@
 import { defineAction } from "ironpipe";
-import { ITicketMetadata, GBucketPrefixesEnum } from "@wormgraph/helpers";
+import { ITicketMetadata } from "@wormgraph/helpers";
 import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { Manifest } from "../../manifest";
+import { Manifest, GBucketPrefixesEnum } from "../../manifest";
 const manifest = Manifest.default;
+
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.onLootboxURI.slug} (aka ${manifest.pipedream.actions.onLootboxURI.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.onLootboxURI.pipedreamSemver}`
+);
 
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxURI.alias,
@@ -10,7 +17,7 @@ const action = defineAction({
     Saves a Lootbox URI.json to GCloud
   `,
   key: manifest.pipedream.actions.onLootboxURI.slug,
-  version: "0.0.17",
+  version: manifest.pipedream.actions.onLootboxURI.pipedreamSemver,
   type: "action",
   props: {
     googleCloud: {
@@ -23,6 +30,14 @@ const action = defineAction({
     },
   },
   async run() {
+    const storageBucket = manifest.storage.buckets.find(
+      (bucket) => bucket.bucketType === "appspot"
+    );
+
+    if (!storageBucket) {
+      console.log("Storage bucket not configured in manifest... exiting");
+      return;
+    }
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     const lootboxURIData = (this as any).webhookTrigger as ITicketMetadata;
 
@@ -38,10 +53,9 @@ const action = defineAction({
       alias: `Saving ABI for ${lootboxURIData.name}`,
       credentials,
       fileName: `${lootboxURIData.address}.json`,
-      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum["lootbox-uri"],
-      bucket: manifest.googleCloud.bucket.id,
+      bucket: storageBucket.id,
       data: JSON.stringify(lootboxURIData),
     });
 
@@ -49,10 +63,9 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
       credentials,
-      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum["lootbox-uri"],
-      bucket: manifest.googleCloud.bucket.id,
+      bucket: storageBucket.id,
     });
 
     return;

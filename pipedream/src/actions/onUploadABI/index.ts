@@ -1,10 +1,16 @@
 import { defineAction } from "ironpipe";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { GBucketPrefixesEnum } from "@wormgraph/helpers";
 import { ABIGenericInterface, ChainIDHex } from "@wormgraph/helpers";
+import { SemanticVersion, GBucketPrefixesEnum } from "@wormgraph/manifest";
+import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
 import { Manifest } from "../../manifest";
-import { SemanticVersion } from "@wormgraph/manifest";
 const manifest = Manifest.default;
+
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.onUploadABI.slug} (aka ${manifest.pipedream.actions.onUploadABI.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.onUploadABI.pipedreamSemver}`
+);
 
 const action = defineAction({
   key: manifest.pipedream.actions.onUploadABI.slug,
@@ -12,7 +18,7 @@ const action = defineAction({
     Saves an ABI.json to GCloud
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
-  version: "0.0.7",
+  version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
   type: "action",
   props: {
     googleCloud: {
@@ -25,6 +31,15 @@ const action = defineAction({
     },
   },
   async run() {
+    const storageBucket = manifest.storage.buckets.find(
+      (bucket) => bucket.bucketType === "appspot"
+    );
+
+    if (!storageBucket) {
+      console.log("Storage bucket not configured in manifest... exiting");
+      return;
+    }
+
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     interface ABIWithMetadata {
       metadata: {
@@ -56,10 +71,9 @@ const action = defineAction({
       alias: `Saving ABI for ${metadata.alias}`,
       credentials,
       fileName: `${metadata.alias}.json`,
-      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum.abi,
-      bucket: manifest.googleCloud.bucket.id,
+      bucket: storageBucket.id,
       data: JSON.stringify(abi),
     });
 
@@ -67,10 +81,9 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Index ABIs triggered by upload of ${metadata.alias} ABI`,
       credentials,
-      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum.abi,
-      bucket: manifest.googleCloud.bucket.id,
+      bucket: storageBucket.id,
     });
 
     return;

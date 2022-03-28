@@ -4,12 +4,19 @@ import { ABIUtilRepresenation } from "@wormgraph/helpers";
 import { Manifest } from "../../manifest";
 const manifest = Manifest.default;
 
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.defineEventABIs.slug} (aka ${manifest.pipedream.actions.defineEventABIs.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.defineEventABIs.pipedreamSemver}`
+);
+
 const action = defineAction({
   name: manifest.pipedream.actions.defineEventABIs.alias,
   description:
     "Define the ABI of on-chain events that get emitted by  smart contracts",
   key: manifest.pipedream.actions.defineEventABIs.slug,
-  version: "0.0.12",
+  version: manifest.pipedream.actions.defineEventABIs.pipedreamSemver,
   type: "action",
   props: {},
   async run() {

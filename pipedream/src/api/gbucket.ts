@@ -1,10 +1,8 @@
-import {
-  ChainIDHex,
-  GBucketPrefixes,
-  GCloudBucket,
-} from "@wormgraph/helpers";
-import { SemanticVersion } from "@wormgraph/manifest";
+import { ChainIDHex } from "@wormgraph/helpers";
+import { latest as Manifest, GBucketPrefixes } from "@wormgraph/manifest";
 import { encodeURISafe } from "./helpers";
+
+const manifest = Manifest.snapshot;
 
 type GBucketCreds = {
   project_id: string;
@@ -16,20 +14,18 @@ interface GBucketSaveFragProps {
   credentials: GBucketCreds;
   fileName: string;
   data: any;
-  semver: SemanticVersion;
   chainIdHex: ChainIDHex;
   prefix: GBucketPrefixes;
-  bucket: GCloudBucket;
+  bucket: string;
 }
 interface GBucketSaveLocalProps {
   alias: string;
   localFilePath: string;
   credentials: GBucketCreds;
   fileName: string;
-  semver: SemanticVersion;
   chainIdHex: ChainIDHex;
   prefix: GBucketPrefixes;
-  bucket: GCloudBucket;
+  bucket: string;
 }
 
 export const saveLocalFileToGBucket = async ({
@@ -49,10 +45,10 @@ export const saveLocalFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
-  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
-    filePath
-  )}?alt=media \n`;
+  const filePath = `${prefix}/${chainIdHex}/${fileName}`;
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
@@ -84,10 +80,10 @@ export const saveFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
-  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
-    filePath
-  )}?alt=media \n`;
+  const filePath = `${prefix}/${chainIdHex}/${fileName}`;
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
@@ -113,14 +109,14 @@ export const indexGBucketRoute = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `v/${chainIdHex}/${prefix}/index.json`;
-  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
-    filePath
-  )}?alt=media \n`;
+  const filePath = `${prefix}/${chainIdHex}/index.json`;
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
 
   // Lists files in the bucket, filtered by a prefix
   const options = {
-    prefix: `v/${chainIdHex}/${prefix}/`,
+    prefix: `${prefix}/${chainIdHex}/`,
     delimiter: "/",
   };
   const result = await storage.bucket(bucket).getFiles(options);

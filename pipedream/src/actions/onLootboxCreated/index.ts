@@ -6,11 +6,10 @@ import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
   ABIUtilRepresenation,
-  GBucketPrefixesEnum,
   convertHexToDecimal,
 } from "@wormgraph/helpers";
 import { BigNumber } from "ethers";
-import { Manifest } from "../../manifest";
+import { Manifest, GBucketPrefixesEnum } from "../../manifest";
 import { encodeURISafe } from "../../api/helpers";
 const manifest = Manifest.default;
 
@@ -23,6 +22,13 @@ interface Event_LootboxCreated {
   sharePriceUSD: BigNumber;
 }
 
+console.log(
+  `Deploying Action ${manifest.pipedream.actions.onLootboxCreated.slug} (aka ${manifest.pipedream.actions.onLootboxCreated.alias})`
+);
+console.log(
+  `Version ${manifest.pipedream.actions.onLootboxCreated.pipedreamSemver}`
+);
+
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxCreated.alias,
   description: `
@@ -34,7 +40,7 @@ const action = defineAction({
     4. Forward parsed data down pipe
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
-  version: "0.0.18",
+  version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
   type: "action",
   props: {
     googleCloud: {
@@ -51,6 +57,15 @@ const action = defineAction({
     },
   },
   async run() {
+    const storageBucket = manifest.storage.buckets.find(
+      (bucket) => bucket.bucketType === "appspot"
+    );
+
+    if (!storageBucket) {
+      console.log("Storage bucket not configured in manifest... exiting");
+      return;
+    }
+
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     const abiReps = (this as any).eventABI as ABIUtilRepresenation[];
     const { transaction } = (this as any).webhookTrigger as BlockTriggerEvent;
@@ -81,10 +96,9 @@ const action = defineAction({
           alias: `JSON for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.lootbox}.json`,
-          semver: manifest.googleCloud.bucket.folderSemver,
           chainIdHex: manifest.chain.chainIDHex,
           prefix: GBucketPrefixesEnum.lootbox,
-          bucket: manifest.googleCloud.bucket.id,
+          bucket: storageBucket.id,
           data: JSON.stringify({
             address: ev.lootbox,
             title: ev.lootboxName,
@@ -118,10 +132,9 @@ const action = defineAction({
           alias: `TXT for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.lootbox}.txt`,
-          semver: manifest.googleCloud.bucket.folderSemver,
           chainIdHex: manifest.chain.chainIDHex,
           prefix: GBucketPrefixesEnum.lootbox,
-          bucket: manifest.googleCloud.bucket.id,
+          bucket: storageBucket.id,
           data: note,
         });
       })
@@ -130,16 +143,16 @@ const action = defineAction({
     await indexGBucketRoute({
       alias: `Lootbox Index triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum.lootbox,
-      bucket: manifest.googleCloud.bucket.id,
+      bucket: storageBucket.id,
     });
     // Lootbox NFT ticket image
-    const filePath = `v/${manifest.chain.chainIDHex}/nft-ticket-stamp/${lootboxAddr}.png`;
-    const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${
-      manifest.googleCloud.bucket.id
+    const filePath = `nft-ticket-stamp/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
+    const downloadablePath = `${manifest.storage.downloadUrl}/${
+      storageBucket.id
     }/o/${encodeURISafe(filePath)}?alt=media`;
+
     return {
       json: savedFragmentJSON,
       txt: savedFragmentTXT,

@@ -1,9 +1,6 @@
-import {
-  ChainIDHex,
-  GBucketPrefixes,
-  GCloudBucket,
-} from "@wormgraph/helpers";
+import { ChainIDHex, GBucketPrefixes, GCloudBucket } from "@wormgraph/helpers";
 import { SemanticVersion } from "@wormgraph/manifest";
+import { manifest } from "../../manifest";
 const { Storage } = require("@google-cloud/storage");
 
 const encodeURISafe = (stringFragment: string) =>
@@ -29,10 +26,10 @@ export const saveLocalFileToGBucket = async ({
   bucket,
 }: GBucketSaveLocalProps) => {
   const storage = new Storage();
-  const filePath = `v/${chainIdHex}/${prefix}/${fileName}`;
-  const downloadablePath = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURISafe(
-    filePath
-  )}?alt=media`;
+  const filePath = `${prefix}/${chainIdHex}/${fileName}`;
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
