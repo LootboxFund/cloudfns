@@ -1,5 +1,1 @@
-export {
-  latest as Manifest,
-  SemanticVersion,
-  GBucketPrefixesEnum,
-} from "@wormgraph/manifest";
+export { latest as Manifest, SemanticVersion } from "@wormgraph/manifest";

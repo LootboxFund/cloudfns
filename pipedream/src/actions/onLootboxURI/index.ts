@@ -1,7 +1,7 @@
 import { defineAction } from "ironpipe";
 import { ITicketMetadata } from "@wormgraph/helpers";
 import { saveFileToGBucket } from "../../api/gbucket";
-import { Manifest, GBucketPrefixesEnum } from "../../manifest";
+import { Manifest } from "../../manifest";
 const manifest = Manifest.default;
 
 const action = defineAction({
@@ -46,7 +46,6 @@ const action = defineAction({
       credentials,
       fileName: `${lootboxURIData.address}.json`,
       chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum["lootbox-uri"],
       bucket: bucket.id,
       data: JSON.stringify(lootboxURIData),
     });

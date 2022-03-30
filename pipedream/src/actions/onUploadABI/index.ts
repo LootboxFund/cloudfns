@@ -1,7 +1,7 @@
 import { defineAction } from "ironpipe";
 import { ABIGenericInterface, ChainIDHex } from "@wormgraph/helpers";
 import { saveFileToGBucket } from "../../api/gbucket";
-import { Manifest, SemanticVersion, GBucketPrefixesEnum } from "../../manifest";
+import { Manifest, SemanticVersion } from "../../manifest";
 const manifest = Manifest.default;
 
 const action = defineAction({
@@ -58,7 +58,6 @@ const action = defineAction({
       credentials,
       fileName: `${metadata.alias}.json`,
       chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum.abi,
       bucket: bucket.id,
       data: JSON.stringify(abi),
     });

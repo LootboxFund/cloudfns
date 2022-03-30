@@ -1,5 +1,4 @@
-import { ChainIDHex, GBucketPrefixes, GCloudBucket } from "@wormgraph/helpers";
-import { SemanticVersion } from "@wormgraph/manifest";
+import { ChainIDHex } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 const { Storage } = require("@google-cloud/storage");
 
@@ -10,23 +9,19 @@ interface GBucketSaveLocalProps {
   alias: string;
   localFilePath: string;
   fileName: string;
-  semver: SemanticVersion;
   chainIdHex: ChainIDHex;
-  prefix: GBucketPrefixes;
-  bucket: GCloudBucket;
+  bucket: typeof manifest.storage.buckets.lootboxStamp;
 }
 
 export const saveLocalFileToGBucket = async ({
   alias,
   localFilePath,
   fileName,
-  semver,
   chainIdHex,
-  prefix,
   bucket,
 }: GBucketSaveLocalProps) => {
   const storage = new Storage();
-  const filePath = `${prefix}/${chainIdHex}/${fileName}`;
+  const filePath = `${chainIdHex}/${fileName}`;
   const downloadablePath = `${
     manifest.storage.downloadUrl
   }/${bucket}/o/${encodeURISafe(filePath)}?alt=media`;

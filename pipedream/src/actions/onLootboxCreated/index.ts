@@ -9,7 +9,7 @@ import {
   convertHexToDecimal,
 } from "@wormgraph/helpers";
 import { BigNumber } from "ethers";
-import { Manifest, GBucketPrefixesEnum } from "../../manifest";
+import { Manifest } from "../../manifest";
 import { encodeURISafe } from "../../api/helpers";
 const manifest = Manifest.default;
 
@@ -84,7 +84,6 @@ const action = defineAction({
           credentials,
           fileName: `${ev.lootbox}.json`,
           chainIdHex: manifest.chain.chainIDHex,
-          prefix: GBucketPrefixesEnum.lootbox,
           bucket: lootboxData.id,
           data: JSON.stringify({
             address: ev.lootbox,

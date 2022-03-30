@@ -4,7 +4,6 @@ import * as ReactDOM from "react-dom";
 import axios from "axios";
 import nodeHtmlToImage from "node-html-to-image";
 import Ticket, { TicketProps } from "../components/Ticket";
-import { ContractAddress, GBucketPrefixesEnum } from "@wormgraph/helpers";
 import { saveLocalFileToGBucket } from "./gbucket";
 import { manifest } from "../../manifest";
 
@@ -47,13 +46,11 @@ export const generateImage = async (path: string, props: TicketProps) => {
       },
     });
     const imagePath = await saveLocalFileToGBucket({
-      alias: `Image for ${props.name}`,
+      alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
       fileName: `${props.lootboxAddress}.png`,
-      semver: manifest.googleCloud.bucket.folderSemver,
       chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum["nft-ticket-stamp"],
-      bucket: manifest.googleCloud.bucket.id,
+      bucket: manifest.storage.buckets.lootboxStamp,
     });
     return imagePath;
   } catch (e) {
