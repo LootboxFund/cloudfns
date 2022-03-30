@@ -11,7 +11,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onLootboxURI.slug,
   // version: manifest.pipedream.actions.onLootboxURI.pipedreamSemver,
-  version: "0.14.0",
+  version: "0.14.1",
   type: "action",
   props: {
     googleCloud: {
@@ -24,11 +24,9 @@ const action = defineAction({
     },
   },
   async run() {
-    const storageBucket = manifest.storage.buckets.find(
-      (bucket) => bucket.bucketType === "appspot"
-    );
+    const bucket = manifest.storage.buckets.lootboxUri;
 
-    if (!storageBucket) {
+    if (!bucket) {
       console.log("Storage bucket not configured in manifest... exiting");
       return;
     }
@@ -49,18 +47,9 @@ const action = defineAction({
       fileName: `${lootboxURIData.address}.json`,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum["lootbox-uri"],
-      bucket: storageBucket.id,
+      bucket: bucket.id,
       data: JSON.stringify(lootboxURIData),
     });
-
-    // // index the rest of the guildtokens
-    // await indexGBucketRoute({
-    //   alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
-    //   credentials,
-    //   chainIdHex: manifest.chain.chainIDHex,
-    //   prefix: GBucketPrefixesEnum["lootbox-uri"],
-    //   bucket: storageBucket.id,
-    // });
 
     return;
   },

@@ -24,14 +24,7 @@ const action = defineAction({
     },
   },
   async run() {
-    const storageBucket = manifest.storage.buckets.find(
-      (bucket) => bucket.bucketType === "appspot"
-    );
-
-    if (!storageBucket) {
-      console.log("Storage bucket not configured in manifest... exiting");
-      return;
-    }
+    const bucket = manifest.storage.buckets.abi;
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     interface ABIWithMetadata {
@@ -66,18 +59,9 @@ const action = defineAction({
       fileName: `${metadata.alias}.json`,
       chainIdHex: manifest.chain.chainIDHex,
       prefix: GBucketPrefixesEnum.abi,
-      bucket: storageBucket.id,
+      bucket: bucket.id,
       data: JSON.stringify(abi),
     });
-
-    // // index the rest of the guildtokens
-    // await indexGBucketRoute({
-    //   alias: `Index ABIs triggered by upload of ${metadata.alias} ABI`,
-    //   credentials,
-    //   chainIdHex: manifest.chain.chainIDHex,
-    //   prefix: GBucketPrefixesEnum.abi,
-    //   bucket: storageBucket.id,
-    // });
 
     return;
   },

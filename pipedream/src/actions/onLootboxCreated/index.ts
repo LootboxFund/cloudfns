@@ -51,14 +51,7 @@ const action = defineAction({
     },
   },
   async run() {
-    const storageBucket = manifest.storage.buckets.find(
-      (bucket) => bucket.bucketType === "appspot"
-    );
-
-    if (!storageBucket) {
-      console.log("Storage bucket not configured in manifest... exiting");
-      return;
-    }
+    const { lootboxData, lootboxStamp } = manifest.storage.buckets;
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     const abiReps = (this as any).eventABI as ABIUtilRepresenation[];
@@ -92,7 +85,7 @@ const action = defineAction({
           fileName: `${ev.lootbox}.json`,
           chainIdHex: manifest.chain.chainIDHex,
           prefix: GBucketPrefixesEnum.lootbox,
-          bucket: storageBucket.id,
+          bucket: lootboxData.id,
           data: JSON.stringify({
             address: ev.lootbox,
             title: ev.lootboxName,
@@ -103,55 +96,16 @@ const action = defineAction({
       })
     );
 
-    // save the crowdsale.txt to gbucket
-    const savedFragmentTXT = await Promise.all(
-      decodedLogs.map(async (ev) => {
-        const note = `
-        Your Lootbox has been created!
-        Add its address below to your OpenZeppelin Defender:
-        
-        ${ev.lootboxName} \n
-        Address: ${ev.lootbox} (import this contract address to OZ Defender) \n
-
-        lootboxName:      ${ev.lootboxName} \n
-        lootbox:          ${ev.lootbox} \n  
-        issuer:           ${ev.issuer} \n
-        treasury:         ${ev.treasury} \n
-        maxSharesSold:    ${ev.maxSharesSold} \n
-        sharePriceUSD:    ${ev.sharePriceUSD} \n
-
-        current time: ${new Date().toISOString()}
-        `;
-        return await saveFileToGBucket({
-          alias: `TXT for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
-          credentials,
-          fileName: `${ev.lootbox}.txt`,
-          chainIdHex: manifest.chain.chainIDHex,
-          prefix: GBucketPrefixesEnum.lootbox,
-          bucket: storageBucket.id,
-          data: note,
-        });
-      })
-    );
-    // // index the rest of the crowdsales
-    // await indexGBucketRoute({
-    //   alias: `Lootbox Index triggered by tx hash ${transaction.transactionHash}`,
-    //   credentials,
-    //   chainIdHex: manifest.chain.chainIDHex,
-    //   prefix: GBucketPrefixesEnum.lootbox,
-    //   bucket: storageBucket.id,
-    // });
     // Lootbox NFT ticket image
-    const filePath = `nft-ticket-stamp/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
+    const filePath = `${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
     const downloadablePath = `${manifest.storage.downloadUrl}/${
-      storageBucket.id
+      lootboxStamp.id
     }/o/${encodeURISafe(filePath)}?alt=media`;
 
     return {
       json: savedFragmentJSON,
-      txt: savedFragmentTXT,
       name: lootboxName,
-      publicUrl: `https://www.lootbox.fund/demo/0-2-3-demo/lootbox?lootbox=${lootboxAddr}`,
+      publicUrl: manifest.microfrontends.webflow.lootboxUrl,
       image: downloadablePath,
     };
   },
