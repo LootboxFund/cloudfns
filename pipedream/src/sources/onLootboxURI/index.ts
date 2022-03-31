@@ -13,7 +13,7 @@ const source = {
   name: manifest.pipedream.sources.onLootboxURI.alias,
   description: "Webhook entry point to upload Lootbox URI to GBucket",
   // version: manifest.pipedream.sources.onLootboxURI.semver,
-  version: "0.14.0",
+  version: "0.14.1",
   props: {
     httpInterface: {
       type: "$.interface.http",

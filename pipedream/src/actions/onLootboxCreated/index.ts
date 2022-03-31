@@ -34,7 +34,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
   // version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
-  version: "0.14.0",
+  version: "0.14.1",
   type: "action",
   props: {
     googleCloud: {

@@ -14,7 +14,7 @@ const source = {
   description:
     "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
   // version: manifest.pipedream.sources.onCreateLootbox.semver,
-  version: "0.14.0",
+  version: "0.14.1",
   props: {
     httpInterface: {
       type: "$.interface.http",
