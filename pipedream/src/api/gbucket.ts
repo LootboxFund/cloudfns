@@ -15,7 +15,6 @@ interface GBucketSaveFragProps {
   fileName: string;
   data: any;
   chainIdHex: ChainIDHex;
-  prefix: GBucketPrefixes;
   bucket: string;
 }
 interface GBucketSaveLocalProps {
@@ -68,7 +67,6 @@ export const saveFileToGBucket = async ({
   fileName,
   data,
   chainIdHex,
-  prefix,
   bucket,
 }: GBucketSaveFragProps) => {
   require("@dylburger/umask")();
@@ -80,7 +78,7 @@ export const saveFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `${prefix}/${chainIdHex}/${fileName}`;
+  const filePath = `${chainIdHex}/${fileName}`;
   const downloadablePath = `${
     manifest.storage.downloadUrl
   }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
@@ -91,50 +89,4 @@ export const saveFileToGBucket = async ({
   await storage.bucket(bucket).file(filePath).makePublic();
   console.log(`✅ Uploaded \n`);
   return downloadablePath;
-};
-
-export const indexGBucketRoute = async ({
-  alias,
-  credentials,
-  chainIdHex,
-  prefix,
-  bucket,
-}: Omit<GBucketSaveFragProps, "fileName" | "data">) => {
-  require("@dylburger/umask")();
-  const { Storage } = require("@google-cloud/storage");
-  const storage = new Storage({
-    projectId: credentials.project_id,
-    credentials: {
-      client_email: credentials.client_email,
-      private_key: credentials.private_key,
-    },
-  });
-  const filePath = `${prefix}/${chainIdHex}/index.json`;
-  const downloadablePath = `${
-    manifest.storage.downloadUrl
-  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
-
-  // Lists files in the bucket, filtered by a prefix
-  const options = {
-    prefix: `${prefix}/${chainIdHex}/`,
-    delimiter: "/",
-  };
-  const result = await storage.bucket(bucket).getFiles(options);
-  const routes: any[] = [];
-  result[0]
-    .filter(
-      (f: any) =>
-        f.name.indexOf("index.json") === -1 &&
-        f.name.indexOf("defaults.json") === -1
-    )
-    .forEach((file: any) => {
-      console.log(file.name);
-      routes.push(file.name);
-    });
-  console.log(
-    `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath} \n`
-  );
-  await storage.bucket(bucket).file(filePath).save(JSON.stringify(routes));
-  await storage.bucket(bucket).file(filePath).makePublic();
-  console.log(`✅ Uploaded \n`);
 };

@@ -1,16 +1,8 @@
 import { defineAction } from "ironpipe";
 import { ABIGenericInterface, ChainIDHex } from "@wormgraph/helpers";
-import { SemanticVersion, GBucketPrefixesEnum } from "@wormgraph/manifest";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { Manifest } from "../../manifest";
+import { saveFileToGBucket } from "../../api/gbucket";
+import { Manifest, SemanticVersion } from "../../manifest";
 const manifest = Manifest.default;
-
-console.log(
-  `Deploying Action ${manifest.pipedream.actions.onUploadABI.slug} (aka ${manifest.pipedream.actions.onUploadABI.alias})`
-);
-console.log(
-  `Version ${manifest.pipedream.actions.onUploadABI.pipedreamSemver}`
-);
 
 const action = defineAction({
   key: manifest.pipedream.actions.onUploadABI.slug,
@@ -18,7 +10,8 @@ const action = defineAction({
     Saves an ABI.json to GCloud
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
-  version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
+  // version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
+  version: "0.14.1",
   type: "action",
   props: {
     googleCloud: {
@@ -31,14 +24,7 @@ const action = defineAction({
     },
   },
   async run() {
-    const storageBucket = manifest.storage.buckets.find(
-      (bucket) => bucket.bucketType === "appspot"
-    );
-
-    if (!storageBucket) {
-      console.log("Storage bucket not configured in manifest... exiting");
-      return;
-    }
+    const bucket = manifest.storage.buckets.abi;
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     interface ABIWithMetadata {
@@ -53,16 +39,16 @@ const action = defineAction({
     const { abi, metadata } = (this as any).webhookTrigger as ABIWithMetadata;
 
     console.log(`
-    
+
         ----- abi
-    
+
     `);
     console.log(abi);
 
     console.log(`
-    
+
         ----- metadata
-    
+
     `);
     console.log(metadata);
 
@@ -72,18 +58,8 @@ const action = defineAction({
       credentials,
       fileName: `${metadata.alias}.json`,
       chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum.abi,
-      bucket: storageBucket.id,
+      bucket: bucket.id,
       data: JSON.stringify(abi),
-    });
-
-    // index the rest of the guildtokens
-    await indexGBucketRoute({
-      alias: `Index ABIs triggered by upload of ${metadata.alias} ABI`,
-      credentials,
-      chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum.abi,
-      bucket: storageBucket.id,
     });
 
     return;

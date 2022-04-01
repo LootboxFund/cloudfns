@@ -1,15 +1,8 @@
 import { defineAction } from "ironpipe";
 import { ITicketMetadata } from "@wormgraph/helpers";
-import { indexGBucketRoute, saveFileToGBucket } from "../../api/gbucket";
-import { Manifest, GBucketPrefixesEnum } from "../../manifest";
+import { saveFileToGBucket } from "../../api/gbucket";
+import { Manifest } from "../../manifest";
 const manifest = Manifest.default;
-
-console.log(
-  `Deploying Action ${manifest.pipedream.actions.onLootboxURI.slug} (aka ${manifest.pipedream.actions.onLootboxURI.alias})`
-);
-console.log(
-  `Version ${manifest.pipedream.actions.onLootboxURI.pipedreamSemver}`
-);
 
 const action = defineAction({
   name: manifest.pipedream.actions.onLootboxURI.alias,
@@ -17,7 +10,8 @@ const action = defineAction({
     Saves a Lootbox URI.json to GCloud
   `,
   key: manifest.pipedream.actions.onLootboxURI.slug,
-  version: manifest.pipedream.actions.onLootboxURI.pipedreamSemver,
+  // version: manifest.pipedream.actions.onLootboxURI.pipedreamSemver,
+  version: "0.14.2",
   type: "action",
   props: {
     googleCloud: {
@@ -30,11 +24,9 @@ const action = defineAction({
     },
   },
   async run() {
-    const storageBucket = manifest.storage.buckets.find(
-      (bucket) => bucket.bucketType === "appspot"
-    );
+    const bucket = manifest.storage.buckets.lootboxUri;
 
-    if (!storageBucket) {
+    if (!bucket) {
       console.log("Storage bucket not configured in manifest... exiting");
       return;
     }
@@ -54,18 +46,8 @@ const action = defineAction({
       credentials,
       fileName: `${lootboxURIData.address}.json`,
       chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum["lootbox-uri"],
-      bucket: storageBucket.id,
+      bucket: bucket.id,
       data: JSON.stringify(lootboxURIData),
-    });
-
-    // index the rest of the guildtokens
-    await indexGBucketRoute({
-      alias: `Index URIs triggered by upload of ${lootboxURIData.address} URI`,
-      credentials,
-      chainIdHex: manifest.chain.chainIDHex,
-      prefix: GBucketPrefixesEnum["lootbox-uri"],
-      bucket: storageBucket.id,
     });
 
     return;
