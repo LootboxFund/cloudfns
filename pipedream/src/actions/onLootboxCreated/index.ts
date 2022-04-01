@@ -34,7 +34,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
   // version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
-  version: "0.14.1",
+  version: "0.14.2",
   type: "action",
   props: {
     googleCloud: {
@@ -99,12 +99,12 @@ const action = defineAction({
     const filePath = `${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
     const downloadablePath = `${manifest.storage.downloadUrl}/${
       lootboxStamp.id
-    }/o/${encodeURISafe(filePath)}?alt=media`;
+    }/${encodeURISafe(filePath)}?alt=media`;
 
     return {
       json: savedFragmentJSON,
       name: lootboxName,
-      publicUrl: manifest.microfrontends.webflow.lootboxUrl,
+      publicUrl: `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`,
       image: downloadablePath,
     };
   },
