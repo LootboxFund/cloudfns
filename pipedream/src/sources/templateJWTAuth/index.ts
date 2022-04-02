@@ -55,6 +55,12 @@ const source = {
       SecretManagerServiceClient,
     } = require("@google-cloud/secret-manager");
 
+    // ########################################################
+    //
+    //                    AUTHENTICATION
+    //
+    // ########################################################
+
     // --------------- Checks the Authorization Header exists and correctly formed ---------------
 
     const authHeader = event?.headers?.authorization?.startsWith("Bearer ");
@@ -120,6 +126,9 @@ const source = {
       });
       return;
     }
+
+    // ##################################################
+    // ##################################################
 
     const summary = `${event.method} ${event.path}`;
 
