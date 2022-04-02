@@ -50,7 +50,8 @@ event LootboxCreated(
   address indexed issuer,
   address indexed treasury,
   uint256 maxSharesSold,
-  uint256 sharePriceUSD
+  uint256 sharePriceUSD,
+  string _data
 )
 `,
   keys: [

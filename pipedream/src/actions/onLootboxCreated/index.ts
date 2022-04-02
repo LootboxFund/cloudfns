@@ -20,7 +20,7 @@ interface Event_LootboxCreated {
   treasury: Address;
   maxSharesSold: BigNumber;
   sharePriceUSD: BigNumber;
-  uri: string;
+  _data: string;
 }
 
 const action = defineAction({
@@ -35,7 +35,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
   // version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
-  version: "0.14.2",
+  version: "0.14.3",
   type: "action",
   props: {
     googleCloud: {
@@ -78,8 +78,8 @@ const action = defineAction({
     // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
-        if (!ev.lootbox || !ev.uri || !ev.lootboxName) {
-          console.log("invalid event", ev.lootbox, ev.lootboxName, ev.uri);
+        if (!ev.lootbox || !ev._data || !ev.lootboxName) {
+          console.log("invalid event", ev.lootbox, ev.lootboxName, ev._data);
           return;
         }
 
@@ -88,7 +88,7 @@ const action = defineAction({
 
         let lootboxURI;
         try {
-          lootboxURI = JSON.parse(ev.uri);
+          lootboxURI = JSON.parse(ev._data);
         } catch (err) {
           console.error("Could not parse lootbox URI", err);
           lootboxURI = {};
