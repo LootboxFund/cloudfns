@@ -1,6 +1,6 @@
 import { Manifest } from "../../manifest";
 const manifest = Manifest.default;
-import { abi } from "../../abi/LootboxFactory.json";
+import { abi } from "../../abi/LootboxInstantFactory.json";
 import { ExternalCreateSubscriberRequest } from "defender-sentinel-client/lib/models/subscriber";
 
 export const constants = {
