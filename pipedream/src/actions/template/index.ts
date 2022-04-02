@@ -4,7 +4,7 @@ const action = defineAction({
   name: "Template Action",
   description: "Template Action for Pipedream Typescript",
   key: "templateAction",
-  version: "0.0.1",
+  version: "0.1.0",
   type: "action",
   props: {
     // googleCloud: {
