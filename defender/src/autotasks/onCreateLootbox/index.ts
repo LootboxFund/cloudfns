@@ -1,9 +1,18 @@
 import axios from "axios";
 import { AutotaskEvent, SentinelTriggerEvent } from "defender-autotask-utils";
 import { constants } from "./constants";
+import jwt from "jsonwebtoken";
 
 // Entrypoint for the Autotask
 exports.handler = async function (event: AutotaskEvent) {
+  const token = jwt.sign(
+    {
+      // 30 second expiration
+      exp: Math.floor(Date.now() / 1000) + 30,
+    },
+    "mysecret"
+  );
+
   const { PD_ONCREATE_LOOTBOX_SECRET } = event.secrets || {};
 
   if (!PD_ONCREATE_LOOTBOX_SECRET) {
@@ -16,6 +25,7 @@ exports.handler = async function (event: AutotaskEvent) {
     await axios.post(constants.PIPEDREAM_WEBHOOK, transaction, {
       headers: {
         secret: PD_ONCREATE_LOOTBOX_SECRET,
+        authorization: "Bearer " + token,
       },
     });
   }
