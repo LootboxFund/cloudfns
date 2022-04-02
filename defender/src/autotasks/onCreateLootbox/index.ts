@@ -2,40 +2,13 @@ import axios from "axios";
 import { AutotaskEvent, SentinelTriggerEvent } from "defender-autotask-utils";
 import { constants } from "./constants";
 import jwt from "jsonwebtoken";
-import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 
 // Entrypoint for the Autotask
 exports.handler = async function (event: AutotaskEvent) {
-  if (!constants.SECRET_NAME || !constants.SECRET_VERSION) {
-    throw new Error("JWT secret not properly configured in manifest");
-  }
+  const { JWT_ON_CREATE_LOOTBOX } = event.secrets || {};
 
-  const { SA_ON_CREATE_LOOTBOX } = event.secrets || {};
-
-  if (!SA_ON_CREATE_LOOTBOX) {
-    throw new Error("SA_ON_CREATE_LOOTBOX not configured");
-  }
-
-  const serviceAccountKey = JSON.parse(SA_ON_CREATE_LOOTBOX);
-
-  const gsmClient = new SecretManagerServiceClient({
-    projectId: serviceAccountKey.project_id,
-    credentials: {
-      client_email: serviceAccountKey.client_email,
-      private_key: serviceAccountKey.private_key,
-    },
-  });
-
-  let jwtEncryptionSecret = undefined;
-
-  const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
-    name: `projects/${constants.PROJECT_ID}/secrets/${constants.SECRET_NAME}/versions/${constants.SECRET_VERSION}`,
-  });
-
-  jwtEncryptionSecret = jwtSecretResponse?.payload?.data?.toString();
-
-  if (!jwtEncryptionSecret) {
-    throw new Error("JWT Secret Not Found");
+  if (!JWT_ON_CREATE_LOOTBOX) {
+    throw new Error("JWT_ON_CREATE_LOOTBOX not configured");
   }
 
   const token = jwt.sign(
@@ -43,7 +16,7 @@ exports.handler = async function (event: AutotaskEvent) {
       // 30 second expiration
       exp: Math.floor(Date.now() / 1000) + 30,
     },
-    jwtEncryptionSecret
+    JWT_ON_CREATE_LOOTBOX
   );
 
   if (event.request && event.request.body) {
