@@ -35,7 +35,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onLootboxCreated.slug,
   // version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
-  version: "0.14.3",
+  version: "0.14.4",
   type: "action",
   props: {
     googleCloud: {
@@ -105,7 +105,7 @@ const action = defineAction({
             title: ev.lootboxName,
             chainIdHex: manifest.chain.chainIDHex,
             chainIdDecimal: convertHexToDecimal(manifest.chain.chainIDHex),
-            uri: lootboxURI,
+            data: lootboxURI,
           }),
         });
       })
