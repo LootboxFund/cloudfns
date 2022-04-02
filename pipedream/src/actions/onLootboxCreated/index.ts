@@ -20,6 +20,7 @@ interface Event_LootboxCreated {
   treasury: Address;
   maxSharesSold: BigNumber;
   sharePriceUSD: BigNumber;
+  uri: string;
 }
 
 const action = defineAction({
@@ -74,11 +75,25 @@ const action = defineAction({
     let lootboxName = "";
     let lootboxAddr = "";
 
-    // save the crowdsale.json to gbucket
+    // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
+        if (!ev.lootbox || !ev.uri || !ev.lootboxName) {
+          console.log("invalid event", ev.lootbox, ev.lootboxName, ev.uri);
+          return;
+        }
+
         lootboxName = ev.lootboxName;
         lootboxAddr = ev.lootbox;
+
+        let lootboxURI;
+        try {
+          lootboxURI = JSON.parse(ev.uri);
+        } catch (err) {
+          console.error("Could not parse lootbox URI", err);
+          lootboxURI = {};
+        }
+
         return saveFileToGBucket({
           alias: `JSON for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
@@ -90,6 +105,7 @@ const action = defineAction({
             title: ev.lootboxName,
             chainIdHex: manifest.chain.chainIDHex,
             chainIdDecimal: convertHexToDecimal(manifest.chain.chainIDHex),
+            uri: lootboxURI,
           }),
         });
       })
