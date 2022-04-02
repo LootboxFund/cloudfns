@@ -94,6 +94,17 @@ const action = defineAction({
           lootboxURI = {};
         }
 
+        // We need to add some data to the URI file
+        // This causes weaker typing - be sure to coordinate this
+        // with the frontend @widgets repo
+        lootboxURI.address = ev.lootbox;
+        lootboxURI.lootbox = {
+          ...lootboxURI.lootbox,
+          address: ev.lootbox,
+          transactionHash: transaction.transactionHash,
+          blockNumber: transaction.blockNumber,
+        };
+
         return saveFileToGBucket({
           alias: `JSON for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
