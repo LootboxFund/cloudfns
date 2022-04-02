@@ -52,7 +52,7 @@ const action = defineAction({
     },
   },
   async run() {
-    const { lootboxData, lootboxStamp } = manifest.storage.buckets;
+    const { data: bucketData, stamp: bucketStamp } = manifest.storage.buckets;
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     const abiReps = (this as any).eventABI as ABIUtilRepresenation[];
@@ -110,7 +110,7 @@ const action = defineAction({
           credentials,
           fileName: `${ev.lootbox}.json`,
           chainIdHex: manifest.chain.chainIDHex,
-          bucket: lootboxData.id,
+          bucket: bucketData.id,
           data: JSON.stringify({
             address: ev.lootbox,
             title: ev.lootboxName,
@@ -125,7 +125,7 @@ const action = defineAction({
     // Lootbox NFT ticket image
     const filePath = `${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
     const downloadablePath = `${manifest.storage.downloadUrl}/${
-      lootboxStamp.id
+      bucketStamp.id
     }/${encodeURISafe(filePath)}?alt=media`;
 
     return {
