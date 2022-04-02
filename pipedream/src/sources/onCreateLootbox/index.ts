@@ -15,6 +15,10 @@ const source = {
   // version: manifest.pipedream.sources.onCreateLootbox.semver,
   version: "0.1.0",
   props: {
+    googleCloud: {
+      type: "app",
+      app: "google_cloud",
+    },
     httpInterface: {
       type: "$.interface.http",
       customResponse: true,
