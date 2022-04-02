@@ -20,10 +20,11 @@ interface Event_LootboxCreated {
   treasury: Address;
   maxSharesSold: BigNumber;
   sharePriceUSD: BigNumber;
+  _data: string;
 }
 
 const action = defineAction({
-  name: manifest.pipedream.actions.onLootboxCreated.alias,
+  name: manifest.pipedream.actions.onCreateLootbox.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -32,9 +33,9 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onLootboxCreated.slug,
-  // version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
-  version: "0.14.2",
+  key: manifest.pipedream.actions.onCreateLootbox.slug,
+  // version: manifest.pipedream.actions.onCreateLootbox.pipedreamSemver,
+  version: "0.14.4",
   type: "action",
   props: {
     googleCloud: {
@@ -74,11 +75,36 @@ const action = defineAction({
     let lootboxName = "";
     let lootboxAddr = "";
 
-    // save the crowdsale.json to gbucket
+    // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
+        if (!ev.lootbox || !ev._data || !ev.lootboxName) {
+          console.log("invalid event", ev.lootbox, ev.lootboxName, ev._data);
+          return;
+        }
+
         lootboxName = ev.lootboxName;
         lootboxAddr = ev.lootbox;
+
+        let lootboxURI;
+        try {
+          lootboxURI = JSON.parse(ev._data);
+        } catch (err) {
+          console.error("Could not parse lootbox URI", err);
+          lootboxURI = {};
+        }
+
+        // We need to add some data to the URI file
+        // This causes weaker typing - be sure to coordinate this
+        // with the frontend @widgets repo
+        lootboxURI.address = ev.lootbox;
+        lootboxURI.lootbox = {
+          ...lootboxURI.lootbox,
+          address: ev.lootbox,
+          transactionHash: transaction.transactionHash,
+          blockNumber: transaction.blockNumber,
+        };
+
         return saveFileToGBucket({
           alias: `JSON for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
@@ -90,6 +116,7 @@ const action = defineAction({
             title: ev.lootboxName,
             chainIdHex: manifest.chain.chainIDHex,
             chainIdDecimal: convertHexToDecimal(manifest.chain.chainIDHex),
+            data: lootboxURI,
           }),
         });
       })

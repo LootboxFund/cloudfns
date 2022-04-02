@@ -10,7 +10,7 @@ const action = defineAction({
     "Define the ABI of on-chain events that get emitted by smart contracts",
   key: manifest.pipedream.actions.defineEventABIs.slug,
   // version: manifest.pipedream.actions.defineEventABIs.pipedreamSemver,
-  version: "0.14.3",
+  version: "0.14.5",
   type: "action",
   props: {},
   async run() {
@@ -50,7 +50,8 @@ event LootboxCreated(
   address indexed issuer,
   address indexed treasury,
   uint256 maxSharesSold,
-  uint256 sharePriceUSD
+  uint256 sharePriceUSD,
+  string _data
 )
 `,
   keys: [
@@ -60,6 +61,7 @@ event LootboxCreated(
     "treasury",
     "maxSharesSold",
     "sharePriceUSD",
+    "_data",
   ],
 };
 
