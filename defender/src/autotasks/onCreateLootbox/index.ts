@@ -2,29 +2,55 @@ import axios from "axios";
 import { AutotaskEvent, SentinelTriggerEvent } from "defender-autotask-utils";
 import { constants } from "./constants";
 import jwt from "jsonwebtoken";
+import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 
 // Entrypoint for the Autotask
 exports.handler = async function (event: AutotaskEvent) {
+  if (!constants.SECRET_NAME || !constants.SECRET_VERSION) {
+    throw new Error("JWT secret not properly configured in manifest");
+  }
+
+  const { SA_ON_CREATE_LOOTBOX } = event.secrets || {};
+
+  if (!SA_ON_CREATE_LOOTBOX) {
+    throw new Error("SA_ON_CREATE_LOOTBOX not configured");
+  }
+
+  const serviceAccountKey = JSON.parse(SA_ON_CREATE_LOOTBOX);
+
+  const gsmClient = new SecretManagerServiceClient({
+    projectId: serviceAccountKey.project_id,
+    credentials: {
+      client_email: serviceAccountKey.client_email,
+      private_key: serviceAccountKey.private_key,
+    },
+  });
+
+  let jwtEncryptionSecret = undefined;
+
+  const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
+    name: `projects/${constants.PROJECT_ID}/secrets/${constants.SECRET_NAME}/versions/${constants.SECRET_VERSION}`,
+  });
+
+  jwtEncryptionSecret = jwtSecretResponse?.payload?.data?.toString();
+
+  if (!jwtEncryptionSecret) {
+    throw new Error("JWT Secret Not Found");
+  }
+
   const token = jwt.sign(
     {
       // 30 second expiration
       exp: Math.floor(Date.now() / 1000) + 30,
     },
-    "mysecret"
+    jwtEncryptionSecret
   );
-
-  const { PD_ONCREATE_LOOTBOX_SECRET } = event.secrets || {};
-
-  if (!PD_ONCREATE_LOOTBOX_SECRET) {
-    throw new Error("PD_ONCREATE_LOOTBOX_SECRET not configured");
-  }
 
   if (event.request && event.request.body) {
     const transaction = event.request.body as SentinelTriggerEvent;
 
     await axios.post(constants.PIPEDREAM_WEBHOOK, transaction, {
       headers: {
-        secret: PD_ONCREATE_LOOTBOX_SECRET,
         authorization: "Bearer " + token,
       },
     });

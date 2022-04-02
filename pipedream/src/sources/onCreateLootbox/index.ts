@@ -62,6 +62,14 @@ const source = {
     //
     // ########################################################
 
+    const jwtSecretConfig = manifest.secretManager.secrets.find(
+      (secret) => secret.name === "JWT_ON_CREATE_LOOTBOX"
+    );
+
+    if (!jwtSecretConfig) {
+      throw new Error("JWT Secret config not set up in manifest");
+    }
+
     // --------------- Checks the Authorization Header exists and correctly formed ---------------
 
     const authHeader = event?.headers?.authorization?.startsWith("Bearer ");
@@ -81,39 +89,37 @@ const source = {
 
     // --------------- Load the JWT Signing Secret from GSM ---------------
 
-    // const serviceAccountKey = JSON.parse(
-    //   (this as any).googleCloud.$auth.key_json
-    // );
+    const serviceAccountKey = JSON.parse(
+      (this as any).googleCloud.$auth.key_json
+    );
 
-    // const gsmClient = new SecretManagerServiceClient({
-    //   projectId: serviceAccountKey.project_id,
-    //   credentials: {
-    //     client_email: serviceAccountKey.client_email,
-    //     private_key: serviceAccountKey.private_key,
-    //   },
-    // });
+    const gsmClient = new SecretManagerServiceClient({
+      projectId: serviceAccountKey.project_id,
+      credentials: {
+        client_email: serviceAccountKey.client_email,
+        private_key: serviceAccountKey.private_key,
+      },
+    });
 
-    // let secret = undefined;
+    let secret = undefined;
 
-    // try {
-    //   const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
-    //     name: `projects/${"lootbox-fund-development"}/secrets/${"JWT_ONCREATE_LOOTBOX_SECRET"}/versions/${"1"}`,
-    //   });
+    try {
+      const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
+        name: `projects/${manifest.googleCloud.projectID}/secrets/${jwtSecretConfig.name}/versions/${jwtSecretConfig.version}`,
+      });
 
-    //   secret = jwtSecretResponse?.payload?.data?.toString();
+      secret = jwtSecretResponse?.payload?.data?.toString();
 
-    //   if (!secret) {
-    //     throw new Error("JWT Secret Not Found");
-    //   }
-    // } catch (err) {
-    //   console.log("Error fetching jwt secret", err);
-    //   (this as any).httpInterface.respond({
-    //     status: 500,
-    //   });
-    //   return;
-    // }
-
-    const secret = "mysecret";
+      if (!secret) {
+        throw new Error("JWT Secret Not Found");
+      }
+    } catch (err) {
+      console.log("Error fetching jwt secret", err);
+      (this as any).httpInterface.respond({
+        status: 500,
+      });
+      return;
+    }
 
     // --------------- Verify JWT Token ---------------
 
