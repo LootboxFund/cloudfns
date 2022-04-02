@@ -24,7 +24,7 @@ interface Event_LootboxCreated {
 }
 
 const action = defineAction({
-  name: manifest.pipedream.actions.onLootboxCreated.alias,
+  name: manifest.pipedream.actions.onCreateLootbox.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -33,8 +33,8 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onLootboxCreated.slug,
-  // version: manifest.pipedream.actions.onLootboxCreated.pipedreamSemver,
+  key: manifest.pipedream.actions.onCreateLootbox.slug,
+  // version: manifest.pipedream.actions.onCreateLootbox.pipedreamSemver,
   version: "0.14.4",
   type: "action",
   props: {
