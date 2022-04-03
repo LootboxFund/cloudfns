@@ -1,12 +1,13 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
-
 import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
   ABIUtilRepresenation,
   convertHexToDecimal,
+  ITicketMetadata,
+  ContractAddress,
 } from "@wormgraph/helpers";
 import { BigNumber } from "ethers";
 import { Manifest } from "../../manifest";
@@ -74,35 +75,66 @@ const action = defineAction({
 
     let lootboxName = "";
     let lootboxAddr = "";
+    let _lootboxURI: ITicketMetadata | undefined = undefined;
 
     // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
-        if (!ev.lootbox || !ev._data || !ev.lootboxName) {
-          console.log("invalid event", ev.lootbox, ev.lootboxName, ev._data);
+        if (!ev.lootbox || !ev.lootboxName) {
+          console.log(
+            "invalid lootbox event",
+            ev.lootbox,
+            ev.lootboxName,
+            ev._data
+          );
           return;
         }
 
         lootboxName = ev.lootboxName;
         lootboxAddr = ev.lootbox;
 
-        let lootboxURI;
         try {
-          lootboxURI = JSON.parse(ev._data);
-        } catch (err) {
-          console.error("Could not parse lootbox URI", err);
-          lootboxURI = {};
+          _lootboxURI = JSON.parse(ev._data) as ITicketMetadata;
+        } catch (err) {          
+          console.error("Could not parse lootbox URI", err); 
         }
 
-        // We need to add some data to the URI file
-        // This causes weaker typing - be sure to coordinate this
-        // with the frontend @widgets repo
-        lootboxURI.address = ev.lootbox;
-        lootboxURI.lootbox = {
-          ...lootboxURI.lootbox,
-          address: ev.lootbox,
-          transactionHash: transaction.transactionHash,
-          blockNumber: transaction.blockNumber,
+        const lootboxURI: ITicketMetadata =  {
+          address: ev.lootbox as ContractAddress,
+          name: _lootboxURI?.name || "",
+          description: _lootboxURI?.description || "",
+          image: _lootboxURI?.image || "",
+          backgroundColor: _lootboxURI?.backgroundColor || "",
+          backgroundImage: _lootboxURI?.backgroundImage || "",
+          badgeImage: _lootboxURI?.badgeImage || "",
+          lootbox: {
+            address: ev.lootbox as ContractAddress,
+            transactionHash: transaction.transactionHash,
+            blockNumber: transaction.blockNumber,
+            chainIdHex: _lootboxURI?.lootbox?.chainIdHex || "",
+            chainIdDecimal: _lootboxURI?.lootbox?.chainIdDecimal || "",
+            chainName: _lootboxURI?.lootbox?.chainName || "",
+            targetPaybackDate: _lootboxURI?.lootbox?.targetPaybackDate || new Date().valueOf(),
+            createdAt: _lootboxURI?.lootbox?.createdAt || new Date().valueOf(),
+            fundraisingTarget: _lootboxURI?.lootbox?.fundraisingTarget || "",
+            fundraisingTargetMax: _lootboxURI?.lootbox?.fundraisingTargetMax || "",
+            basisPointsReturnTarget: _lootboxURI?.lootbox?.basisPointsReturnTarget || "",
+            returnAmountTarget: _lootboxURI?.lootbox?.returnAmountTarget || "",
+            pricePerShare: _lootboxURI?.lootbox?.pricePerShare || "",
+            lootboxThemeColor: _lootboxURI?.lootbox?.lootboxThemeColor || "",
+          },
+          socials: {
+            twitter: _lootboxURI?.socials?.twitter || "",
+            email: _lootboxURI?.socials?.email || "",
+            instagram: _lootboxURI?.socials?.instagram || "",
+            tiktok: _lootboxURI?.socials?.tiktok || "",
+            facebook: _lootboxURI?.socials?.facebook || "",
+            discord: _lootboxURI?.socials?.discord || "",
+            youtube: _lootboxURI?.socials?.youtube || "",
+            snapchat: _lootboxURI?.socials?.snapchat || "",
+            twitch: _lootboxURI?.socials?.twitch || "",
+            web: _lootboxURI?.socials?.web || "",
+          },
         };
 
         return saveFileToGBucket({
