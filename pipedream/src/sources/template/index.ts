@@ -52,7 +52,7 @@ const source = {
     const { headers } = event;
     const secret = get(headers, "secret");
     if (secret !== (this as any).secret) {
-      (this as any).http.respond({
+      (this as any).httpInterface.respond({
         status: 400,
       });
     }
