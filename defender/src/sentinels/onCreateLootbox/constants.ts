@@ -6,8 +6,7 @@ import { ExternalCreateSubscriberRequest } from "defender-sentinel-client/lib/mo
 export const constants = {
   NAME: manifest.openZeppelin.sentinels.onCreateLootbox.alias,
   CHAIN_ALIAS: manifest.openZeppelin.sentinels.onCreateLootbox.ozChainSlug,
-  AUTO_TASK_ID:
-    manifest.openZeppelin.sentinels.onCreateLootbox.autoTaskHandlerID,
+  AUTO_TASK_ID: manifest.openZeppelin.autoTasks.onCreateLootbox.id,
   SENTINAL_WATCH_ADDRESS:
     manifest.openZeppelin.sentinels.onCreateLootbox.contractWatchAddress,
   ABI: abi,

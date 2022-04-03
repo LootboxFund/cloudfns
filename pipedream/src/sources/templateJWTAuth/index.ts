@@ -4,16 +4,11 @@
  * It depends on Pipedream env dependencies. The only reason why this file is here is for git source control records
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
-import { Manifest } from "../../manifest";
-const manifest = Manifest.default;
-
 const source = {
-  key: manifest.pipedream.sources.onCreateLootbox.slug,
-  name: manifest.pipedream.sources.onCreateLootbox.alias,
-  description:
-    "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
-  // version: manifest.pipedream.sources.onCreateLootbox.semver,
-  version: "0.1.0",
+  key: "dev",
+  name: "dev",
+  description: "dev",
+  version: "0.1.1",
   props: {
     googleCloud: {
       type: "app",
@@ -66,14 +61,6 @@ const source = {
     //
     // ########################################################
 
-    const jwtSecretConfig = manifest.secretManager.secrets.find(
-      (secret) => secret.name === "JWT_ON_CREATE_LOOTBOX"
-    );
-
-    if (!jwtSecretConfig) {
-      throw new Error("JWT Secret config not set up in manifest");
-    }
-
     // --------------- Checks the Authorization Header exists and correctly formed ---------------
 
     const authHeader = event?.headers?.authorization?.startsWith("Bearer ");
@@ -109,7 +96,7 @@ const source = {
 
     try {
       const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
-        name: `projects/${manifest.googleCloud.projectID}/secrets/${jwtSecretConfig.name}/versions/${jwtSecretConfig.version}`,
+        name: `projects/${"lootbox-fund-development"}/secrets/${"JWT_ONCREATE_LOOTBOX_SECRET"}/versions/${"1"}`,
       });
 
       secret = jwtSecretResponse?.payload?.data?.toString();
