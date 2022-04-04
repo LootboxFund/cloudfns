@@ -4,11 +4,12 @@ import { abi } from "../../abi/LootboxInstantFactory.json";
 import { ExternalCreateSubscriberRequest } from "defender-sentinel-client/lib/models/subscriber";
 
 export const constants = {
-  NAME: manifest.openZeppelin.sentinels.onCreateLootbox.alias,
-  CHAIN_ALIAS: manifest.openZeppelin.sentinels.onCreateLootbox.ozChainSlug,
+  NAME: manifest.openZeppelin.sentinels.onCreateLootboxInstant.alias,
+  CHAIN_ALIAS:
+    manifest.openZeppelin.sentinels.onCreateLootboxInstant.ozChainSlug,
   AUTO_TASK_ID: manifest.openZeppelin.autoTasks.onCreateLootbox.id,
   SENTINAL_WATCH_ADDRESS:
-    manifest.openZeppelin.sentinels.onCreateLootbox.contractWatchAddress,
+    manifest.openZeppelin.sentinels.onCreateLootboxInstant.contractWatchAddress,
   ABI: abi,
   EVENT_SIGNATURES: [
     {
