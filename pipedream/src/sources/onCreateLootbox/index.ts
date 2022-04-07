@@ -109,6 +109,7 @@ const source = {
 
     try {
       const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
+        // name: `projects/lootbox-fund-staging/secrets/${jwtSecretConfig.name}/versions/${jwtSecretConfig.version}`,
         name: `projects/${manifest.googleCloud.projectID}/secrets/${jwtSecretConfig.name}/versions/${jwtSecretConfig.version}`,
       });
 
