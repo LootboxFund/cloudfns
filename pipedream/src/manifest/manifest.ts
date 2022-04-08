@@ -1,4 +1,4 @@
-import { Address, BLOCKCHAINS, ChainSlugs, Url } from "../types";
+import { Address, BLOCKCHAINS, ChainSlugs } from "../types";
 import { OZChainSlugs } from "../types";
 import {
   CloudRunContainerSlugs,
@@ -78,11 +78,17 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
       },
     ],
     autoTasks: {
-      onCreateLootbox: {
+      onCreateInstantLootbox: {
         id: "______________________________" as OZAutoTaskID,
-        alias: "On creation of a Lootbox",
+        alias: "On creation of an Instant Lootbox",
         semver: "0.3.0-prod",
-        slug: OZAutoTaskSlugs.onCreateLootbox,
+        slug: OZAutoTaskSlugs.onCreateEscrowLootbox,
+      },
+      onCreateEscrowLootbox: {
+        id: "______________________________" as OZAutoTaskID,
+        alias: "On creation of an Escrow Lootbox",
+        semver: "0.3.0-prod",
+        slug: OZAutoTaskSlugs.onCreateInstantLootbox,
       },
     },
     sentinels: {
@@ -109,13 +115,21 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     alias: "0.3.0-prod",
     email: "0_3_0_prod_0xnewton@lootbox.fyi",
     sources: {
-      onCreateLootbox: {
+      onCreateInstantLootbox: {
+        alias: "onCreateInstantLootbox",
+        pipedreamID: "______________________________" as PipedreamSourceID,
+        semver: "0.1.0",
+        webhookEndpoint:
+          "https://______________________________.m.pipedream.net",
+        slug: PipedreamSourceSlugs.onCreateInstantLootbox,
+      },
+      onCreateEscrowLootbox: {
         alias: "onCreateLootbox",
         pipedreamID: "______________________________" as PipedreamSourceID,
         semver: "0.1.0",
         webhookEndpoint:
           "https://______________________________.m.pipedream.net",
-        slug: PipedreamSourceSlugs.onCreateLootbox,
+        slug: PipedreamSourceSlugs.onCreateEscrowLootbox,
       },
       onUploadABI: {
         alias: "onUploadABI",
@@ -225,11 +239,11 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     semver: "0.3.0-prod",
     contracts: {
       LootboxInstantFactory: {
-        address: "0xbc7280E8dba198B76a8aFc50C36542d96f2FEb59" as Address,
+        address: "____________________________________" as Address,
         slug: ContractSlugs.LootboxInstantFactory,
       },
       LootboxEscrowFactory: {
-        address: "0x5AdA44C7C78f0bD017B77F0829e2a9CB62572123" as Address,
+        address: "____________________________________" as Address,
         slug: ContractSlugs.LootboxEscrowFactory,
       },
     },

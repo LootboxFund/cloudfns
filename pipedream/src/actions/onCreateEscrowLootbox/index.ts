@@ -7,6 +7,7 @@ import {
   ABIUtilRepresenation,
   ITicketMetadata,
   ContractAddress,
+  convertHexToDecimal
 } from "../../types";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
@@ -21,10 +22,6 @@ interface Event_LootboxCreated {
   sharePriceUSD: BigNumber;
   _data: string;
 }
-
-const convertHexToDecimal = (hex: string): string => {
-  return parseInt(hex, 16).toString();
-};
 
 const action = defineAction({
   name: manifest.pipedream.actions.onCreateLootbox.alias,

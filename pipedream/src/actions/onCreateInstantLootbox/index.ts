@@ -7,7 +7,7 @@ import {
   Address,
   ABIUtilRepresenation,
   convertHexToDecimal,
-} from "@wormgraph/helpers";
+} from "../../types";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";

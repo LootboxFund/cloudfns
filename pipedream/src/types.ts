@@ -209,3 +209,7 @@ export const BLOCKCHAINS: Record<ChainSlugs, ChainInfo> = {
     priceFeedUSD: '0x0' as ContractAddress,
   },
 }
+
+export const convertHexToDecimal = (hex: string): string => {
+  return parseInt(hex, 16).toString();
+};

@@ -11,6 +11,7 @@ import {
 
 type RepoSemver = string;
 type DeployedSemver = string;
+type ContractGroupSemver = string;
 type StorageDownloadUrl = "https://storage.googleapis.com/storage/v1/b";
 
 interface BaseSemver {
@@ -58,7 +59,8 @@ export enum OZTeammemberSlugs {
 
 export type OZAutoTaskID = string & { readonly _: unique symbol };
 export enum OZAutoTaskSlugs {
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
 }
 type OZAutoTaskSlug = OZAutoTaskSlugs;
 interface OZAutoTask {
@@ -66,6 +68,7 @@ interface OZAutoTask {
   alias: string;
   semver: RepoSemver;
   slug: OZAutoTaskSlug;
+  // webhookEndpoint: Url;
 }
 
 export type OZSentinelID = string & { readonly _: unique symbol };
@@ -100,6 +103,11 @@ interface Contract {
   slug: ContractSlug;
 }
 
+interface LootboxFactory extends Contract {
+  alias: string;
+  contractGroupSemver: ContractGroupSemver;
+}
+
 type PipedreamSemver = string;
 interface Pipedream {
   alias: string;
@@ -110,7 +118,8 @@ interface Pipedream {
 }
 
 export enum PipedreamSourceSlugs {
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
   onUploadABI = "onUploadABI",
 }
 export type PipedreamSourceID = string & { readonly _: unique symbol };
