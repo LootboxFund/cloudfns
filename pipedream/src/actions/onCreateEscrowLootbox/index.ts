@@ -11,6 +11,7 @@ import {
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
+import { InstantEscrowCreated } from "../../api/event-abi";
 
 interface Event_LootboxCreated {
   lootboxName: string;
@@ -27,7 +28,7 @@ const convertHexToDecimal = (hex: string): string => {
 };
 
 const action = defineAction({
-  name: manifest.pipedream.actions.onCreateLootbox.alias,
+  name: manifest.pipedream.actions.onCreateEscrowLootbox.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -36,9 +37,9 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onCreateLootbox.slug,
-  // version: manifest.pipedream.actions.onCreateLootbox.pipedreamSemver,
-  version: "0.1.6",
+  key: manifest.pipedream.actions.onCreateEscrowLootbox.slug,
+  // version: manifest.pipedream.actions.onCreateEscrowLootbox.pipedreamSemver,
+  version: "0.1.10",
   type: "action",
   props: {
     googleCloud: {
@@ -49,16 +50,11 @@ const action = defineAction({
       // {{steps.trigger.event}}
       type: "object",
     },
-    eventABI: {
-      // {{steps.defineEventABIs.$return_value.LootboxEscrowFactory}}
-      type: "object",
-    },
   },
   async run() {
     const { data: bucketData, stamp: bucketStamp } = manifest.storage.buckets;
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
-    const abiReps = (this as any).eventABI as ABIUtilRepresenation[];
     const { transaction } = (this as any).webhookTrigger as BlockTriggerEvent;
     console.log(`
     
@@ -71,7 +67,7 @@ const action = defineAction({
     const decodedLogs = decodeEVMLogs<Event_LootboxCreated>({
       eventName: "LootboxCreated",
       logs: transaction.logs,
-      abiReps,
+      abiReps: [InstantEscrowCreated],
     });
     console.log(decodedLogs);
 
