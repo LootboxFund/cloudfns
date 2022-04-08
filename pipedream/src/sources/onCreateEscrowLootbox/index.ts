@@ -7,8 +7,8 @@
 import manifest from "../../manifest/manifest";
 
 const source = {
-  key: manifest.pipedream.sources.onCreateEscrowLootbox.slug,
-  name: manifest.pipedream.sources.onCreateEscrowLootbox.alias,
+  key: manifest.pipedream.sources.onCreateLootboxEscrow.slug,
+  name: manifest.pipedream.sources.onCreateLootboxEscrow.alias,
   description:
     "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
   // version: manifest.pipedream.sources.onCreateLootbox.semver,

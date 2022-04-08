@@ -1,4 +1,4 @@
-import { Address, ChainIDHex, ContractAddress, Url } from "../types";
+import { Address, ChainIDHex, ContractAddress, Url } from "./types.helpers";
 import {
   OZChainSlugs,
   BucketType,
@@ -7,7 +7,7 @@ import {
   SecretVersion,
   OZSecretName,
   BucketId,
-} from "../types";
+} from "./types.helpers";
 
 type RepoSemver = string;
 type DeployedSemver = string;
@@ -30,6 +30,7 @@ interface OZSecret {
 type OpenZeppelinSemver = string;
 interface OpenZeppelin {
   alias: string;
+  // teamMembers: Record<OZTeammemberSlug, OZTeammember>;
   multiSigs: Record<MultiSigSlug, MultiSig>;
   contracts: Record<ContractSlug, Contract>;
   autoTasks: Record<OZAutoTaskSlug, OZAutoTask>;
@@ -57,10 +58,12 @@ export enum OZTeammemberSlugs {
   Oxnewton = "Oxnewton",
 }
 
+type Role = "founder" | "staff" | "engineer";
+
 export type OZAutoTaskID = string & { readonly _: unique symbol };
 export enum OZAutoTaskSlugs {
-  onCreateInstantLootbox = "onCreateInstantLootbox",
-  onCreateEscrowLootbox = "onCreateEscrowLootbox",
+  onCreateLootboxInstant = "onCreateLootboxInstant",
+  onCreateLootboxEscrow = "onCreateLootboxEscrow",
 }
 type OZAutoTaskSlug = OZAutoTaskSlugs;
 interface OZAutoTask {
@@ -118,8 +121,8 @@ interface Pipedream {
 }
 
 export enum PipedreamSourceSlugs {
-  onCreateInstantLootbox = "onCreateInstantLootbox",
-  onCreateEscrowLootbox = "onCreateEscrowLootbox",
+  onCreateLootboxInstant = "onCreateLootboxInstant",
+  onCreateLootboxEscrow = "onCreateLootboxEscrow",
   onUploadABI = "onUploadABI",
 }
 export type PipedreamSourceID = string & { readonly _: unique symbol };
@@ -135,8 +138,8 @@ interface PipedreamSource {
 
 export enum PipedreamActionSlugs {
   defineEventABIs = "defineEventABIs",
-  onCreateInstantLootbox = "onCreateInstantLootbox",
-  onCreateEscrowLootbox = "onCreateEscrowLootbox",
+  onCreateLootboxInstant = "onCreateLootboxInstant",
+  onCreateLootboxEscrow = "onCreateLootboxEscrow",
   onUploadABI = "onUploadABI",
 }
 type PipedreamActionSlug = PipedreamActionSlugs;
@@ -149,8 +152,7 @@ interface PipedreamAction {
 }
 
 export enum PipedreamWorkflowSlugs {
-  onCreateInstantLootbox = "onCreateInstantLootbox",
-  onCreateEscrowLootbox = "onCreateEscrowLootbox",
+  onCreateLootbox = "onCreateLootbox",
   onUploadABI = "onUploadABI",
 }
 export type PipedreamWorkflowID = string & { readonly _: unique symbol };
@@ -226,7 +228,16 @@ interface Storage {
   buckets: Record<BucketType, Bucket>;
 }
 
-export interface GlobalMainfest_v0_2_8_sandbox {
+interface Firebase {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: BucketId;
+  messagingSenderId: string;
+  appId: string;
+}
+
+export interface GlobalMainfest_v0_3_0_prod {
   alias: string;
   date: Date;
   description: string;
@@ -234,6 +245,7 @@ export interface GlobalMainfest_v0_2_8_sandbox {
   semver: BaseSemver;
   openZeppelin: OpenZeppelin;
   pipedream: Pipedream;
+  firebase: Firebase;
   googleCloud: GoogleCloud;
   cloudRun: CloudRun;
   microfrontends: Microfrontends;

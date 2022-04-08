@@ -1,5 +1,5 @@
 import { defineAction } from "ironpipe";
-import { ABIUtilRepresenation } from "../../types";
+import { ABIUtilRepresenation } from "../../manifest/types.helpers";
 import manifest from "../../manifest/manifest";
 
 const action = defineAction({

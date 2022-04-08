@@ -1,5 +1,5 @@
 import { defineAction } from "ironpipe";
-import { ABIGenericInterface, ChainIDHex, SemanticVersion } from "../../types";
+import { ABIGenericInterface, ChainIDHex, SemanticVersion } from "../../manifest/types.helpers";
 import { saveFileToGBucket } from "../../api/gbucket";
 import manifest from "../../manifest/manifest";
 

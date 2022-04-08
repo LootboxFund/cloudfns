@@ -7,7 +7,7 @@ import {
   Address,
   ABIUtilRepresenation,
   convertHexToDecimal,
-} from "../../types";
+} from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
@@ -24,7 +24,7 @@ interface Event_LootboxCreated {
 }
 
 const action = defineAction({
-  name: manifest.pipedream.actions.onCreateInstantLootbox.alias,
+  name: manifest.pipedream.actions.onCreateLootboxInstant.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -33,8 +33,8 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onCreateInstantLootbox.slug,
-  // version: manifest.pipedream.actions.onCreateInstantLootbox.pipedreamSemver,
+  key: manifest.pipedream.actions.onCreateLootboxInstant.slug,
+  // version: manifest.pipedream.actions.onCreateLootboxInstant.pipedreamSemver,
   version: "0.2.0",
   type: "action",
   props: {
