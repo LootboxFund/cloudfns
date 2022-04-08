@@ -237,7 +237,7 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
       alias: "0.3.0-prod",
       semver: "0.3.0-prod",
       email: "support@guildfx.exchange",
-      lootboxUrl: "____________________________________",
+      lootboxUrl: "https://lootbox.fund/buy",
     },
   },
   lootbox: {
