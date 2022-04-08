@@ -5,14 +5,12 @@ import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
   ABIUtilRepresenation,
-  convertHexToDecimal,
   ITicketMetadata,
   ContractAddress,
-} from "@wormgraph/helpers";
+} from "../../types";
 import { BigNumber } from "ethers";
-import { Manifest } from "../../manifest";
+import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
-const manifest = Manifest.default;
 
 interface Event_LootboxCreated {
   lootboxName: string;
@@ -22,6 +20,10 @@ interface Event_LootboxCreated {
   maxSharesSold: BigNumber;
   sharePriceUSD: BigNumber;
   _data: string;
+}
+
+const convertHexToDecimal = (hex: string): string => {
+  return parseInt(hex, 16).toString()
 }
 
 const action = defineAction({
@@ -36,7 +38,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootbox.slug,
   // version: manifest.pipedream.actions.onCreateLootbox.pipedreamSemver,
-  version: "0.1.3",
+  version: "0.1.6",
   type: "action",
   props: {
     googleCloud: {
