@@ -10,7 +10,7 @@ const action = defineAction({
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
   // version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
-  version: "0.1.5",
+  version: "0.2.0",
   type: "action",
   props: {
     googleCloud: {
