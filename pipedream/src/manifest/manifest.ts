@@ -124,7 +124,7 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
         slug: PipedreamSourceSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
-        alias: "onCreateLootboxEscrow",
+        alias: "onCreateLootbox",
         pipedreamID: "______________________________" as PipedreamSourceID,
         semver: "0.1.0",
         webhookEndpoint:
