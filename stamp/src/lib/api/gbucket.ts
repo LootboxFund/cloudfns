@@ -1,4 +1,5 @@
 import { ChainIDHex } from "@wormgraph/helpers";
+import { BucketId } from "@wormgraph/manifest";
 import { manifest } from "../../manifest";
 const { Storage } = require("@google-cloud/storage");
 
@@ -10,7 +11,7 @@ interface GBucketSaveLocalProps {
   localFilePath: string;
   fileName: string;
   chainIdHex: ChainIDHex;
-  bucket: typeof manifest.storage.buckets.stamp;
+  bucket: BucketId;
 }
 
 export const saveLocalFileToGBucket = async ({

@@ -40,7 +40,8 @@
     "watch": "tsc -w",
     "build": "tsc",
     "test": "jest --verbose --watch",
-    "deploy:sources:onCreateLootbox": "bash ./deploy/upload-source-onCreateLootbox.sh",
+    "deploy:sources:onCreateInstantLootbox": "bash ./deploy/upload-source-onCreateInstantLootbox.sh",
+    "deploy:sources:onCreateEscrowLootbox": "bash ./deploy/upload-source-onCreateEscrowLootbox.sh",
     "deploy:sources:onUploadABI": "bash ./deploy/upload-source-onUploadABI.sh",
     "deploy:actions": "bash ./deploy/upload-actions.sh",
     "deploy:dev": "bash ./upload-pipedream.sh"
