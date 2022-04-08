@@ -4,16 +4,15 @@
  * It depends on Pipedream env dependencies. The only reason why this file is here is for git source control records
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
-import { Manifest } from "../../manifest";
-const manifest = Manifest.default;
+import manifest from "../../manifest/manifest";
 
 const source = {
   key: manifest.pipedream.sources.onCreateEscrowLootbox.slug,
   name: manifest.pipedream.sources.onCreateEscrowLootbox.alias,
   description:
     "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
-  // version: manifest.pipedream.sources.onCreateEscrowLootbox.semver,
-  version: "0.1.0",
+  // version: manifest.pipedream.sources.onCreateLootbox.semver,
+  version: "0.1.3",
   props: {
     googleCloud: {
       type: "app",

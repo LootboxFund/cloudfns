@@ -9,9 +9,8 @@ import {
   convertHexToDecimal,
 } from "@wormgraph/helpers";
 import { BigNumber } from "ethers";
-import { Manifest } from "../../manifest";
+import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
-const manifest = Manifest.default;
 
 interface Event_LootboxCreated {
   lootboxName: string;

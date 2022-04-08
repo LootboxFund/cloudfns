@@ -4,8 +4,7 @@
  * It depends on Pipedream env dependencies. The only reason why this file is here is for git source control records
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
-import { Manifest } from "../../manifest";
-const manifest = Manifest.default;
+import manifest from "../../manifest/manifest";
 
 const source = {
   key: manifest.pipedream.sources.onCreateInstantLootbox.slug,
