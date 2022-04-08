@@ -61,7 +61,7 @@ router.post(
       numShares,
     });
     res.json({
-      message: "You hit the snap endpoint",
+      message: "Created stamp!",
       stamp: linkToImage,
     });
   }

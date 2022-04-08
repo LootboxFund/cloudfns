@@ -35,7 +35,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootbox.slug,
   // version: manifest.pipedream.actions.onCreateLootbox.pipedreamSemver,
-  version: "0.1.3",
+  version: "0.1.5",
   type: "action",
   props: {
     googleCloud: {
@@ -47,7 +47,7 @@ const action = defineAction({
       type: "object",
     },
     eventABI: {
-      // {{steps.defineEventABIs.$return_value.LootboxFactory}}
+      // {{steps.defineEventABIs.$return_value.LootboxInstantFactory}}
       type: "object",
     },
   },
@@ -106,7 +106,7 @@ const action = defineAction({
         };
 
         return saveFileToGBucket({
-          alias: `JSON for Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
+          alias: `JSON for Instant Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.lootbox}.json`,
           chainIdHex: manifest.chain.chainIDHex,

@@ -10,13 +10,14 @@ const action = defineAction({
     "Define the ABI of on-chain events that get emitted by smart contracts",
   key: manifest.pipedream.actions.defineEventABIs.slug,
   // version: manifest.pipedream.actions.defineEventABIs.pipedreamSemver,
-  version: "0.1.2",
+  version: "0.1.4",
   type: "action",
   props: {},
   async run() {
     return {
       ERC20: [Transfer, Approval],
-      LootboxFactory: [LootboxCreated],
+      LootboxInstantFactory: [InstantLootboxCreated],
+      LootboxEscrowFactory: [InstantEscrowCreated],
     };
   },
 });
@@ -42,7 +43,7 @@ event Approval(
   keys: ["owner", "spender", "value"],
 };
 
-const LootboxCreated: ABIUtilRepresenation = {
+const InstantLootboxCreated: ABIUtilRepresenation = {
   abi: `
 event LootboxCreated(
   string lootboxName,
@@ -59,6 +60,31 @@ event LootboxCreated(
     "lootbox",
     "issuer",
     "treasury",
+    "maxSharesSold",
+    "sharePriceUSD",
+    "_data",
+  ],
+};
+
+const InstantEscrowCreated: ABIUtilRepresenation = {
+  abi: `
+event LootboxCreated(
+  string lootboxName,
+  address indexed lootbox,
+  address indexed issuer,
+  address indexed treasury,
+  uint256 targetSharesSold,
+  uint256 maxSharesSold,
+  uint256 sharePriceUSD,
+  string _data
+)
+`,
+  keys: [
+    "lootboxName",
+    "lootbox",
+    "issuer",
+    "treasury",
+    "targetSharesSold",
     "maxSharesSold",
     "sharePriceUSD",
     "_data",

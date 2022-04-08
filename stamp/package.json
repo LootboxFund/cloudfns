@@ -9,7 +9,7 @@
     "watch:server": "nodemon dist/server.js",
     "dev": "npm-run-all --parallel watch:*",
     "start": "node dist/server.js",
-    "deploy": "yarn build && gcloud run deploy stamp-nft --memory 1024Mi",
+    "deploy": "yarn build && gcloud run deploy stamp-nft --memory 1024Mi --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging",
     "local:dev": "yarn build && node dist/server.js",
     "local:render": "npx ts-node ./src/demo.ts",
     "storybook": "start-storybook"
@@ -19,11 +19,11 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/storage": "^5.18.2",
-    "@wormgraph/helpers": "0.0.33",
-    "@wormgraph/manifest": "0.2.97",
     "@types/express": "^4.17.13",
     "@types/react": "^17.0.22",
     "@types/react-dom": "^17.0.9",
+    "@wormgraph/helpers": "0.0.33",
+    "@wormgraph/manifest": "0.2.133",
     "axios": "^0.26.0",
     "body-parser": "^1.19.2",
     "bootstrap": "^5.1.1",

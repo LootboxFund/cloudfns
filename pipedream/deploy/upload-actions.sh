@@ -8,5 +8,6 @@ cd "$parent_path"
 
 NODE_ENV=production pd publish ../lib/actions/defineEventABIs/index.js
 NODE_ENV=production pd publish ../lib/actions/onUploadABI/index.js
-NODE_ENV=production pd publish ../lib/actions/onCreateLootbox/index.js
+NODE_ENV=production pd publish ../lib/actions/onCreateInstantLootbox/index.js
+NODE_ENV=production pd publish ../lib/actions/onCreateEscrowLootbox/index.js
 

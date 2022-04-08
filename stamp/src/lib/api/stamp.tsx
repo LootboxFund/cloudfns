@@ -50,7 +50,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
       localFilePath: path,
       fileName: `${props.lootboxAddress}.png`,
       chainIdHex: manifest.chain.chainIDHex,
-      bucket: manifest.storage.buckets.lootboxStamp,
+      bucket: manifest.storage.buckets.stamp.id,
     });
     return imagePath;
   } catch (e) {
