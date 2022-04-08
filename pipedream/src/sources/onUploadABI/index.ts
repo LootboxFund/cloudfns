@@ -5,14 +5,14 @@
  * View this Pipedream Source in GUI: https://pipedream.com/sources/dc_76u2zgb/configuration
  */
 import get from "lodash/get";
-import manifest from "../../manifest.json";
+import manifest from "../../manifest/manifest";
 
 const source = {
   key: manifest.pipedream.sources.onUploadABI.slug,
   name: manifest.pipedream.sources.onUploadABI.alias,
   description: "Webhook entry point to upload ABI to GBucket",
   // version: manifest.pipedream.sources.onUploadABI.semver,
-  version: "0.1.2",
+  version: "0.1.3",
   props: {
     httpInterface: {
       type: "$.interface.http",

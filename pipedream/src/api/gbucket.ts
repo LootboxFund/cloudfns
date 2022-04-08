@@ -1,5 +1,5 @@
 import { ChainIDHex } from "../types";
-import manifest from '../manifest.json'
+import manifest from '../manifest/manifest'
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {

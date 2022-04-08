@@ -9,7 +9,7 @@ import {
   ContractAddress,
 } from "../../types";
 import { BigNumber } from "ethers";
-import manifest from "../../manifest.json";
+import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
 
 interface Event_LootboxCreated {
@@ -38,7 +38,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootbox.slug,
   // version: manifest.pipedream.actions.onCreateLootbox.pipedreamSemver,
-  version: "0.1.5",
+  version: "0.1.6",
   type: "action",
   props: {
     googleCloud: {

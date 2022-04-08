@@ -1,7 +1,7 @@
 import { defineAction } from "ironpipe";
 import { ABIGenericInterface, ChainIDHex, SemanticVersion } from "../../types";
 import { saveFileToGBucket } from "../../api/gbucket";
-import manifest from "../../manifest.json";
+import manifest from "../../manifest/manifest";
 
 const action = defineAction({
   key: manifest.pipedream.actions.onUploadABI.slug,
@@ -10,7 +10,7 @@ const action = defineAction({
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
   // version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
-  version: "0.1.4",
+  version: "0.1.5",
   type: "action",
   props: {
     googleCloud: {

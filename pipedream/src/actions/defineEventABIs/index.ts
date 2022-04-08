@@ -1,6 +1,6 @@
 import { defineAction } from "ironpipe";
 import { ABIUtilRepresenation } from "../../types";
-import manifest from "../../manifest.json";
+import manifest from "../../manifest/manifest";
 
 const action = defineAction({
   name: manifest.pipedream.actions.defineEventABIs.alias,
@@ -8,7 +8,7 @@ const action = defineAction({
     "Define the ABI of on-chain events that get emitted by smart contracts",
   key: manifest.pipedream.actions.defineEventABIs.slug,
   // version: manifest.pipedream.actions.defineEventABIs.pipedreamSemver,
-  version: "0.1.4",
+  version: "0.1.6",
   type: "action",
   props: {},
   async run() {
