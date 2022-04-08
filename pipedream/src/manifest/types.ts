@@ -135,7 +135,8 @@ interface PipedreamSource {
 
 export enum PipedreamActionSlugs {
   defineEventABIs = "defineEventABIs",
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
   onUploadABI = "onUploadABI",
 }
 type PipedreamActionSlug = PipedreamActionSlugs;
@@ -148,7 +149,8 @@ interface PipedreamAction {
 }
 
 export enum PipedreamWorkflowSlugs {
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
   onUploadABI = "onUploadABI",
 }
 export type PipedreamWorkflowID = string & { readonly _: unique symbol };
@@ -224,7 +226,7 @@ interface Storage {
   buckets: Record<BucketType, Bucket>;
 }
 
-export interface GlobalMainfest_v0_3_0_prod {
+export interface GlobalMainfest_v0_2_8_sandbox {
   alias: string;
   date: Date;
   description: string;
