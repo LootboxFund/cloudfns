@@ -10,7 +10,7 @@ interface GBucketSaveLocalProps {
   localFilePath: string;
   fileName: string;
   chainIdHex: ChainIDHex;
-  bucket: typeof manifest.storage.buckets.lootboxStamp;
+  bucket: typeof manifest.storage.buckets.stamp;
 }
 
 export const saveLocalFileToGBucket = async ({
