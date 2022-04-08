@@ -5,14 +5,12 @@ import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
   ABIUtilRepresenation,
-  convertHexToDecimal,
   ITicketMetadata,
   ContractAddress,
-} from "@wormgraph/helpers";
+} from "../../types";
 import { BigNumber } from "ethers";
-import { Manifest } from "../../manifest";
+import manifest from "../../manifest.json";
 import { encodeURISafe } from "../../api/helpers";
-const manifest = Manifest.default;
 
 interface Event_LootboxCreated {
   lootboxName: string;
@@ -22,6 +20,10 @@ interface Event_LootboxCreated {
   maxSharesSold: BigNumber;
   sharePriceUSD: BigNumber;
   _data: string;
+}
+
+const convertHexToDecimal = (hex: string): string => {
+  return parseInt(hex, 16).toString()
 }
 
 const action = defineAction({

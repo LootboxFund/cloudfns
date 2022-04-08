@@ -1,8 +1,6 @@
 import { defineAction } from "ironpipe";
 import { ABIUtilRepresenation } from "@wormgraph/helpers";
-
-import { Manifest } from "../../manifest";
-const manifest = Manifest.default;
+import manifest from "../../manifest.json";
 
 const action = defineAction({
   name: manifest.pipedream.actions.defineEventABIs.alias,

@@ -1,8 +1,7 @@
 import { defineAction } from "ironpipe";
-import { ABIGenericInterface, ChainIDHex } from "@wormgraph/helpers";
+import { ABIGenericInterface, ChainIDHex, SemanticVersion } from "../../types";
 import { saveFileToGBucket } from "../../api/gbucket";
-import { Manifest, SemanticVersion } from "../../manifest";
-const manifest = Manifest.default;
+import manifest from "../../manifest.json";
 
 const action = defineAction({
   key: manifest.pipedream.actions.onUploadABI.slug,
