@@ -58,7 +58,8 @@ export enum OZTeammemberSlugs {
 
 export type OZAutoTaskID = string & { readonly _: unique symbol };
 export enum OZAutoTaskSlugs {
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
 }
 type OZAutoTaskSlug = OZAutoTaskSlugs;
 interface OZAutoTask {
@@ -110,7 +111,8 @@ interface Pipedream {
 }
 
 export enum PipedreamSourceSlugs {
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
   onUploadABI = "onUploadABI",
 }
 export type PipedreamSourceID = string & { readonly _: unique symbol };
@@ -126,7 +128,8 @@ interface PipedreamSource {
 
 export enum PipedreamActionSlugs {
   defineEventABIs = "defineEventABIs",
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
   onUploadABI = "onUploadABI",
 }
 type PipedreamActionSlug = PipedreamActionSlugs;
@@ -139,7 +142,8 @@ interface PipedreamAction {
 }
 
 export enum PipedreamWorkflowSlugs {
-  onCreateLootbox = "onCreateLootbox",
+  onCreateInstantLootbox = "onCreateInstantLootbox",
+  onCreateEscrowLootbox = "onCreateEscrowLootbox",
   onUploadABI = "onUploadABI",
 }
 export type PipedreamWorkflowID = string & { readonly _: unique symbol };
@@ -215,7 +219,7 @@ interface Storage {
   buckets: Record<BucketType, Bucket>;
 }
 
-export interface GlobalMainfest_v0_3_0_prod {
+export interface GlobalMainfest_v0_2_8_sandbox {
   alias: string;
   date: Date;
   description: string;

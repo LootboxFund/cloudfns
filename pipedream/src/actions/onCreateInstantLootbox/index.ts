@@ -3,14 +3,12 @@ import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
 
 import { decodeEVMLogs } from "../../api/evm";
-import {
-  Address,
-  ABIUtilRepresenation,
-  convertHexToDecimal,
-} from "@wormgraph/helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
+import { ABIUtilRepresenation, Address } from "../../types";
+import { convertHexToDecimal } from "../../api/general";
+import { InstantLootboxCreated } from "../../api/event-abi";
 
 interface Event_LootboxCreated {
   lootboxName: string;
@@ -23,7 +21,7 @@ interface Event_LootboxCreated {
 }
 
 const action = defineAction({
-  name: manifest.pipedream.actions.onCreateLootbox.alias,
+  name: manifest.pipedream.actions.onCreateInstantLootbox.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -32,9 +30,9 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onCreateLootbox.slug,
-  // version: manifest.pipedream.actions.onCreateLootbox.pipedreamSemver,
-  version: "0.1.5",
+  key: manifest.pipedream.actions.onCreateInstantLootbox.slug,
+  // version: manifest.pipedream.actions.onCreateInstantLootbox.pipedreamSemver,
+  version: "0.1.9",
   type: "action",
   props: {
     googleCloud: {
@@ -45,16 +43,15 @@ const action = defineAction({
       // {{steps.trigger.event}}
       type: "object",
     },
-    eventABI: {
-      // {{steps.defineEventABIs.$return_value.LootboxInstantFactory}}
-      type: "object",
-    },
+    // eventABI: {
+    //   // {{steps.defineEventABIs.$return_value.LootboxInstantFactory}}
+    //   type: "object",
+    // },
   },
   async run() {
     const { data: bucketData, stamp: bucketStamp } = manifest.storage.buckets;
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
-    const abiReps = (this as any).eventABI as ABIUtilRepresenation[];
     const { transaction } = (this as any).webhookTrigger as BlockTriggerEvent;
     console.log(`
     
@@ -67,7 +64,7 @@ const action = defineAction({
     const decodedLogs = decodeEVMLogs<Event_LootboxCreated>({
       eventName: "LootboxCreated",
       logs: transaction.logs,
-      abiReps,
+      abiReps: [InstantLootboxCreated],
     });
     console.log(decodedLogs);
 

@@ -7,7 +7,7 @@ export const constants = {
   NAME: manifest.openZeppelin.sentinels.onCreateLootboxEscrow.alias,
   CHAIN_ALIAS:
     manifest.openZeppelin.sentinels.onCreateLootboxEscrow.ozChainSlug,
-  AUTO_TASK_ID: manifest.openZeppelin.autoTasks.onCreateLootbox.id,
+  AUTO_TASK_ID: manifest.openZeppelin.autoTasks.onCreateEscrowLootbox.id,
   SENTINAL_WATCH_ADDRESS:
     manifest.openZeppelin.sentinels.onCreateLootboxEscrow.contractWatchAddress,
   ABI: abi,
