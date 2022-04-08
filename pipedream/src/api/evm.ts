@@ -1,6 +1,6 @@
 import { EthLog } from "defender-autotask-utils";
 import { ethers } from "ethers";
-import { ABIUtilRepresenation } from '../types';
+import { ABIUtilRepresenation } from '../manifest/types.helpers';
 
 export const decodeEVMLogs = <T>({
   eventName,

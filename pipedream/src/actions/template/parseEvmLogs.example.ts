@@ -2,7 +2,7 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { BigNumber, ethers } from "ethers";
 import { defineAction } from "ironpipe";
-import { Address } from '../../types';
+import { Address } from '../../manifest/types.helpers';
 
 interface ERC20_TransferEvent {
   from: Address;
