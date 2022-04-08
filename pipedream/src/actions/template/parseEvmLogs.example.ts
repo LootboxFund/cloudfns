@@ -2,15 +2,13 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { BigNumber, ethers } from "ethers";
 import { defineAction } from "ironpipe";
-import { Address } from '@wormgraph/helpers';
+import { Address } from '../../types';
 
 interface ERC20_TransferEvent {
   from: Address;
   to: Address;
   value: BigNumber;
 }
-
-
 
 const EventParams = ["from", "to", "value"];
 

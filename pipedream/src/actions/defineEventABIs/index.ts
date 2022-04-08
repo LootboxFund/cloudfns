@@ -1,5 +1,5 @@
 import { defineAction } from "ironpipe";
-import { ABIUtilRepresenation } from "@wormgraph/helpers";
+import { ABIUtilRepresenation } from "../../types";
 import manifest from "../../manifest.json";
 
 const action = defineAction({
