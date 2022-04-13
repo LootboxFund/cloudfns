@@ -12,7 +12,7 @@ import {
 type RepoSemver = string;
 type DeployedSemver = string;
 type ContractGroupSemver = string;
-type StorageDownloadUrl = "https://storage.googleapis.com/storage/v1/b";
+type StorageDownloadUrl = "https://storage.googleapis.com";
 
 interface BaseSemver {
   major: number;

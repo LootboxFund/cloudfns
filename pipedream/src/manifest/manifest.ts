@@ -64,11 +64,11 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     },
     contracts: {
       LootboxInstantFactory: {
-        address: "______________________________" as Address,
+        address: "_______________" as Address,
         slug: ContractSlugs.LootboxInstantFactory,
       },
       LootboxEscrowFactory: {
-        address: "______________________________" as Address,
+        address: "_______________" as Address,
         slug: ContractSlugs.LootboxEscrowFactory,
       },
     },
@@ -79,13 +79,13 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     ],
     autoTasks: {
       onCreateLootboxInstant: {
-        id: "______________________________" as OZAutoTaskID,
+        id: "_______________" as OZAutoTaskID,
         alias: "On creation of an Instant Lootbox",
         semver: "0.3.0-prod",
         slug: OZAutoTaskSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
-        id: "______________________________" as OZAutoTaskID,
+        id: "_______________" as OZAutoTaskID,
         alias: "On creation of an Escrow Lootbox",
         semver: "0.3.0-prod",
         slug: OZAutoTaskSlugs.onCreateLootboxEscrow,
@@ -93,20 +93,20 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     },
     sentinels: {
       onCreateLootboxInstant: {
-        id: "______________________________" as OZSentinelID,
+        id: "_______________" as OZSentinelID,
         alias: "Instant Lootbox onCreate",
         semver: "0.3.0-prod",
         slug: OZSentinelSlugs.onCreateLootboxInstant,
         ozChainSlug: OZChainSlugs.BSC_MAINNET,
-        contractWatchAddress: "______________________________" as Address,
+        contractWatchAddress: "_______________" as Address,
       },
       onCreateLootboxEscrow: {
-        id: "______________________________" as OZSentinelID,
+        id: "_______________" as OZSentinelID,
         alias: "Escrow Lootbox onCreate",
         semver: "0.3.0-prod",
         slug: OZSentinelSlugs.onCreateLootboxEscrow,
         ozChainSlug: OZChainSlugs.BSC_MAINNET,
-        contractWatchAddress: "______________________________" as Address,
+        contractWatchAddress: "_______________" as Address,
       },
     },
     semver: "0.3.0-prod",
@@ -117,51 +117,48 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     sources: {
       onCreateLootboxInstant: {
         alias: "onCreateLootboxInstant",
-        pipedreamID: "______________________________" as PipedreamSourceID,
+        pipedreamID: "_______________" as PipedreamSourceID,
         semver: "0.1.0",
-        webhookEndpoint:
-          "https://______________________________.m.pipedream.net",
+        webhookEndpoint: "https://_______________.m.pipedream.net",
         slug: PipedreamSourceSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
         alias: "onCreateLootboxEscrow",
-        pipedreamID: "______________________________" as PipedreamSourceID,
+        pipedreamID: "_______________" as PipedreamSourceID,
         semver: "0.1.0",
-        webhookEndpoint:
-          "https://______________________________.m.pipedream.net",
+        webhookEndpoint: "https://_______________.m.pipedream.net",
         slug: PipedreamSourceSlugs.onCreateLootboxEscrow,
       },
       onUploadABI: {
         alias: "onUploadABI",
-        pipedreamID: "______________________________" as PipedreamSourceID,
+        pipedreamID: "_______________" as PipedreamSourceID,
         semver: "0.1.0",
-        webhookEndpoint:
-          "https://______________________________.m.pipedream.net",
+        webhookEndpoint: "https://_______________.m.pipedream.net",
         slug: PipedreamSourceSlugs.onUploadABI,
       },
     },
     actions: {
       defineEventABIs: {
         alias: "defineEventABIs",
-        pipedreamID: "______________________________" as PipedreamActionID,
+        pipedreamID: "_______________" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: PipedreamActionSlugs.defineEventABIs,
       },
       onCreateLootboxInstant: {
         alias: "onCreateLootboxInstant",
-        pipedreamID: "______________________________" as PipedreamActionID,
+        pipedreamID: "_______________" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: PipedreamActionSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
         alias: "onCreateLootboxEscrow",
-        pipedreamID: "______________________________" as PipedreamActionID,
+        pipedreamID: "_______________" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: PipedreamActionSlugs.onCreateLootboxEscrow,
       },
       onUploadABI: {
         alias: "onUploadABI",
-        pipedreamID: "______________________________" as PipedreamActionID,
+        pipedreamID: "_______________" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: PipedreamActionSlugs.onUploadABI,
       },
@@ -174,7 +171,8 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     containers: {
       stampNewLootbox: {
         slug: CloudRunContainerSlugs.stampNewLootbox,
-        fullRoute: "https://____________.a.run.app/stamp/new/lootbox",
+        fullRoute:
+          "https://stamp-nft-wpkp2xisuq-ue.a.run.app/stamp/new/lootbox",
       },
     },
   },
@@ -184,7 +182,7 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     semver: "0.3.0-prod",
   },
   storage: {
-    downloadUrl: "https://storage.googleapis.com/storage/v1/b",
+    downloadUrl: "https://storage.googleapis.com",
     buckets: {
       abi: {
         id: "lootbox-abi-prod",
@@ -245,22 +243,22 @@ export const snapshot: GlobalMainfest_v0_3_0_prod = {
     semver: "0.3.0-prod",
     contracts: {
       LootboxInstantFactory: {
-        address: "____________________________________" as Address,
+        address: "_______________" as Address,
         slug: ContractSlugs.LootboxInstantFactory,
       },
       LootboxEscrowFactory: {
-        address: "____________________________________" as Address,
+        address: "_______________" as Address,
         slug: ContractSlugs.LootboxEscrowFactory,
       },
     },
   },
   firebase: {
-    apiKey: "____________________________________",
-    authDomain: "____________________________________",
-    projectId: "____________________________________",
-    storageBucket: "____________________________________",
-    messagingSenderId: "____________________________________",
-    appId: "____________________________________",
+    apiKey: "AIzaSyBWx_NB1ztvNMayG5VWBjYz3xtgPLoXH8c",
+    authDomain: "lootbox-fund-prod.firebaseapp.com",
+    projectId: "lootbox-fund-prod",
+    storageBucket: "lootbox-fund-prod.appspot.com",
+    messagingSenderId: "2446790853",
+    appId: "1:2446790853:web:82a1b6374dc4df5e8ea0ac",
   },
 };
 
