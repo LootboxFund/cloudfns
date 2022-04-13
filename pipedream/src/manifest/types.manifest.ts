@@ -151,10 +151,6 @@ interface PipedreamAction {
   slug: PipedreamActionSlug;
 }
 
-export enum PipedreamWorkflowSlugs {
-  onCreateLootbox = "onCreateLootbox",
-  onUploadABI = "onUploadABI",
-}
 export type PipedreamWorkflowID = string & { readonly _: unique symbol };
 
 export enum CloudRunContainerSlugs {
