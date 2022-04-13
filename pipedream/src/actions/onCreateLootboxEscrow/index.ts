@@ -7,7 +7,7 @@ import {
   ABIUtilRepresenation,
   ITicketMetadata,
   ContractAddress,
-  convertHexToDecimal
+  convertHexToDecimal,
 } from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
@@ -153,10 +153,10 @@ const action = defineAction({
     );
 
     // Lootbox NFT ticket image
-    const filePath = `${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
-    const downloadablePath = `${manifest.storage.downloadUrl}/${
-      bucketStamp.id
-    }/${encodeURISafe(filePath)}?alt=media`;
+    const filePath = `${bucketStamp.id}/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
+    const downloadablePath = `${manifest.storage.downloadUrl}/${encodeURISafe(
+      filePath
+    )}?alt=media`;
 
     return {
       json: savedFragmentJSON,
