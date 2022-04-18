@@ -3,11 +3,16 @@ import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
 
 import { decodeEVMLogs } from "../../api/evm";
+import {
+  Address,
+  ABIUtilRepresenation,
+  ITicketMetadata,
+  ContractAddress,
+  convertHexToDecimal,
+} from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
-import { ABIUtilRepresenation, Address } from "../../types";
-import { convertHexToDecimal } from "../../api/general";
 import { InstantLootboxCreated } from "../../api/event-abi";
 
 interface Event_LootboxCreated {
@@ -21,7 +26,7 @@ interface Event_LootboxCreated {
 }
 
 const action = defineAction({
-  name: manifest.pipedream.actions.onCreateInstantLootbox.alias,
+  name: manifest.pipedream.actions.onCreateLootboxInstant.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -30,9 +35,9 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onCreateInstantLootbox.slug,
-  // version: manifest.pipedream.actions.onCreateInstantLootbox.pipedreamSemver,
-  version: "0.1.9",
+  key: manifest.pipedream.actions.onCreateLootboxInstant.slug,
+  // version: manifest.pipedream.actions.onCreateLootboxInstant.pipedreamSemver,
+  version: "0.4.3",
   type: "action",
   props: {
     googleCloud: {
@@ -70,6 +75,7 @@ const action = defineAction({
 
     let lootboxName = "";
     let lootboxAddr = "";
+    let _lootboxURI: ITicketMetadata | undefined = undefined;
 
     // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
@@ -82,23 +88,51 @@ const action = defineAction({
         lootboxName = ev.lootboxName;
         lootboxAddr = ev.lootbox;
 
-        let lootboxURI;
         try {
-          lootboxURI = JSON.parse(ev._data);
+          _lootboxURI = JSON.parse(ev._data) as ITicketMetadata;
         } catch (err) {
           console.error("Could not parse lootbox URI", err);
-          lootboxURI = {};
         }
 
-        // We need to add some data to the URI file
-        // This causes weaker typing - be sure to coordinate this
-        // with the frontend @widgets repo
-        lootboxURI.address = ev.lootbox;
-        lootboxURI.lootbox = {
-          ...lootboxURI.lootbox,
-          address: ev.lootbox,
-          transactionHash: transaction.transactionHash,
-          blockNumber: transaction.blockNumber,
+        const lootboxURI: ITicketMetadata = {
+          address: ev.lootbox as ContractAddress,
+          name: _lootboxURI?.name || "",
+          description: _lootboxURI?.description || "",
+          image: _lootboxURI?.image || "",
+          backgroundColor: _lootboxURI?.backgroundColor || "",
+          backgroundImage: _lootboxURI?.backgroundImage || "",
+          badgeImage: _lootboxURI?.badgeImage || "",
+          lootbox: {
+            address: ev.lootbox as ContractAddress,
+            transactionHash: transaction.transactionHash,
+            blockNumber: transaction.blockNumber,
+            chainIdHex: _lootboxURI?.lootbox?.chainIdHex || "",
+            chainIdDecimal: _lootboxURI?.lootbox?.chainIdDecimal || "",
+            chainName: _lootboxURI?.lootbox?.chainName || "",
+            targetPaybackDate:
+              _lootboxURI?.lootbox?.targetPaybackDate || new Date().valueOf(),
+            createdAt: _lootboxURI?.lootbox?.createdAt || new Date().valueOf(),
+            fundraisingTarget: _lootboxURI?.lootbox?.fundraisingTarget || "",
+            fundraisingTargetMax:
+              _lootboxURI?.lootbox?.fundraisingTargetMax || "",
+            basisPointsReturnTarget:
+              _lootboxURI?.lootbox?.basisPointsReturnTarget || "",
+            returnAmountTarget: _lootboxURI?.lootbox?.returnAmountTarget || "",
+            pricePerShare: _lootboxURI?.lootbox?.pricePerShare || "",
+            lootboxThemeColor: _lootboxURI?.lootbox?.lootboxThemeColor || "",
+          },
+          socials: {
+            twitter: _lootboxURI?.socials?.twitter || "",
+            email: _lootboxURI?.socials?.email || "",
+            instagram: _lootboxURI?.socials?.instagram || "",
+            tiktok: _lootboxURI?.socials?.tiktok || "",
+            facebook: _lootboxURI?.socials?.facebook || "",
+            discord: _lootboxURI?.socials?.discord || "",
+            youtube: _lootboxURI?.socials?.youtube || "",
+            snapchat: _lootboxURI?.socials?.snapchat || "",
+            twitch: _lootboxURI?.socials?.twitch || "",
+            web: _lootboxURI?.socials?.web || "",
+          },
         };
 
         return saveFileToGBucket({
@@ -119,10 +153,10 @@ const action = defineAction({
     );
 
     // Lootbox NFT ticket image
-    const filePath = `${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
-    const downloadablePath = `${manifest.storage.downloadUrl}/${
-      bucketStamp.id
-    }/${encodeURISafe(filePath)}?alt=media`;
+    const filePath = `${bucketStamp.id}/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
+    const downloadablePath = `${manifest.storage.downloadUrl}/${encodeURISafe(
+      filePath
+    )}?alt=media`;
 
     return {
       json: savedFragmentJSON,

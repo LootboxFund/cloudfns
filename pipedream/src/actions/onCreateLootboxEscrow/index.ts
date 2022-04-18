@@ -7,7 +7,8 @@ import {
   ABIUtilRepresenation,
   ITicketMetadata,
   ContractAddress,
-} from "../../types";
+  convertHexToDecimal,
+} from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
@@ -23,12 +24,8 @@ interface Event_LootboxCreated {
   _data: string;
 }
 
-const convertHexToDecimal = (hex: string): string => {
-  return parseInt(hex, 16).toString();
-};
-
 const action = defineAction({
-  name: manifest.pipedream.actions.onCreateEscrowLootbox.alias,
+  name: manifest.pipedream.actions.onCreateLootboxEscrow.alias,
   description: `
     Pipeline for handling LootboxCreated event
     0. Parse the EVM logs
@@ -37,9 +34,9 @@ const action = defineAction({
     3. Save lootbox/index.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onCreateEscrowLootbox.slug,
-  // version: manifest.pipedream.actions.onCreateEscrowLootbox.pipedreamSemver,
-  version: "0.1.10",
+  key: manifest.pipedream.actions.onCreateLootboxEscrow.slug,
+  // version: manifest.pipedream.actions.onCreateLootboxEscrow.pipedreamSemver,
+  version: "0.4.2",
   type: "action",
   props: {
     googleCloud: {
@@ -156,10 +153,10 @@ const action = defineAction({
     );
 
     // Lootbox NFT ticket image
-    const filePath = `${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
-    const downloadablePath = `${manifest.storage.downloadUrl}/${
-      bucketStamp.id
-    }/${encodeURISafe(filePath)}?alt=media`;
+    const filePath = `${bucketStamp.id}/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
+    const downloadablePath = `${manifest.storage.downloadUrl}/${encodeURISafe(
+      filePath
+    )}?alt=media`;
 
     return {
       json: savedFragmentJSON,

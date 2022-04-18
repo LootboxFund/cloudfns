@@ -1,4 +1,4 @@
-import { ABIUtilRepresenation } from "../types";
+import { ABIUtilRepresenation } from "../manifest/types.helpers";
 
 export const InstantLootboxCreated: ABIUtilRepresenation = {
   abi: `

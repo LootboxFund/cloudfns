@@ -7,12 +7,12 @@
 import manifest from "../../manifest/manifest";
 
 const source = {
-  key: manifest.pipedream.sources.onCreateEscrowLootbox.slug,
-  name: manifest.pipedream.sources.onCreateEscrowLootbox.alias,
+  key: manifest.pipedream.sources.onCreateLootboxInstant.slug,
+  name: manifest.pipedream.sources.onCreateLootboxInstant.alias,
   description:
     "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
-  // version: manifest.pipedream.sources.onCreateLootbox.semver,
-  version: "0.1.3",
+  // version: manifest.pipedream.sources.onCreateLootboxInstant.semver,
+  version: "0.3.0",
   props: {
     googleCloud: {
       type: "app",

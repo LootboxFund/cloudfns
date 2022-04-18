@@ -2212,20 +2212,28 @@
     "@typescript-eslint/types" "5.15.0"
     eslint-visitor-keys "^3.0.0"
 
-"@wormgraph/helpers@0.0.33":
-  version "0.0.33"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.0.33.tgz#68b0aad4472ea0198d25a424d1b8040d102deea6"
-  integrity sha512-JQB7YC8ZLpPam13UNNeP24wq0PxxgiXFP07c+BBY7oD2g+GDIaJMl7pTDCcOPx1gW0V85b19xCYiaxjerjWRLA==
+"@wormgraph/helpers@0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.1.tgz#ce3864a245def07c6f088dde85ff8db59774af0d"
+  integrity sha512-p8n7U63C+JZVe/hw7q2x8JwXRYedTGOR2IrKqxHaXtz1k5pSDHA9ObxuyYEQLUmFnsMiQidXnRIRR3mGDD/BFQ==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/manifest@0.2.137":
-  version "0.2.137"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.2.137.tgz#dfd109b2b346d75f49e9192c296145c553a0203f"
-  integrity sha512-dNjYgJvVKxAuQW5/t8dpsu15I+y79sY5K6Udx7nw3wROpvwprAU/D/RRCRMsmoMPrxnejgKOPtZED8uAQF+brQ==
+"@wormgraph/helpers@0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.2.tgz#d3bf884961e787625222db9a0dae0ea1a92420d3"
+  integrity sha512-SU7nbVK8/QBkjr2IX5Y/IfROlSeiNnkx+5GXGyn3zh0YTxhAv8rFgkksWyEFKXOT/rGqufucFRyxxAmycQhSGA==
   dependencies:
-    "@wormgraph/helpers" "0.0.33"
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@wormgraph/manifest@0.3.21":
+  version "0.3.21"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.21.tgz#94db0fec4ce946964e22d574bf76f381ebba0e6a"
+  integrity sha512-0ZdV8shj0fhTwGOFAELwcxKuO2FCGmfawSJ+wUii34pLOAk8Bg0d3b6xkwEET9qRUtf7jWBlxmZHXlPF3XhrmA==
+  dependencies:
+    "@wormgraph/helpers" "0.1.2"
 
 abab@^2.0.3, abab@^2.0.5:
   version "2.0.5"
