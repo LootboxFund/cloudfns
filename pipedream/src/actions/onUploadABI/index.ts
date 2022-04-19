@@ -14,7 +14,7 @@ const action = defineAction({
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
   // version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
-  version: "0.4.1",
+  version: "0.4.2",
   type: "action",
   props: {
     googleCloud: {
@@ -59,7 +59,7 @@ const action = defineAction({
     await saveFileToGBucket({
       alias: `Saving ABI for ${metadata.alias}`,
       credentials,
-      fileName: `${metadata.alias}.json`,
+      fileName: `${manifest.pipedream.semver}/${metadata.alias}.json`,
       chainIdHex: manifest.chain.chainIDHex,
       bucket: bucket.id,
       data: JSON.stringify(abi),
