@@ -137,7 +137,6 @@ interface PipedreamSource {
 }
 
 export enum PipedreamActionSlugs {
-  defineEventABIs = "defineEventABIs",
   onCreateLootboxInstant = "onCreateLootboxInstant",
   onCreateLootboxEscrow = "onCreateLootboxEscrow",
   onUploadABI = "onUploadABI",
@@ -184,6 +183,7 @@ interface Microfrontends {
 export enum WidgetSlugs {
   fundraiserPage = "fundraiserPage",
   createLootbox = "createLootbox",
+  manageLootbox = "manageLootbox"
 }
 type WidgetSlug = WidgetSlugs;
 type WidgetSemver = string;
@@ -233,7 +233,7 @@ interface Firebase {
   appId: string;
 }
 
-export interface GlobalMainfest_v0_3_0_prod {
+export interface GlobalMainfest_v0_3_1_demo {
   alias: string;
   date: Date;
   description: string;
