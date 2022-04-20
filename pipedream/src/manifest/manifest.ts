@@ -23,9 +23,9 @@ export const snapshot: GlobalMainfest_v0_3_1_demo = {
     This is a demo version of lootbox hosted on BSC testnet.
   `,
   chain: {
-    chainIDHex: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex,
-    chainName: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainName,
-    priceFeedUSD: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].priceFeedUSD,
+    chainIDHex: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
+    chainName: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainName,
+    priceFeedUSD: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].priceFeedUSD,
   },
   date: new Date("Tue Apr 19 2022 21:36:13 GMT+0700 (Indochina Time)"),
   semver: {
@@ -46,7 +46,7 @@ export const snapshot: GlobalMainfest_v0_3_1_demo = {
           "0x5cf72D125e8be3eD2311E50cbbbc4d09C746516e" as Address,
           "0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address,
         ],
-        chainHexID: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex,
+        chainHexID: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
         threshold: 1,
         slug: MultiSigSlugs.LootboxDAO,
       },
@@ -57,7 +57,7 @@ export const snapshot: GlobalMainfest_v0_3_1_demo = {
           "0x5cf72D125e8be3eD2311E50cbbbc4d09C746516e" as Address,
           "0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address,
         ],
-        chainHexID: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex,
+        chainHexID: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
         threshold: 1,
         slug: MultiSigSlugs.LootboxDAO,
       },
@@ -97,7 +97,7 @@ export const snapshot: GlobalMainfest_v0_3_1_demo = {
         alias: "Instant Lootbox onCreate",
         semver: "0.3.1-demo",
         slug: OZSentinelSlugs.onCreateLootboxInstant,
-        ozChainSlug: OZChainSlugs.BSC_MAINNET,
+        ozChainSlug: OZChainSlugs.BSC_TESTNET,
         contractWatchAddress: "___________" as Address,
       },
       onCreateLootboxEscrow: {
@@ -105,7 +105,7 @@ export const snapshot: GlobalMainfest_v0_3_1_demo = {
         alias: "Escrow Lootbox onCreate",
         semver: "0.3.1-demo",
         slug: OZSentinelSlugs.onCreateLootboxEscrow,
-        ozChainSlug: OZChainSlugs.BSC_MAINNET,
+        ozChainSlug: OZChainSlugs.BSC_TESTNET,
         contractWatchAddress: "___________" as Address,
       },
     },
