@@ -1,9 +1,6 @@
 import { defineAction } from "ironpipe";
-import {
-  ABIGenericInterface,
-  ChainIDHex,
-  SemanticVersion,
-} from "../../manifest/types.helpers";
+import { ABIGenericInterface, ChainIDHex } from "../../manifest/types.helpers";
+import { SemanticVersion } from "../../manifest/types.manifest.semver";
 import { saveFileToGBucket } from "../../api/gbucket";
 import manifest from "../../manifest/manifest";
 
