@@ -1,5 +1,5 @@
 import { ChainIDHex } from "../manifest/types.helpers";
-import manifest from '../manifest/manifest'
+import manifest from "../manifest/manifest";
 import { encodeURISafe } from "./helpers";
 
 type GBucketCreds = {
@@ -12,7 +12,6 @@ interface GBucketSaveFragProps {
   credentials: GBucketCreds;
   fileName: string;
   data: any;
-  chainIdHex: ChainIDHex;
   bucket: string;
 }
 
@@ -21,7 +20,6 @@ export const saveFileToGBucket = async ({
   credentials,
   fileName,
   data,
-  chainIdHex,
   bucket,
 }: GBucketSaveFragProps) => {
   require("@dylburger/umask")();
@@ -33,15 +31,14 @@ export const saveFileToGBucket = async ({
       private_key: credentials.private_key,
     },
   });
-  const filePath = `${chainIdHex}/${fileName}`;
   const downloadablePath = `${
     manifest.storage.downloadUrl
-  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media \n`;
+  }/${bucket}/o/${encodeURISafe(fileName)}?alt=media \n`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
-  await storage.bucket(bucket).file(filePath).save(data);
-  await storage.bucket(bucket).file(filePath).makePublic();
+  await storage.bucket(bucket).file(fileName).save(data);
+  await storage.bucket(bucket).file(fileName).makePublic();
   console.log(`✅ Uploaded \n`);
   return downloadablePath;
 };

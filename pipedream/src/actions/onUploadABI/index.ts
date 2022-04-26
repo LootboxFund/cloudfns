@@ -56,8 +56,7 @@ const action = defineAction({
     await saveFileToGBucket({
       alias: `Saving ABI for ${metadata.alias}`,
       credentials,
-      fileName: `${manifest.pipedream.semver}/${metadata.alias}.json`,
-      chainIdHex: manifest.chain.chainIDHex,
+      fileName: `${manifest.chain.chainIDHex}/${manifest.pipedream.semver}/${metadata.alias}.json`,
       bucket: bucket.id,
       data: JSON.stringify(abi),
     });

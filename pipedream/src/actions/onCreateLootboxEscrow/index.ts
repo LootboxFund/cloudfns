@@ -174,7 +174,6 @@ const action = defineAction({
           alias: `JSON for Escrow Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.lootbox}.json`,
-          chainIdHex: manifest.chain.chainIDHex,
           bucket: bucketData.id,
           data: JSON.stringify({
             address: ev.lootbox,
