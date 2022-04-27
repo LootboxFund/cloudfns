@@ -1,4 +1,10 @@
-import { Address, ChainIDHex, ContractAddress, Url } from "./types.helpers";
+import {
+  Address,
+  ChainIDHex,
+  ContractAddress,
+  Url,
+  ChainInfo,
+} from "./types.helpers";
 import {
   OZChainSlugs,
   BucketType,
@@ -218,12 +224,6 @@ interface SecretManager {
   secrets: SecretManagerSecret[];
 }
 
-interface Chain {
-  chainIDHex: ChainIDHex;
-  chainName: string;
-  priceFeedUSD: ContractAddress;
-}
-
 interface Bucket {
   id: BucketId;
 }
@@ -246,7 +246,7 @@ export interface GlobalMainfest_v0_4_0_demo {
   alias: string;
   date: Date;
   description: string;
-  chains: Chain[];
+  chains: ChainInfo[];
   semver: BaseSemver;
   openZeppelin: OpenZeppelin;
   pipedream: Pipedream;

@@ -24,14 +24,10 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
   `,
   chains: [
     {
-      chainIDHex: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
-      chainName: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainName,
-      priceFeedUSD: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].priceFeedUSD,
+      ...BLOCKCHAINS[ChainSlugs.BSC_TESTNET],
     },
     {
-      chainIDHex: BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex,
-      chainName: BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainName,
-      priceFeedUSD: BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].priceFeedUSD,
+      ...BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET],
     },
   ],
   date: new Date("Tue Apr 26 2022 07:25:51 GMT-0400 (Eastern Daylight Time)"),
@@ -49,22 +45,16 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
       [BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex]: {
         LootboxDAO: {
           alias: "LootboxDAO",
-          address: "0x0a284530Eb51033D363648281BDe68F581188Df1" as Address,
-          signers: [
-            "0x5cf72D125e8be3eD2311E50cbbbc4d09C746516e" as Address,
-            "0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address,
-          ],
+          address: "0xb9a608a29979421461838047BDe9166Cd7ea647f" as Address,
+          signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
           chainHexID: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
         },
         LootboxDAO_Treasury: {
           alias: "LootboxDAO Treasury",
-          address: "0x0a284530Eb51033D363648281BDe68F581188Df1" as Address,
-          signers: [
-            "0x5cf72D125e8be3eD2311E50cbbbc4d09C746516e" as Address,
-            "0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address,
-          ],
+          address: "0x228586A4564B999a7CB673581d7055EcbB9287F3" as Address,
+          signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
           chainHexID: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
@@ -73,17 +63,17 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
       [BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex]: {
         LootboxDAO: {
           alias: "LootboxDAO",
-          address: "0xA471dfd91666EA3EC4a0975f6c30AA1C79c6791D" as Address,
+          address: "0xae069b7d5dfe85CCf056170af7a65F6374588776" as Address,
           signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
-          chainHexID: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex,
+          chainHexID: BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
         },
         LootboxDAO_Treasury: {
           alias: "LootboxDAO Treasury",
-          address: "0x6897CD98857dBf3E3d54aaB250a85B5aBBAE7b9D" as Address,
+          address: "0xC2e94223edf8470f32fa318D53564ABe283960B2" as Address,
           signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
-          chainHexID: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex,
+          chainHexID: BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
         },
@@ -92,11 +82,11 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
     contracts: {
       [BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "0x968914263FFd5A6F364fE2Cf677E34dFeeCC4CA0" as Address,
+          address: "______________________________" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "0x9B47B9F816eb15139240087e2Ddd833fE0974F47" as Address,
+          address: "______________________________" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
@@ -118,13 +108,13 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
     ],
     autoTasks: {
       onCreateLootboxInstant: {
-        id: "e840296b-e734-40ee-bc6f-38b936691d0e" as OZAutoTaskID,
+        id: "______________________________" as OZAutoTaskID,
         alias: "On creation of an Instant Lootbox",
         semver: "0.4.0-demo",
         slug: OZAutoTaskSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
-        id: "bd91c2ce-efb7-4ccc-9cee-bf695e324e8c" as OZAutoTaskID,
+        id: "______________________________" as OZAutoTaskID,
         alias: "On creation of an Escrow Lootbox",
         semver: "0.4.0-demo",
         slug: OZAutoTaskSlugs.onCreateLootboxEscrow,
@@ -133,13 +123,12 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
     sentinels: {
       [BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex]: {
         onCreateLootboxInstant: {
-          id: "a3953775-e841-4d5c-ab13-62683e9744b4" as OZSentinelID,
+          id: "______________________________" as OZSentinelID,
           alias: "Instant Lootbox onCreate",
           semver: "0.4.0-demo",
           slug: OZSentinelSlugs.onCreateLootboxInstant,
           ozChainSlug: OZChainSlugs.BSC_TESTNET,
-          contractWatchAddress:
-            "0x968914263FFd5A6F364fE2Cf677E34dFeeCC4CA0" as Address,
+          contractWatchAddress: "______________________________" as Address,
         },
         onCreateLootboxEscrow: {
           id: "2d61148b-def7-4f78-bffc-70f9eca5e7a5" as OZSentinelID,
@@ -147,8 +136,7 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
           semver: "0.4.0-demo",
           slug: OZSentinelSlugs.onCreateLootboxEscrow,
           ozChainSlug: OZChainSlugs.BSC_TESTNET,
-          contractWatchAddress:
-            "0x9B47B9F816eb15139240087e2Ddd833fE0974F47" as Address,
+          contractWatchAddress: "______________________________" as Address,
         },
       },
       [BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex]: {
@@ -178,45 +166,45 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
     sources: {
       onCreateLootboxInstant: {
         alias: "onCreateLootboxInstant",
-        pipedreamID: "dc_K0uDAE4" as PipedreamSourceID,
+        pipedreamID: "dc_RWuRA3d" as PipedreamSourceID,
         semver: "0.1.0",
         webhookEndpoint:
-          "https://6ea20d8a104d2e57d237f580c8d9ceed.m.pipedream.net",
+          "https://d1b2b949e807ad6885c0905f37bedf2c.m.pipedream.net",
         slug: PipedreamSourceSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
         alias: "onCreateLootboxEscrow",
-        pipedreamID: "dc_Nquy3Ya" as PipedreamSourceID,
+        pipedreamID: "dc_OLu0V3p" as PipedreamSourceID,
         semver: "0.1.0",
         webhookEndpoint:
-          "https://93381ebecb73be2451eb54f095b12bc0.m.pipedream.net",
+          "https://39cb0fae6d13ef1a1e77e19d3b174341.m.pipedream.net",
         slug: PipedreamSourceSlugs.onCreateLootboxEscrow,
       },
       onUploadABI: {
         alias: "onUploadABI",
-        pipedreamID: "dc_jkuvQR4" as PipedreamSourceID,
+        pipedreamID: "dc_MDukVpl" as PipedreamSourceID,
         semver: "0.1.0",
         webhookEndpoint:
-          "https://4820d2adc40d83cd74b83de58eb6ef09.m.pipedream.net",
+          "https://eee545ce433d88321fd2d3b00554e5f6.m.pipedream.net",
         slug: PipedreamSourceSlugs.onUploadABI,
       },
     },
     actions: {
       onCreateLootboxInstant: {
         alias: "onCreateLootboxInstant",
-        pipedreamID: "sc_pMijzVV" as PipedreamActionID,
+        pipedreamID: "sc_5Zia00y" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: PipedreamActionSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
         alias: "onCreateLootboxEscrow",
-        pipedreamID: "sc_B5iQEWw" as PipedreamActionID,
+        pipedreamID: "sc_6QinxxV" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: PipedreamActionSlugs.onCreateLootboxEscrow,
       },
       onUploadABI: {
         alias: "onUploadABI",
-        pipedreamID: "sc_B5iQE8Y" as PipedreamActionID,
+        pipedreamID: "sc_WGiOGGM" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: PipedreamActionSlugs.onUploadABI,
       },
@@ -258,19 +246,19 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
     secrets: [
       {
         name: "OZ_DEFENDER_API_KEY",
-        version: 2,
+        version: 3,
       },
       {
         name: "OZ_DEFENDER_API_SECRET",
-        version: 2,
+        version: 3,
       },
       {
         name: "PD_ABI_UPLOADER_SECRET",
-        version: 2,
+        version: 3,
       },
       {
         name: "JWT_ON_CREATE_LOOTBOX",
-        version: 2,
+        version: 3,
       },
     ],
   },
@@ -307,11 +295,11 @@ export const snapshot: GlobalMainfest_v0_4_0_demo = {
     contracts: {
       [BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "0x968914263FFd5A6F364fE2Cf677E34dFeeCC4CA0" as Address,
+          address: "______________________________" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "0x9B47B9F816eb15139240087e2Ddd833fE0974F47" as Address,
+          address: "______________________________" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
