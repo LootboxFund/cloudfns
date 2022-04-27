@@ -153,18 +153,21 @@ export const BLOCKCHAINS: Record<ChainSlugs, ChainInfo> = {
 };
 
 export interface LootboxCustomSchema {
-  address: ContractAddress;
-  name: string | undefined;
-  description: string | undefined;
-  image: Url | undefined;
-  backgroundColor: string | undefined;
-  backgroundImage: Url | undefined;
-  badgeImage: Url | undefined;
-  lootbox?: {
+  version: string;
+  chain: {
     address: ContractAddress;
-    chainIdHex: ChainIDHex;
-    chainIdDecimal: ChainIDDecimal;
+    title: string;
+    chainIdHex: string;
+    chainIdDecimal: string;
     chainName: string;
+  };
+  lootbox: {
+    name: string;
+    description: string;
+    image: Url;
+    backgroundColor: string;
+    backgroundImage: Url;
+    badgeImage: Url;
     targetPaybackDate: number; // Unix timestamp (new Date().valueOf())
     createdAt: number; // Unix timestamp (new Date().valueOf())
     fundraisingTarget: string;
@@ -176,7 +179,7 @@ export interface LootboxCustomSchema {
     transactionHash: string;
     blockNumber: string;
   };
-  socials?: {
+  socials: {
     twitter: string;
     email: string;
     instagram: string;
@@ -190,7 +193,6 @@ export interface LootboxCustomSchema {
   };
 }
 
-//
 /**
  * Base level metadata should be opensea compatible (see https://docs.opensea.io/docs/metadata-standards for more details)
  * Custom lootbox metadata is nested in lootboxCustomSchema field
