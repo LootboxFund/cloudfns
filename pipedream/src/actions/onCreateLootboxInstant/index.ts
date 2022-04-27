@@ -5,7 +5,6 @@ import { saveFileToGBucket } from "../../api/gbucket";
 import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
-  ABIUtilRepresenation,
   ITicketMetadata,
   ContractAddress,
   convertHexToDecimal,
@@ -118,25 +117,29 @@ const action = defineAction({
           animation_url: _lootboxURI?.animation_url || "",
           youtube_url: _lootboxURI?.youtube_url || "",
           lootboxCustomSchema: {
-            address: ev.lootbox as ContractAddress,
-            name: _lootboxURI?.lootboxCustomSchema?.name || "",
-            description: _lootboxURI?.lootboxCustomSchema?.description || "",
-            image: _lootboxURI?.lootboxCustomSchema?.image || "",
-            backgroundColor:
-              _lootboxURI?.lootboxCustomSchema?.backgroundColor || "",
-            backgroundImage:
-              _lootboxURI?.lootboxCustomSchema?.backgroundImage || "",
-            badgeImage: _lootboxURI?.lootboxCustomSchema?.badgeImage || "",
-            lootbox: {
+            version: manifest.semver.id,
+            chain: {
               address: ev.lootbox as ContractAddress,
+              title: ev.lootboxName,
+              chainIdHex: chain.chainIdHex,
+              chainName: chain.slug,
+              chainIdDecimal: convertHexToDecimal(chain.chainIdHex),
+            },
+            lootbox: {
+              name: _lootboxURI?.lootboxCustomSchema?.lootbox?.name || "",
+              description:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.description || "",
+              image: _lootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
+              backgroundColor:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundColor ||
+                "",
+              backgroundImage:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage ||
+                "",
+              badgeImage:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
               transactionHash: transaction.transactionHash,
               blockNumber: transaction.blockNumber,
-              chainIdHex:
-                _lootboxURI?.lootboxCustomSchema?.lootbox?.chainIdHex || "",
-              chainIdDecimal:
-                _lootboxURI?.lootboxCustomSchema?.lootbox?.chainIdDecimal || "",
-              chainName:
-                _lootboxURI?.lootboxCustomSchema?.lootbox?.chainName || "",
               targetPaybackDate:
                 _lootboxURI?.lootboxCustomSchema?.lootbox?.targetPaybackDate ||
                 new Date().valueOf(),
@@ -184,13 +187,7 @@ const action = defineAction({
           credentials,
           fileName: `${ev.lootbox}.json`,
           bucket: bucketData.id,
-          data: JSON.stringify({
-            address: ev.lootbox,
-            title: ev.lootboxName,
-            chainIdHex: chain.chainIdHex,
-            chainIdDecimal: convertHexToDecimal(chain.chainIdHex),
-            data: lootboxURI,
-          }),
+          data: JSON.stringify(lootboxURI),
         });
       })
     );
