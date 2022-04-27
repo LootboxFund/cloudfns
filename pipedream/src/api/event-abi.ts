@@ -23,7 +23,7 @@ event LootboxCreated(
   ],
 };
 
-export const InstantEscrowCreated: ABIUtilRepresenation = {
+export const EscrowLootboxCreated: ABIUtilRepresenation = {
   abi: `
 event LootboxCreated(
   string lootboxName,
