@@ -19,8 +19,8 @@ interface Event_LootboxCreated {
   lootbox: Address;
   issuer: Address;
   treasury: Address;
+  targetSharesSold: BigNumber;
   maxSharesSold: BigNumber;
-  sharePriceUSD: BigNumber;
   _data: string;
 }
 
@@ -36,7 +36,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxEscrow.slug,
   // version: manifest.pipedream.actions.onCreateLootboxEscrow.pipedreamSemver,
-  version: "0.1.0",
+  version: "0.1.2",
   type: "action",
   props: {
     googleCloud: {
@@ -86,6 +86,12 @@ const action = defineAction({
     });
     console.log(decodedLogs);
 
+    // Lootbox NFT ticket image
+    const stampFilePath = `${bucketStamp.id}/${chain.chainIdHex}/${lootboxAddr}.png`;
+    const stampDownloadablePath = `${
+      manifest.storage.downloadUrl
+    }/${encodeURISafe(stampFilePath)}?alt=media`;
+
     // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
@@ -107,6 +113,8 @@ const action = defineAction({
         } catch (err) {
           console.error("Could not parse lootbox URI", err);
         }
+
+        const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`;
 
         const lootboxURI: ITicketMetadata = {
           image: stampDownloadablePath, // the stamp
@@ -191,14 +199,6 @@ const action = defineAction({
         });
       })
     );
-
-    // Lootbox NFT ticket image
-    const stampFilePath = `${bucketStamp.id}/${chain.chainIdHex}/${lootboxAddr}.png`;
-    const stampDownloadablePath = `${
-      manifest.storage.downloadUrl
-    }/${encodeURISafe(stampFilePath)}?alt=media`;
-
-    const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`;
 
     return {
       json: savedFragmentJSON,
