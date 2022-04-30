@@ -49,7 +49,6 @@ export const generateImage = async (path: string, props: TicketProps) => {
       alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
       fileName: `${props.lootboxAddress}.png`,
-      chainIdHex: manifest.chain.chainIDHex,
       bucket: manifest.storage.buckets.stamp.id,
     });
     return imagePath;
