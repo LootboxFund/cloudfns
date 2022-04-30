@@ -22,7 +22,7 @@ export const saveLocalFileToGBucket = async ({
   bucket,
 }: GBucketSaveLocalProps) => {
   const storage = new Storage();
-  const filePath = `${chainIdHex}/${fileName}`;
+  const filePath = `${fileName}`;
   const downloadablePath = `${
     manifest.storage.downloadUrl
   }/${bucket}/o/${encodeURISafe(filePath)}?alt=media`;
