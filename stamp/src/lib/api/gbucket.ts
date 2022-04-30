@@ -10,7 +10,6 @@ interface GBucketSaveLocalProps {
   alias: string;
   localFilePath: string;
   fileName: string;
-  chainIdHex: ChainIDHex;
   bucket: BucketId;
 }
 
@@ -18,7 +17,6 @@ export const saveLocalFileToGBucket = async ({
   alias,
   localFilePath,
   fileName,
-  chainIdHex,
   bucket,
 }: GBucketSaveLocalProps) => {
   const storage = new Storage();
