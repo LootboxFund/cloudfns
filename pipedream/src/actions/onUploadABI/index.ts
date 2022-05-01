@@ -1,9 +1,6 @@
 import { defineAction } from "ironpipe";
-import {
-  ABIGenericInterface,
-  ChainIDHex,
-  SemanticVersion,
-} from "../../manifest/types.helpers";
+import { ABIGenericInterface, ChainIDHex } from "../../manifest/types.helpers";
+import { SemanticVersion } from "../../manifest/types.manifest.semver";
 import { saveFileToGBucket } from "../../api/gbucket";
 import manifest from "../../manifest/manifest";
 
@@ -14,7 +11,7 @@ const action = defineAction({
   `,
   name: manifest.pipedream.actions.onUploadABI.alias,
   // version: manifest.pipedream.actions.onUploadABI.pipedreamSemver,
-  version: "0.4.4",
+  version: "0.1.0",
   type: "action",
   props: {
     googleCloud: {
@@ -59,8 +56,7 @@ const action = defineAction({
     await saveFileToGBucket({
       alias: `Saving ABI for ${metadata.alias}`,
       credentials,
-      fileName: `${manifest.pipedream.semver}/${metadata.alias}.json`,
-      chainIdHex: manifest.chain.chainIDHex,
+      fileName: `${metadata.chainIdHex}/${manifest.pipedream.semver}/${metadata.alias}.json`,
       bucket: bucket.id,
       data: JSON.stringify(abi),
     });

@@ -4,23 +4,23 @@ import { saveFileToGBucket } from "../../api/gbucket";
 import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
-  ABIUtilRepresenation,
   ITicketMetadata,
   ContractAddress,
   convertHexToDecimal,
+  BLOCKCHAINS,
 } from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
-import { InstantEscrowCreated } from "../../api/event-abi";
+import { EscrowLootboxCreated } from "../../api/event-abi";
 
 interface Event_LootboxCreated {
   lootboxName: string;
   lootbox: Address;
   issuer: Address;
   treasury: Address;
+  targetSharesSold: BigNumber;
   maxSharesSold: BigNumber;
-  sharePriceUSD: BigNumber;
   _data: string;
 }
 
@@ -36,7 +36,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxEscrow.slug,
   // version: manifest.pipedream.actions.onCreateLootboxEscrow.pipedreamSemver,
-  version: "0.4.4",
+  version: "0.1.3",
   type: "action",
   props: {
     googleCloud: {
@@ -52,7 +52,9 @@ const action = defineAction({
     const { data: bucketData, stamp: bucketStamp } = manifest.storage.buckets;
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
-    const { transaction } = (this as any).webhookTrigger as BlockTriggerEvent;
+    const { transaction, sentinel } = (this as any)
+      .webhookTrigger as BlockTriggerEvent;
+
     console.log(`
     
         ----- transaction
@@ -60,17 +62,35 @@ const action = defineAction({
     `);
     console.log(transaction);
 
-    // decode events from the EVM logs
-    const decodedLogs = decodeEVMLogs<Event_LootboxCreated>({
-      eventName: "LootboxCreated",
-      logs: transaction.logs,
-      abiReps: [InstantEscrowCreated],
-    });
-    console.log(decodedLogs);
+    console.log(`
+        ----- sentinel
+    `);
+    console.log(sentinel);
+
+    const chainID = sentinel.chainId;
+
+    const chain =
+      Object.values(BLOCKCHAINS).find(
+        (chainRaw) => chainRaw.chainIdDecimal === chainID.toString()
+      ) || BLOCKCHAINS.UNKNOWN;
 
     let lootboxName = "";
     let lootboxAddr = "";
     let _lootboxURI: ITicketMetadata | undefined = undefined;
+
+    // decode events from the EVM logs
+    const decodedLogs = decodeEVMLogs<Event_LootboxCreated>({
+      eventName: "LootboxCreated",
+      logs: transaction.logs,
+      abiReps: [EscrowLootboxCreated],
+    });
+    console.log(decodedLogs);
+
+    // Lootbox NFT ticket image
+    const stampFilePath = `${bucketStamp.id}/${chain.chainIdHex}/${lootboxAddr}.png`;
+    const stampDownloadablePath = `${
+      manifest.storage.downloadUrl
+    }/${encodeURISafe(stampFilePath)}?alt=media`;
 
     // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
@@ -94,44 +114,79 @@ const action = defineAction({
           console.error("Could not parse lootbox URI", err);
         }
 
+        const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`;
+
         const lootboxURI: ITicketMetadata = {
-          address: ev.lootbox as ContractAddress,
-          name: _lootboxURI?.name || "",
+          image: stampDownloadablePath, // the stamp
+          external_url: lootboxPublicUrl,
           description: _lootboxURI?.description || "",
-          image: _lootboxURI?.image || "",
-          backgroundColor: _lootboxURI?.backgroundColor || "",
-          backgroundImage: _lootboxURI?.backgroundImage || "",
-          badgeImage: _lootboxURI?.badgeImage || "",
-          lootbox: {
-            address: ev.lootbox as ContractAddress,
-            transactionHash: transaction.transactionHash,
-            blockNumber: transaction.blockNumber,
-            chainIdHex: _lootboxURI?.lootbox?.chainIdHex || "",
-            chainIdDecimal: _lootboxURI?.lootbox?.chainIdDecimal || "",
-            chainName: _lootboxURI?.lootbox?.chainName || "",
-            targetPaybackDate:
-              _lootboxURI?.lootbox?.targetPaybackDate || new Date().valueOf(),
-            createdAt: _lootboxURI?.lootbox?.createdAt || new Date().valueOf(),
-            fundraisingTarget: _lootboxURI?.lootbox?.fundraisingTarget || "",
-            fundraisingTargetMax:
-              _lootboxURI?.lootbox?.fundraisingTargetMax || "",
-            basisPointsReturnTarget:
-              _lootboxURI?.lootbox?.basisPointsReturnTarget || "",
-            returnAmountTarget: _lootboxURI?.lootbox?.returnAmountTarget || "",
-            pricePerShare: _lootboxURI?.lootbox?.pricePerShare || "",
-            lootboxThemeColor: _lootboxURI?.lootbox?.lootboxThemeColor || "",
-          },
-          socials: {
-            twitter: _lootboxURI?.socials?.twitter || "",
-            email: _lootboxURI?.socials?.email || "",
-            instagram: _lootboxURI?.socials?.instagram || "",
-            tiktok: _lootboxURI?.socials?.tiktok || "",
-            facebook: _lootboxURI?.socials?.facebook || "",
-            discord: _lootboxURI?.socials?.discord || "",
-            youtube: _lootboxURI?.socials?.youtube || "",
-            snapchat: _lootboxURI?.socials?.snapchat || "",
-            twitch: _lootboxURI?.socials?.twitch || "",
-            web: _lootboxURI?.socials?.web || "",
+          name: _lootboxURI?.name || "",
+          background_color: _lootboxURI?.background_color || "000000",
+          animation_url: _lootboxURI?.animation_url || "",
+          youtube_url: _lootboxURI?.youtube_url || "",
+          lootboxCustomSchema: {
+            version: manifest.semver.id,
+            chain: {
+              address: ev.lootbox as ContractAddress,
+              title: ev.lootboxName,
+              chainIdHex: chain.chainIdHex,
+              chainName: chain.slug,
+              chainIdDecimal: convertHexToDecimal(chain.chainIdHex),
+            },
+            lootbox: {
+              name: _lootboxURI?.lootboxCustomSchema?.lootbox?.name || "",
+              description:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.description || "",
+              image: _lootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
+              backgroundColor:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundColor ||
+                "",
+              backgroundImage:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage ||
+                "",
+              badgeImage:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
+              transactionHash: transaction.transactionHash,
+              blockNumber: transaction.blockNumber,
+              targetPaybackDate:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.targetPaybackDate ||
+                new Date().valueOf(),
+              createdAt:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.createdAt ||
+                new Date().valueOf(),
+              fundraisingTarget:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.fundraisingTarget ||
+                "",
+              fundraisingTargetMax:
+                _lootboxURI?.lootboxCustomSchema?.lootbox
+                  ?.fundraisingTargetMax || "",
+              basisPointsReturnTarget:
+                _lootboxURI?.lootboxCustomSchema?.lootbox
+                  ?.basisPointsReturnTarget || "",
+              returnAmountTarget:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.returnAmountTarget ||
+                "",
+              pricePerShare:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.pricePerShare || "",
+              lootboxThemeColor:
+                _lootboxURI?.lootboxCustomSchema?.lootbox?.lootboxThemeColor ||
+                "",
+            },
+            socials: {
+              twitter: _lootboxURI?.lootboxCustomSchema?.socials?.twitter || "",
+              email: _lootboxURI?.lootboxCustomSchema?.socials?.email || "",
+              instagram:
+                _lootboxURI?.lootboxCustomSchema?.socials?.instagram || "",
+              tiktok: _lootboxURI?.lootboxCustomSchema?.socials?.tiktok || "",
+              facebook:
+                _lootboxURI?.lootboxCustomSchema?.socials?.facebook || "",
+              discord: _lootboxURI?.lootboxCustomSchema?.socials?.discord || "",
+              youtube: _lootboxURI?.lootboxCustomSchema?.socials?.youtube || "",
+              snapchat:
+                _lootboxURI?.lootboxCustomSchema?.socials?.snapchat || "",
+              twitch: _lootboxURI?.lootboxCustomSchema?.socials?.twitch || "",
+              web: _lootboxURI?.lootboxCustomSchema?.socials?.web || "",
+            },
           },
         };
 
@@ -139,30 +194,17 @@ const action = defineAction({
           alias: `JSON for Escrow Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
           fileName: `${ev.lootbox}.json`,
-          chainIdHex: manifest.chain.chainIDHex,
           bucket: bucketData.id,
-          data: JSON.stringify({
-            address: ev.lootbox,
-            title: ev.lootboxName,
-            chainIdHex: manifest.chain.chainIDHex,
-            chainIdDecimal: convertHexToDecimal(manifest.chain.chainIDHex),
-            data: lootboxURI,
-          }),
+          data: JSON.stringify(lootboxURI),
         });
       })
     );
-
-    // Lootbox NFT ticket image
-    const filePath = `${bucketStamp.id}/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
-    const downloadablePath = `${manifest.storage.downloadUrl}/${encodeURISafe(
-      filePath
-    )}?alt=media`;
 
     return {
       json: savedFragmentJSON,
       name: lootboxName,
       publicUrl: `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`,
-      image: downloadablePath,
+      image: stampDownloadablePath,
     };
   },
 });

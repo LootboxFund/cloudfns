@@ -10,7 +10,6 @@ interface GBucketSaveLocalProps {
   alias: string;
   localFilePath: string;
   fileName: string;
-  chainIdHex: ChainIDHex;
   bucket: BucketId;
 }
 
@@ -18,14 +17,13 @@ export const saveLocalFileToGBucket = async ({
   alias,
   localFilePath,
   fileName,
-  chainIdHex,
   bucket,
 }: GBucketSaveLocalProps) => {
   const storage = new Storage();
-  const filePath = `${chainIdHex}/${fileName}`;
+  const filePath = `${fileName}`;
   const downloadablePath = `${
     manifest.storage.downloadUrl
-  }/${bucket}/o/${encodeURISafe(filePath)}?alt=media`;
+  }/${bucket}/${encodeURISafe(filePath)}?alt=media`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );

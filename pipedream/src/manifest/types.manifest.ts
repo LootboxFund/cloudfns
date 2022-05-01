@@ -1,13 +1,20 @@
-import { Address, ChainIDHex, ContractAddress, Url } from "./types.helpers";
+import {
+  Address,
+  ChainIDHex,
+  ContractAddress,
+  Url,
+  ChainInfo,
+} from "./types.helpers";
 import {
   OZChainSlugs,
   BucketType,
-  SemanticVersion,
+  // SemanticVersion,
   SecretName,
   SecretVersion,
   OZSecretName,
   BucketId,
 } from "./types.helpers";
+import { SemanticVersion } from "./types.manifest.semver";
 
 type RepoSemver = string;
 type DeployedSemver = string;
@@ -27,14 +34,19 @@ interface OZSecret {
   name: OZSecretName;
 }
 
+type OZChainMultiSigs = Record<MultiSigSlug, MultiSig>;
+
+type OZChainContracts = Record<ContractSlug, Contract>;
+
+type OZChainSentinels = Record<OZSentinelSlug, OZSentinel>;
+
 type OpenZeppelinSemver = string;
 interface OpenZeppelin {
   alias: string;
-  // teamMembers: Record<OZTeammemberSlug, OZTeammember>;
-  multiSigs: Record<MultiSigSlug, MultiSig>;
-  contracts: Record<ContractSlug, Contract>;
+  multiSigs: Record<ChainIDHex, OZChainMultiSigs>;
+  contracts: Record<ChainIDHex, OZChainContracts>;
   autoTasks: Record<OZAutoTaskSlug, OZAutoTask>;
-  sentinels: Record<OZSentinelSlug, OZSentinel>;
+  sentinels: Record<ChainIDHex, OZChainSentinels>;
   semver: OpenZeppelinSemver;
   secrets: OZSecret[];
 }
@@ -90,10 +102,13 @@ interface OZSentinel {
 }
 
 type LootboxManifestSemver = string;
+
+type ChainContracts = Record<ContractSlug, Contract>;
+
 interface Lootbox {
   alias: string;
   semver: LootboxManifestSemver;
-  contracts: Record<ContractSlug, Contract>;
+  contracts: Record<ChainIDHex, ChainContracts>;
 }
 
 export enum ContractSlugs {
@@ -183,7 +198,7 @@ interface Microfrontends {
 export enum WidgetSlugs {
   fundraiserPage = "fundraiserPage",
   createLootbox = "createLootbox",
-  manageLootbox = "manageLootbox"
+  manageLootbox = "manageLootbox",
 }
 type WidgetSlug = WidgetSlugs;
 type WidgetSemver = string;
@@ -209,12 +224,6 @@ interface SecretManager {
   secrets: SecretManagerSecret[];
 }
 
-interface Chain {
-  chainIDHex: ChainIDHex;
-  chainName: string;
-  priceFeedUSD: ContractAddress;
-}
-
 interface Bucket {
   id: BucketId;
 }
@@ -233,11 +242,11 @@ interface Firebase {
   appId: string;
 }
 
-export interface GlobalMainfest_v0_3_1_demo {
+export interface GlobalMainfest_v0_4_0_demo {
   alias: string;
   date: Date;
   description: string;
-  chain: Chain;
+  chains: ChainInfo[];
   semver: BaseSemver;
   openZeppelin: OpenZeppelin;
   pipedream: Pipedream;
