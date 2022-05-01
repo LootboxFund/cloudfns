@@ -12,7 +12,7 @@ const source = {
   description:
     "Webhook entry point for handling a LootboxCreated event. OZ sends to Pipedream here.",
   // version: manifest.pipedream.sources.onCreateLootboxInstant.semver,
-  version: "0.3.0",
+  version: "0.1.0",
   props: {
     googleCloud: {
       type: "app",
