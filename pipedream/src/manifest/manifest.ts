@@ -257,19 +257,19 @@ export const snapshot: GlobalMainfest_v0_4_0_prod = {
     secrets: [
       {
         name: "OZ_DEFENDER_API_KEY",
-        version: 3,
+        version: 2,
       },
       {
         name: "OZ_DEFENDER_API_SECRET",
-        version: 3,
+        version: 2,
       },
       {
         name: "PD_ABI_UPLOADER_SECRET",
-        version: 3,
+        version: 1,
       },
       {
         name: "JWT_ON_CREATE_LOOTBOX",
-        version: 3,
+        version: 2,
       },
     ],
   },
