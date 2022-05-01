@@ -147,7 +147,8 @@ interface PipedreamSource {
   alias: string;
   pipedreamID: PipedreamSourceID;
   semver: DeployedSemver;
-  slug: PipedreamSourceSlug;
+  // slug: PipedreamSourceSlug;
+  slug: string;
   webhookEndpoint: Url;
 }
 
@@ -162,7 +163,8 @@ interface PipedreamAction {
   alias: string;
   pipedreamID: PipedreamActionID;
   pipedreamSemver: DeployedSemver;
-  slug: PipedreamActionSlug;
+  // slug: PipedreamActionSlug;
+  slug: string;
 }
 
 export type PipedreamWorkflowID = string & { readonly _: unique symbol };
@@ -214,6 +216,10 @@ interface Webflow {
   semver: WebflowSemver;
   email: string;
   lootboxUrl: string;
+  createPage: string;
+  managePage: string;
+  myFundraisersPage: string;
+  myCollectionsPage: string;
 }
 
 interface SecretManagerSecret {
@@ -242,7 +248,7 @@ interface Firebase {
   appId: string;
 }
 
-export interface GlobalMainfest_v0_4_0_demo {
+export interface GlobalMainfest_v0_4_0_prod {
   alias: string;
   date: Date;
   description: string;
