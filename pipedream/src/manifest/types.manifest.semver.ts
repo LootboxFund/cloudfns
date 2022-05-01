@@ -13,7 +13,9 @@ export type SemanticVersion =
   | "0.2.8-sandbox"
   | "0.3.0-prod"
   | "0.3.1-demo"
-  | "0.4.0-demo";
+  | "0.4.0-demo"
+  | "0.4.1-demo"
+  | "0.4.0-prod";
 export enum SemanticVersionEnum {
   "0.0.1-sandbox" = "0.0.1-sandbox",
   "0.1.0-demo" = "0.1.0-demo",
@@ -30,4 +32,6 @@ export enum SemanticVersionEnum {
   "0.3.0-prod" = "0.3.0-prod",
   "0.3.1-demo" = "0.3.1-demo",
   "0.4.0-demo" = "0.4.0-demo",
+  "0.4.1-demo" = "0.4.1-demo",
+  "0.4.0-prod" = "0.4.0-prod",
 }
