@@ -269,7 +269,7 @@ export const snapshot: GlobalMainfest_v0_4_0_prod = {
       },
       {
         name: "JWT_ON_CREATE_LOOTBOX",
-        version: 2,
+        version: 1,
       },
     ],
   },
