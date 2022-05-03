@@ -24,7 +24,7 @@ const main = async () => {
     const pathToFolder = `${process.env.DEFENDER_PATH_TO_LIB_FOLDER}/lib/autotasks/${constants.FOLDER_NAME}`;
     console.log(`
   
-  --- ⏳ Uploading auto task handleFactories()...
+  --- ⏳ Uploading auto task handleBadgeBCSFactories()...
   
   ${pathToFolder}
   `);

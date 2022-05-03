@@ -1,14 +1,12 @@
-import { Manifest } from "../../manifest";
-const manifest = Manifest.default;
 import { abi } from "../../abi/BadgeFactoryBCS.json";
 import { ExternalCreateSubscriberRequest } from "defender-sentinel-client/lib/models/subscriber";
 
 export const constants = {
-  NAME: "onCreateBadgeBCS",
-  CHAIN_ALIAS: "mumbai",
-  AUTO_TASK_ID: "cbe79a32-979b-4adf-bf65-2051f7932f80",
-  SENTINAL_WATCH_ADDRESS: "0x58CeB1A7aB895EA125AFB901b9a7B1095B126452",
+  AUTO_TASK_ID: "_______",
   ABI: abi,
+  NAME: "Badge BlockchainSpace",
+  NETWORK: "polygon",
+  SENTINAL_WATCH_ADDRESS: "________",
   EVENT_SIGNATURES: [
     {
       eventSignature: `BadgeCreated(string,address,address,string)`,
@@ -17,7 +15,7 @@ export const constants = {
 };
 
 export const sentinel: ExternalCreateSubscriberRequest = {
-  network: constants.CHAIN_ALIAS,
+  network: constants.NETWORK,
   // optional
   confirmLevel: 1, // if not set, we pick the blockwatcher for the chosen network with the lowest offset
   name: constants.NAME,

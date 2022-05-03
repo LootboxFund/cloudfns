@@ -1,7 +1,6 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
-
 import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
@@ -11,31 +10,39 @@ import {
   convertHexToDecimal,
 } from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
-import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
-import { InstantLootboxCreated } from "../../api/event-abi";
 
-interface Event_LootboxCreated {
-  lootboxName: string;
-  lootbox: Address;
-  issuer: Address;
-  treasury: Address;
-  maxSharesSold: BigNumber;
-  sharePriceUSD: BigNumber;
-  _data: string;
+const BadgeMintedABI: ABIUtilRepresenation = {
+  abi: `
+event MintBadge(
+  address indexed purchaser,
+  uint256 ticketId,
+  address badgeFactory,
+  string memberName,
+  string guildName
+);
+`,
+  keys: ["purchaser", "ticketId", "badgeFactory", "memberName", "guildName"],
+};
+
+interface Event_BadgeMinted {
+  purchaser: Address;
+  ticketId: string;
+  badgeFactory: Address;
+  memberName: string;
+  guildName: string;
 }
 
 const action = defineAction({
-  name: manifest.pipedream.actions.onCreateLootboxInstant.alias,
+  name: "onMintBadgeBCS",
   description: `
-    Pipeline for handling BadgeCreated event
+    Pipeline for handling BadgeMinted event
     0. Parse the EVM logs
     1. Save badge/address.json to GBucket for FE to consume
     4. Forward parsed data down pipe
   `,
-  key: manifest.pipedream.actions.onCreateLootboxInstant.slug,
-  // version: manifest.pipedream.actions.onCreateLootboxInstant.pipedreamSemver,
-  version: "0.4.5",
+  key: "onMintBadgeBCS",
+  version: "0.1.0",
   type: "action",
   props: {
     googleCloud: {
@@ -52,7 +59,10 @@ const action = defineAction({
     // },
   },
   async run() {
-    const { data: bucketData, stamp: bucketStamp } = manifest.storage.buckets;
+    const bucketData = { id: "lootbox-bcsbadge-data-prod" };
+    const bucketStamp = {
+      id: "lootbox-bcsbadge-stamp-prod",
+    };
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     const { transaction } = (this as any).webhookTrigger as BlockTriggerEvent;
@@ -64,22 +74,22 @@ const action = defineAction({
     console.log(transaction);
 
     // decode events from the EVM logs
-    const decodedLogs = decodeEVMLogs<Event_LootboxCreated>({
-      eventName: "BadgeCreated",
+    const decodedLogs = decodeEVMLogs<Event_BadgeMinted>({
+      eventName: "MintBadge",
       logs: transaction.logs,
-      abiReps: [InstantLootboxCreated],
+      abiReps: [BadgeMintedABI],
     });
     console.log(decodedLogs);
 
     let lootboxName = "";
     let lootboxAddr = "";
-    let _lootboxURI: ITicketMetadata | undefined = undefined;
+    let _lootboxURI: any | undefined = undefined;
 
     // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
-        if (!ev.lootbox || !ev._data || !ev.lootboxName) {
-          console.log("invalid event", ev.lootbox, ev.lootboxName, ev._data);
+        if (!ev.badgeName || !ev.badge || !ev.issuer) {
+          console.log("invalid event", ev.badgeName, ev.badge, ev.issuer);
           return;
         }
 

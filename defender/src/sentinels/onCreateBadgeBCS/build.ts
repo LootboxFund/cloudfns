@@ -9,10 +9,14 @@ dotenv.config();
 
 import { SentinelClient } from "defender-sentinel-client";
 import { constants, sentinel } from "./constants";
-import { getDefenderApiCredentials } from "../../services/secrets"; // This file is not actually bundled into the autotask
+
+const getLocalDefenderApiCredentials = () => ({
+  apiKey: process.env.BCS_DEFENDER_API_KEY || "",
+  apiSecret: process.env.BCS_DEFENDER_API_SECRET || "",
+});
 
 const main = async () => {
-  const credentials = await getDefenderApiCredentials();
+  const credentials = await getLocalDefenderApiCredentials();
 
   if (!credentials) {
     return;
@@ -23,12 +27,12 @@ const main = async () => {
   try {
     console.log(`
   
-  --- ⏳ Deploying the sentinel...
+  --- ⏳ Deploying the BCS Badge sentinel...
   
   `);
     console.log(`
 
---- watchOnCreateBadgeBCS sentinel ---
+--- watchOnBadgeBCS sentinel ---
 AutoTask ID: ${constants.AUTO_TASK_ID}
 Address: ${constants.SENTINAL_WATCH_ADDRESS}
 
