@@ -12,6 +12,8 @@ import {
 import { BigNumber } from "ethers";
 import { encodeURISafe } from "../../api/helpers";
 
+const gbucketRoute = `https://gbucket.co/route`;
+
 const BadgeMintedABI: ABIUtilRepresenation = {
   abi: `
 event MintBadge(
@@ -31,6 +33,17 @@ interface Event_BadgeMinted {
   badgeFactory: Address;
   memberName: string;
   guildName: string;
+}
+
+interface IBadgeMetadata {
+  /** points to stamp image - opensea compatible */
+  image: string;
+  /** points to badge page on lootbox.fund - opensea compatible */
+  external_url: string;
+  /** description of the lootbox - opensea compatible */
+  description: string;
+  /** name of the lootbox - opensea compatible */
+  name: string;
 }
 
 const action = defineAction({
@@ -81,95 +94,60 @@ const action = defineAction({
     });
     console.log(decodedLogs);
 
-    let lootboxName = "";
-    let lootboxAddr = "";
-    let _lootboxURI: any | undefined = undefined;
+    let badgeFactory = "";
+    let ticketId = "";
 
-    // save the lootbox.json to gbucket
+    // save the badge.json to gbucket
     const savedFragmentJSON = await Promise.all(
       decodedLogs.map(async (ev) => {
-        if (!ev.badgeName || !ev.badge || !ev.issuer) {
-          console.log("invalid event", ev.badgeName, ev.badge, ev.issuer);
+        if (
+          !ev.purchaser ||
+          !ev.ticketId ||
+          !ev.badgeFactory ||
+          !ev.memberName ||
+          !ev.guildName
+        ) {
+          console.log(
+            "invalid event",
+            ev.purchaser,
+            ev.ticketId,
+            ev.badgeFactory,
+            ev.memberName,
+            ev.guildName
+          );
           return;
         }
 
-        lootboxName = ev.lootboxName;
-        lootboxAddr = ev.lootbox;
+        badgeFactory = ev.badgeFactory;
+        ticketId = ev.ticketId;
 
-        try {
-          _lootboxURI = JSON.parse(ev._data) as ITicketMetadata;
-        } catch (err) {
-          console.error("Could not parse lootbox URI", err);
-        }
-
-        const lootboxURI: ITicketMetadata = {
-          address: ev.lootbox as ContractAddress,
-          name: _lootboxURI?.name || "",
-          description: _lootboxURI?.description || "",
-          image: _lootboxURI?.image || "",
-          backgroundColor: _lootboxURI?.backgroundColor || "",
-          backgroundImage: _lootboxURI?.backgroundImage || "",
-          badgeImage: _lootboxURI?.badgeImage || "",
-          lootbox: {
-            address: ev.lootbox as ContractAddress,
-            transactionHash: transaction.transactionHash,
-            blockNumber: transaction.blockNumber,
-            chainIdHex: _lootboxURI?.lootbox?.chainIdHex || "",
-            chainIdDecimal: _lootboxURI?.lootbox?.chainIdDecimal || "",
-            chainName: _lootboxURI?.lootbox?.chainName || "",
-            targetPaybackDate:
-              _lootboxURI?.lootbox?.targetPaybackDate || new Date().valueOf(),
-            createdAt: _lootboxURI?.lootbox?.createdAt || new Date().valueOf(),
-            fundraisingTarget: _lootboxURI?.lootbox?.fundraisingTarget || "",
-            fundraisingTargetMax:
-              _lootboxURI?.lootbox?.fundraisingTargetMax || "",
-            basisPointsReturnTarget:
-              _lootboxURI?.lootbox?.basisPointsReturnTarget || "",
-            returnAmountTarget: _lootboxURI?.lootbox?.returnAmountTarget || "",
-            pricePerShare: _lootboxURI?.lootbox?.pricePerShare || "",
-            lootboxThemeColor: _lootboxURI?.lootbox?.lootboxThemeColor || "",
-          },
-          socials: {
-            twitter: _lootboxURI?.socials?.twitter || "",
-            email: _lootboxURI?.socials?.email || "",
-            instagram: _lootboxURI?.socials?.instagram || "",
-            tiktok: _lootboxURI?.socials?.tiktok || "",
-            facebook: _lootboxURI?.socials?.facebook || "",
-            discord: _lootboxURI?.socials?.discord || "",
-            youtube: _lootboxURI?.socials?.youtube || "",
-            snapchat: _lootboxURI?.socials?.snapchat || "",
-            twitch: _lootboxURI?.socials?.twitch || "",
-            web: _lootboxURI?.socials?.web || "",
-          },
+        const badgeMetadata: IBadgeMetadata = {
+          external_url: `https://lootbox.fund/badge/bcs?badge=${ev.badgeFactory}&id=${ev.ticketId}`,
+          name: `${ev.memberName} - ${ev.guildName}`,
+          description: `Membership badge in ${ev.guildName} for member ${ev.memberName}`,
+          image: `${gbucketRoute}/${ev.badgeFactory}/${ev.ticketId}.png`,
         };
 
         return saveFileToGBucket({
-          alias: `JSON for Instant Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
+          alias: `JSON for Badge ${ev.badgeFactory} ID ${ev.ticketId} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
-          fileName: `${ev.lootbox}.json`,
-          chainIdHex: manifest.chain.chainIDHex,
+          fileName: `${ev.badgeFactory}/${ev.ticketId}.json`,
           bucket: bucketData.id,
-          data: JSON.stringify({
-            address: ev.lootbox,
-            title: ev.lootboxName,
-            chainIdHex: manifest.chain.chainIDHex,
-            chainIdDecimal: convertHexToDecimal(manifest.chain.chainIDHex),
-            data: lootboxURI,
-          }),
+          data: JSON.stringify(badgeMetadata),
         });
       })
     );
 
     // Lootbox NFT ticket image
-    const filePath = `${bucketStamp.id}/${manifest.chain.chainIDHex}/${lootboxAddr}.png`;
-    const downloadablePath = `${manifest.storage.downloadUrl}/${encodeURISafe(
+    const filePath = `${badgeFactory}/${ticketId}.png`;
+    const downloadablePath = `${gbucketRoute}/${encodeURISafe(
       filePath
     )}?alt=media`;
 
     return {
       json: savedFragmentJSON,
-      name: lootboxName,
-      publicUrl: `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`,
+      name: `Badge ${badgeFactory} Member ${ticketId}`,
+      publicUrl: `https://lootbox.fund/badge/bcs?badge=${badgeFactory}&id=${ticketId}`,
       image: downloadablePath,
     };
   },

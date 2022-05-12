@@ -5,7 +5,7 @@ export const constants = {
   AUTO_TASK_ID: "_______",
   ABI: abi,
   NAME: "Badge BlockchainSpace",
-  NETWORK: "polygon",
+  NETWORK: "matic",
   SENTINAL_WATCH_ADDRESS: "________",
   EVENT_SIGNATURES: [
     {
