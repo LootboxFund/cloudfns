@@ -3,25 +3,27 @@ import * as ReactDOMServer from "react-dom/server";
 import * as ReactDOM from "react-dom";
 import axios from "axios";
 import nodeHtmlToImage from "node-html-to-image";
-import Ticket, { TicketProps } from "../components/Ticket";
-import { saveLocalFileToGBucket } from "./gbucket";
-import { manifest } from "../../manifest";
+import Badge, { BadgeProps } from "./index";
+import { saveLocalFileToGBucket } from "../../api/gbucket";
 
-export const generateStaticElement = (props: TicketProps) =>
+const bucketName = "___________";
+
+export const generateStaticElement = (props: BadgeProps) =>
   ReactDOMServer.renderToStaticMarkup(
-    <Ticket
+    <Badge
       ticketID={props.ticketID}
       backgroundImage={props.backgroundImage}
       logoImage={props.logoImage}
       themeColor={props.themeColor}
-      name={props.name}
-      lootboxAddress={props.lootboxAddress}
+      guildName={props.guildName}
+      memberName={props.memberName}
+      badgeAddress={props.badgeAddress}
       chainIdHex={props.chainIdHex}
       numShares={props.numShares}
     />
   );
 
-export const generateImage = async (path: string, props: TicketProps) => {
+export const generateBadgeImage = async (path: string, props: BadgeProps) => {
   console.log(`Generating Image...`);
   try {
     await nodeHtmlToImage({
@@ -36,7 +38,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
           </style>
         </head>
         <body>
-          ${generateStaticElement(props)}
+            ${generateStaticElement(props)}
         </body>
       </html>
       `,
@@ -46,10 +48,10 @@ export const generateImage = async (path: string, props: TicketProps) => {
       },
     });
     const imagePath = await saveLocalFileToGBucket({
-      alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
+      alias: `Image for src/actions/onLootboxURI/index.ts guild=${props.guildName}, member=${props.memberName}`,
       localFilePath: path,
-      fileName: `${props.lootboxAddress}.png`,
-      bucket: manifest.storage.buckets.stamp.id,
+      fileName: `${props.badgeAddress}/${props.ticketID}.png`,
+      bucket: bucketName,
     });
     return imagePath;
   } catch (e) {

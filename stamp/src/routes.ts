@@ -1,7 +1,9 @@
 import * as express from "express";
 import { generateImage } from "./lib/api/stamp";
+import { generateBadgeImage } from "./lib/components/Badge/stamp";
 import { ContractAddress } from "@wormgraph/helpers";
 import { TicketProps } from "./lib/components/Ticket";
+import { BadgeProps } from "./lib/components/Badge";
 
 const router = express.Router();
 
@@ -57,6 +59,45 @@ router.post(
       themeColor,
       name,
       lootboxAddress,
+      chainIdHex,
+      numShares,
+    });
+    res.json({
+      message: "Created stamp!",
+      stamp: linkToImage,
+    });
+  }
+);
+
+router.post(
+  "/stamp/new/badge-bcs",
+  async (req: express.Request, res: express.Response, next) => {
+    const { secret } = req.headers;
+    if (secret !== "7XsxFA!C&X8f*5&65g3XFNXmJ^K#Y1BDlx2kVZRp") {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+    const tempLocalPath = `/tmp/image.png`;
+    const {
+      ticketID,
+      backgroundImage,
+      logoImage,
+      themeColor,
+      guildName,
+      memberName,
+      badgeAddress,
+      chainIdHex,
+      numShares,
+    }: BadgeProps = req.body;
+    const linkToImage = await generateBadgeImage(tempLocalPath, {
+      ticketID,
+      backgroundImage,
+      logoImage,
+      themeColor,
+      guildName,
+      memberName,
+      badgeAddress,
       chainIdHex,
       numShares,
     });
