@@ -55,8 +55,13 @@ export const Ticket = (props: BadgeProps) => {
       ></div>
 
       <div style={StyleTicketTag()}>
-        <p style={StyleTicketIDText()}>{props.memberName || "Member Name"}</p>
-        <p style={StyleTagInfoText()}>{props.guildName || "Guild Name"}</p>
+        <span style={StyleTicketIDText()}>
+          {props.memberName || "Member Name"}
+        </span>
+        <div style={{ height: "10px", width: "100%" }}></div>
+        <span style={StyleTagInfoText()}>
+          {props.guildName || "Guild Name"}
+        </span>
       </div>
       <div style={StyleTagAddressFooter()}>
         <$Horizontal
@@ -177,7 +182,6 @@ const StyleTicketIDText = () => ({
   fontFamily: `${TYPOGRAPHY.fontFamily.regular}`,
   fontWeight: `${TYPOGRAPHY.fontWeight.bold}`,
   fontSize: `1.8rem`,
-  lineHeight: `2rem`,
   textAlign: `center` as "center",
   position: `relative` as "relative",
   color: `#ffffff`,
@@ -186,7 +190,7 @@ const StyleTicketIDText = () => ({
   wordBreak: "break-all" as "break-all",
 });
 
-export const $TagText = styled.p`
+export const $TagText = styled.span`
   font-family: ${TYPOGRAPHY.fontFamily.regular};
   font-weight: ${TYPOGRAPHY.fontWeight.bold};
   font-size: ${TYPOGRAPHY.fontSize.large};
@@ -195,7 +199,6 @@ export const $TagText = styled.p`
   position: relative;
   color: #ffffff;
   width: 100%;
-  padding: 5px;
   margin: auto;
   word-break: break-all;
 `;
@@ -225,7 +228,6 @@ const StyleTagInfoText = () => ({
   fontStyle: "normal",
   fontWeight: 600,
   fontSize: "1.2rem",
-  lineHeight: "1.3rem",
   textAlign: "center" as "center",
   position: "relative" as "relative",
   color: "#ffffff",
