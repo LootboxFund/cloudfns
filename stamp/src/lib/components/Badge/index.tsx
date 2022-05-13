@@ -181,7 +181,7 @@ const StylePoweredBy = () => ({
 const StyleTicketIDText = () => ({
   fontFamily: `${TYPOGRAPHY.fontFamily.regular}`,
   fontWeight: `${TYPOGRAPHY.fontWeight.bold}`,
-  fontSize: `1.8rem`,
+  fontSize: `2rem`,
   textAlign: `center` as "center",
   position: `relative` as "relative",
   color: `#ffffff`,
@@ -227,7 +227,7 @@ const StyleTagInfoText = () => ({
   fontFamily: "sans-serif",
   fontStyle: "normal",
   fontWeight: 600,
-  fontSize: "1.2rem",
+  fontSize: "1.5rem",
   textAlign: "center" as "center",
   position: "relative" as "relative",
   color: "#ffffff",
