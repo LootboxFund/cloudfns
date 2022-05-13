@@ -7,9 +7,9 @@
 import get from "lodash/get";
 
 const source = {
-  key: "mint_badge_bcs",
-  name: "Mint Badge BCS - Source",
-  description: "Mint badge for BCS - Source",
+  key: "badge_factory_bcs",
+  name: "Badge Factory BCS - Source",
+  description: "Badge Factory for BCS - Source",
   version: "0.0.1",
   props: {
     httpInterface: {

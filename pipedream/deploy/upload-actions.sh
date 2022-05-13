@@ -10,4 +10,5 @@ cd "$parent_path"
 # NODE_ENV=production pd publish ../lib/actions/onCreateLootboxInstant/index.js
 # NODE_ENV=production pd publish ../lib/actions/onCreateLootboxEscrow/index.js
 
-NODE_ENV=production pd publish ../lib/actions/onMintBadgeBCS/index.js
+# NODE_ENV=production pd publish ../lib/actions/onMintBadgeBCS/index.js
+NODE_ENV=production pd publish ../lib/actions/onBadgeFactoryBCS/index.js

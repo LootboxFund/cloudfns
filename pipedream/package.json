@@ -44,6 +44,7 @@
     "deploy:sources:onCreateLootboxEscrow": "bash ./deploy/upload-source-onCreateLootboxEscrow.sh",
     "deploy:sources:onUploadABI": "bash ./deploy/upload-source-onUploadABI.sh",
     "deploy:sources:onMintBadgeBCS": "bash ./deploy/upload-source-onMintBadgeBCS.sh",
+    "deploy:sources:onBadgeFactoryBCS": "bash ./deploy/upload-source-onBadgeFactoryBCS.sh",
     "deploy:actions": "bash ./deploy/upload-actions.sh",
     "deploy:dev": "bash ./upload-pipedream.sh"
   },
