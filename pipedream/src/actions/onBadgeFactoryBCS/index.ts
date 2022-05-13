@@ -42,7 +42,7 @@ const action = defineAction({
     await saveFileToGBucket({
       alias: `Saving guild badge for Guild=${data.name}`,
       credentials,
-      fileName: `${data.badgeAddress}/_root.json`,
+      fileName: `${data.badgeAddress.toLowerCase()}/_root.json`,
       bucket: BUCKET_NAME,
       data: JSON.stringify(data),
     });

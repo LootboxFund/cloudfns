@@ -59,7 +59,7 @@ const action = defineAction({
     await saveFileToGBucket({
       alias: `Saving guild member badge for Guild=${data.guildName}, Member=${data.memberName}`,
       credentials,
-      fileName: `${data.badgeAddress}/${data.ticketId}.json`,
+      fileName: `${data.badgeAddress.toLowerCase()}/${data.ticketId}.json`,
       bucket: BUCKET_NAME,
       data: JSON.stringify(nftData),
     });
