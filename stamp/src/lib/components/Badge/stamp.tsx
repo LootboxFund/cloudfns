@@ -6,7 +6,7 @@ import nodeHtmlToImage from "node-html-to-image";
 import Badge, { BadgeProps } from "./index";
 import { saveLocalFileToGBucket } from "../../api/gbucket";
 
-const bucketName = "___________";
+const bucketName = "badge-bcs-stamp";
 
 export const generateStaticElement = (props: BadgeProps) =>
   ReactDOMServer.renderToStaticMarkup(
@@ -19,7 +19,6 @@ export const generateStaticElement = (props: BadgeProps) =>
       memberName={props.memberName}
       badgeAddress={props.badgeAddress}
       chainIdHex={props.chainIdHex}
-      numShares={props.numShares}
     />
   );
 

@@ -30,7 +30,6 @@ const Template = () => {
         memberName="John Doe"
         badgeAddress={badgeAddress}
         chainIdHex="0x38"
-        numShares="180.02"
       />
     </$CardViewport>
   );

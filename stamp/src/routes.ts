@@ -88,7 +88,6 @@ router.post(
       memberName,
       badgeAddress,
       chainIdHex,
-      numShares,
     }: BadgeProps = req.body;
     const linkToImage = await generateBadgeImage(tempLocalPath, {
       ticketID,
@@ -99,7 +98,6 @@ router.post(
       memberName,
       badgeAddress,
       chainIdHex,
-      numShares,
     });
     res.json({
       message: "Created stamp!",

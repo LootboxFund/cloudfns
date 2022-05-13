@@ -23,7 +23,6 @@ export interface BadgeProps {
   ticketID: string;
   badgeAddress: ContractAddress;
   chainIdHex: ChainIDHex;
-  numShares: string;
 }
 
 export const Ticket = (props: BadgeProps) => {
@@ -35,7 +34,6 @@ export const Ticket = (props: BadgeProps) => {
     ticketID,
     badgeAddress,
     chainIdHex,
-    numShares,
     themeColor,
   } = props;
   const networkLogo =
@@ -57,8 +55,8 @@ export const Ticket = (props: BadgeProps) => {
       ></div>
 
       <div style={StyleTicketTag()}>
-        <$TicketIDText>{props.memberName || "Member Name"}</$TicketIDText>
-        <$TagText>{props.guildName || "Guild Name"}</$TagText>
+        <p style={StyleTicketIDText()}>{props.memberName || "Member Name"}</p>
+        <p style={StyleTagInfoText()}>{props.guildName || "Guild Name"}</p>
       </div>
       <div style={StyleTagAddressFooter()}>
         <$Horizontal
@@ -79,11 +77,7 @@ export const Ticket = (props: BadgeProps) => {
             fontWeight: "normal",
           }}
         >
-          <img
-            src={networkLogo}
-            style={{ width: "1.2rem", height: "1.2rem", marginRight: "5px" }}
-          />
-          {`(${networkName})`} {badgeAddress}
+          {`(${networkName})`} {badgeAddress} {`#${ticketID}`}
         </$Horizontal>
       </div>
     </section>
@@ -164,33 +158,33 @@ const StyleTagText = () => ({
   flex: 1,
 });
 
-export const $PoweredBy = styled.p`
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  font-family: ${TYPOGRAPHY.fontFamily.regular};
-  font-weight: ${TYPOGRAPHY.fontWeight.bold};
-  font-size: 1rem;
-  line-height: 1.5rem;
-  padding: 10px 20px;
-  text-align: center;
-  position: relative;
-  color: #ffffff;
-  width: auto;
-  margin: auto;
-`;
+const StylePoweredBy = () => ({
+  background: "rgba(0, 0, 0, 0.1)",
+  borderRadius: "10px",
+  fontFamily: `${TYPOGRAPHY.fontFamily.regular}`,
+  fontWeight: `${TYPOGRAPHY.fontWeight.bold}`,
+  fontSize: `1rem`,
+  lineHeight: `1.5rem`,
+  padding: `10px 20px`,
+  textAlign: `center`,
+  position: `relative`,
+  color: `#ffffff`,
+  width: `auto`,
+  margin: `auto`,
+});
 
-export const $TicketIDText = styled.p`
-  font-family: ${TYPOGRAPHY.fontFamily.regular};
-  font-weight: ${TYPOGRAPHY.fontWeight.bold};
-  font-size: 1.8rem;
-  line-height: 2rem;
-  text-align: center;
-  position: relative;
-  color: #ffffff;
-  width: 100%;
-  margin: auto;
-  word-break: break-all;
-`;
+const StyleTicketIDText = () => ({
+  fontFamily: `${TYPOGRAPHY.fontFamily.regular}`,
+  fontWeight: `${TYPOGRAPHY.fontWeight.bold}`,
+  fontSize: `1.8rem`,
+  lineHeight: `2rem`,
+  textAlign: `center` as "center",
+  position: `relative` as "relative",
+  color: `#ffffff`,
+  width: `100%`,
+  margin: `auto`,
+  wordBreak: "break-all" as "break-all",
+});
 
 export const $TagText = styled.p`
   font-family: ${TYPOGRAPHY.fontFamily.regular};
@@ -213,19 +207,6 @@ const StyleTicketInfo = () => ({
   alignItems: "center",
   flex: 1,
   padding: "5px",
-});
-
-const StyleTicketIDText = () => ({
-  fontFamily: "sans-serif",
-  fontStyle: "normal",
-  fontWeight: 800,
-  fontSize: "3rem",
-  lineHeight: "3rem",
-  textAlign: "center" as "center",
-  position: "relative" as "relative",
-  color: "#ffffff",
-  width: "100%",
-  // maxWidth: "50%",
 });
 
 const $VTicketTag = styled.section`
