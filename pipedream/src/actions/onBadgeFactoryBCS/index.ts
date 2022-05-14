@@ -1,5 +1,6 @@
 import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
+import { ChainIDHex } from "../../manifest/types.helpers";
 
 const BUCKET_NAME = "badge-bcs-uri";
 
@@ -7,7 +8,7 @@ const action = defineAction({
   name: "onBadgeFactoryBCS Action",
   description: "On Badge Factory BCS Action for Pipedream Typescript",
   key: "onBadgeFactoryBCS",
-  version: "0.1.0",
+  version: "0.1.1",
   type: "action",
   props: {
     googleCloud: {
@@ -37,6 +38,8 @@ const action = defineAction({
       gamesPlayed: string;
       web: string;
       badgeAddress: string;
+      chainIdHex: ChainIDHex;
+      chainName: string;
     }
     const data = (this as any).webhookTrigger as IGuildBadgeData;
     await saveFileToGBucket({

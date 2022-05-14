@@ -7,7 +7,7 @@ const action = defineAction({
   name: "onMintBadgeBCS Action",
   description: "On Mint Badge BCS Action for Pipedream Typescript",
   key: "onMintBadgeBCS",
-  version: "0.1.0",
+  version: "0.1.1",
   type: "action",
   props: {
     googleCloud: {
@@ -40,6 +40,8 @@ const action = defineAction({
       stampImage: string;
       ticketId: string;
       badgeAddress: string;
+      chainIdHex: ChainIDHex;
+      chainName: string;
     }
     const data = (this as any).webhookTrigger as IGuildMemberBadgeData;
     const nftData = {
