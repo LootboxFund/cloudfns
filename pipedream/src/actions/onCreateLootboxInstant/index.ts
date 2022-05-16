@@ -81,6 +81,7 @@ const action = defineAction({
 
     let lootboxName = "";
     let lootboxAddr = "";
+    let stampDownloadablePath = "";
     let _lootboxURI: ITicketMetadata | undefined = undefined;
 
     // decode events from the EVM logs
@@ -90,12 +91,6 @@ const action = defineAction({
       abiReps: [InstantLootboxCreated],
     });
     console.log(decodedLogs);
-
-    // Lootbox NFT ticket image
-    const stampFilePath = `${bucketStamp.id}/${chain.chainIdHex}/${lootboxAddr}.png`;
-    const stampDownloadablePath = `${
-      manifest.storage.downloadUrl
-    }/${encodeURISafe(stampFilePath)}?alt=media`;
 
     // save the lootbox.json to gbucket
     const savedFragmentJSON = await Promise.all(
@@ -115,6 +110,12 @@ const action = defineAction({
         }
 
         const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`;
+
+        // Lootbox NFT ticket image
+        const stampFilePath = `${bucketStamp.id}/${lootboxAddr}.png`;
+        stampDownloadablePath = `${
+          manifest.storage.downloadUrl
+        }/${encodeURISafe(stampFilePath)}?alt=media`;
 
         const lootboxURI: ITicketMetadata = {
           image: stampDownloadablePath, // the stamp
