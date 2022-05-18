@@ -21,6 +21,7 @@ export const generateStaticElement = (props: TicketProps) =>
     />
   );
 
+/** Generates lootbox stamp image */
 export const generateImage = async (path: string, props: TicketProps) => {
   console.log(`Generating Image...`);
   try {
@@ -48,7 +49,46 @@ export const generateImage = async (path: string, props: TicketProps) => {
     const imagePath = await saveLocalFileToGBucket({
       alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
-      fileName: `${props.lootboxAddress}.png`,
+      fileName: `${props.lootboxAddress}/lootbox.png`,
+      bucket: manifest.storage.buckets.stamp.id,
+    });
+    return imagePath;
+  } catch (e) {
+    console.log(`--- BIG ERROR ---`);
+    console.log(e);
+    return;
+  }
+};
+
+/** Generates ticket stamp image */
+export const generateTicketImage = async (path: string, props: TicketProps) => {
+  console.log(`Generating Ticket Image...`);
+  try {
+    await nodeHtmlToImage({
+      output: path,
+      html: `<html>
+        <head>
+          <style>
+            body {
+              width: 500px;
+              height: 700px;
+            }
+          </style>
+        </head>
+        <body>
+            ${generateStaticElement(props)}
+        </body>
+      </html>
+      `,
+      transparent: true,
+      puppeteerArgs: {
+        args: ["--no-sandbox"],
+      },
+    });
+    const imagePath = await saveLocalFileToGBucket({
+      alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
+      localFilePath: path,
+      fileName: `${props.lootboxAddress}/${props.ticketID}.png`,
       bucket: manifest.storage.buckets.stamp.id,
     });
     return imagePath;
