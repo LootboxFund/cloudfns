@@ -13,6 +13,13 @@ interface GBucketSaveLocalProps {
   bucket: BucketId;
 }
 
+interface GBucketSaveFragProps {
+  alias: string;
+  fileName: string;
+  data: string;
+  bucket: string;
+}
+
 export const saveLocalFileToGBucket = async ({
   alias,
   localFilePath,
@@ -36,4 +43,20 @@ export const saveLocalFileToGBucket = async ({
   
   `);
   return downloadablePath;
+};
+
+export const saveTicketMetadataToGBucket = async ({
+  alias,
+  fileName,
+  data,
+  bucket,
+}: GBucketSaveFragProps) => {
+  const storage = new Storage();
+  console.log(
+    `⏳ Uploading ${alias} to Cloud Storage Bucket as ${fileName} in bucket ${bucket}`
+  );
+  await storage.bucket(bucket).file(fileName).save(data);
+  await storage.bucket(bucket).file(fileName).makePublic();
+  console.log(`✅ Uploaded \n`);
+  return "download_path";
 };

@@ -1,7 +1,44 @@
 import * as express from "express";
-import { generateImage } from "./lib/api/stamp";
+import { generateImage, generateTicketImage } from "./lib/api/stamp";
 import { ContractAddress } from "@wormgraph/helpers";
 import { TicketProps } from "./lib/components/Ticket";
+import { saveTicketMetadataToGBucket } from "./lib/api/gbucket";
+import { manifest } from "./manifest";
+
+interface OpenSeaAttributes {
+  trait_type: string | number;
+  value: string;
+  display_type?: string;
+}
+
+export interface ITicketMetadata {
+  image: string; // the stamp
+  external_url: string;
+  description: string;
+  name: string;
+  background_color: string;
+  animation_url: string;
+  youtube_url: string;
+  attributes?: OpenSeaAttributes[];
+  lootboxCustomSchema: {
+    version: string;
+    chain: {
+      /** lootbox address */
+      address: string;
+      chainIdHex: string;
+      chainName: string;
+      chainIdDecimal: string;
+    };
+    lootbox: {
+      ticketNumber: number;
+      backgroundImage: string;
+      image: string;
+      backgroundColor: string;
+      badgeImage?: string;
+      sharesInTicket: string;
+    };
+  };
+}
 
 const router = express.Router();
 
@@ -63,6 +100,89 @@ router.post(
     res.json({
       message: "Created stamp!",
       stamp: linkToImage,
+    });
+  }
+);
+
+router.post(
+  "/stamp/new/ticket",
+  async (req: express.Request, res: express.Response, next) => {
+    const { secret } = req.headers;
+    if (secret !== "mysecret") {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    // TODO Validate that the ticket has been minted according to the smart contract
+
+    const tempLocalPath = `/tmp/image.png`;
+    const {
+      ticketID,
+      backgroundImage,
+      logoImage,
+      themeColor,
+      name,
+      lootboxAddress,
+      chainIdHex,
+      numShares,
+    }: TicketProps = req.body;
+    const metadata: ITicketMetadata = req.body.metadata;
+
+    const linkToImage = await generateTicketImage(tempLocalPath, {
+      ticketID,
+      backgroundImage,
+      logoImage,
+      themeColor,
+      name,
+      lootboxAddress,
+      chainIdHex,
+      numShares,
+    });
+
+    const ticketMetadata: ITicketMetadata = {
+      image: linkToImage,
+      external_url: metadata?.external_url || "",
+      description: metadata?.description || "",
+      name: metadata?.name || "",
+      background_color: metadata?.background_color || "000000",
+      animation_url: metadata?.animation_url || "",
+      youtube_url: metadata?.youtube_url || "",
+      lootboxCustomSchema: {
+        version: manifest.semver.id,
+        chain: {
+          address: metadata?.lootboxCustomSchema?.chain?.address || "",
+          chainIdHex: metadata?.lootboxCustomSchema?.chain?.chainIdHex || "",
+          chainName: metadata?.lootboxCustomSchema?.chain?.chainName || "",
+          chainIdDecimal:
+            metadata?.lootboxCustomSchema?.chain?.chainIdDecimal || "",
+        },
+        lootbox: {
+          ticketNumber:
+            metadata?.lootboxCustomSchema?.lootbox?.ticketNumber || 0,
+          backgroundImage:
+            metadata?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
+          image: metadata?.lootboxCustomSchema?.lootbox?.image || "",
+          backgroundColor:
+            metadata?.lootboxCustomSchema?.lootbox?.backgroundColor || "",
+          badgeImage: metadata?.lootboxCustomSchema?.lootbox?.badgeImage || "",
+          sharesInTicket:
+            metadata?.lootboxCustomSchema?.lootbox?.sharesInTicket || "",
+        },
+      },
+    };
+
+    const linkToURI = await saveTicketMetadataToGBucket({
+      alias: `${lootboxAddress}-${ticketID}`,
+      fileName: `${lootboxAddress}/${ticketID}.json`,
+      data: JSON.stringify(ticketMetadata),
+      bucket: manifest.storage.buckets.data.id,
+    });
+
+    res.json({
+      message: "Created stamp!",
+      stamp: linkToImage,
+      uri: linkToURI,
     });
   }
 );
