@@ -52,11 +52,14 @@ export const saveTicketMetadataToGBucket = async ({
   bucket,
 }: GBucketSaveFragProps) => {
   const storage = new Storage();
+  const downloadablePath = `${
+    manifest.storage.downloadUrl
+  }/${bucket}/${encodeURISafe(fileName)}?alt=media`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${fileName} in bucket ${bucket}`
   );
   await storage.bucket(bucket).file(fileName).save(data);
   await storage.bucket(bucket).file(fileName).makePublic();
   console.log(`✅ Uploaded \n`);
-  return "download_path";
+  return downloadablePath;
 };

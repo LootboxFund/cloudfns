@@ -33,7 +33,7 @@ export const saveFileToGBucket = async ({
   });
   const downloadablePath = `${
     manifest.storage.downloadUrl
-  }/${bucket}/o/${encodeURISafe(fileName)}?alt=media \n`;
+  }/${bucket}/${encodeURISafe(fileName)}?alt=media \n`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
