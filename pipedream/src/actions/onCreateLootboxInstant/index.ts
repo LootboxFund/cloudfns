@@ -193,7 +193,7 @@ const action = defineAction({
         return saveFileToGBucket({
           alias: `JSON for Instant Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
-          fileName: `${ev.lootbox}.json`,
+          fileName: `${ev.lootbox}/lootbox.json`,
           bucket: bucketData.id,
           data: JSON.stringify(lootboxURI),
         });
