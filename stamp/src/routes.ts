@@ -146,7 +146,7 @@ router.post(
 
     const linkToURI = await saveTicketMetadataToGBucket({
       alias: `${lootboxAddress}-${ticketID}`,
-      fileName: `${lootboxAddress}/${ticketID}.json`,
+      fileName: `${lootboxAddress.toLowerCase()}/${ticketID}.json`,
       data: JSON.stringify(ticketMetadata),
       bucket: manifest.storage.buckets.data.id,
     });
