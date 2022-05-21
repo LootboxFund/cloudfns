@@ -22,7 +22,6 @@ export enum OZChainSlugs {
 export type BucketType =
   | "abi"
   | "data"
-  | "assets"
   | "stamp"
   | "constants"
   | "widgets";

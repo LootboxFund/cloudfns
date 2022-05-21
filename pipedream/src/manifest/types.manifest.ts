@@ -171,6 +171,7 @@ export type PipedreamWorkflowID = string & { readonly _: unique symbol };
 
 export enum CloudRunContainerSlugs {
   stampNewLootbox = "stampNewLootbox",
+  stampNewTicket = "stampNewTicket"
 }
 type CloudRunContainerSlug = CloudRunContainerSlugs;
 interface CloudRun {
@@ -248,7 +249,7 @@ interface Firebase {
   appId: string;
 }
 
-export interface GlobalMainfest_v0_4_0_prod {
+export interface GlobalMainfest_v0_5_0_demo {
   alias: string;
   date: Date;
   description: string;
