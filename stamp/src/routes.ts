@@ -36,7 +36,10 @@ router.post(
   "/stamp/new/lootbox",
   async (req: express.Request, res: express.Response, next) => {
     const { secret } = req.headers;
-    if (secret !== "mysecret") {
+    if (
+      secret !==
+      "kjnlkvsjdnlkjsfnlvksjdnlksjdnvrjgnwoeirwhoqiwhqowncasljcnalsknaslkcnvlkdnlsdknscldksdjfnskdjfbksdjfbskdjqlwekjqwlekjqwlj"
+    ) {
       return res.status(401).json({
         message: "Unauthorized",
       });
@@ -73,7 +76,10 @@ router.post(
   "/stamp/new/ticket",
   async (req: express.Request, res: express.Response, next) => {
     const { secret } = req.headers;
-    if (secret !== "mysecret") {
+    if (
+      secret !==
+      ";kdfng;dkjfgn;dkfjgnsldkjfna;sdaposdjpaokcpaoskpaosckapsocksdgnekrfnvlsdknalkdcnalsdgbrhejbgjrbkbakjsbaksjbksdjfs"
+    ) {
       return res.status(401).json({
         message: "Unauthorized",
       });
