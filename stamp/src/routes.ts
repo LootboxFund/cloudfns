@@ -113,6 +113,7 @@ router.post(
       background_color: metadata?.background_color || "000000",
       animation_url: metadata?.animation_url || "",
       youtube_url: metadata?.youtube_url || "",
+      attributes: metadata?.attributes || [],
       lootboxCustomSchema: {
         version: manifest.semver.id,
         chain: {
