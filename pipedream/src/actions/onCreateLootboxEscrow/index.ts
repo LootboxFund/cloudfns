@@ -194,7 +194,7 @@ const action = defineAction({
         return saveFileToGBucket({
           alias: `JSON for Escrow Lootbox ${ev.lootbox} triggered by tx hash ${transaction.transactionHash}`,
           credentials,
-          fileName: `${ev.lootbox}.json`,
+          fileName: `${ev.lootbox.toLowerCase()}/lootbox.json`,
           bucket: bucketData.id,
           data: JSON.stringify(lootboxURI),
         });
