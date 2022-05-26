@@ -138,7 +138,7 @@ interface Pipedream {
 export enum PipedreamSourceSlugs {
   onCreateLootboxInstant = "onCreateLootboxInstant",
   onCreateLootboxEscrow = "onCreateLootboxEscrow",
-  onUploadABI = "onUploadABI",
+  // onUploadABI = "onUploadABI",
 }
 export type PipedreamSourceID = string & { readonly _: unique symbol };
 type PipedreamSourceSlug = PipedreamSourceSlugs;
@@ -155,7 +155,7 @@ interface PipedreamSource {
 export enum PipedreamActionSlugs {
   onCreateLootboxInstant = "onCreateLootboxInstant",
   onCreateLootboxEscrow = "onCreateLootboxEscrow",
-  onUploadABI = "onUploadABI",
+  // onUploadABI = "onUploadABI",
 }
 type PipedreamActionSlug = PipedreamActionSlugs;
 export type PipedreamActionID = string & { readonly _: unique symbol };
@@ -249,7 +249,7 @@ interface Firebase {
   appId: string;
 }
 
-export interface GlobalMainfest_v0_5_0_demo {
+export interface GlobalMainfest_v0_5_0_prod {
   alias: string;
   date: Date;
   description: string;

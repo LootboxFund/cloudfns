@@ -10,20 +10,20 @@ import {
   PipedreamSourceSlugs,
   WidgetSlugs,
   ContractSlugs,
-  GlobalMainfest_v0_5_0_demo,
+  GlobalMainfest_v0_5_0_prod,
   MultiSigSlugs,
   OZAutoTaskSlugs,
   OZSentinelSlugs,
 } from "./types.manifest";
 
-const PIPEDREAM_SEMVER = "0.5.0-demo";
-const PIPEDREAM_SEMVER_SLUG = "0-5-0-demo";
-const OPEN_ZEPPELIN_SEMVER = "0.5.0-demo";
+const PIPEDREAM_SEMVER = "0.5.0-prod";
+const PIPEDREAM_SEMVER_SLUG = "0-5-0-prod";
+const OPEN_ZEPPELIN_SEMVER = "0.5.0-prod";
 
-export const snapshot: GlobalMainfest_v0_5_0_demo = {
-  alias: "0.5.0-demo",
+export const snapshot: GlobalMainfest_v0_5_0_prod = {
+  alias: "0.5.0-prod",
   description: `
-    Demo version of Lootbox.
+    Production version of Lootbox. Supporting Polygon & BSC.
   `,
   chains: [
     {
@@ -33,50 +33,50 @@ export const snapshot: GlobalMainfest_v0_5_0_demo = {
       ...BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET],
     },
   ],
-  date: new Date("Thu May 19 2022 16:38:03 GMT-0400 (Eastern Daylight Time)"),
+  date: new Date("Sun May 22 2022 12:57:31 GMT-0400 (Eastern Daylight Time)"),
   semver: {
     major: 0,
     minor: 5,
     patch: 0,
-    prerelease: ["demo"],
+    prerelease: ["prod"],
     build: [],
-    id: "0.5.0-demo",
+    id: "0.5.0-prod",
   },
   openZeppelin: {
     alias: OPEN_ZEPPELIN_SEMVER,
     multiSigs: {
-      [BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex]: {
+      [BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex]: {
         LootboxDAO: {
           alias: "LootboxDAO",
-          address: "0xb9a608a29979421461838047BDe9166Cd7ea647f" as Address,
-          signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
-          chainHexID: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
+          address: "____________________" as Address,
+          signers: ["____________________" as Address],
+          chainHexID: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
         },
         LootboxDAO_Treasury: {
           alias: "LootboxDAO Treasury",
-          address: "0x228586A4564B999a7CB673581d7055EcbB9287F3" as Address,
-          signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
-          chainHexID: BLOCKCHAINS[ChainSlugs.BSC_TESTNET].chainIdHex,
+          address: "____________________" as Address,
+          signers: ["____________________" as Address],
+          chainHexID: BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
         },
       },
-      [BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex]: {
+      [BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex]: {
         LootboxDAO: {
           alias: "LootboxDAO",
-          address: "0xae069b7d5dfe85CCf056170af7a65F6374588776" as Address,
-          signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
-          chainHexID: BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex,
+          address: "____________________" as Address,
+          signers: ["____________________" as Address],
+          chainHexID: BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
         },
         LootboxDAO_Treasury: {
           alias: "LootboxDAO Treasury",
-          address: "0xC2e94223edf8470f32fa318D53564ABe283960B2" as Address,
-          signers: ["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288" as Address],
-          chainHexID: BLOCKCHAINS[ChainSlugs.POLYGON_TESTNET].chainIdHex,
+          address: "____________________" as Address,
+          signers: ["____________________" as Address],
+          chainHexID: BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex,
           threshold: 1,
           slug: MultiSigSlugs.LootboxDAO,
         },
@@ -85,21 +85,21 @@ export const snapshot: GlobalMainfest_v0_5_0_demo = {
     contracts: {
       [BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
       [BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
@@ -111,13 +111,13 @@ export const snapshot: GlobalMainfest_v0_5_0_demo = {
     ],
     autoTasks: {
       onCreateLootboxInstant: {
-        id: "___________________" as OZAutoTaskID,
+        id: "____________________" as OZAutoTaskID,
         alias: "On creation of an Instant Lootbox",
         semver: OPEN_ZEPPELIN_SEMVER,
         slug: OZAutoTaskSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
-        id: "40169b71-5842-4437-890f-d4a25f30af7b" as OZAutoTaskID,
+        id: "____________________" as OZAutoTaskID,
         alias: "On creation of an Escrow Lootbox",
         semver: OPEN_ZEPPELIN_SEMVER,
         slug: OZAutoTaskSlugs.onCreateLootboxEscrow,
@@ -126,38 +126,38 @@ export const snapshot: GlobalMainfest_v0_5_0_demo = {
     sentinels: {
       [BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex]: {
         onCreateLootboxInstant: {
-          id: "___________________" as OZSentinelID,
+          id: "____________________" as OZSentinelID,
           alias: `[${OPEN_ZEPPELIN_SEMVER}] Instant Lootbox onCreate`,
           semver: OPEN_ZEPPELIN_SEMVER, // NOT USED
           slug: OZSentinelSlugs.onCreateLootboxInstant, // NOT USED
           ozChainSlug: OZChainSlugs.BSC_MAINNET,
-          contractWatchAddress: "___________________" as Address,
+          contractWatchAddress: "____________________" as Address,
         },
         onCreateLootboxEscrow: {
-          id: "___________________" as OZSentinelID,
+          id: "____________________" as OZSentinelID,
           alias: `[${OPEN_ZEPPELIN_SEMVER}] Escrow Lootbox onCreate`,
           semver: OPEN_ZEPPELIN_SEMVER,
           slug: OZSentinelSlugs.onCreateLootboxEscrow,
           ozChainSlug: OZChainSlugs.BSC_MAINNET,
-          contractWatchAddress: "___________________" as Address,
+          contractWatchAddress: "____________________" as Address,
         },
       },
       [BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex]: {
         onCreateLootboxInstant: {
-          id: "___________________" as OZSentinelID,
+          id: "____________________" as OZSentinelID,
           alias: `[${OPEN_ZEPPELIN_SEMVER}] Instant Lootbox onCreate`,
           semver: OPEN_ZEPPELIN_SEMVER,
           slug: OZSentinelSlugs.onCreateLootboxInstant,
           ozChainSlug: OZChainSlugs.POLYGON_MAINNET,
-          contractWatchAddress: "___________________" as Address,
+          contractWatchAddress: "____________________" as Address,
         },
         onCreateLootboxEscrow: {
-          id: "___________________" as OZSentinelID,
+          id: "____________________" as OZSentinelID,
           alias: `[${OPEN_ZEPPELIN_SEMVER}] Escrow Lootbox onCreate`,
           semver: OPEN_ZEPPELIN_SEMVER,
           slug: OZSentinelSlugs.onCreateLootboxEscrow,
           ozChainSlug: OZChainSlugs.POLYGON_MAINNET,
-          contractWatchAddress: "___________________" as Address,
+          contractWatchAddress: "____________________" as Address,
         },
       },
     },
@@ -165,129 +165,116 @@ export const snapshot: GlobalMainfest_v0_5_0_demo = {
   },
   pipedream: {
     alias: PIPEDREAM_SEMVER,
-    email: "___________________@lootbox.fyi",
+    email: "0xnewton@lootbox.fund",
     sources: {
       onCreateLootboxInstant: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxInstant`, // Used as PD name
-        pipedreamID: "___________________" as PipedreamSourceID,
+        pipedreamID: "____________________" as PipedreamSourceID,
         semver: "0.1.0",
-        webhookEndpoint: "https://___________________.m.pipedream.net",
+        webhookEndpoint: "https://____________________.m.pipedream.net",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamSourceSlugs.onCreateLootboxInstant}`, // Used as PD key
       },
       onCreateLootboxEscrow: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxEscrow`, // Used as PD name
-        pipedreamID: "dc_gzu0jgA" as PipedreamSourceID,
+        pipedreamID: "____________________" as PipedreamSourceID,
         semver: "0.1.0",
-        webhookEndpoint: "https://___________________.m.pipedream.net",
+        webhookEndpoint: "https://____________________.m.pipedream.net",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamSourceSlugs.onCreateLootboxEscrow}`, // Used as PD key
-      },
-      onUploadABI: {
-        alias: `[${PIPEDREAM_SEMVER}] onUploadABI`, // Used as PD name
-        pipedreamID: "______________________" as PipedreamSourceID,
-        semver: "0.1.0",
-        webhookEndpoint: "https://______________________.m.pipedream.net",
-        slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamSourceSlugs.onUploadABI}`, // Used as PD key
       },
     },
     actions: {
       onCreateLootboxInstant: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxInstant`, // Used as PD name
-        pipedreamID: "___________________" as PipedreamActionID,
+        pipedreamID: "____________________" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamActionSlugs.onCreateLootboxInstant}`, // Used as PD key
       },
       onCreateLootboxEscrow: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxEscrow`, // Used as PD name
-        pipedreamID: "___________________" as PipedreamActionID,
+        pipedreamID: "____________________" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamActionSlugs.onCreateLootboxEscrow}`, // Used as PD key
-      },
-      onUploadABI: {
-        alias: `[${PIPEDREAM_SEMVER}] onUploadABI`, // Used as PD name
-        pipedreamID: "______________________" as PipedreamActionID,
-        pipedreamSemver: "0.1.0",
-        slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamActionSlugs.onUploadABI}`, // Used as PD key
       },
     },
     semver: PIPEDREAM_SEMVER,
   },
   cloudRun: {
     alias: "string",
-    semver: "0.5.0-demo",
+    semver: "0.5.0-prod",
     containers: {
       stampNewLootbox: {
         slug: CloudRunContainerSlugs.stampNewLootbox,
-        fullRoute: "https://___________________.a.run.app/stamp/new/lootbox",
+        fullRoute: "https://____________________.a.run.app/stamp/new/lootbox",
       },
       stampNewTicket: {
         slug: CloudRunContainerSlugs.stampNewTicket,
-        fullRoute: "https://___________________.a.run.app/stamp/new/ticket",
+        fullRoute: "https://____________________.a.run.app/stamp/new/ticket",
       },
     },
   },
   googleCloud: {
-    alias: "0.5.0-demo",
-    projectID: "lootbox-fund-staging",
-    semver: "0.5.0-demo",
+    alias: "0.5.0-prod",
+    projectID: "lootbox-fund-prod",
+    semver: "0.5.0-prod",
   },
   storage: {
     downloadUrl: "https://storage.googleapis.com",
     buckets: {
       abi: {
-        id: "lootbox-abi-staging",
+        id: "lootbox-abi-prod",
       },
       stamp: {
-        id: "lootbox-stamp-staging",
+        id: "lootbox-stamp-prod",
       },
-      data: { id: "lootbox-data-staging" },
-      constants: { id: "lootbox-constants-staging" },
-      widgets: { id: "lootbox-widgets-staging" },
+      data: { id: "lootbox-data-prod" },
+      constants: { id: "lootbox-constants-prod" },
+      widgets: { id: "lootbox-widgets-prod" },
     },
   },
   secretManager: {
     secrets: [
       {
         name: "OZ_DEFENDER_API_KEY",
-        version: 3,
+        version: 2,
       },
       {
         name: "OZ_DEFENDER_API_SECRET",
-        version: 3,
+        version: 2,
       },
       {
         name: "PD_ABI_UPLOADER_SECRET",
-        version: 3,
+        version: 1,
       },
       {
         name: "JWT_ON_CREATE_LOOTBOX",
-        version: 3,
+        version: 1,
       },
     ],
   },
   microfrontends: {
-    alias: "0.5.0-demo",
-    semver: "0.5.0-demo",
+    alias: "0.5.0-prod",
+    semver: "0.5.0-prod",
     widgets: {
       fundraiserPage: {
         alias: "fundraiserPage",
-        semver: "0.5.0-demo",
+        semver: "0.5.0-prod",
         slug: WidgetSlugs.fundraiserPage,
       },
       createLootbox: {
         alias: "createLootbox",
-        semver: "0.5.0-demo",
+        semver: "0.5.0-prod",
         slug: WidgetSlugs.createLootbox,
       },
       manageLootbox: {
         alias: "manageLootbox",
-        semver: "0.5.0-demo",
+        semver: "0.5.0-prod",
         slug: WidgetSlugs.manageLootbox,
       },
     },
     webflow: {
-      alias: "0.5.0-demo",
-      semver: "0.5.0-demo",
-      email: "support@guildfx.exchange",
+      alias: "0.5.0-prod",
+      semver: "0.5.0-prod",
+      email: "support@lootbox.fund",
       lootboxUrl: "https://www.lootbox.fund/buy",
       createPage: "https://www.lootbox.fund/create",
       managePage: "https://www.lootbox.fund/manage",
@@ -296,38 +283,38 @@ export const snapshot: GlobalMainfest_v0_5_0_demo = {
     },
   },
   lootbox: {
-    alias: "0.5.0-demo",
-    semver: "0.5.0-demo",
+    alias: "0.5.0-prod",
+    semver: "0.5.0-prod",
     contracts: {
       [BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
       [BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "___________________" as Address,
+          address: "____________________" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
     },
   },
   firebase: {
-    apiKey: "AIzaSyB8NCUR9bmlBSSkjW313FWeuStrdzcfXLg",
-    authDomain: "lootbox-fund-staging.firebaseapp.com",
-    projectId: "lootbox-fund-staging",
-    storageBucket: "lootbox-fund-staging.appspot.com",
-    messagingSenderId: "874567421974",
-    appId: "1:874567421974:web:cad45dbef9102978dca537",
+    apiKey: "AIzaSyBWx_NB1ztvNMayG5VWBjYz3xtgPLoXH8c",
+    authDomain: "lootbox-fund-prod.firebaseapp.com",
+    projectId: "lootbox-fund-prod",
+    storageBucket: "lootbox-fund-prod.appspot.com",
+    messagingSenderId: "2446790853",
+    appId: "1:2446790853:web:a32422e70eed6ffe8ea0ac",
   },
 };
 
