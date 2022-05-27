@@ -5,7 +5,7 @@ import { saveFileToGBucket } from "../../api/gbucket";
 import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
-  ITicketMetadata,
+  ILootboxMetadata,
   ContractAddress,
   convertHexToDecimal,
   BLOCKCHAINS,
@@ -82,7 +82,7 @@ const action = defineAction({
     let lootboxName = "";
     let lootboxAddr = "";
     let stampDownloadablePath = "";
-    let _lootboxURI: ITicketMetadata | undefined = undefined;
+    let _lootboxURI: ILootboxMetadata | undefined = undefined;
 
     // decode events from the EVM logs
     const decodedLogs = decodeEVMLogs<Event_LootboxCreated>({
@@ -104,7 +104,7 @@ const action = defineAction({
         lootboxAddr = ev.lootbox;
 
         try {
-          _lootboxURI = JSON.parse(ev._data) as ITicketMetadata;
+          _lootboxURI = JSON.parse(ev._data) as ILootboxMetadata;
         } catch (err) {
           console.error("Could not parse lootbox URI", err);
         }
@@ -117,7 +117,7 @@ const action = defineAction({
           manifest.storage.downloadUrl
         }/${encodeURISafe(stampFilePath)}?alt=media`;
 
-        const lootboxURI: ITicketMetadata = {
+        const lootboxURI: ILootboxMetadata = {
           image: stampDownloadablePath, // the stamp
           external_url: lootboxPublicUrl,
           description: _lootboxURI?.description || "",
