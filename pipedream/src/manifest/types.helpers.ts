@@ -250,6 +250,7 @@ export interface LootboxDatabaseSchema {
 
   name: string; // warning this is duped in metadata
   chainIdHex: ChainIDHex; // warning this is duped in metadata
+  variant: "escrow" | "instant";
 
   // Emitted in lootbox created event
   issuer: Address;

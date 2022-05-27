@@ -9,6 +9,7 @@ import {
   convertHexToDecimal,
   BLOCKCHAINS,
   ChainIDHex,
+  LootboxDatabaseSchema,
 } from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
@@ -25,30 +26,6 @@ interface Event_LootboxCreated {
   _data: string;
 }
 
-interface LootboxDatabaseSchema {
-  address: Address;
-  factory: Address;
-
-  name: string; // warning this is duped in metadata
-  chainIdHex: ChainIDHex; // warning this is duped in metadata
-
-  // Emitted in lootbox created event
-  issuer: Address;
-  treasury: Address;
-  targetSharesSold: string;
-  maxSharesSold: string;
-
-  // From Block Trigger Event
-  timestamps: {
-    lootboxCreatedAt: number;
-    lootboxIndexedAt: number;
-  };
-
-  // Metadata
-  metadataDownloadUrl: string;
-  metadata: ILootboxMetadata;
-}
-
 const action = defineAction({
   name: manifest.pipedream.actions.onCreateLootboxEscrow.alias,
   description: `
@@ -61,7 +38,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxEscrow.slug,
   // version: manifest.pipedream.actions.onCreateLootboxEscrow.pipedreamSemver,
-  version: "0.1.9",
+  version: "0.1.10",
   type: "action",
   props: {
     googleCloud: {
@@ -198,9 +175,9 @@ const action = defineAction({
     };
 
     const jsonDownloadPath = await saveFileToGBucket({
-      alias: `JSON for Escrow Lootbox ${event?.lootbox} triggered by tx hash ${transaction.transactionHash}`,
+      alias: `JSON for Escrow Lootbox ${event.lootbox} triggered by tx hash ${transaction.transactionHash}`,
       credentials,
-      fileName: `${event?.lootbox.toLowerCase()}/lootbox.json`,
+      fileName: `${event.lootbox.toLowerCase()}/lootbox.json`,
       bucket: bucketData.id,
       data: JSON.stringify(coercedLootboxURI),
     });
@@ -220,12 +197,13 @@ const action = defineAction({
       },
       metadata: coercedLootboxURI,
       metadataDownloadUrl: jsonDownloadPath,
+      variant: "escrow",
     };
 
     return {
       json: jsonDownloadPath,
       name: event.lootboxName,
-      publicUrl: `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${event.lootbox}`,
+      publicUrl: lootboxPublicUrl,
       image: stampDownloadablePath,
       lootboxDatabaseSchema,
     };
