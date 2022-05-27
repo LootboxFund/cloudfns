@@ -244,6 +244,30 @@ export interface ITicketMetadata {
   };
 }
 
+export interface LootboxDatabaseSchema {
+  address: Address;
+  factory: Address;
+
+  name: string; // warning this is duped in metadata
+  chainIdHex: ChainIDHex; // warning this is duped in metadata
+
+  // Emitted in lootbox created event
+  issuer: Address;
+  treasury: Address;
+  targetSharesSold: string;
+  maxSharesSold: string;
+
+  // From Block Trigger Event
+  timestamps: {
+    lootboxCreatedAt: number;
+    lootboxIndexedAt: number;
+  };
+
+  // Metadata
+  metadataDownloadUrl: string;
+  metadata: ILootboxMetadata;
+}
+
 export const convertHexToDecimal = (hex: string): string => {
   return parseInt(hex, 16).toString();
 };
