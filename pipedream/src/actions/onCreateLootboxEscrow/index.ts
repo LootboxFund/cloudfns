@@ -35,8 +35,8 @@ interface LootboxDatabaseSchema {
   // Emitted in lootbox created event
   issuer: Address;
   treasury: Address;
-  targetSharesSold: BigNumber;
-  maxSharesSold: BigNumber;
+  targetSharesSold: string;
+  maxSharesSold: string;
 
   // From Block Trigger Event
   timestamps: {
@@ -61,7 +61,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxEscrow.slug,
   // version: manifest.pipedream.actions.onCreateLootboxEscrow.pipedreamSemver,
-  version: "0.1.5",
+  version: "0.1.9",
   type: "action",
   props: {
     googleCloud: {
@@ -126,7 +126,7 @@ const action = defineAction({
     const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${event.lootbox}`;
 
     // Lootbox NFT ticket image
-    const stampFilePath = `${bucketStamp.id}/${event.lootbox}.png`;
+    const stampFilePath = `${bucketStamp.id}/${event.lootbox}/lootbox.png`;
     const stampDownloadablePath = `${
       manifest.storage.downloadUrl
     }/${encodeURISafe(stampFilePath)}?alt=media`;
@@ -212,8 +212,8 @@ const action = defineAction({
       chainIdHex: chain.chainIdHex,
       issuer: event.issuer,
       treasury: event.treasury,
-      targetSharesSold: event.targetSharesSold,
-      maxSharesSold: event.maxSharesSold,
+      targetSharesSold: event.targetSharesSold?.toString(),
+      maxSharesSold: event.maxSharesSold?.toString(),
       timestamps: {
         lootboxCreatedAt: timestamp,
         lootboxIndexedAt: new Date().valueOf(),

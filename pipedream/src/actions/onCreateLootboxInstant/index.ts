@@ -112,7 +112,7 @@ const action = defineAction({
         const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxAddr}`;
 
         // Lootbox NFT ticket image
-        const stampFilePath = `${bucketStamp.id}/${lootboxAddr}.png`;
+        const stampFilePath = `${bucketStamp.id}/${lootboxAddr}/lootbox.png`;
         stampDownloadablePath = `${
           manifest.storage.downloadUrl
         }/${encodeURISafe(stampFilePath)}?alt=media`;
