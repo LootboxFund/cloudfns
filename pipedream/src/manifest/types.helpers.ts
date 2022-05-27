@@ -19,12 +19,7 @@ export enum OZChainSlugs {
   POLYGON_TESTNET = "polygon",
   POLYGON_MAINNET = "mumbai",
 }
-export type BucketType =
-  | "abi"
-  | "data"
-  | "stamp"
-  | "constants"
-  | "widgets";
+export type BucketType = "abi" | "data" | "stamp" | "constants" | "widgets";
 
 export type SecretName =
   | "OZ_DEFENDER_API_KEY"
@@ -196,7 +191,7 @@ export interface LootboxCustomSchema {
  * Base level metadata should be opensea compatible (see https://docs.opensea.io/docs/metadata-standards for more details)
  * Custom lootbox metadata is nested in lootboxCustomSchema field
  */
-export interface ITicketMetadata {
+export interface ILootboxMetadata {
   /** points to stamp image - opensea compatible */
   image: string;
   /** points to lootbox page on lootbox.fund - opensea compatible */
@@ -212,6 +207,41 @@ export interface ITicketMetadata {
   /** A URL to a YouTube video - opensea compatible */
   youtube_url?: string;
   lootboxCustomSchema: LootboxCustomSchema; // Used in lootbox custom code etc
+}
+
+interface OpenSeaAttributes {
+  trait_type: string | number;
+  value: string;
+  display_type?: string;
+}
+
+export interface ITicketMetadata {
+  image: string; // the stamp
+  external_url: string;
+  description: string;
+  name: string;
+  background_color: string;
+  animation_url: string;
+  youtube_url: string;
+  attributes?: OpenSeaAttributes[];
+  lootboxCustomSchema: {
+    version: string;
+    chain: {
+      /** lootbox address */
+      address: string;
+      chainIdHex: string;
+      chainName: string;
+      chainIdDecimal: string;
+    };
+    lootbox: {
+      ticketNumber: number;
+      backgroundImage: string;
+      image: string;
+      backgroundColor: string;
+      badgeImage?: string;
+      sharesInTicket: string;
+    };
+  };
 }
 
 export const convertHexToDecimal = (hex: string): string => {
