@@ -8,6 +8,7 @@ import {
   Wallet,
   CreateUserResponse,
   AuthenticateWalletResponse,
+  CreateUserWithWalletCredentials,
 } from "../../generated/types";
 import {
   getUser,
@@ -41,7 +42,7 @@ const UserResolvers = {
         return {
           error: {
             code: StatusCode.ServerError,
-            message: err.message,
+            message: err instanceof Error ? err.message : "",
           },
         };
       }
@@ -55,91 +56,109 @@ const UserResolvers = {
 
   Mutation: {
     createUser: async (_, { payload }: MutationCreateUserArgs) => {
-      if (payload.credentials.__typename === "CreateUserWithEmailCredentials") {
-        return {
-          error: {
-            code: StatusCode.NotImplemented,
-            message: "Please sign in using your wallet",
-          },
-        };
-      }
+      if (payload.password) {
+        try {
+          // Create the user in the IDP
+          const idpUser = await identityProvider.createUser({
+            email: payload.email,
+            phoneNumber: payload.phoneNumber,
+            emailVerified: false,
+            claims: undefined,
+            password: payload.password,
+          });
 
-      // Validate the signature is correct from the wallet
-      let address: Address;
-      let nonce: string;
-
-      try {
-        const res = await validateSignature(
-          payload.credentials.message,
-          payload.credentials.signedMessage
-        );
-
-        address = res.address;
-        nonce = res.nonce;
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: err.message,
-          },
-        };
-      }
-
-      // Make sure the wallet is not already in use by someone
-      try {
-        const wallet = await getWalletByAddress(address);
-        if (wallet) {
+          const user = await createUser(idpUser, payload);
+          user.wallets = [];
+          return user;
+        } catch (err) {
           return {
             error: {
-              code: StatusCode.BadRequest,
-              message: "Wallet already in use",
+              code: StatusCode.ServerError,
+              message: err instanceof Error ? err.message : "",
             },
           };
         }
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err.message,
-          },
-        };
+      } else {
+        // Create user with wallet
+
+        if (
+          !payload?.walletCredentials?.message ||
+          !payload?.walletCredentials?.signedMessage
+        ) {
+          return {
+            error: {
+              code: StatusCode.NotImplemented,
+              message: "Please sign in using your wallet",
+            },
+          };
+        }
+
+        // Validate the signature is correct from the wallet
+        let address: Address;
+        let nonce: string;
+
+        try {
+          const res = await validateSignature(
+            payload?.walletCredentials?.message,
+            payload?.walletCredentials?.signedMessage
+          );
+
+          address = res.address;
+          nonce = res.nonce;
+        } catch (err) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: err instanceof Error ? err.message : "",
+            },
+          };
+        }
+
+        // Make sure the wallet is not already in use by someone
+        try {
+          const wallet = await getWalletByAddress(address);
+          if (wallet) {
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                message: "Wallet already in use",
+              },
+            };
+          }
+        } catch (err) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: err instanceof Error ? err.message : "",
+            },
+          };
+        }
+
+        try {
+          // Create the user in the IDP
+          const idpUser = await identityProvider.createUser({
+            email: payload.email,
+            phoneNumber: payload.phoneNumber,
+            emailVerified: false,
+            claims: undefined,
+          });
+
+          const user = await createUser(idpUser, payload);
+          const wallet = await createUserWallet({
+            userId: idpUser.id,
+            address,
+          });
+          user.wallets = [wallet];
+          return user;
+        } catch (err) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: err instanceof Error ? err.message : "",
+            },
+          };
+        }
       }
-
-      // Create the user in the IDP
-      const idpUser = await identityProvider.createUser({
-        email: payload.email,
-        phoneNumber: payload.phoneNumber,
-        emailVerified: true,
-        claims: undefined,
-      });
-
-      // Create the user document in database
-      let user: User;
-      try {
-        user = await createUser(idpUser, payload);
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err.message,
-          },
-        };
-      }
-
-      // Add the wallet to the user document
-      try {
-        const wallet = await createUserWallet({ userId: idpUser.id, address });
-        user.wallets = [wallet];
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err.message,
-          },
-        };
-      }
-
-      return user;
     },
     /** This should be a mutation, because it will write to the db the nonce, in order to ensure uniqueness */
     authenticateWallet: async (
@@ -162,13 +181,13 @@ const UserResolvers = {
         return {
           error: {
             code: StatusCode.Unauthorized,
-            message: err.message,
+            message: err instanceof Error ? err.message : "",
           },
         };
       }
 
       // Make sure the wallet is not already in use by someone
-      let wallet: Wallet;
+      let wallet: Wallet | undefined;
       try {
         wallet = await getWalletByAddress(address);
         if (!wallet) {
@@ -179,33 +198,39 @@ const UserResolvers = {
             },
           };
         }
+
+        // Now that we have a userId in the wallet
+        const idpUser = await identityProvider.getUserById(wallet.userId);
+
+        if (!idpUser) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "No user found",
+            },
+          };
+        } else if (!idpUser.isEnabled) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "User is not enabled",
+            },
+          };
+        }
+
+        // Now get the signin token from admin-sdk
+        const signinToken = await identityProvider.getSigninToken(idpUser.id);
+
+        // Sign in token can be used in the front end to sign users in
+        return signinToken;
       } catch (err) {
         return {
           error: {
             code: StatusCode.ServerError,
-            message: err.message,
+            message: err instanceof Error ? err.message : "",
           },
         };
       }
-
-      // Now that we have a userId in the wallet
-      const idpUser = await identityProvider.getUserById(wallet.userId);
-
-      if (!idpUser.isEnabled) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: "User is not enabled",
-          },
-        };
-      }
-
-      // Now get the signin token from admin-sdk
-      const signinToken = await identityProvider.getSigninToken(idpUser.id);
-
-      // Sign in token can be used in the front end to sign users in
-
-      return signinToken;
     },
   },
 

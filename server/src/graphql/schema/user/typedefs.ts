@@ -10,12 +10,11 @@ const UserTypeDefs = gql`
 
   type User {
     id: ID!
-    firstName: String!
-    lastName: String!
-    email: String
+    firstName: String
+    lastName: String
+    email: String!
     wallets: [Wallet!]
     phoneNumber: String
-    isEnabled: Boolean!
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
@@ -35,33 +34,25 @@ const UserTypeDefs = gql`
 
   # Mutations
 
-  input CreateUserPayload {
-    firstName: String!
-    lastName: String!
-    email: EmailAddress # Optional, not used if email is in credentials
-    phoneNumber: PhoneNumber # Optional, not used if phoneNumber is in credentials
-    credentials: CreateUserCredentials!
-  }
-
-  type CreateUserWithWalletCredentials {
+  input CreateUserWithWalletCredentials {
     message: String!
     signedMessage: String!
   }
-
-  type CreateUserWithEmailCredentials {
-    email: EmailAddress!
-    password: String!
-  }
-
-  union CreateUserCredentials =
-      CreateUserWithWalletCredentials
-    | CreateUserWithEmailCredentials
 
   type CreateUserResponseSuccess {
     id: ID!
   }
 
   union CreateUserResponse = CreateUserResponseSuccess | ResponseError
+
+  input CreateUserPayload {
+    firstName: String
+    lastName: String
+    email: EmailAddress!
+    phoneNumber: PhoneNumber
+    password: String # Optional, not used if walletCredentials exists
+    walletCredentials: CreateUserWithWalletCredentials
+  }
 
   type AuthenticateWalletResponseSuccess {
     token: String!
@@ -71,10 +62,15 @@ const UserTypeDefs = gql`
       AuthenticateWalletResponseSuccess
     | ResponseError
 
+  input AuthenticateWalletPayload {
+    message: String!
+    signedMessage: String!
+  }
+
   extend type Mutation {
     createUser(payload: CreateUserPayload!): CreateUserResponse
     authenticateWallet(
-      payload: CreateUserWithWalletCredentials!
+      payload: AuthenticateWalletPayload!
     ): AuthenticateWalletResponse
   }
 `;

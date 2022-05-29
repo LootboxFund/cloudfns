@@ -40,6 +40,7 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     return {
       id: userRecord.uid,
       email,
+      phoneNumber,
       claims,
       isEnabled: !userRecord.disabled,
     };

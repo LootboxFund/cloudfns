@@ -26,7 +26,7 @@ const LootboxResolvers: Resolvers = {
         return {
           error: {
             code: StatusCode.ServerError,
-            message: err.message,
+            message: err instanceof Error ? err.message : "",
           },
         };
       }

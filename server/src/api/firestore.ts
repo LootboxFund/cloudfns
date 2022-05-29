@@ -23,7 +23,7 @@ enum Collection {
 
 export const getLootboxByAddress = async (
   address: string
-): Promise<Lootbox> => {
+): Promise<Lootbox | undefined> => {
   const lootboxRef = db
     .collection(Collection.Lootbox)
     .where(
@@ -56,18 +56,19 @@ export const createUser = async (
 
   const user: User = {
     id: idpUser.id,
-    firstName: payload.firstName,
-    lastName: payload.lastName,
-    isEnabled: idpUser.isEnabled,
+    email: idpUser.email,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   };
 
-  if (idpUser.email) {
-    user.email = idpUser.email;
-  }
   if (idpUser.phoneNumber) {
     user.phoneNumber = idpUser.phoneNumber;
+  }
+  if (payload.firstName) {
+    user.firstName = payload.firstName;
+  }
+  if (payload.lastName) {
+    user.lastName = payload.lastName;
   }
 
   await userRef.set(user);
@@ -75,7 +76,9 @@ export const createUser = async (
   return user;
 };
 
-export const getUser = async (id: string): Promise<Omit<User, "wallets">> => {
+export const getUser = async (
+  id: string
+): Promise<Omit<User, "wallets"> | undefined> => {
   const userRef = db
     .collection(Collection.User)
     .doc(id) as DocumentReference<User>;
@@ -85,10 +88,15 @@ export const getUser = async (id: string): Promise<Omit<User, "wallets">> => {
   if (!userSnapshot.exists) {
     return undefined;
   } else {
-    const user = userSnapshot.data();
+    const user = userSnapshot.data() as User;
     return {
       id: userSnapshot.id,
-      ...user,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 };
@@ -105,7 +113,6 @@ export const getUserWallets = async (id: string): Promise<Wallet[]> => {
     return walletSnapshot.docs.map((doc) => {
       const wallet = doc.data();
       return {
-        id: doc.id,
         ...wallet,
       };
     });
@@ -127,7 +134,6 @@ export const getWalletByAddress = async (
     const doc = walletSnapshot.docs[0];
     const wallet = doc.data();
     return {
-      id: doc.id,
       ...wallet,
     };
   }
