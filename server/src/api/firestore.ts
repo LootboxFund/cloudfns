@@ -1,17 +1,11 @@
 import {
   CollectionGroup,
   CollectionReference,
-  DocumentData,
   DocumentReference,
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "./firebase";
-import {
-  Lootbox,
-  User,
-  Wallet,
-  CreateUserPayload,
-} from "../graphql/generated/types";
+import { Lootbox, User, Wallet } from "../graphql/generated/types";
 import { Address, LootboxDatabaseSchema } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
 
@@ -19,6 +13,11 @@ enum Collection {
   "Lootbox" = "lootbox",
   "User" = "user",
   "Wallet" = "wallet",
+}
+
+interface CreateFirestoreUserPayload {
+  firstName?: string;
+  lastName?: string;
 }
 
 export const getLootboxByAddress = async (
@@ -48,7 +47,7 @@ export const getLootboxByAddress = async (
 
 export const createUser = async (
   idpUser: IIdpUser,
-  payload: CreateUserPayload
+  payload: CreateFirestoreUserPayload
 ): Promise<User> => {
   const userRef = db
     .collection(Collection.User)

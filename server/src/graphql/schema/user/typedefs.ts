@@ -32,26 +32,27 @@ const UserTypeDefs = gql`
     getMyProfile: GetMyProfileResponse!
   }
 
-  # Mutations
-
-  input CreateUserWithWalletCredentials {
-    message: String!
-    signedMessage: String!
-  }
-
   type CreateUserResponseSuccess {
-    id: ID!
+    user: User!
   }
 
   union CreateUserResponse = CreateUserResponseSuccess | ResponseError
 
-  input CreateUserPayload {
+  input CreateUserWithPasswordPayload {
     firstName: String
     lastName: String
     email: EmailAddress!
     phoneNumber: PhoneNumber
-    password: String # Optional, not used if walletCredentials exists
-    walletCredentials: CreateUserWithWalletCredentials
+    password: String!
+  }
+
+  input CreateUserWithWalletPayload {
+    firstName: String
+    lastName: String
+    email: EmailAddress!
+    phoneNumber: PhoneNumber
+    message: String!
+    signedMessage: String!
   }
 
   type ConnectWalletResponseSuccess {
@@ -65,9 +66,20 @@ const UserTypeDefs = gql`
     signedMessage: String!
   }
 
+  input AuthenticateWalletPayload {
+    message: String!
+    signedMessage: String!
+  }
+
   extend type Mutation {
-    createUser(payload: CreateUserPayload!): CreateUserResponse!
+    createUserWithPassword(
+      payload: CreateUserWithPasswordPayload!
+    ): CreateUserResponse!
+    createUserWithWallet(
+      payload: CreateUserWithWalletPayload!
+    ): CreateUserResponse!
     connectWallet(payload: ConnectWalletPayload!): ConnectWalletResponse!
+    authenticateWallet(payload: AuthenticateWalletPayload!): String!
   }
 `;
 
