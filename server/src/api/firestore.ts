@@ -3,10 +3,17 @@ import {
   CollectionReference,
   DocumentData,
   DocumentReference,
+  Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "./firebase";
-import { Lootbox, User, Wallet } from "../graphql/generated/types";
-import { LootboxDatabaseSchema } from "@wormgraph/helpers";
+import {
+  Lootbox,
+  User,
+  Wallet,
+  CreateUserPayload,
+} from "../graphql/generated/types";
+import { Address, LootboxDatabaseSchema } from "@wormgraph/helpers";
+import { IIdpUser } from "./identityProvider/interface";
 
 enum Collection {
   "Lootbox" = "lootbox",
@@ -37,6 +44,35 @@ export const getLootboxByAddress = async (
       address: lootbox.address,
     };
   }
+};
+
+export const createUser = async (
+  idpUser: IIdpUser,
+  payload: CreateUserPayload
+): Promise<User> => {
+  const userRef = db
+    .collection(Collection.User)
+    .doc(idpUser.id) as DocumentReference<User>;
+
+  const user: User = {
+    id: idpUser.id,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    isEnabled: idpUser.isEnabled,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  };
+
+  if (idpUser.email) {
+    user.email = idpUser.email;
+  }
+  if (idpUser.phoneNumber) {
+    user.phoneNumber = idpUser.phoneNumber;
+  }
+
+  await userRef.set(user);
+
+  return user;
 };
 
 export const getUser = async (id: string): Promise<Omit<User, "wallets">> => {
@@ -74,4 +110,50 @@ export const getUserWallets = async (id: string): Promise<Wallet[]> => {
       };
     });
   }
+};
+
+export const getWalletByAddress = async (
+  address: Address
+): Promise<Wallet | undefined> => {
+  const walletRef = db
+    .collection(Collection.Wallet)
+    .where("address", "==", address) as CollectionReference<Wallet>;
+
+  const walletSnapshot = await walletRef.get();
+
+  if (walletSnapshot.empty) {
+    return undefined;
+  } else {
+    const doc = walletSnapshot.docs[0];
+    const wallet = doc.data();
+    return {
+      id: doc.id,
+      ...wallet,
+    };
+  }
+};
+
+interface CreateUserWalletPayload {
+  address: Address;
+  userId: string;
+}
+export const createUserWallet = async (
+  payload: CreateUserWalletPayload
+): Promise<Wallet> => {
+  const walletRef = db
+    .collection(Collection.User)
+    .doc(payload.userId)
+    .collection(Collection.Wallet)
+    .doc() as DocumentReference<Wallet>;
+
+  const wallet: Wallet = {
+    id: walletRef.id,
+    address: payload.address,
+    userId: payload.userId,
+    createdAt: Timestamp.now(),
+  };
+
+  await walletRef.set(wallet);
+
+  return wallet;
 };

@@ -2,14 +2,14 @@ import { auth } from "../firebase";
 import { default as adminAuth, UserRecord } from "firebase-admin/auth";
 import { ICreateUserRequest, IIdentityProvider, IIdpUser } from "./interface";
 
-function convertUserRecordToUser(userRecord: UserRecord): IIdpUser {
+const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
   return {
     id: userRecord.uid,
     email: userRecord.email ?? "",
     isEnabled: !userRecord.disabled,
     claims: userRecord.customClaims ? userRecord.customClaims : {},
   };
-}
+};
 
 class FirebaseIdentityProvider implements IIdentityProvider {
   private readonly authInstance: adminAuth.Auth;
@@ -23,6 +23,7 @@ class FirebaseIdentityProvider implements IIdentityProvider {
   async createUser({
     email,
     password,
+    phoneNumber,
     emailVerified = true,
     claims,
   }: ICreateUserRequest): Promise<IIdpUser> {
@@ -30,6 +31,7 @@ class FirebaseIdentityProvider implements IIdentityProvider {
       email,
       password,
       emailVerified,
+      phoneNumber,
     });
     await this.authInstance.setCustomUserClaims(userRecord.uid, claims);
 

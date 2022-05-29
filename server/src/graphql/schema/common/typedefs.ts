@@ -1,6 +1,11 @@
 import { gql } from "apollo-server";
 
 const CommonTypeDefs = gql`
+  scalar EmailAddress
+  scalar Timestamp
+  scalar PhoneNumber
+  scalar ID
+
   enum StatusCode {
     Success
     NotImplemented
@@ -9,6 +14,7 @@ const CommonTypeDefs = gql`
     ServerError
     InvalidOperation
     Forbidden
+    Unauthorized
   }
 
   type Status {

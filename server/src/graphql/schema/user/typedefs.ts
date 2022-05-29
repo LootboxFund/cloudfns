@@ -1,8 +1,6 @@
 import { gql } from "apollo-server";
 
 const UserTypeDefs = gql`
-  scalar Timestamp
-
   type Wallet {
     id: ID!
     userId: ID!
@@ -23,6 +21,8 @@ const UserTypeDefs = gql`
     deletedAt: Timestamp
   }
 
+  # Queries
+
   type UserResponseSuccess {
     user: User!
   }
@@ -31,6 +31,40 @@ const UserTypeDefs = gql`
 
   extend type Query {
     getUser(id: ID!): GetUserResponse
+  }
+
+  # Mutations
+
+  input CreateUserPayload {
+    firstName: String!
+    lastName: String!
+    email: EmailAddress # Optional, not used if email is in credentials
+    phoneNumber: PhoneNumber # Optional, not used if phoneNumber is in credentials
+    credentials: CreateUserCredentials!
+  }
+
+  type CreateUserWithWalletCredentials {
+    message: String!
+    signedMessage: String!
+  }
+
+  type CreateUserWithEmailCredentials {
+    email: EmailAddress!
+    password: String!
+  }
+
+  union CreateUserCredentials =
+      CreateUserWithWalletCredentials
+    | CreateUserWithEmailCredentials
+
+  type CreateUserResponseSuccess {
+    id: ID!
+  }
+
+  union CreateUserResponse = CreateUserResponseSuccess | ResponseError
+
+  extend type Mutation {
+    createUser(payload: CreateUserPayload!): CreateUserResponse
   }
 `;
 

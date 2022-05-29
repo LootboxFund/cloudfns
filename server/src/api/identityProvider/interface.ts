@@ -1,17 +1,17 @@
-export interface IClaims {
-  tournament?: string[];
-}
+export type IClaims = any; // TODO refine this
 
 export interface IIdpUser {
   id: string;
-  email: string;
+  email?: string;
   claims: IClaims;
   isEnabled: boolean;
+  phoneNumber?: string;
 }
 
 export interface ICreateUserRequest {
-  email: string;
-  password: string;
+  phoneNumber?: string;
+  email?: string;
+  password?: string; // Optional because we can use wallet signature instead
   emailVerified?: boolean;
   claims: IClaims;
 }
