@@ -3,12 +3,9 @@ import {
   StatusCode,
   GetUserResponse,
   MutationCreateUserArgs,
-  User,
   MutationConnectWalletArgs,
-  Wallet,
   CreateUserResponse,
   ConnectWalletResponse,
-  CreateUserWithWalletCredentials,
 } from "../../generated/types";
 import {
   getUser,
@@ -22,6 +19,7 @@ import { Address } from "@wormgraph/helpers";
 import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
+import { isAuthenticated } from "../../../lib/permissionGuard";
 
 const UserResolvers = {
   Query: {
@@ -208,7 +206,7 @@ const UserResolvers = {
 
         // Connect the wallet to the user
         const wallet = await createUserWallet({
-          userId: context.userId as string,
+          userId: context.userId as string, // Typing is enforced in isAuthenticated middleware
           address,
         });
 
@@ -331,4 +329,10 @@ const UserResolvers = {
   },
 };
 
-export default UserResolvers;
+const userResolversComposition = {
+  "Mutation.connectWallet": [isAuthenticated()],
+};
+
+const resolvers = composeResolvers(UserResolvers, userResolversComposition);
+
+export default resolvers;
