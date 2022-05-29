@@ -1,7 +1,10 @@
 import { ApolloServer } from "apollo-server";
 import identityProvider from "../api/identityProvider";
-import { IIdpUser } from "../api/identityProvider/interface";
 import { schema } from "./schema";
+
+export interface Context {
+  userId: string | null;
+}
 
 const decodeToken = (token: string) => {
   try {
@@ -20,7 +23,7 @@ const server = new ApolloServer({
   schema,
   csrfPrevention: true,
   introspection: true,
-  context: async ({ req }): Promise<{ userId: string | null }> => {
+  context: async ({ req }): Promise<Context> => {
     try {
       const { authorization } = req.headers;
 

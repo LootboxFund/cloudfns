@@ -54,24 +54,20 @@ const UserTypeDefs = gql`
     walletCredentials: CreateUserWithWalletCredentials
   }
 
-  type AuthenticateWalletResponseSuccess {
-    token: String!
+  type ConnectWalletResponseSuccess {
+    wallet: Wallet!
   }
 
-  union AuthenticateWalletResponse =
-      AuthenticateWalletResponseSuccess
-    | ResponseError
+  union ConnectWalletResponse = ConnectWalletResponseSuccess | ResponseError
 
-  input AuthenticateWalletPayload {
+  input ConnectWalletPayload {
     message: String!
     signedMessage: String!
   }
 
   extend type Mutation {
     createUser(payload: CreateUserPayload!): CreateUserResponse
-    authenticateWallet(
-      payload: AuthenticateWalletPayload!
-    ): AuthenticateWalletResponse
+    connectWallet(payload: ConnectWalletPayload!): ConnectWalletResponse
   }
 `;
 
