@@ -23,6 +23,7 @@ export interface IIdentityProvider {
   // getUserByEmail(email: string): Promise<IIdpUser | null>;
   // getUsersById(ids: string[]): Promise<Map<string, IIdpUser | null>>;
   // updateUser(id: string, request: IUpdateUserRequest): Promise<void>;
+  getSigninToken(userId: string): Promise<string>;
   verifyIDToken(token: string, refreshToken: string): Promise<string | null>;
   generateEmailVerificationLink(email: string): Promise<string>;
 }

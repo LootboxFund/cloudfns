@@ -71,6 +71,11 @@ class FirebaseIdentityProvider implements IIdentityProvider {
   async generateEmailVerificationLink(email: string): Promise<any> {
     return this.authInstance.generateEmailVerificationLink(email);
   }
+
+  async getSigninToken(userId: string): Promise<string> {
+    const token = await auth.createCustomToken(userId);
+    return token;
+  }
 }
 
 const provider = new FirebaseIdentityProvider(auth);
