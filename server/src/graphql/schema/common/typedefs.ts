@@ -2,9 +2,8 @@ import { gql } from "apollo-server";
 
 const CommonTypeDefs = gql`
   scalar EmailAddress
-  scalar Timestamp
   scalar PhoneNumber
-  scalar ID
+  scalar Timestamp
 
   enum StatusCode {
     Success

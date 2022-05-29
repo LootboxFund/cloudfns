@@ -57,8 +57,8 @@ export const createUser = async (
   const user: User = {
     id: idpUser.id,
     email: idpUser.email,
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
+    createdAt: Timestamp.now().toMillis(),
+    updatedAt: Timestamp.now().toMillis(),
   };
 
   if (idpUser.phoneNumber) {
@@ -156,7 +156,7 @@ export const createUserWallet = async (
     id: walletRef.id,
     address: payload.address,
     userId: payload.userId,
-    createdAt: Timestamp.now(),
+    createdAt: Timestamp.now().toMillis(),
   };
 
   await walletRef.set(wallet);
