@@ -7,25 +7,22 @@ const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
     id: userRecord.uid,
     email: userRecord.email ?? "",
     isEnabled: !userRecord.disabled,
-    claims: userRecord.customClaims ? userRecord.customClaims : {},
   };
 };
 
 class FirebaseIdentityProvider implements IIdentityProvider {
   private readonly authInstance: adminAuth.Auth;
+  readonly typeName = "firebase";
 
   constructor(authInstance: adminAuth.Auth) {
     this.authInstance = authInstance;
   }
-
-  readonly typeName = "firebase";
 
   async createUser({
     email,
     password,
     phoneNumber,
     emailVerified = true,
-    claims,
   }: ICreateUserRequest): Promise<IIdpUser> {
     const userRecord = await this.authInstance.createUser({
       email,
@@ -33,7 +30,6 @@ class FirebaseIdentityProvider implements IIdentityProvider {
       emailVerified,
       phoneNumber,
     });
-    await this.authInstance.setCustomUserClaims(userRecord.uid, claims);
 
     await this.generateEmailVerificationLink(email);
 
@@ -41,7 +37,6 @@ class FirebaseIdentityProvider implements IIdentityProvider {
       id: userRecord.uid,
       email,
       phoneNumber,
-      claims,
       isEnabled: !userRecord.disabled,
     };
   }

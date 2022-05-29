@@ -1,9 +1,7 @@
-export type IClaims = any; // TODO refine this
-
 export interface IIdpUser {
   id: string;
   email: string;
-  claims: IClaims;
+  // claims: IClaims;
   isEnabled: boolean;
   phoneNumber?: string;
 }
@@ -13,7 +11,6 @@ export interface ICreateUserRequest {
   email: string;
   password?: string; // Optional because we can use wallet signature instead
   emailVerified?: boolean;
-  claims: IClaims;
 }
 
 export interface IIdentityProvider {

@@ -63,7 +63,6 @@ const UserResolvers = {
             email: payload.email,
             phoneNumber: payload.phoneNumber,
             emailVerified: false,
-            claims: undefined,
             password: payload.password,
           });
 
@@ -140,7 +139,6 @@ const UserResolvers = {
             email: payload.email,
             phoneNumber: payload.phoneNumber,
             emailVerified: false,
-            claims: undefined,
           });
 
           const user = await createUser(idpUser, payload);
