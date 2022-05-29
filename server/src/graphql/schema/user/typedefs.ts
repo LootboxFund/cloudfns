@@ -22,14 +22,14 @@ const UserTypeDefs = gql`
 
   # Queries
 
-  type UserResponseSuccess {
+  type GetMyProfileSuccess {
     user: User!
   }
 
-  union GetUserResponse = UserResponseSuccess | ResponseError
+  union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
 
   extend type Query {
-    getUser(id: ID!): GetUserResponse
+    getMyProfile: GetMyProfileResponse!
   }
 
   # Mutations
@@ -66,8 +66,8 @@ const UserTypeDefs = gql`
   }
 
   extend type Mutation {
-    createUser(payload: CreateUserPayload!): CreateUserResponse
-    connectWallet(payload: ConnectWalletPayload!): ConnectWalletResponse
+    createUser(payload: CreateUserPayload!): CreateUserResponse!
+    connectWallet(payload: ConnectWalletPayload!): ConnectWalletResponse!
   }
 `;
 

@@ -1,7 +1,6 @@
 import {
-  QueryGetUserArgs,
   StatusCode,
-  GetUserResponse,
+  GetMyProfileResponse,
   MutationCreateUserArgs,
   MutationConnectWalletArgs,
   CreateUserResponse,
@@ -24,9 +23,18 @@ import { isAuthenticated } from "../../../lib/permissionGuard";
 const UserResolvers = {
   Query: {
     /** Note: wallets get added async below */
-    getUser: async (_, args: QueryGetUserArgs) => {
+    getMyProfile: async (_, _args, context: Context) => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You are not authenticated!",
+          },
+        };
+      }
+
       try {
-        const user = await getUser(args.id);
+        const user = await getUser(context.userId);
         if (!user) {
           return {
             error: {
@@ -164,6 +172,15 @@ const UserResolvers = {
       { payload }: MutationConnectWalletArgs,
       context: Context
     ) => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You are not authenticated!",
+          },
+        };
+      }
+
       // Validate the signature is correct from the wallet
       let address: Address;
       let nonce: string;
@@ -206,7 +223,7 @@ const UserResolvers = {
 
         // Connect the wallet to the user
         const wallet = await createUserWallet({
-          userId: context.userId as string, // Typing is enforced in isAuthenticated middleware
+          userId: context.userId,
           address,
         });
 
@@ -291,10 +308,10 @@ const UserResolvers = {
     // },
   },
 
-  GetUserResponse: {
-    __resolveType: (obj: GetUserResponse) => {
+  GetMyProfileResponse: {
+    __resolveType: (obj: GetMyProfileResponse) => {
       if ("user" in obj) {
-        return "UserResponseSuccess";
+        return "GetMyProfileSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
@@ -330,6 +347,7 @@ const UserResolvers = {
 };
 
 const userResolversComposition = {
+  "Query.getMyProfile": [isAuthenticated()],
   "Mutation.connectWallet": [isAuthenticated()],
 };
 
