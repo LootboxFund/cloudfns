@@ -7,6 +7,7 @@ import {
   MutationAuthenticateWalletArgs,
   Wallet,
   CreateUserResponse,
+  AuthenticateWalletResponse,
 } from "../../generated/types";
 import {
   getUser,
@@ -224,6 +225,18 @@ const UserResolvers = {
     __resolveType: (obj: CreateUserResponse) => {
       if ("id" in obj) {
         return "CreateUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  AuthenticateWalletResponse: {
+    __resolveType: (obj: AuthenticateWalletResponse) => {
+      if ("token" in obj) {
+        return "AuthenticateWalletResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

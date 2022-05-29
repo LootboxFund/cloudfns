@@ -63,17 +63,19 @@ const UserTypeDefs = gql`
 
   union CreateUserResponse = CreateUserResponseSuccess | ResponseError
 
-  type AuthenticateResponseSuccess {
+  type AuthenticateWalletResponseSuccess {
     token: String!
   }
 
-  union AuthenticateResponse = AuthenticateResponseSuccess | ResponseError
+  union AuthenticateWalletResponse =
+      AuthenticateWalletResponseSuccess
+    | ResponseError
 
   extend type Mutation {
     createUser(payload: CreateUserPayload!): CreateUserResponse
     authenticateWallet(
       payload: CreateUserWithWalletCredentials!
-    ): AuthenticateResponse
+    ): AuthenticateWalletResponse
   }
 `;
 
