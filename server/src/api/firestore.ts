@@ -122,7 +122,7 @@ export const getWalletByAddress = async (
   address: Address
 ): Promise<Wallet | undefined> => {
   const walletRef = db
-    .collection(Collection.Wallet)
+    .collectionGroup(Collection.Wallet)
     .where("address", "==", address) as CollectionReference<Wallet>;
 
   const walletSnapshot = await walletRef.get();

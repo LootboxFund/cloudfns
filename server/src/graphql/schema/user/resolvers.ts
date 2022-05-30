@@ -8,6 +8,7 @@ import {
   MutationAuthenticateWalletArgs,
   MutationCreateUserWithWalletArgs,
   Wallet,
+  AuthenticateWalletResponse,
 } from "../../generated/types";
 import {
   getUser,
@@ -228,7 +229,7 @@ const UserResolvers = {
         const signinToken = await identityProvider.getSigninToken(idpUser.id);
 
         // Sign in token can be used in the front end to sign users in
-        return signinToken;
+        return { token: signinToken };
       } catch (err) {
         return {
           error: {
@@ -338,6 +339,18 @@ const UserResolvers = {
     __resolveType: (obj: ConnectWalletResponse) => {
       if ("token" in obj) {
         return "ConnectWalletResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  AuthenticateWalletResponse: {
+    __resolveType: (obj: AuthenticateWalletResponse) => {
+      if ("token" in obj) {
+        return "AuthenticateWalletResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
