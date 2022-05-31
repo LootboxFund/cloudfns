@@ -1,9 +1,11 @@
+import { UserIdpID } from "../../lib/types";
+
 export interface IIdpUser {
-  id: string;
+  id: UserIdpID;
   email: string;
-  // claims: IClaims;
   isEnabled: boolean;
   phoneNumber?: string;
+  // claims: IClaims;
 }
 
 export interface ICreateUserRequest {

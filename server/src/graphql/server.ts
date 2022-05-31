@@ -1,9 +1,10 @@
 import { ApolloServer } from "apollo-server";
 import identityProvider from "../api/identityProvider";
+import { UserIdpID } from "../lib/types";
 import { schema } from "./schema";
 
 export interface Context {
-  userId: string | null;
+  userId: UserIdpID | null;
 }
 
 const decodeToken = (token: string) => {

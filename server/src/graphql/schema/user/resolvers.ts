@@ -9,6 +9,7 @@ import {
   MutationCreateUserWithWalletArgs,
   Wallet,
   AuthenticateWalletResponse,
+  User,
 } from "../../generated/types";
 import {
   getUser,
@@ -23,6 +24,7 @@ import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import { UserID } from "../../../lib/types";
 
 const UserResolvers = {
   Query: {
@@ -61,8 +63,8 @@ const UserResolvers = {
     },
   },
   User: {
-    wallets: async (user) => {
-      return await getUserWallets(user.id);
+    wallets: async (user: User) => {
+      return await getUserWallets(user.id as UserID);
     },
   },
 

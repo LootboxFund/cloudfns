@@ -1,10 +1,11 @@
 import { auth } from "../firebase";
 import { default as adminAuth, UserRecord } from "firebase-admin/auth";
 import { ICreateUserRequest, IIdentityProvider, IIdpUser } from "./interface";
+import { UserIdpID } from "../../lib/types";
 
 const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
   return {
-    id: userRecord.uid,
+    id: userRecord.uid as UserIdpID,
     email: userRecord.email ?? "",
     isEnabled: !userRecord.disabled,
   };
@@ -34,7 +35,7 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     await this.generateEmailVerificationLink(email);
 
     return {
-      id: userRecord.uid,
+      id: userRecord.uid as UserIdpID,
       email,
       phoneNumber,
       isEnabled: !userRecord.disabled,
@@ -51,12 +52,15 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     return convertUserRecordToUser(userRecord) as IIdpUser;
   }
 
-  async verifyIDToken(token: string, refreshToken: string) {
+  async verifyIDToken(
+    token: string,
+    refreshToken: string
+  ): Promise<UserIdpID | null> {
     try {
       if (!token || !refreshToken) return null;
 
       const decodedToken = await this.authInstance.verifyIdToken(token);
-      return decodedToken.uid;
+      return decodedToken.uid as UserIdpID;
     } catch (error) {
       // TODO: change when we add logger
       console.log(error);

@@ -5,12 +5,13 @@ import {
   StatusCode,
 } from "../../generated/types";
 import { getLootboxByAddress } from "../../../api/firestore";
+import { Address } from "@wormgraph/helpers";
 
 const LootboxResolvers: Resolvers = {
   Query: {
     getLootboxByAddress: async (_, args: QueryGetLootboxByAddressArgs) => {
       try {
-        const lootbox = await getLootboxByAddress(args.address);
+        const lootbox = await getLootboxByAddress(args.address as Address);
         if (!lootbox) {
           return {
             error: {

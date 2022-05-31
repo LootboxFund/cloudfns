@@ -8,6 +8,7 @@ import { db } from "./firebase";
 import { Lootbox, User, Wallet } from "../graphql/generated/types";
 import { Address, LootboxDatabaseSchema } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
+import { UserID, UserIdpID, LootboxID } from "../lib/types";
 
 enum Collection {
   "Lootbox" = "lootbox",
@@ -21,7 +22,7 @@ interface CreateFirestoreUserPayload {
 }
 
 export const getLootboxByAddress = async (
-  address: string
+  address: Address
 ): Promise<Lootbox | undefined> => {
   const lootboxRef = db
     .collection(Collection.Lootbox)
@@ -39,7 +40,7 @@ export const getLootboxByAddress = async (
     const doc = lootboxSnapshot.docs[0];
     const lootbox = doc.data();
     return {
-      id: doc.id,
+      id: doc.id as LootboxID,
       address: lootbox.address,
     };
   }
@@ -100,7 +101,7 @@ export const getUser = async (
   }
 };
 
-export const getUserWallets = async (id: string): Promise<Wallet[]> => {
+export const getUserWallets = async (id: UserID): Promise<Wallet[]> => {
   const wallets = db
     .collectionGroup(Collection.Wallet)
     .where("userId", "==", id) as CollectionGroup<Wallet>;
@@ -140,7 +141,7 @@ export const getWalletByAddress = async (
 
 interface CreateUserWalletPayload {
   address: Address;
-  userId: string;
+  userId: UserID | UserIdpID;
 }
 export const createUserWallet = async (
   payload: CreateUserWalletPayload
