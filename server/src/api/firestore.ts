@@ -5,7 +5,12 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "./firebase";
-import { Lootbox, User, Wallet } from "../graphql/generated/types";
+import {
+  Lootbox,
+  LootboxSnapshot,
+  User,
+  Wallet,
+} from "../graphql/generated/types";
 import { Address, LootboxDatabaseSchema } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
 import { UserID, UserIdpID, LootboxID } from "../lib/types";
@@ -14,7 +19,15 @@ enum Collection {
   "Lootbox" = "lootbox",
   "User" = "user",
   "Wallet" = "wallet",
+  "WalletLootboxSnapshot" = "wallet-lootbox-snapshot",
 }
+
+type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
+
+type UserWithoutWalletsOrLootboxSnapshots = Omit<
+  User,
+  "wallets" | "lootboxSnapshots"
+>;
 
 interface CreateFirestoreUserPayload {
   firstName?: string;
@@ -78,7 +91,7 @@ export const createUser = async (
 
 export const getUser = async (
   id: string
-): Promise<Omit<User, "wallets"> | undefined> => {
+): Promise<UserWithoutWalletsOrLootboxSnapshots | undefined> => {
   const userRef = db
     .collection(Collection.User)
     .doc(id) as DocumentReference<User>;
@@ -101,10 +114,12 @@ export const getUser = async (
   }
 };
 
-export const getUserWallets = async (id: UserID): Promise<Wallet[]> => {
+export const getUserWallets = async (
+  id: UserID
+): Promise<WalletWithoutLootboxSnapshot[]> => {
   const wallets = db
     .collectionGroup(Collection.Wallet)
-    .where("userId", "==", id) as CollectionGroup<Wallet>;
+    .where("userId", "==", id) as CollectionGroup<WalletWithoutLootboxSnapshot>;
 
   const walletSnapshot = await wallets.get();
   if (walletSnapshot.empty) {
@@ -162,4 +177,20 @@ export const createUserWallet = async (
   await walletRef.set(wallet);
 
   return wallet;
+};
+
+export const getLootboxSnapshotsForWallet = async (walletAddress: Address) => {
+  const collectionGroupRef = db
+    .collectionGroup(Collection.WalletLootboxSnapshot)
+    .where("address", "==", walletAddress) as CollectionGroup<LootboxSnapshot>;
+
+  const lootboxSnapshot = await collectionGroupRef.get();
+
+  if (lootboxSnapshot.empty) {
+    return [];
+  } else {
+    return lootboxSnapshot.docs.map((doc) => {
+      return doc.data();
+    });
+  }
 };

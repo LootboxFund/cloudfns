@@ -6,6 +6,7 @@ const UserTypeDefs = gql`
     userId: ID!
     address: String!
     createdAt: Timestamp!
+    lootboxSnapshots: [LootboxSnapshot!]
   }
 
   type User {
@@ -13,11 +14,11 @@ const UserTypeDefs = gql`
     firstName: String
     lastName: String
     email: String!
-    wallets: [Wallet!]
     phoneNumber: String
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
+    wallets: [Wallet!]
   }
 
   # Queries

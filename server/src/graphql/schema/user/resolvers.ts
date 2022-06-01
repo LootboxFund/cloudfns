@@ -10,6 +10,9 @@ import {
   Wallet,
   AuthenticateWalletResponse,
   User,
+  Lootbox,
+  ResponseError,
+  LootboxSnapshot,
 } from "../../generated/types";
 import {
   getUser,
@@ -17,6 +20,7 @@ import {
   getWalletByAddress,
   createUser,
   createUserWallet,
+  getLootboxSnapshotsForWallet,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../api/ethers";
 import { Address } from "@wormgraph/helpers";
@@ -29,7 +33,11 @@ import { UserID } from "../../../lib/types";
 const UserResolvers = {
   Query: {
     /** Note: wallets get added async below */
-    getMyProfile: async (_, _args, context: Context) => {
+    getMyProfile: async (
+      _,
+      _args,
+      context: Context
+    ): Promise<GetMyProfileResponse> => {
       if (!context.userId) {
         return {
           error: {
@@ -63,8 +71,17 @@ const UserResolvers = {
     },
   },
   User: {
-    wallets: async (user: User) => {
-      return await getUserWallets(user.id as UserID);
+    wallets: async (user: User): Promise<Wallet[]> => {
+      const wallets = await getUserWallets(user.id as UserID);
+      return wallets;
+    },
+  },
+  Wallet: {
+    lootboxSnapshots: async (wallet: Wallet): Promise<LootboxSnapshot[]> => {
+      const lootboxes = await getLootboxSnapshotsForWallet(
+        wallet.address as Address
+      );
+      return lootboxes;
     },
   },
 
@@ -72,7 +89,7 @@ const UserResolvers = {
     createUserWithPassword: async (
       _,
       { payload }: MutationCreateUserWithPasswordArgs
-    ) => {
+    ): Promise<CreateUserResponse> => {
       try {
         // Create the user in the IDP
         const idpUser = await identityProvider.createUser({
@@ -100,7 +117,7 @@ const UserResolvers = {
     createUserWithWallet: async (
       _,
       { payload }: MutationCreateUserWithWalletArgs
-    ) => {
+    ): Promise<CreateUserResponse> => {
       // Validate the signature is correct from the wallet
       let address: Address;
       let nonce: string;
@@ -159,7 +176,7 @@ const UserResolvers = {
           address,
         });
         user.wallets = [wallet];
-        return user;
+        return { user };
       } catch (err) {
         return {
           error: {
@@ -173,7 +190,7 @@ const UserResolvers = {
     authenticateWallet: async (
       _,
       { payload }: MutationAuthenticateWalletArgs
-    ) => {
+    ): Promise<AuthenticateWalletResponse> => {
       // Validate the signature is correct from the wallet
       let address: Address;
       let nonce: string;
@@ -246,7 +263,7 @@ const UserResolvers = {
       _,
       { payload }: MutationConnectWalletArgs,
       context: Context
-    ) => {
+    ): Promise<ConnectWalletResponse> => {
       if (!context.userId) {
         return {
           error: {

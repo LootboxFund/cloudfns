@@ -6,6 +6,10 @@ const LootboxTypeDefs = gql`
     address: String!
   }
 
+  type LootboxSnapshot {
+    address: String!
+  }
+
   type LootboxResponseSuccess {
     lootbox: Lootbox!
   }
