@@ -1,49 +1,27 @@
-// import {
-//   StatusCode,
-//   GetMyProfileResponse,
-//   MutationCreateUserWithPasswordArgs,
-//   MutationConnectWalletArgs,
-//   CreateUserResponse,
-//   ConnectWalletResponse,
-//   MutationAuthenticateWalletArgs,
-//   MutationCreateUserWithWalletArgs,
-//   Wallet,
-//   AuthenticateWalletResponse,
-//   Tournament,
-// } from "../../generated/types";
-// import {
-//   getUser,
-//   getUserWallets,
-//   getWalletByAddress,
-//   createUser,
-//   createUserWallet,
-// } from "../../../api/firestore";
-// import { validateSignature } from "../../../api/ethers";
-// import { Address } from "@wormgraph/helpers";
-// import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import {
   getLootboxSnapshotsForTournament,
   getTournamentById,
+  createTournament,
 } from "../../../api/firestore";
+import { isAuthenticated } from "../../../lib/permissionGuard";
 import { TournamentID } from "../../../lib/types";
 import {
+  CreateTournamentResponse,
   LootboxSnapshot,
+  MutationCreateTournamentArgs,
   StatusCode,
   Tournament,
   TournamentResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
-// import { Context } from "../../server";
-// import { isAuthenticated } from "../../../lib/permissionGuard";
-// import { UserID } from "../../../lib/types";
 
 const TournamentResolvers = {
   Query: {
     tournament: async (
       _,
       { id },
-      constext: Context
+      context: Context
     ): Promise<TournamentResponse> => {
       try {
         const tournament = await getTournamentById(id);
@@ -73,10 +51,60 @@ const TournamentResolvers = {
       return getLootboxSnapshotsForTournament(tournament.id as TournamentID);
     },
   },
-  Mutation: {},
+  Mutation: {
+    createTournament: async (
+      _,
+      { payload }: MutationCreateTournamentArgs
+    ): Promise<TournamentResponse> => {
+      try {
+        const tournament = await createTournament({
+          title: payload.title,
+          description: payload.description,
+          tournamentLink: payload.tournamentLink,
+        });
+
+        return { tournament };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+
+  TournamentResponse: {
+    __resolveType: (obj: TournamentResponse) => {
+      if ("tournament" in obj) {
+        return "TournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  CreateTournamentResponse: {
+    __resolveType: (obj: CreateTournamentResponse) => {
+      if ("tournament" in obj) {
+        return "CreateTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
-const tournamentResolverComposition = {};
+const tournamentResolverComposition = {
+  "Mutation.createTournament": [isAuthenticated()],
+};
 
 const resolvers = composeResolvers(
   TournamentResolvers,

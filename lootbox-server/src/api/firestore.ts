@@ -224,3 +224,33 @@ export const getLootboxSnapshotsForTournament = async (
     });
   }
 };
+
+export interface CreateTournamentArgs {
+  title: string;
+  description: string;
+  tournamentLink?: string | null;
+}
+export const createTournament = async ({
+  title,
+  description,
+  tournamentLink,
+}: CreateTournamentArgs): Promise<Tournament> => {
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .doc() as DocumentReference<Tournament>;
+
+  const tournament: Tournament = {
+    id: tournamentRef.id,
+    title,
+    description,
+    ...(!!tournamentLink && { tournamentLink }),
+    timestamps: {
+      createdAt: Timestamp.now().toMillis(),
+      updatedAt: Timestamp.now().toMillis(),
+    },
+  };
+
+  await tournamentRef.set(tournament);
+
+  return tournament;
+};
