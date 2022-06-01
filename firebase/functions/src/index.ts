@@ -1,1 +1,3 @@
-export * from "./database-triggers";
+import { onCreateLootbox, onCreateWallet } from "./database-triggers";
+
+export { onCreateLootbox, onCreateWallet };

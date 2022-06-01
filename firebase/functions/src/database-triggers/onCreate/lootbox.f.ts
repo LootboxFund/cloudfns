@@ -5,10 +5,10 @@ import { firestore } from "firebase-functions";
 import { Collection, indexLootboxOnCreate } from "../../api/firestore";
 import { Lootbox } from "../../api/graphql/generated/types";
 
-export default firestore
+const onCreateLootbox = firestore
   .document(`${Collection.Lootbox}/{lootboxId}`)
   .onCreate(async (snap: QueryDocumentSnapshot, context: EventContext) => {
-    const lootbox = (snap.data()?.original as Lootbox) || undefined;
+    const lootbox = (snap.data() as Lootbox) || undefined;
 
     if (!lootbox) {
       error(`Lootbox onCreate: No data in snapshot`);
@@ -23,3 +23,5 @@ export default firestore
 
     return;
   });
+
+export default onCreateLootbox;
