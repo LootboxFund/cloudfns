@@ -16,6 +16,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@wormgraph/helpers": "^0.1.12",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.18.0"
   },
