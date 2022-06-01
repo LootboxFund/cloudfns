@@ -27,11 +27,13 @@ WORKDIR /usr/src/app
 # Copying this first prevents re-running npm install on every code change.
 COPY package*.json ./
 
+# Copy NPMRC file to download private repos
+COPY .npmrc ./
+
 # Install production dependencies.
 # If you add a package-lock.json, speed your build by switching to 'npm ci'.
 # RUN npm ci --only=production
 RUN npm install --only=production
-
 
 # Copy local code to the container image.
 COPY . ./
