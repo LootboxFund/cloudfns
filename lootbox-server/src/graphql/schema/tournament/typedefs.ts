@@ -1,96 +1,28 @@
 import { gql } from "apollo-server";
 
-const UserTypeDefs = gql`
-  type Wallet {
-    id: ID!
-    userId: ID!
-    address: String!
-    createdAt: Timestamp!
-  }
-
-  type User {
-    id: ID!
-    firstName: String
-    lastName: String
-    email: String!
-    wallets: [Wallet!]
-    phoneNumber: String
+const TournamentTypeDefs = gql`
+  type TournamentTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
-    deletedAt: Timestamp
   }
 
-  # Queries
-
-  type GetMyProfileSuccess {
-    user: User!
+  type Tournament {
+    id: ID!
+    title: String!
+    description: String!
+    timestamps: TournamentTimestamps!
+    lootboxSnapshots: [LootboxSnapshot!]
   }
 
-  union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
+  type TournamentResponseSuccess {
+    tournament: Tournament!
+  }
+
+  union TournamentResponse = TournamentResponseSuccess | ResponseError
 
   extend type Query {
-    getMyProfile: GetMyProfileResponse!
-  }
-
-  type CreateUserResponseSuccess {
-    user: User!
-  }
-
-  union CreateUserResponse = CreateUserResponseSuccess | ResponseError
-
-  input CreateUserWithPasswordPayload {
-    firstName: String
-    lastName: String
-    email: EmailAddress!
-    phoneNumber: PhoneNumber
-    password: String!
-  }
-
-  input CreateUserWithWalletPayload {
-    firstName: String
-    lastName: String
-    email: EmailAddress!
-    phoneNumber: PhoneNumber
-    message: String!
-    signedMessage: String!
-  }
-
-  type ConnectWalletResponseSuccess {
-    wallet: Wallet!
-  }
-
-  union ConnectWalletResponse = ConnectWalletResponseSuccess | ResponseError
-
-  input ConnectWalletPayload {
-    message: String!
-    signedMessage: String!
-  }
-
-  input AuthenticateWalletPayload {
-    message: String!
-    signedMessage: String!
-  }
-
-  type AuthenticateWalletResponseSuccess {
-    token: String!
-  }
-
-  union AuthenticateWalletResponse =
-      AuthenticateWalletResponseSuccess
-    | ResponseError
-
-  extend type Mutation {
-    createUserWithPassword(
-      payload: CreateUserWithPasswordPayload!
-    ): CreateUserResponse!
-    createUserWithWallet(
-      payload: CreateUserWithWalletPayload!
-    ): CreateUserResponse!
-    connectWallet(payload: ConnectWalletPayload!): ConnectWalletResponse!
-    authenticateWallet(
-      payload: AuthenticateWalletPayload!
-    ): AuthenticateWalletResponse!
+    tournament(id: ID!): TournamentResponse!
   }
 `;
 
-export default UserTypeDefs;
+export default TournamentTypeDefs;

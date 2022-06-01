@@ -8,20 +8,23 @@ import { db } from "./firebase";
 import {
   Lootbox,
   LootboxSnapshot,
+  Tournament,
   User,
   Wallet,
 } from "../graphql/generated/types";
 import { Address, LootboxDatabaseSchema } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
-import { UserID, UserIdpID, LootboxID } from "../lib/types";
+import { UserID, UserIdpID, LootboxID, TournamentID } from "../lib/types";
 
 // TODO: extract this to helpers
 //       this is copied over in @cloudfns/firebase
-enum Collection {
+export enum Collection {
   "Lootbox" = "lootbox",
   "User" = "user",
   "Wallet" = "wallet",
-  "WalletLootboxSnapshot" = "wallet-lootbox-snapshot",
+  "LootboxSnapshotWallet" = "lootbox-snapshot-wallet",
+  "LootboxSnapshotTournament" = "lootbox-snapshot-tournament",
+  "Tournament" = "tournament",
 }
 
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
@@ -36,16 +39,14 @@ interface CreateFirestoreUserPayload {
   lastName?: string;
 }
 
+type TournamentWithoutLootboxSnapshots = Omit<Tournament, "lootboxSnapshots">;
+
 export const getLootboxByAddress = async (
   address: Address
 ): Promise<Lootbox | undefined> => {
   const lootboxRef = db
     .collection(Collection.Lootbox)
-    .where(
-      "address",
-      "==",
-      address
-    ) as CollectionReference<LootboxDatabaseSchema>;
+    .where("address", "==", address) as CollectionReference<Lootbox>;
 
   const lootboxSnapshot = await lootboxRef.get();
 
@@ -53,11 +54,7 @@ export const getLootboxByAddress = async (
     return undefined;
   } else {
     const doc = lootboxSnapshot.docs[0];
-    const lootbox = doc.data();
-    return {
-      id: doc.id as LootboxID,
-      address: lootbox.address,
-    };
+    return doc.data();
   }
 };
 
@@ -128,10 +125,7 @@ export const getUserWallets = async (
     return [];
   } else {
     return walletSnapshot.docs.map((doc) => {
-      const wallet = doc.data();
-      return {
-        ...wallet,
-      };
+      return doc.data();
     });
   }
 };
@@ -149,10 +143,7 @@ export const getWalletByAddress = async (
     return undefined;
   } else {
     const doc = walletSnapshot.docs[0];
-    const wallet = doc.data();
-    return {
-      ...wallet,
-    };
+    return doc.data();
   }
 };
 
@@ -183,8 +174,45 @@ export const createUserWallet = async (
 
 export const getLootboxSnapshotsForWallet = async (walletAddress: Address) => {
   const collectionGroupRef = db
-    .collectionGroup(Collection.WalletLootboxSnapshot)
+    .collectionGroup(Collection.LootboxSnapshotWallet)
     .where("address", "==", walletAddress) as CollectionGroup<LootboxSnapshot>;
+
+  const lootboxSnapshot = await collectionGroupRef.get();
+
+  if (lootboxSnapshot.empty) {
+    return [];
+  } else {
+    return lootboxSnapshot.docs.map((doc) => {
+      return doc.data();
+    });
+  }
+};
+
+export const getTournamentById = async (
+  id: TournamentID
+): Promise<Tournament | undefined> => {
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .doc(id) as DocumentReference<Tournament>;
+
+  const tournamentSnapshot = await tournamentRef.get();
+
+  if (!tournamentSnapshot.exists) {
+    return undefined;
+  } else {
+    return tournamentSnapshot.data();
+  }
+};
+
+export const getLootboxSnapshotsForTournament = async (
+  tournamentID: TournamentID
+): Promise<LootboxSnapshot[]> => {
+  const collectionGroupRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(
+      Collection.LootboxSnapshotTournament
+    ) as CollectionReference<LootboxSnapshot>;
 
   const lootboxSnapshot = await collectionGroupRef.get();
 

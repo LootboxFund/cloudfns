@@ -72,16 +72,12 @@ const UserResolvers = {
   },
   User: {
     wallets: async (user: User): Promise<Wallet[]> => {
-      const wallets = await getUserWallets(user.id as UserID);
-      return wallets;
+      return await getUserWallets(user.id as UserID);
     },
   },
   Wallet: {
     lootboxSnapshots: async (wallet: Wallet): Promise<LootboxSnapshot[]> => {
-      const lootboxes = await getLootboxSnapshotsForWallet(
-        wallet.address as Address
-      );
-      return lootboxes;
+      return await getLootboxSnapshotsForWallet(wallet.address as Address);
     },
   },
 
