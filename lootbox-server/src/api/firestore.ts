@@ -15,6 +15,8 @@ import { Address, LootboxDatabaseSchema } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
 import { UserID, UserIdpID, LootboxID } from "../lib/types";
 
+// TODO: extract this to helpers
+//       this is copied over in @cloudfns/firebase
 enum Collection {
   "Lootbox" = "lootbox",
   "User" = "user",
