@@ -24,6 +24,10 @@ const server = new ApolloServer({
   schema,
   csrfPrevention: true,
   introspection: true,
+  cors: {
+    // TODO replace with prod addresses
+    origin: "*",
+  },
   context: async ({ req }): Promise<Context> => {
     try {
       const { authorization } = req.headers;
