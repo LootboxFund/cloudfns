@@ -9,7 +9,11 @@ import {
   convertHexToDecimal,
   BLOCKCHAINS,
 } from "../../manifest/types.helpers";
-import { Lootbox, LootboxMetadata } from "../../api/graphql/generated/types";
+import {
+  Lootbox,
+  LootboxMetadata,
+  LootboxVariant,
+} from "../../api/graphql/generated/types";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
@@ -204,7 +208,7 @@ const action = defineAction({
       },
       metadata: coercedLootboxURI,
       metadataDownloadUrl: jsonDownloadPath,
-      variant: "instant",
+      variant: LootboxVariant.Instant,
     };
 
     if (tournamentId) {

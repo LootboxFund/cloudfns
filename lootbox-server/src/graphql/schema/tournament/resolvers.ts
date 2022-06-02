@@ -22,11 +22,7 @@ import { Context } from "../../server";
 
 const TournamentResolvers = {
   Query: {
-    tournament: async (
-      _,
-      { id },
-      context: Context
-    ): Promise<TournamentResponse> => {
+    tournament: async (_, { id }): Promise<TournamentResponse> => {
       try {
         const tournament = await getTournamentById(id);
         if (!tournament) {

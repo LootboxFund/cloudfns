@@ -1,6 +1,11 @@
 import { gql } from "apollo-server";
 
 const LootboxTypeDefs = gql`
+  enum LootboxVariant {
+    escrow
+    instant
+  }
+
   type LootboxChain {
     address: ID!
     title: String!
@@ -80,7 +85,7 @@ const LootboxTypeDefs = gql`
     tournamentId: ID # Optional, if lootboxes are associated to a tournament
     name: String!
     chainIdHex: String!
-    variant: String!
+    variant: LootboxVariant!
 
     issuer: ID!
     treasury: ID!

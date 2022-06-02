@@ -12,7 +12,11 @@ import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
 import { EscrowLootboxCreated } from "../../api/event-abi";
-import { LootboxMetadata, Lootbox } from "../../api/graphql/generated/types";
+import {
+  LootboxMetadata,
+  Lootbox,
+  LootboxVariant,
+} from "../../api/graphql/generated/types";
 
 interface Event_LootboxCreated {
   lootboxName: string;
@@ -203,7 +207,7 @@ const action = defineAction({
       },
       metadata: coercedLootboxURI,
       metadataDownloadUrl: jsonDownloadPath,
-      variant: "escrow",
+      variant: LootboxVariant.Escrow,
     };
 
     if (tournamentId) {
