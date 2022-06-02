@@ -244,6 +244,7 @@ export interface ITicketMetadata {
   };
 }
 
+// TODO: replace with generated type from lootbox-server
 export interface LootboxDatabaseSchema {
   address: Address;
   factory: Address;
@@ -260,8 +261,9 @@ export interface LootboxDatabaseSchema {
 
   // From Block Trigger Event
   timestamps: {
-    lootboxCreatedAt: number;
-    lootboxIndexedAt: number;
+    createdAt: number;
+    indexedAt: number;
+    updatedAt: number;
   };
 
   // Metadata

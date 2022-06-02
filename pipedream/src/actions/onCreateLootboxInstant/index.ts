@@ -192,8 +192,9 @@ const action = defineAction({
       targetSharesSold: event.targetSharesSold?.toString(),
       maxSharesSold: event.maxSharesSold?.toString(),
       timestamps: {
-        lootboxCreatedAt: timestamp,
-        lootboxIndexedAt: new Date().valueOf(),
+        createdAt: timestamp,
+        indexedAt: new Date().valueOf(),
+        updatedAt: new Date().valueOf(),
       },
       metadata: coercedLootboxURI,
       metadataDownloadUrl: jsonDownloadPath,
