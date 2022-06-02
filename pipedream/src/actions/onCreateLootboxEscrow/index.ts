@@ -108,6 +108,9 @@ const action = defineAction({
       manifest.storage.downloadUrl
     }/${encodeURISafe(stampFilePath)}?alt=media`;
 
+    const tournamentId =
+      _lootboxURI?.lootboxCustomSchema?.lootbox?.tournamentId;
+
     const coercedLootboxURI: LootboxMetadata = {
       image: stampDownloadablePath, // the stamp
       external_url: lootboxPublicUrl,
@@ -159,6 +162,7 @@ const action = defineAction({
             _lootboxURI?.lootboxCustomSchema?.lootbox?.pricePerShare || "",
           lootboxThemeColor:
             _lootboxURI?.lootboxCustomSchema?.lootbox?.lootboxThemeColor || "",
+          tournamentId: tournamentId || "",
         },
         socials: {
           twitter: _lootboxURI?.lootboxCustomSchema?.socials?.twitter || "",
@@ -190,8 +194,8 @@ const action = defineAction({
       chainIdHex: chain.chainIdHex,
       issuer: event.issuer,
       treasury: event.treasury,
-      targetSharesSold: event.targetSharesSold?.toString(),
-      maxSharesSold: event.maxSharesSold?.toString(),
+      targetSharesSold: event.targetSharesSold?.toString() || "",
+      maxSharesSold: event.maxSharesSold?.toString() || "",
       timestamps: {
         createdAt: timestamp,
         indexedAt: new Date().valueOf(),
@@ -201,6 +205,10 @@ const action = defineAction({
       metadataDownloadUrl: jsonDownloadPath,
       variant: "escrow",
     };
+
+    if (tournamentId) {
+      lootboxDatabaseSchema.tournamentId = tournamentId;
+    }
 
     return {
       json: jsonDownloadPath,

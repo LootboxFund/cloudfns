@@ -26,6 +26,8 @@ const LootboxTypeDefs = gql`
     lootboxThemeColor: String!
     transactionHash: String!
     blockNumber: String!
+    factory: ID!
+    tournamentId: ID
   }
 
   type LootboxSocials {
