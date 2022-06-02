@@ -1,8 +1,0 @@
-overwrite: true
-schema: "http://localhost:8080/graphql" # NEXT_PUBLIC_GRAPHQL_ENDPOINT
-documents: []
-generates:
-  src/api/graphql/generated/types.ts:
-    plugins:
-      - "typescript"
-      - "typescript-resolvers"
