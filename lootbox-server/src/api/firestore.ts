@@ -2,6 +2,7 @@ import {
   CollectionGroup,
   CollectionReference,
   DocumentReference,
+  Query,
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "./firebase";
@@ -12,7 +13,7 @@ import {
   User,
   Wallet,
 } from "../graphql/generated/types";
-import { Address, LootboxDatabaseSchema } from "@wormgraph/helpers";
+import { Address } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
 import { UserID, UserIdpID, LootboxID, TournamentID } from "../lib/types";
 
@@ -22,8 +23,6 @@ export enum Collection {
   "Lootbox" = "lootbox",
   "User" = "user",
   "Wallet" = "wallet",
-  "LootboxSnapshotWallet" = "lootbox-snapshot-wallet",
-  "LootboxSnapshotTournament" = "lootbox-snapshot-tournament",
   "Tournament" = "tournament",
 }
 
@@ -172,18 +171,36 @@ export const createUserWallet = async (
   return wallet;
 };
 
-export const getLootboxSnapshotsForWallet = async (walletAddress: Address) => {
-  const collectionGroupRef = db
-    .collectionGroup(Collection.LootboxSnapshotWallet)
-    .where("address", "==", walletAddress) as CollectionGroup<LootboxSnapshot>;
+export const getLootboxSnapshotsForWallet = async (
+  walletAddress: Address
+): Promise<LootboxSnapshot[]> => {
+  const collectionRef = db
+    .collection(Collection.Lootbox)
+    .where("address", "==", walletAddress) as CollectionGroup<Lootbox>;
 
-  const lootboxSnapshot = await collectionGroupRef.get();
+  const lootboxSnapshot = await collectionRef.get();
 
   if (lootboxSnapshot.empty) {
     return [];
   } else {
     return lootboxSnapshot.docs.map((doc) => {
-      return doc.data();
+      const data = doc.data();
+      return {
+        address: data.address,
+        issuer: data.issuer,
+        name: data.name,
+        metadataDownloadUrl: data.metadataDownloadUrl,
+        timestamps: {
+          updatedAt: data.timestamps.updatedAt,
+          createdAt: data.timestamps.createdAt,
+        },
+        backgroundColor:
+          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundColor || "",
+        backgroundImage:
+          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
+        image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
+        stampImage: data.metadata.image,
+      };
     });
   }
 };
@@ -207,20 +224,33 @@ export const getTournamentById = async (
 export const getLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID
 ): Promise<LootboxSnapshot[]> => {
-  const collectionGroupRef = db
-    .collection(Collection.Tournament)
-    .doc(tournamentID)
-    .collection(
-      Collection.LootboxSnapshotTournament
-    ) as CollectionReference<LootboxSnapshot>;
+  const collectionRef = db
+    .collection(Collection.Lootbox)
+    .where("tournamentId", "==", tournamentID) as Query<Lootbox>;
 
-  const lootboxSnapshot = await collectionGroupRef.get();
+  const collectionSnapshot = await collectionRef.get();
 
-  if (lootboxSnapshot.empty) {
+  if (collectionSnapshot.empty) {
     return [];
   } else {
-    return lootboxSnapshot.docs.map((doc) => {
-      return doc.data();
+    return collectionSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        address: data.address,
+        issuer: data.issuer,
+        name: data.name,
+        metadataDownloadUrl: data.metadataDownloadUrl,
+        timestamps: {
+          updatedAt: data.timestamps.updatedAt,
+          createdAt: data.timestamps.createdAt,
+        },
+        backgroundColor:
+          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundColor || "",
+        backgroundImage:
+          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
+        image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
+        stampImage: data.metadata.image,
+      };
     });
   }
 };
