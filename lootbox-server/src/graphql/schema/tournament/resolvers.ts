@@ -3,6 +3,7 @@ import {
   getLootboxSnapshotsForTournament,
   getTournamentById,
   createTournament,
+  updateTournament,
 } from "../../../api/firestore";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { TournamentID } from "../../../lib/types";
@@ -14,6 +15,8 @@ import {
   StatusCode,
   Tournament,
   TournamentResponse,
+  MutationEditTournamentArgs,
+  EditTournamentResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 
@@ -127,6 +130,56 @@ const TournamentResolvers = {
         };
       }
     },
+    editTournament: async (
+      _,
+      { payload }: MutationEditTournamentArgs,
+      context: Context
+    ): Promise<EditTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+
+      try {
+        // Make sure the user owns the tournament
+        const tournament = await getTournamentById(payload.id as TournamentID);
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament not found`,
+            },
+          };
+        } else if (tournament.creatorId !== context.userId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: `You do not own this tournament`,
+            },
+          };
+        }
+
+        const { id, ...rest } = payload;
+
+        const updatedTournament = await updateTournament(
+          id as TournamentID,
+          rest
+        );
+
+        return { tournament: updatedTournament };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   TournamentResponse: {
@@ -167,10 +220,24 @@ const TournamentResolvers = {
       return null;
     },
   },
+
+  EditTournamentResponse: {
+    __resolveType: (obj: EditTournamentResponse) => {
+      if ("tournament" in obj) {
+        return "EditTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const tournamentResolverComposition = {
   "Mutation.createTournament": [isAuthenticated()],
+  "Mutation.editTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
 };
 

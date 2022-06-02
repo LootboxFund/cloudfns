@@ -14,6 +14,7 @@ const TournamentTypeDefs = gql`
     timestamps: TournamentTimestamps!
     lootboxSnapshots: [LootboxSnapshot!]
     creatorId: ID!
+    magicLink: String
   }
 
   type TournamentResponseSuccess {
@@ -36,9 +37,19 @@ const TournamentTypeDefs = gql`
     tournament: Tournament!
   }
 
+  type CreateTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+
+  type EditTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+
   union CreateTournamentResponse =
       CreateTournamentResponseSuccess
     | ResponseError
+
+  union EditTournamentResponse = EditTournamentResponseSuccess | ResponseError
 
   input CreateTournamentPayload {
     title: String!
@@ -46,10 +57,19 @@ const TournamentTypeDefs = gql`
     tournamentLink: String
   }
 
+  input EditTournamentPayload {
+    id: ID!
+    title: String
+    description: String
+    tournamentLink: String
+    magicLink: String
+  }
+
   extend type Mutation {
     createTournament(
       payload: CreateTournamentPayload!
     ): CreateTournamentResponse!
+    editTournament(payload: EditTournamentPayload!): EditTournamentResponse!
   }
 `;
 

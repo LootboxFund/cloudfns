@@ -7,6 +7,7 @@ import {
 } from "firebase-admin/firestore";
 import { db } from "./firebase";
 import {
+  EditTournamentPayload,
   Lootbox,
   LootboxSnapshot,
   Tournament,
@@ -286,4 +287,28 @@ export const createTournament = async ({
   await tournamentRef.set(tournament);
 
   return tournament;
+};
+
+export const updateTournament = async (
+  id: TournamentID,
+  payload: Omit<EditTournamentPayload, "id">
+): Promise<Tournament> => {
+  if (Object.keys(payload).length === 0) {
+    throw new Error("No data provided");
+  }
+
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .doc(id) as DocumentReference<Tournament>;
+
+  const updatePayload = {
+    ...(!!payload.title && { title: payload.title }),
+    ...(!!payload.description && { description: payload.description }),
+    ...(!!payload.tournamentLink && { tournamentLink: payload.tournamentLink }),
+    ...(!!payload.magicLink && { magicLink: payload.magicLink }),
+  };
+
+  await tournamentRef.update(updatePayload);
+
+  return (await tournamentRef.get()).data() as Tournament;
 };
