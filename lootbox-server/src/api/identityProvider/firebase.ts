@@ -52,12 +52,9 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     return convertUserRecordToUser(userRecord) as IIdpUser;
   }
 
-  async verifyIDToken(
-    token: string,
-    refreshToken: string
-  ): Promise<UserIdpID | null> {
+  async verifyIDToken(token: string): Promise<UserIdpID | null> {
     try {
-      if (!token || !refreshToken) return null;
+      if (!token) return null;
 
       const decodedToken = await this.authInstance.verifyIdToken(token);
       return decodedToken.uid as UserIdpID;

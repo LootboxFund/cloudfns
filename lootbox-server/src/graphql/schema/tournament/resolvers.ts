@@ -51,11 +51,12 @@ const TournamentResolvers = {
       return getLootboxSnapshotsForTournament(tournament.id as TournamentID);
     },
   },
+
   Mutation: {
     createTournament: async (
       _,
       { payload }: MutationCreateTournamentArgs
-    ): Promise<TournamentResponse> => {
+    ): Promise<CreateTournamentResponse> => {
       try {
         const tournament = await createTournament({
           title: payload.title,
