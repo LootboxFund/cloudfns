@@ -229,11 +229,13 @@ export interface CreateTournamentArgs {
   title: string;
   description: string;
   tournamentLink?: string | null;
+  creatorId: UserIdpID;
 }
 export const createTournament = async ({
   title,
   description,
   tournamentLink,
+  creatorId,
 }: CreateTournamentArgs): Promise<Tournament> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -243,6 +245,7 @@ export const createTournament = async ({
     id: tournamentRef.id,
     title,
     description,
+    creatorId,
     ...(!!tournamentLink && { tournamentLink }),
     timestamps: {
       createdAt: Timestamp.now().toMillis(),

@@ -10,6 +10,7 @@ import {
   CreateTournamentResponse,
   LootboxSnapshot,
   MutationCreateTournamentArgs,
+  MyTournamentResponse,
   StatusCode,
   Tournament,
   TournamentResponse,
@@ -43,6 +44,48 @@ const TournamentResolvers = {
         };
       }
     },
+    myTournament: async (
+      _,
+      { id },
+      context: Context
+    ): Promise<TournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+
+      try {
+        const tournament = await getTournamentById(id);
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament not found`,
+            },
+          };
+        } else if (tournament.creatorId !== context.userId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: `You do not own this tournament`,
+            },
+          };
+        }
+
+        return { tournament };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
   Tournament: {
     lootboxSnapshots: async (
@@ -55,13 +98,23 @@ const TournamentResolvers = {
   Mutation: {
     createTournament: async (
       _,
-      { payload }: MutationCreateTournamentArgs
+      { payload }: MutationCreateTournamentArgs,
+      context: Context
     ): Promise<CreateTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
         const tournament = await createTournament({
           title: payload.title,
           description: payload.description,
           tournamentLink: payload.tournamentLink,
+          creatorId: context.userId,
         });
 
         return { tournament };
@@ -89,6 +142,19 @@ const TournamentResolvers = {
     },
   },
 
+  MyTournamentResponse: {
+    __resolveType: (obj: MyTournamentResponse) => {
+      if ("tournament" in obj) {
+        return "MyTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
   CreateTournamentResponse: {
     __resolveType: (obj: CreateTournamentResponse) => {
       if ("tournament" in obj) {
@@ -105,6 +171,7 @@ const TournamentResolvers = {
 
 const tournamentResolverComposition = {
   "Mutation.createTournament": [isAuthenticated()],
+  "Query.myTournament": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(

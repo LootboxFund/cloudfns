@@ -13,16 +13,23 @@ const TournamentTypeDefs = gql`
     tournamentLink: String
     timestamps: TournamentTimestamps!
     lootboxSnapshots: [LootboxSnapshot!]
+    creatorId: ID!
   }
 
   type TournamentResponseSuccess {
     tournament: Tournament!
   }
 
+  type MyTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+
   union TournamentResponse = TournamentResponseSuccess | ResponseError
+  union MyTournamentResponse = MyTournamentResponseSuccess | ResponseError
 
   extend type Query {
     tournament(id: ID!): TournamentResponse!
+    myTournament(id: ID!): MyTournamentResponse!
   }
 
   type CreateTournamentResponseSuccess {
