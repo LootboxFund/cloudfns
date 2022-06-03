@@ -179,7 +179,7 @@ export const getLootboxSnapshotsForWallet = async (
 ): Promise<LootboxSnapshot[]> => {
   const collectionRef = db
     .collection(Collection.Lootbox)
-    .where("address", "==", walletAddress) as CollectionGroup<Lootbox>;
+    .where("issuer", "==", walletAddress) as CollectionGroup<Lootbox>;
 
   const lootboxSnapshot = await collectionRef.get();
 
