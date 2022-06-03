@@ -79,6 +79,10 @@ const LootboxTypeDefs = gql`
     updatedAt: Timestamp!
   }
 
+  type TournamentMetadata {
+    status: LootboxTournamentStatus!
+  }
+
   type Lootbox {
     address: ID!
     factory: ID!
@@ -98,6 +102,8 @@ const LootboxTypeDefs = gql`
     # Metadata
     metadataDownloadUrl: String
     metadata: LootboxMetadata!
+
+    tournamentMetadata: TournamentMetadata # Optional, if lootboxes are associated to a tournament - TODO: refactor this to be a subcollection under the tournament collection
   }
 
   type LootboxSnapshotTimestamps {

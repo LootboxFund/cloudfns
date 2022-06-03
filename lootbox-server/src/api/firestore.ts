@@ -10,6 +10,8 @@ import {
   EditTournamentPayload,
   Lootbox,
   LootboxSnapshot,
+  LootboxTournamentSnapshot,
+  LootboxTournamentStatus,
   Tournament,
   User,
   Wallet,
@@ -224,7 +226,7 @@ export const getTournamentById = async (
 
 export const getLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID
-): Promise<LootboxSnapshot[]> => {
+): Promise<LootboxTournamentSnapshot[]> => {
   const collectionRef = db
     .collection(Collection.Lootbox)
     .where("tournamentId", "==", tournamentID) as Query<Lootbox>;
@@ -251,6 +253,8 @@ export const getLootboxSnapshotsForTournament = async (
           data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
         image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
         stampImage: data.metadata.image,
+        status:
+          data?.tournamentMetadata?.status || LootboxTournamentStatus.Pending,
       };
     });
   }

@@ -17,6 +17,7 @@ import {
   TournamentResponse,
   MutationEditTournamentArgs,
   EditTournamentResponse,
+  LootboxTournamentSnapshot,
 } from "../../generated/types";
 import { Context } from "../../server";
 
@@ -89,7 +90,7 @@ const TournamentResolvers = {
   Tournament: {
     lootboxSnapshots: async (
       tournament: Tournament
-    ): Promise<LootboxSnapshot[]> => {
+    ): Promise<LootboxTournamentSnapshot[]> => {
       return getLootboxSnapshotsForTournament(tournament.id as TournamentID);
     },
   },

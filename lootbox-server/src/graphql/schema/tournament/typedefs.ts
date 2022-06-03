@@ -1,9 +1,31 @@
 import { gql } from "apollo-server";
 
 const TournamentTypeDefs = gql`
+  enum LootboxTournamentStatus {
+    pending
+    active
+    rejected
+  }
+
   type TournamentTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
+  }
+
+  type LootboxTournamentSnapshot {
+    address: ID!
+    issuer: ID!
+
+    name: String!
+    stampImage: String!
+    image: String!
+    backgroundColor: String!
+    backgroundImage: String!
+
+    metadataDownloadUrl: String
+    timestamps: LootboxSnapshotTimestamps!
+
+    status: LootboxTournamentStatus!
   }
 
   type Tournament {
@@ -12,7 +34,7 @@ const TournamentTypeDefs = gql`
     description: String!
     tournamentLink: String
     timestamps: TournamentTimestamps!
-    lootboxSnapshots: [LootboxSnapshot!]
+    lootboxSnapshots: [LootboxTournamentSnapshot!]
     creatorId: ID!
     magicLink: String
   }

@@ -12,6 +12,7 @@ import {
 import {
   Lootbox,
   LootboxMetadata,
+  LootboxTournamentStatus,
   LootboxVariant,
 } from "../../api/graphql/generated/types";
 import { BigNumber } from "ethers";
@@ -213,6 +214,9 @@ const action = defineAction({
 
     if (tournamentId) {
       lootboxDatabaseSchema.tournamentId = tournamentId;
+      lootboxDatabaseSchema.tournamentMetadata = {
+        status: LootboxTournamentStatus.Pending,
+      };
     }
 
     return {

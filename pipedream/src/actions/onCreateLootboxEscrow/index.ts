@@ -16,6 +16,7 @@ import {
   LootboxMetadata,
   Lootbox,
   LootboxVariant,
+  LootboxTournamentStatus,
 } from "../../api/graphql/generated/types";
 
 interface Event_LootboxCreated {
@@ -212,6 +213,9 @@ const action = defineAction({
 
     if (tournamentId) {
       lootboxDatabaseSchema.tournamentId = tournamentId;
+      lootboxDatabaseSchema.tournamentMetadata = {
+        status: LootboxTournamentStatus.Pending,
+      };
     }
 
     return {
