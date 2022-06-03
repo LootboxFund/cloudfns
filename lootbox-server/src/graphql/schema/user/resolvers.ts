@@ -13,6 +13,8 @@ import {
   Lootbox,
   ResponseError,
   LootboxSnapshot,
+  MutationRemoveWalletArgs,
+  RemoveWalletResponse,
 } from "../../generated/types";
 import {
   getUser,
@@ -21,6 +23,8 @@ import {
   createUser,
   createUserWallet,
   getLootboxSnapshotsForWallet,
+  getUserWalletById,
+  deleteWallet,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../api/ethers";
 import { Address } from "@wormgraph/helpers";
@@ -28,7 +32,7 @@ import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { UserID } from "../../../lib/types";
+import { UserID, WalletID } from "../../../lib/types";
 
 const UserResolvers = {
   Query: {
@@ -325,6 +329,66 @@ const UserResolvers = {
         };
       }
     },
+
+    removeWallet: async (
+      _,
+      { payload }: MutationRemoveWalletArgs,
+      context: Context
+    ): Promise<RemoveWalletResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthenticated",
+          },
+        };
+      }
+
+      // Make sure the wallet belongs to the user
+      try {
+        const userWallets = await getUserWallets(
+          context.userId as unknown as UserID
+        );
+
+        const wallet = userWallets.find(
+          (wallet: Wallet) => wallet.id === payload.id
+        );
+
+        if (!wallet) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Wallet does not exist",
+            },
+          };
+        } else if (wallet.userId !== context.userId) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "You do not own this wallet",
+            },
+          };
+        } else if (userWallets.length === 1) {
+          return {
+            error: {
+              code: StatusCode.InvalidOperation,
+              message: "You must have at least one wallet",
+            },
+          };
+        }
+
+        await deleteWallet(context.userId, payload.id as WalletID);
+
+        return { id: wallet.id };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
   GetMyProfileResponse: {
     __resolveType: (obj: GetMyProfileResponse) => {
@@ -374,11 +438,24 @@ const UserResolvers = {
       return null;
     },
   },
+  RemoveWalletResponse: {
+    __resolveType: (obj: RemoveWalletResponse) => {
+      if ("id" in obj) {
+        return "RemoveWalletResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const userResolversComposition = {
   "Query.getMyProfile": [isAuthenticated()],
   "Mutation.connectWallet": [isAuthenticated()],
+  "Mutation.removeWallet": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(UserResolvers, userResolversComposition);

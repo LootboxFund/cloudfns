@@ -60,7 +60,13 @@ const UserTypeDefs = gql`
     wallet: Wallet!
   }
 
+  type RemoveWalletResponseSuccess {
+    id: ID!
+  }
+
   union ConnectWalletResponse = ConnectWalletResponseSuccess | ResponseError
+
+  union RemoveWalletResponse = RemoveWalletResponseSuccess | ResponseError
 
   input ConnectWalletPayload {
     message: String!
@@ -80,6 +86,10 @@ const UserTypeDefs = gql`
       AuthenticateWalletResponseSuccess
     | ResponseError
 
+  input RemoveWalletPayload {
+    id: ID!
+  }
+
   extend type Mutation {
     createUserWithPassword(
       payload: CreateUserWithPasswordPayload!
@@ -91,6 +101,7 @@ const UserTypeDefs = gql`
     authenticateWallet(
       payload: AuthenticateWalletPayload!
     ): AuthenticateWalletResponse!
+    removeWallet(payload: RemoveWalletPayload!): RemoveWalletResponse!
   }
 `;
 

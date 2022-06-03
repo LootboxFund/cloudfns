@@ -18,7 +18,13 @@ import {
 } from "../graphql/generated/types";
 import { Address } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
-import { UserID, UserIdpID, LootboxID, TournamentID } from "../lib/types";
+import {
+  UserID,
+  UserIdpID,
+  LootboxID,
+  TournamentID,
+  WalletID,
+} from "../lib/types";
 
 // TODO: extract this to helpers
 //       this is copied over in @cloudfns/firebase
@@ -119,8 +125,11 @@ export const getUserWallets = async (
   id: UserID
 ): Promise<WalletWithoutLootboxSnapshot[]> => {
   const wallets = db
-    .collectionGroup(Collection.Wallet)
-    .where("userId", "==", id) as CollectionGroup<WalletWithoutLootboxSnapshot>;
+    .collection(Collection.User)
+    .doc(id)
+    .collection(
+      Collection.Wallet
+    ) as CollectionReference<WalletWithoutLootboxSnapshot>;
 
   const walletSnapshot = await wallets.get();
   if (walletSnapshot.empty) {
@@ -129,6 +138,25 @@ export const getUserWallets = async (
     return walletSnapshot.docs.map((doc) => {
       return doc.data();
     });
+  }
+};
+
+export const getUserWalletById = async (
+  userId: UserIdpID,
+  walletId: WalletID
+): Promise<Wallet | undefined> => {
+  const walletRef = db
+    .collection(Collection.User)
+    .doc(userId)
+    .collection(Collection.Wallet)
+    .doc(walletId) as DocumentReference<Wallet>;
+
+  const walletSnapshot = await walletRef.get();
+
+  if (!walletSnapshot.exists) {
+    return undefined;
+  } else {
+    return walletSnapshot.data();
   }
 };
 
@@ -315,4 +343,18 @@ export const updateTournament = async (
   await tournamentRef.update(updatePayload);
 
   return (await tournamentRef.get()).data() as Tournament;
+};
+
+export const deleteWallet = async (
+  userId: UserIdpID,
+  walletId: WalletID
+): Promise<void> => {
+  const walletRef = db
+    .collection(Collection.User)
+    .doc(userId)
+    .collection(Collection.Wallet)
+    .doc(walletId) as DocumentReference<Wallet>;
+
+  await walletRef.delete();
+  return;
 };
