@@ -416,7 +416,7 @@ const UserResolvers = {
   },
   ConnectWalletResponse: {
     __resolveType: (obj: ConnectWalletResponse) => {
-      if ("token" in obj) {
+      if ("wallet" in obj) {
         return "ConnectWalletResponseSuccess";
       }
       if ("error" in obj) {
