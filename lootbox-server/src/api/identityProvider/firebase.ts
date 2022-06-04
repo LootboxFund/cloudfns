@@ -32,7 +32,7 @@ class FirebaseIdentityProvider implements IIdentityProvider {
       phoneNumber,
     });
 
-    await this.generateEmailVerificationLink(email);
+    // await this.generateEmailVerificationLink(email);
 
     return {
       id: userRecord.uid as UserIdpID,
@@ -65,9 +65,9 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     }
   }
 
-  async generateEmailVerificationLink(email: string): Promise<any> {
-    return this.authInstance.generateEmailVerificationLink(email);
-  }
+  // async generateEmailVerificationLink(email: string): Promise<any> {
+  //   return this.authInstance.generateEmailVerificationLink(email);
+  // }
 
   async getSigninToken(userId: string): Promise<string> {
     const token = await auth.createCustomToken(userId);

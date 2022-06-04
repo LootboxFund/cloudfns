@@ -24,5 +24,5 @@ export interface IIdentityProvider {
   // updateUser(id: string, request: IUpdateUserRequest): Promise<void>;
   getSigninToken(userId: string): Promise<string>;
   verifyIDToken(token: string, refreshToken: string): Promise<string | null>;
-  generateEmailVerificationLink(email: string): Promise<string>;
+  // generateEmailVerificationLink(email: string): Promise<string>;
 }
