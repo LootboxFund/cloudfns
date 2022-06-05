@@ -334,10 +334,14 @@ export const updateTournament = async (
     .doc(id) as DocumentReference<Tournament>;
 
   const updatePayload = {
-    ...(!!payload.title && { title: payload.title }),
-    ...(!!payload.description && { description: payload.description }),
-    ...(!!payload.tournamentLink && { tournamentLink: payload.tournamentLink }),
-    ...(!!payload.magicLink && { magicLink: payload.magicLink }),
+    ...(payload.title != undefined && { title: payload.title }),
+    ...(payload.description != undefined && {
+      description: payload.description,
+    }),
+    ...(payload.tournamentLink != undefined && {
+      tournamentLink: payload.tournamentLink,
+    }),
+    ...(payload.magicLink != undefined && { magicLink: payload.magicLink }),
   };
 
   await tournamentRef.update(updatePayload);

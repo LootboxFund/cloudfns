@@ -9,7 +9,6 @@ import { isAuthenticated } from "../../../lib/permissionGuard";
 import { TournamentID } from "../../../lib/types";
 import {
   CreateTournamentResponse,
-  LootboxSnapshot,
   MutationCreateTournamentArgs,
   MyTournamentResponse,
   StatusCode,
