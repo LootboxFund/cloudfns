@@ -4,11 +4,8 @@ import {
   ContractAddress,
   Url,
   ChainInfo,
-} from "./types.helpers";
-import {
   OZChainSlugs,
   BucketType,
-  // SemanticVersion,
   SecretName,
   SecretVersion,
   OZSecretName,
@@ -103,12 +100,15 @@ interface OZSentinel {
 
 type LootboxManifestSemver = string;
 
-type ChainContracts = Record<ContractSlug, Contract>;
+interface LootboxChainContracts {
+  [ContractSlugs.LootboxEscrowFactory]: LootboxEscrowFactory;
+  [ContractSlugs.LootboxInstantFactory]: Contract;
+}
 
 interface Lootbox {
   alias: string;
   semver: LootboxManifestSemver;
-  contracts: Record<ChainIDHex, ChainContracts>;
+  contracts: Record<ChainIDHex, LootboxChainContracts>;
 }
 
 export enum ContractSlugs {
@@ -121,9 +121,8 @@ interface Contract {
   slug: ContractSlug;
 }
 
-interface LootboxFactory extends Contract {
-  alias: string;
-  contractGroupSemver: ContractGroupSemver;
+interface LootboxEscrowFactory extends Contract {
+  bulkMinterSuperStaff: Address;
 }
 
 type PipedreamSemver = string;
@@ -172,6 +171,7 @@ export type PipedreamWorkflowID = string & { readonly _: unique symbol };
 export enum CloudRunContainerSlugs {
   stampNewLootbox = "stampNewLootbox",
   stampNewTicket = "stampNewTicket",
+  lootboxServer = "lootboxServer",
 }
 type CloudRunContainerSlug = CloudRunContainerSlugs;
 interface CloudRun {
@@ -221,6 +221,12 @@ interface Webflow {
   managePage: string;
   myFundraisersPage: string;
   myCollectionsPage: string;
+  tournamentCreatePage: string;
+  tournamentManagePage: string;
+  tournamentPublicPage: string;
+  loginPage: string;
+  signupPage: string;
+  myProfilePage: string;
 }
 
 interface SecretManagerSecret {
@@ -237,7 +243,7 @@ interface Bucket {
 
 interface Storage {
   downloadUrl: StorageDownloadUrl;
-  buckets: Record<BucketType, Bucket>;
+  buckets: Omit<Record<BucketType, Bucket>, "assets">;
 }
 
 interface Firebase {
@@ -249,7 +255,7 @@ interface Firebase {
   appId: string;
 }
 
-export interface GlobalMainfest_v0_5_1_demo {
+export interface GlobalMainfest_v0_6_0_demo {
   alias: string;
   date: Date;
   description: string;
