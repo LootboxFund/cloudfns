@@ -19,6 +19,7 @@ const UserTypeDefs = gql`
     updatedAt: Timestamp!
     deletedAt: Timestamp
     wallets: [Wallet!]
+    tournaments: [Tournament!]
   }
 
   # Queries

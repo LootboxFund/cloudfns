@@ -362,3 +362,29 @@ export const deleteWallet = async (
   await walletRef.delete();
   return;
 };
+
+export const getUserTournaments = async (userId: UserID) => {
+  const collectionRef = db
+    .collection(Collection.Tournament)
+    .where("creatorId", "==", userId) as CollectionGroup<Tournament>;
+
+  const tournaments = await collectionRef.get();
+
+  if (tournaments.empty) {
+    return [];
+  } else {
+    return tournaments.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        creatorId: data.creatorId,
+        timestamps: {
+          createdAt: data.timestamps.createdAt,
+          updatedAt: data.timestamps.updatedAt,
+        },
+      };
+    });
+  }
+};

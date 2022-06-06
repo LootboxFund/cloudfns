@@ -15,6 +15,7 @@ import {
   LootboxSnapshot,
   MutationRemoveWalletArgs,
   RemoveWalletResponse,
+  Tournament,
 } from "../../generated/types";
 import {
   getUser,
@@ -25,6 +26,7 @@ import {
   getLootboxSnapshotsForWallet,
   getUserWalletById,
   deleteWallet,
+  getUserTournaments,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../api/ethers";
 import { Address } from "@wormgraph/helpers";
@@ -77,6 +79,9 @@ const UserResolvers = {
   User: {
     wallets: async (user: User): Promise<Wallet[]> => {
       return await getUserWallets(user.id as UserID);
+    },
+    tournaments: async (user: User): Promise<Tournament[]> => {
+      return await getUserTournaments(user.id as UserID);
     },
   },
   Wallet: {
@@ -220,7 +225,8 @@ const UserResolvers = {
           return {
             error: {
               code: StatusCode.BadRequest,
-              message: "Wallet does not exist",
+              message:
+                "Wallet is not associated with any user. Try email login if you forgot which wallet you used.",
             },
           };
         }
