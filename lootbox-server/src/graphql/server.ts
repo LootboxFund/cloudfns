@@ -12,10 +12,9 @@ export interface Context {
 const server = new ApolloServer({
   schema,
   csrfPrevention: true,
-  introspection: true,
+  introspection: false,
   cors: {
-    // TODO replace with prod addresses
-    origin: "*",
+    origin: ["https://lootbox.fund", "https://www.lootbox.fund"],
   },
   context: async ({ req }): Promise<Context> => {
     try {
