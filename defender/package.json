@@ -1,6 +1,6 @@
 {
   "name": "@lootboxfund/oz-defender",
-  "version": "0.6.0-prod",
+  "version": "0.6.0-demo",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",
