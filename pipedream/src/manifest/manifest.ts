@@ -16,9 +16,9 @@ import {
   OZSentinelSlugs,
 } from "./types.manifest";
 
-const PIPEDREAM_SEMVER = "0.6.0-demo";
-const PIPEDREAM_SEMVER_SLUG = "0-6-0-demo";
-const OPEN_ZEPPELIN_SEMVER = "0.6.0-demo";
+const PIPEDREAM_SEMVER = "0.6.0-prod";
+const PIPEDREAM_SEMVER_SLUG = "0-6-0-prod";
+const OPEN_ZEPPELIN_SEMVER = "0.6.0-prod";
 
 export const snapshot: GlobalMainfest_v0_6_0_prod = {
   alias: "0.6.0-prod",
