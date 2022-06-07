@@ -9,4 +9,7 @@ export
 
 .DS_Store
 
-.npmrc
+generated
+.secrets
+
+.env

@@ -1,0 +1,31 @@
+{
+  "name": "lootbox-server",
+  "version": "1.0.0",
+  "main": "dist/server.js",
+  "license": "MIT",
+  "scripts": {
+    "codegen": "graphql-codegen --config codegen.yml",
+    "build": "yarn codegen && tsc",
+    "start": "npx ts-node ./src",
+    "deploy": "yarn build && gcloud run deploy --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging",
+    "deploy:prod": "yarn build && gcloud run deploy --memory 1024Mi --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod"
+  },
+  "dependencies": {
+    "@graphql-tools/resolvers-composition": "^6.4.12",
+    "@graphql-tools/schema": "^8.3.13",
+    "@wormgraph/helpers": "^0.1.12",
+    "apollo-server": "^3.8.1",
+    "dotenv": "^16.0.1",
+    "ethers": "^5.6.8",
+    "firebase-admin": "^10.2.0",
+    "graphql": "^16.5.0",
+    "graphql-scalars": "^1.17.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/typescript": "^2.4.11",
+    "@graphql-codegen/typescript-resolvers": "^2.6.4",
+    "ts-node": "^10.8.0",
+    "typescript": "^4.7.2"
+  }
+}

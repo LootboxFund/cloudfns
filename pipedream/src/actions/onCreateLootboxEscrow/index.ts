@@ -4,17 +4,20 @@ import { saveFileToGBucket } from "../../api/gbucket";
 import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
-  ILootboxMetadata,
   ContractAddress,
   convertHexToDecimal,
   BLOCKCHAINS,
-  ChainIDHex,
-  LootboxDatabaseSchema,
 } from "../../manifest/types.helpers";
 import { BigNumber } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
 import { EscrowLootboxCreated } from "../../api/event-abi";
+import {
+  LootboxMetadata,
+  Lootbox,
+  LootboxVariant,
+  LootboxTournamentStatus,
+} from "../../api/graphql/generated/types";
 
 interface Event_LootboxCreated {
   lootboxName: string;
@@ -69,6 +72,8 @@ const action = defineAction({
     `);
     console.log(sentinel);
 
+    const factoryAddress = sentinel.addresses[0] as Address | undefined;
+
     const chainID = sentinel.chainId;
 
     const chain =
@@ -91,10 +96,10 @@ const action = defineAction({
       throw new Error(`Event not found ${transaction.transactionHash}`);
     }
 
-    let _lootboxURI: ILootboxMetadata | undefined = undefined;
+    let _lootboxURI: LootboxMetadata | undefined = undefined;
     if (event?._data) {
       try {
-        _lootboxURI = JSON.parse(event._data) as ILootboxMetadata;
+        _lootboxURI = JSON.parse(event._data) as LootboxMetadata;
       } catch (err) {
         console.error("Could not parse lootbox URI", err);
       }
@@ -108,7 +113,10 @@ const action = defineAction({
       manifest.storage.downloadUrl
     }/${encodeURISafe(stampFilePath)}?alt=media`;
 
-    const coercedLootboxURI: ILootboxMetadata = {
+    const tournamentId =
+      _lootboxURI?.lootboxCustomSchema?.lootbox?.tournamentId;
+
+    const coercedLootboxURI: LootboxMetadata = {
       image: stampDownloadablePath, // the stamp
       external_url: lootboxPublicUrl,
       description: _lootboxURI?.description || "",
@@ -126,6 +134,7 @@ const action = defineAction({
           chainIdDecimal: convertHexToDecimal(chain.chainIdHex),
         },
         lootbox: {
+          factory: factoryAddress || "",
           name: _lootboxURI?.lootboxCustomSchema?.lootbox?.name || "",
           description:
             _lootboxURI?.lootboxCustomSchema?.lootbox?.description || "",
@@ -158,6 +167,7 @@ const action = defineAction({
             _lootboxURI?.lootboxCustomSchema?.lootbox?.pricePerShare || "",
           lootboxThemeColor:
             _lootboxURI?.lootboxCustomSchema?.lootbox?.lootboxThemeColor || "",
+          tournamentId: tournamentId || "",
         },
         socials: {
           twitter: _lootboxURI?.lootboxCustomSchema?.socials?.twitter || "",
@@ -182,23 +192,31 @@ const action = defineAction({
       data: JSON.stringify(coercedLootboxURI),
     });
 
-    const lootboxDatabaseSchema: LootboxDatabaseSchema = {
+    const lootboxDatabaseSchema: Lootbox = {
       address: event.lootbox as Address,
-      factory: (sentinel.addresses[0] || "") as Address,
+      factory: factoryAddress || "",
       name: event.lootboxName,
       chainIdHex: chain.chainIdHex,
       issuer: event.issuer,
       treasury: event.treasury,
-      targetSharesSold: event.targetSharesSold?.toString(),
-      maxSharesSold: event.maxSharesSold?.toString(),
+      targetSharesSold: event.targetSharesSold?.toString() || "",
+      maxSharesSold: event.maxSharesSold?.toString() || "",
       timestamps: {
-        lootboxCreatedAt: timestamp,
-        lootboxIndexedAt: new Date().valueOf(),
+        createdAt: timestamp,
+        indexedAt: new Date().valueOf(),
+        updatedAt: new Date().valueOf(),
       },
       metadata: coercedLootboxURI,
       metadataDownloadUrl: jsonDownloadPath,
-      variant: "escrow",
+      variant: LootboxVariant.Escrow,
     };
+
+    if (tournamentId) {
+      lootboxDatabaseSchema.tournamentId = tournamentId;
+      lootboxDatabaseSchema.tournamentMetadata = {
+        status: LootboxTournamentStatus.Pending,
+      };
+    }
 
     return {
       json: jsonDownloadPath,
