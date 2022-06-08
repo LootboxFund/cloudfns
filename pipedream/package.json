@@ -1,6 +1,6 @@
 {
   "name": "@lootboxfund/pipedream",
-  "version": "0.5.0-prod",
+  "version": "0.6.0-prod",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",

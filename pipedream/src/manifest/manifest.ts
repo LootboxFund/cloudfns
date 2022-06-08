@@ -15,7 +15,6 @@ import {
   OZAutoTaskSlugs,
   OZSentinelSlugs,
 } from "./types.manifest";
-
 const PIPEDREAM_SEMVER = "0.6.0-prod";
 const PIPEDREAM_SEMVER_SLUG = "0-6-0-prod";
 const OPEN_ZEPPELIN_SEMVER = "0.6.0-prod";
@@ -97,21 +96,21 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
     contracts: {
       [BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "________________________________________" as Address,
+          address: "0x2d42627555b7e69365fF186a00B4B0361a617BF7" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "________________________________________" as Address,
+          address: "0xF3d7A43ddbaF6E5a4b128585cf5dEaDa0ED405e1" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
       [BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "________________________________________" as Address,
+          address: "0x6B39b159eCB60C08a42D7D5d6De18cE804221E52" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
         },
         LootboxEscrowFactory: {
-          address: "________________________________________" as Address,
+          address: "0x55E8c0Df4750cD3b12C2237c50fd49253c839dc6" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
         },
       },
@@ -123,13 +122,13 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
     ],
     autoTasks: {
       onCreateLootboxInstant: {
-        id: "________________________________________" as OZAutoTaskID,
+        id: "3bb063d1-dc93-4e7c-8ed7-6b342e878e13" as OZAutoTaskID,
         alias: "On creation of an Instant Lootbox",
         semver: OPEN_ZEPPELIN_SEMVER,
         slug: OZAutoTaskSlugs.onCreateLootboxInstant,
       },
       onCreateLootboxEscrow: {
-        id: "________________________________________" as OZAutoTaskID,
+        id: "4241972d-6888-4db1-af2c-8e35dd6bf1cd" as OZAutoTaskID,
         alias: "On creation of an Escrow Lootbox",
         semver: OPEN_ZEPPELIN_SEMVER,
         slug: OZAutoTaskSlugs.onCreateLootboxEscrow,
@@ -144,7 +143,7 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
           slug: OZSentinelSlugs.onCreateLootboxInstant, // NOT USED
           ozChainSlug: OZChainSlugs.BSC_MAINNET,
           contractWatchAddress:
-            "________________________________________" as Address,
+            "0x2d42627555b7e69365fF186a00B4B0361a617BF7" as Address,
         },
         onCreateLootboxEscrow: {
           id: "________________________________________" as OZSentinelID,
@@ -153,7 +152,7 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
           slug: OZSentinelSlugs.onCreateLootboxEscrow,
           ozChainSlug: OZChainSlugs.BSC_MAINNET,
           contractWatchAddress:
-            "________________________________________" as Address,
+            "0xF3d7A43ddbaF6E5a4b128585cf5dEaDa0ED405e1" as Address,
         },
       },
       [BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex]: {
@@ -164,7 +163,7 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
           slug: OZSentinelSlugs.onCreateLootboxInstant,
           ozChainSlug: OZChainSlugs.POLYGON_MAINNET,
           contractWatchAddress:
-            "________________________________________" as Address,
+            "0x6B39b159eCB60C08a42D7D5d6De18cE804221E52" as Address,
         },
         onCreateLootboxEscrow: {
           id: "________________________________________" as OZSentinelID,
@@ -173,7 +172,7 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
           slug: OZSentinelSlugs.onCreateLootboxEscrow,
           ozChainSlug: OZChainSlugs.POLYGON_MAINNET,
           contractWatchAddress:
-            "________________________________________" as Address,
+            "0x55E8c0Df4750cD3b12C2237c50fd49253c839dc6" as Address,
         },
       },
     },
@@ -185,35 +184,29 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
     sources: {
       onCreateLootboxInstant: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxInstant`, // Used as PD name
-        pipedreamID:
-          "________________________________________" as PipedreamSourceID,
+        pipedreamID: "_______" as PipedreamSourceID,
         semver: "0.1.0",
-        webhookEndpoint:
-          "https://________________________________________.m.pipedream.net",
+        webhookEndpoint: "https://_______.m.pipedream.net",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamSourceSlugs.onCreateLootboxInstant}`, // Used as PD key
       },
       onCreateLootboxEscrow: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxEscrow`, // Used as PD name
-        pipedreamID:
-          "________________________________________" as PipedreamSourceID,
+        pipedreamID: "_______" as PipedreamSourceID,
         semver: "0.1.0",
-        webhookEndpoint:
-          "https://________________________________________.m.pipedream.net",
+        webhookEndpoint: "https://_______.m.pipedream.net",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamSourceSlugs.onCreateLootboxEscrow}`, // Used as PD key
       },
     },
     actions: {
       onCreateLootboxInstant: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxInstant`, // Used as PD name
-        pipedreamID:
-          "________________________________________" as PipedreamActionID,
+        pipedreamID: "sc_B5i6jx6" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamActionSlugs.onCreateLootboxInstant}`, // Used as PD key
       },
       onCreateLootboxEscrow: {
         alias: `[${PIPEDREAM_SEMVER}] onCreateLootboxEscrow`, // Used as PD name
-        pipedreamID:
-          "________________________________________" as PipedreamActionID,
+        pipedreamID: "sc_1LiM489" as PipedreamActionID,
         pipedreamSemver: "0.1.0",
         slug: `${PIPEDREAM_SEMVER_SLUG}-${PipedreamActionSlugs.onCreateLootboxEscrow}`, // Used as PD key
       },
@@ -263,19 +256,19 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
     secrets: [
       {
         name: "OZ_DEFENDER_API_KEY",
-        version: 3,
+        version: 2,
       },
       {
         name: "OZ_DEFENDER_API_SECRET",
-        version: 3,
+        version: 2,
       },
       {
         name: "PD_ABI_UPLOADER_SECRET",
-        version: 3,
+        version: 1,
       },
       {
         name: "JWT_ON_CREATE_LOOTBOX",
-        version: 3,
+        version: 1,
       },
     ],
   },
@@ -323,13 +316,13 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
     contracts: {
       [BLOCKCHAINS[ChainSlugs.BSC_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "________________________________________" as Address,
+          address: "0x2d42627555b7e69365fF186a00B4B0361a617BF7" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
           bulkMinterSuperStaff:
             "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be" as Address,
         },
         LootboxEscrowFactory: {
-          address: "________________________________________" as Address,
+          address: "0xF3d7A43ddbaF6E5a4b128585cf5dEaDa0ED405e1" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
           bulkMinterSuperStaff:
             "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be" as Address,
@@ -337,13 +330,13 @@ export const snapshot: GlobalMainfest_v0_6_0_prod = {
       },
       [BLOCKCHAINS[ChainSlugs.POLYGON_MAINNET].chainIdHex]: {
         LootboxInstantFactory: {
-          address: "________________________________________" as Address,
+          address: "0x6B39b159eCB60C08a42D7D5d6De18cE804221E52" as Address,
           slug: ContractSlugs.LootboxInstantFactory,
           bulkMinterSuperStaff:
             "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be" as Address,
         },
         LootboxEscrowFactory: {
-          address: "________________________________________" as Address,
+          address: "0x55E8c0Df4750cD3b12C2237c50fd49253c839dc6" as Address,
           slug: ContractSlugs.LootboxEscrowFactory,
           bulkMinterSuperStaff:
             "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be" as Address,
