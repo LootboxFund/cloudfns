@@ -1,6 +1,6 @@
 {
   "name": "@lootboxfund/oz-defender",
-  "version": "0.6.0-demo",
+  "version": "0.6.0-prod",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",
@@ -37,7 +37,7 @@
     "@ethersproject/abi": "^5.5.0",
     "@google-cloud/secret-manager": "^3.11.0",
     "@wormgraph/helpers": "0.1.10",
-    "@wormgraph/manifest": "0.3.76",
+    "@wormgraph/manifest": "0.3.81",
     "axios": "^0.25.0",
     "defender-autotask-client": "^1.12.1",
     "defender-autotask-utils": "^1.13.0",
