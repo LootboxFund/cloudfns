@@ -100,10 +100,11 @@ interface OZSentinel {
 
 type LootboxManifestSemver = string;
 
-interface LootboxChainContracts {
-  [ContractSlugs.LootboxEscrowFactory]: LootboxEscrowFactory;
-  [ContractSlugs.LootboxInstantFactory]: Contract;
+interface LootboxFactory extends Contract {
+  bulkMinterSuperStaff: Address;
 }
+
+type LootboxChainContracts = Record<ContractSlugs, LootboxFactory>;
 
 interface Lootbox {
   alias: string;
@@ -224,8 +225,7 @@ interface Webflow {
   tournamentCreatePage: string;
   tournamentManagePage: string;
   tournamentPublicPage: string;
-  loginPage: string;
-  signupPage: string;
+  authPage: string;
   myProfilePage: string;
 }
 
@@ -255,7 +255,7 @@ interface Firebase {
   appId: string;
 }
 
-export interface GlobalMainfest_v0_6_0_demo {
+export interface GlobalMainfest_v0_6_0_prod {
   alias: string;
   date: Date;
   description: string;

@@ -7,8 +7,8 @@
     "codegen": "graphql-codegen --config codegen.yml",
     "build": "yarn codegen && tsc",
     "start": "npx ts-node ./src",
-    "deploy": "yarn build && gcloud run deploy --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging",
-    "deploy:prod": "yarn build && gcloud run deploy --memory 1024Mi --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod"
+    "deploy": "yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging",
+    "deploy:prod": "yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod"
   },
   "dependencies": {
     "@graphql-tools/resolvers-composition": "^6.4.12",

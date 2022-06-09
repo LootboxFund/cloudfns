@@ -1,6 +1,6 @@
 {
   "name": "@lootboxfund/pipedream",
-  "version": "0.5.0-prod",
+  "version": "0.6.0-prod",
   "main": "lib/index.js",
   "author": "0xterran",
   "license": "private",
@@ -52,7 +52,7 @@
     "deploy:dev": "bash ./upload-pipedream.sh"
   },
   "dependencies": {
-    "@wormgraph/manifest": "0.3.69",
+    "@wormgraph/manifest": "0.3.78",
     "axios": "^0.25.0",
     "defender-autotask-utils": "^1.13.0",
     "eslint": "^8.8.0",
