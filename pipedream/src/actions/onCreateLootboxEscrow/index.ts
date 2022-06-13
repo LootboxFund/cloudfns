@@ -2,13 +2,14 @@ import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
 import { decodeEVMLogs } from "../../api/evm";
+import { stampNewLootbox } from "../../api/stamp";
 import {
   Address,
   ContractAddress,
   convertHexToDecimal,
   BLOCKCHAINS,
 } from "../../manifest/types.helpers";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import manifest from "../../manifest/manifest";
 import { encodeURISafe } from "../../api/helpers";
 import { EscrowLootboxCreated } from "../../api/event-abi";
@@ -217,6 +218,27 @@ const action = defineAction({
         status: LootboxTournamentStatus.Pending,
       };
     }
+
+    stampNewLootbox({
+      logoImage: coercedLootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
+      backgroundImage:
+        coercedLootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
+      badgeImage:
+        coercedLootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
+      themeColor:
+        coercedLootboxURI?.lootboxCustomSchema?.lootbox?.backgroundColor || "",
+      name: event.lootboxName,
+      ticketID: "0x",
+      lootboxAddress: event.lootbox as ContractAddress,
+      chainIdHex: chain.chainIdHex,
+      numShares: ethers.utils.formatEther(event.maxSharesSold),
+    })
+      .then(() => {
+        console.log("stamp complete!");
+      })
+      .catch((err) => {
+        console.error(err);
+      });
 
     return {
       json: jsonDownloadPath,

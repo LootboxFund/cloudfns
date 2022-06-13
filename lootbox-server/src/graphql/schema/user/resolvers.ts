@@ -81,7 +81,8 @@ const UserResolvers = {
       return await getUserWallets(user.id as UserID);
     },
     tournaments: async (user: User): Promise<Tournament[]> => {
-      return await getUserTournaments(user.id as UserID);
+      const tournaments = await getUserTournaments(user.id as UserID);
+      return tournaments.filter((tourny) => !tourny.timestamps.deletedAt);
     },
   },
   Wallet: {

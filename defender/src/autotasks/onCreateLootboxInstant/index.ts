@@ -13,8 +13,8 @@ exports.handler = async function (event: AutotaskEvent) {
 
   const token = jwt.sign(
     {
-      // 30 second expiration
-      exp: Math.floor(Date.now() / 1000) + 30,
+      // 120 second expiration
+      exp: Math.floor(Date.now() / 1000) + 120,
     },
     JWT_ON_CREATE_LOOTBOX
   );
