@@ -15,6 +15,7 @@ interface StampNewLootboxProps {
 }
 
 export const stampNewLootbox = async (
+  secret: string,
   props: StampNewLootboxProps
 ): Promise<string> => {
   const {
@@ -37,10 +38,10 @@ export const stampNewLootbox = async (
     chainIdHex,
     numShares,
   };
+
   const headers = new Headers({
     "Content-Type": "application/json",
-    secret:
-      "s;dkjnf;kn;qwkqnewljbflsiubdiuchsdkfljblj1bljbljbjlh23bjh3b24jh3b5k2jdluvsigbaskjcmldsgowpeifjwkjeb23gv2uh42k3jo34uw8eyfisudhbkjwebckjndoi23j4o",
+    secret,
   });
   try {
     const data = await fetch(

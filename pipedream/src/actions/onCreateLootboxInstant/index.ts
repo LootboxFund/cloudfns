@@ -56,7 +56,19 @@ const action = defineAction({
     },
   },
   async run() {
+    const {
+      SecretManagerServiceClient,
+    } = require("@google-cloud/secret-manager");
+
     const { data: bucketData, stamp: bucketStamp } = manifest.storage.buckets;
+
+    const stampNewLootboxSecretConfig = manifest.secretManager.secrets.find(
+      (secret) => secret.name === "STAMP_SECRET"
+    );
+
+    if (!stampNewLootboxSecretConfig) {
+      throw new Error("Secret config not set up in manifest");
+    }
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     const { transaction, sentinel, timestamp } = (this as any)
@@ -73,6 +85,35 @@ const action = defineAction({
     ----- sentinel
 `);
     console.log(sentinel);
+
+    const gsmClient = new SecretManagerServiceClient({
+      projectId: credentials.project_id,
+      credentials: {
+        client_email: credentials.client_email,
+        private_key: credentials.private_key,
+      },
+    });
+
+    let secret = undefined;
+
+    try {
+      const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
+        // name: `projects/lootbox-fund-staging/secrets/${jwtSecretConfig.name}/versions/${jwtSecretConfig.version}`,
+        name: `projects/${manifest.googleCloud.projectID}/secrets/${stampNewLootboxSecretConfig.name}/versions/${stampNewLootboxSecretConfig.version}`,
+      });
+
+      secret = jwtSecretResponse?.payload?.data?.toString();
+
+      if (!secret) {
+        throw new Error("Stamp Secret Not Found");
+      }
+    } catch (err) {
+      console.log("Error fetching stamp secret", err);
+      (this as any).httpInterface.respond({
+        status: 500,
+      });
+      return;
+    }
 
     const factoryAddress = sentinel.addresses[0] as Address | undefined;
 
@@ -110,7 +151,7 @@ const action = defineAction({
     let lootboxPublicUrl: string | undefined;
 
     try {
-      lootboxPublicUrl = await stampNewLootbox({
+      lootboxPublicUrl = await stampNewLootbox(secret, {
         logoImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
         backgroundImage:
           _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
