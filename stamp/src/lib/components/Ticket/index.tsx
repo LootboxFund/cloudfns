@@ -109,9 +109,10 @@ const StyleTicketLogo = ({
   border: "0px solid transparent",
   borderRadius: "50%",
   margin: "auto auto 0px",
-  boxShadow: "0px 10px 10px rgba(0, 0, 0, 0.2)",
+  boxShadow: backgroundShadowColor
+    ? `0px 0px 40px 10px ${backgroundShadowColor}`
+    : "0px 10px 10px rgba(0, 0, 0, 0.2)",
   background: `url("${backgroundImage}")`,
-  filter: `drop-shadow(0px 0px 22px ${backgroundShadowColor})`,
   backgroundSize: "cover",
   backgroundPosition: "center",
   display: "flex" as "flex",
