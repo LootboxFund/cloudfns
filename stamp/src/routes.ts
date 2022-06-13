@@ -38,7 +38,7 @@ router.post(
     const { secret } = req.headers;
     if (
       secret !==
-      "kjnlkvsjdnlkjsfnlvksjdnlksjdnvrjgnwoeirwhoqiwhqowncasljcnalsknaslkcnvlkdnlsdknscldksdjfnskdjfbksdjfbskdjqlwekjqwlekjqwlj"
+      "s;dkjnf;kn;qwkqnewljbflsiubdiuchsdkfljblj1bljbljbjlh23bjh3b24jh3b5k2jdluvsigbaskjcmldsgowpeifjwkjeb23gv2uh42k3jo34uw8eyfisudhbkjwebckjndoi23j4o"
     ) {
       return res.status(401).json({
         message: "Unauthorized",

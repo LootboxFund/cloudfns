@@ -40,7 +40,7 @@ export const stampNewLootbox = async (
   const headers = new Headers({
     "Content-Type": "application/json",
     secret:
-      "kjnlkvsjdnlkjsfnlvksjdnlksjdnvrjgnwoeirwhoqiwhqowncasljcnalsknaslkcnvlkdnlsdknscldksdjfnskdjfbksdjfbskdjqlwekjqwlekjqwlj",
+      "s;dkjnf;kn;qwkqnewljbflsiubdiuchsdkfljblj1bljbljbjlh23bjh3b24jh3b5k2jdluvsigbaskjcmldsgowpeifjwkjeb23gv2uh42k3jo34uw8eyfisudhbkjwebckjndoi23j4o",
   });
   try {
     const data = await fetch(
