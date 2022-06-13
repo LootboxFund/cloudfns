@@ -106,7 +106,25 @@ const action = defineAction({
       }
     }
 
-    const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${event.lootbox}`;
+    let lootboxPublicUrl: string | undefined;
+
+    try {
+      lootboxPublicUrl = await stampNewLootbox({
+        logoImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
+        backgroundImage:
+          _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
+        badgeImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
+        themeColor:
+          _lootboxURI?.lootboxCustomSchema?.lootbox?.lootboxThemeColor || "",
+        name: event.lootboxName,
+        ticketID: "0x",
+        lootboxAddress: event.lootbox as ContractAddress,
+        chainIdHex: chain.chainIdHex,
+        numShares: ethers.utils.formatEther(event.maxSharesSold),
+      });
+    } catch (err) {
+      console.error(err);
+    }
 
     // Lootbox NFT ticket image
     const stampFilePath = `${bucketStamp.id}/${event.lootbox}/lootbox.png`;
@@ -119,7 +137,7 @@ const action = defineAction({
 
     const coercedLootboxURI: LootboxMetadata = {
       image: stampDownloadablePath, // the stamp
-      external_url: lootboxPublicUrl,
+      external_url: lootboxPublicUrl || "",
       description: _lootboxURI?.description || "",
       name: _lootboxURI?.name || "",
       background_color: _lootboxURI?.background_color || "000000",
@@ -219,33 +237,13 @@ const action = defineAction({
       };
     }
 
-    stampNewLootbox({
-      logoImage: coercedLootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
-      backgroundImage:
-        coercedLootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
-      badgeImage:
-        coercedLootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
-      themeColor:
-        coercedLootboxURI?.lootboxCustomSchema?.lootbox?.backgroundColor || "",
-      name: event.lootboxName,
-      ticketID: "0x",
-      lootboxAddress: event.lootbox as ContractAddress,
-      chainIdHex: chain.chainIdHex,
-      numShares: ethers.utils.formatEther(event.maxSharesSold),
-    })
-      .then(() => {
-        console.log("stamp complete!");
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-
     return {
       json: jsonDownloadPath,
       name: event.lootboxName,
       publicUrl: lootboxPublicUrl,
       image: stampDownloadablePath,
       lootboxDatabaseSchema,
+      userEmail: coercedLootboxURI.lootboxCustomSchema?.socials.email || "",
     };
   },
 });
