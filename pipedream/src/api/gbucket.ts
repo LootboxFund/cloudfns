@@ -1,4 +1,3 @@
-import { ChainIDHex } from "../manifest/types.helpers";
 import manifest from "../manifest/manifest";
 import { encodeURISafe } from "./helpers";
 
