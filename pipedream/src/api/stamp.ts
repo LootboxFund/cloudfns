@@ -14,6 +14,10 @@ interface StampNewLootboxProps {
   numShares: string;
 }
 
+interface StampResponse {
+  stamp: string;
+}
+
 export const stampNewLootbox = async (
   secret: string,
   props: StampNewLootboxProps
@@ -39,22 +43,19 @@ export const stampNewLootbox = async (
     numShares,
   };
 
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    secret,
-  });
   try {
     const data = await fetch(
       manifest.cloudRun.containers.stampNewLootbox.fullRoute,
       {
         method: "POST",
-        headers: headers,
-        mode: "cors",
-        cache: "default",
+        headers: {
+          "Content-Type": "application/json",
+          secret,
+        },
         body: JSON.stringify(stampConfig),
       }
     );
-    const { stamp } = await data.json();
+    const { stamp } = (await data.json()) as StampResponse;
     return stamp;
   } catch (e) {
     console.log(e);

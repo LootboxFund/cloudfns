@@ -43,7 +43,7 @@
   "scripts": {
     "codegen": "graphql-codegen --config codegen.yml",
     "watch": "tsc -w",
-    "build": "yarn codegen && tsc",
+    "build": "tsc",
     "test": "jest --verbose --watch",
     "deploy:sources:onCreateLootboxInstant": "bash ./deploy/upload-source-onCreateLootboxInstant.sh",
     "deploy:sources:onCreateLootboxEscrow": "bash ./deploy/upload-source-onCreateLootboxEscrow.sh",
@@ -52,7 +52,6 @@
     "deploy:dev": "bash ./upload-pipedream.sh"
   },
   "dependencies": {
-    "@wormgraph/manifest": "0.3.86",
     "axios": "^0.25.0",
     "defender-autotask-utils": "^1.13.0",
     "eslint": "^8.8.0",
