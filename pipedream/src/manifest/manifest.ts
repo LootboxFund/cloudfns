@@ -1,3 +1,8 @@
+/**
+ * Please copy the content of './manifest.json' here
+ * (I'm not sure how to use the JSON file with Pipedream)
+ */
+
 export default {
   alias: "0.6.1-demo",
   description: "\n    Demo version of Lootbox with Web2 + Bulk Minting!\n  ",
@@ -103,13 +108,13 @@ export default {
     secrets: [{ name: "JWT_ON_CREATE_LOOTBOX" }],
     autoTasks: {
       onCreateLootboxInstant: {
-        id: "________________________________________",
+        id: "c0b37dd5-42f6-4a3c-aafa-394cb653ef5d",
         alias: "On creation of an Instant Lootbox",
         semver: "0.6.1-demo",
         slug: "onCreateLootboxInstant",
       },
       onCreateLootboxEscrow: {
-        id: "________________________________________",
+        id: "fbc26d76-e071-45bd-9380-12a4423ba9ed",
         alias: "On creation of an Escrow Lootbox",
         semver: "0.6.1-demo",
         slug: "onCreateLootboxEscrow",
@@ -161,31 +166,31 @@ export default {
     sources: {
       onCreateLootboxInstant: {
         alias: "[0.6.1-demo] onCreateLootboxInstant",
-        pipedreamID: "________________________________________",
+        pipedreamID: "dc_wDujEbb",
         semver: "0.1.0",
         webhookEndpoint:
-          "https://________________________________________.m.pipedream.net",
+          "https://411f24e564fd04d477334480b9e018ef.m.pipedream.net",
         slug: "0-6-1-demo-onCreateLootboxInstant",
       },
       onCreateLootboxEscrow: {
         alias: "[0.6.1-demo] onCreateLootboxEscrow",
-        pipedreamID: "________________________________________",
+        pipedreamID: "dc_QyueG6p",
         semver: "0.1.0",
         webhookEndpoint:
-          "https://________________________________________.m.pipedream.net",
+          "https://1bc8da955f5bf9015e240e5caffcdfb5.m.pipedream.net",
         slug: "0-6-1-demo-onCreateLootboxEscrow",
       },
     },
     actions: {
       onCreateLootboxInstant: {
         alias: "[0.6.1-demo] onCreateLootboxInstant",
-        pipedreamID: "________________________________________",
+        pipedreamID: "sc_2AiQ4Dp",
         pipedreamSemver: "0.1.0",
         slug: "0-6-1-demo-onCreateLootboxInstant",
       },
       onCreateLootboxEscrow: {
         alias: "[0.6.1-demo] onCreateLootboxEscrow",
-        pipedreamID: "________________________________________",
+        pipedreamID: "sc_YNioEJ0",
         pipedreamSemver: "0.1.0",
         slug: "0-6-1-demo-onCreateLootboxEscrow",
       },
@@ -214,7 +219,7 @@ export default {
   },
   googleCloud: {
     alias: "0.6.1-demo",
-    projectID: "lootbox-fund-demo",
+    projectID: "lootbox-fund-staging",
     semver: "0.6.1-demo",
   },
   storage: {
