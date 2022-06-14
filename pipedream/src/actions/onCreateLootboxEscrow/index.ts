@@ -42,7 +42,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxEscrow.slug,
   // version: manifest.pipedream.actions.onCreateLootboxEscrow.pipedreamSemver,
-  version: "0.1.1",
+  version: "0.1.11",
   type: "action",
   props: {
     googleCloud: {
@@ -97,7 +97,6 @@ const action = defineAction({
 
     try {
       const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
-        // name: `projects/lootbox-fund-staging/secrets/${jwtSecretConfig.name}/versions/${jwtSecretConfig.version}`,
         name: `projects/${manifest.googleCloud.projectID}/secrets/${stampNewLootboxSecretConfig.name}/versions/${stampNewLootboxSecretConfig.version}`,
       });
 
@@ -107,11 +106,9 @@ const action = defineAction({
         throw new Error("Stamp Secret Not Found");
       }
     } catch (err) {
-      console.log("Error fetching stamp secret", err);
-      (this as any).httpInterface.respond({
-        status: 500,
-      });
-      return;
+      console.log("Error fetching stamp secret");
+      console.error(err);
+      throw err;
     }
 
     const factoryAddress = sentinel.addresses[0] as Address | undefined;

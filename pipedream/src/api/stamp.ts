@@ -1,3 +1,4 @@
+import axios from "axios";
 import manifest from "../manifest/manifest";
 import { ChainIDHex, ContractAddress, Url } from "../manifest/types.helpers";
 
@@ -44,21 +45,23 @@ export const stampNewLootbox = async (
   };
 
   try {
-    const data = await fetch(
+    const response = await axios.post<StampResponse>(
       manifest.cloudRun.containers.stampNewLootbox.fullRoute,
+      JSON.stringify(stampConfig),
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           secret,
         },
-        body: JSON.stringify(stampConfig),
       }
     );
-    const { stamp } = (await data.json()) as StampResponse;
+
+    const { stamp } = response.data;
     return stamp;
   } catch (e) {
-    console.log(e);
+    console.error("Error stamping lootbox", e?.message);
+    console.error(e);
     return "";
   }
 };

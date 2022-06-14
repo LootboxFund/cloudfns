@@ -43,7 +43,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxInstant.slug,
   // version: manifest.pipedream.actions.onCreateLootboxInstant.pipedreamSemver,
-  version: "0.1.1",
+  version: "0.1.2",
   type: "action",
   props: {
     googleCloud: {
@@ -109,10 +109,7 @@ const action = defineAction({
       }
     } catch (err) {
       console.log("Error fetching stamp secret", err);
-      (this as any).httpInterface.respond({
-        status: 500,
-      });
-      return;
+      throw err;
     }
 
     const factoryAddress = sentinel.addresses[0] as Address | undefined;
