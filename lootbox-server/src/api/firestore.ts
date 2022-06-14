@@ -230,7 +230,7 @@ export const getLootboxSnapshotsForWallet = async (
         backgroundImage:
           data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
         image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
-        stampImage: data.metadata.image,
+        stampImage: data.metadata.image || "",
       };
     });
   }
