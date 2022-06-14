@@ -1,7 +1,6 @@
 import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
-
 import { decodeEVMLogs } from "../../api/evm";
 import {
   Address,
@@ -17,7 +16,6 @@ import {
 } from "../../api/graphql/generated/types";
 import { BigNumber, ethers } from "ethers";
 import manifest from "../../manifest/manifest";
-import { encodeURISafe } from "../../api/helpers";
 import { InstantLootboxCreated } from "../../api/event-abi";
 import { stampNewLootbox } from "../../api/stamp";
 
@@ -43,7 +41,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxInstant.slug,
   // version: manifest.pipedream.actions.onCreateLootboxInstant.pipedreamSemver,
-  version: "0.1.2",
+  version: "0.1.13",
   type: "action",
   props: {
     googleCloud: {
@@ -98,7 +96,6 @@ const action = defineAction({
 
     try {
       const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
-        // name: `projects/lootbox-fund-staging/secrets/${jwtSecretConfig.name}/versions/${jwtSecretConfig.version}`,
         name: `projects/${manifest.googleCloud.projectID}/secrets/${stampNewLootboxSecretConfig.name}/versions/${stampNewLootboxSecretConfig.version}`,
       });
 
@@ -109,6 +106,7 @@ const action = defineAction({
       }
     } catch (err) {
       console.log("Error fetching stamp secret", err);
+      console.error(err);
       throw err;
     }
 
@@ -145,38 +143,28 @@ const action = defineAction({
       }
     }
 
-    let lootboxPublicUrl: string | undefined;
-
-    try {
-      lootboxPublicUrl = await stampNewLootbox(secret, {
-        logoImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
-        backgroundImage:
-          _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
-        badgeImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
-        themeColor:
-          _lootboxURI?.lootboxCustomSchema?.lootbox?.lootboxThemeColor || "",
-        name: event.lootboxName,
-        ticketID: "0x",
-        lootboxAddress: event.lootbox as ContractAddress,
-        chainIdHex: chain.chainIdHex,
-        numShares: ethers.utils.formatEther(event.maxSharesSold),
-      });
-    } catch (err) {
-      console.error(err);
-    }
-
-    // Lootbox NFT ticket image
-    const stampFilePath = `${bucketStamp.id}/${event.lootbox}/lootbox.png`;
-    const stampDownloadablePath = `${
-      manifest.storage.downloadUrl
-    }/${encodeURISafe(stampFilePath)}?alt=media`;
+    const stampDownloadablePath = await stampNewLootbox(secret, {
+      logoImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
+      backgroundImage:
+        _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
+      badgeImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
+      themeColor:
+        _lootboxURI?.lootboxCustomSchema?.lootbox?.lootboxThemeColor || "",
+      name: event.lootboxName,
+      ticketID: "0x",
+      lootboxAddress: event.lootbox as ContractAddress,
+      chainIdHex: chain.chainIdHex,
+      numShares: ethers.utils.formatEther(event.maxSharesSold),
+    });
 
     const tournamentId =
       _lootboxURI?.lootboxCustomSchema?.lootbox?.tournamentId;
 
+    const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${event.lootbox}`;
+
     const coercedLootboxURI: LootboxMetadata = {
       image: stampDownloadablePath, // the stamp
-      external_url: lootboxPublicUrl || "",
+      external_url: lootboxPublicUrl,
       description: _lootboxURI?.description || "",
       name: _lootboxURI?.name || "",
       background_color: _lootboxURI?.background_color || "000000",
@@ -242,13 +230,21 @@ const action = defineAction({
       },
     };
 
-    const jsonDownloadPath = await saveFileToGBucket({
-      alias: `JSON for Instant Lootbox ${event.lootbox} triggered by tx hash ${transaction.transactionHash}`,
-      credentials,
-      fileName: `${event.lootbox.toLowerCase()}/lootbox.json`,
-      bucket: bucketData.id,
-      data: JSON.stringify(coercedLootboxURI),
-    });
+    let jsonDownloadPath: string = "";
+
+    try {
+      jsonDownloadPath = await saveFileToGBucket({
+        alias: `JSON for Instant Lootbox ${event.lootbox} triggered by tx hash ${transaction.transactionHash}`,
+        credentials,
+        fileName: `${event.lootbox.toLowerCase()}/lootbox.json`,
+        bucket: bucketData.id,
+        data: JSON.stringify(coercedLootboxURI),
+      });
+    } catch (err) {
+      console.log("error writting json", err?.message);
+      console.error(err);
+      throw err;
+    }
 
     const lootboxDatabaseSchema: Lootbox = {
       address: event.lootbox as Address,
