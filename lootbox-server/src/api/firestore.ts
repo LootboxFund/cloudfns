@@ -230,7 +230,7 @@ export const getLootboxSnapshotsForWallet = async (
         backgroundImage:
           data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
         image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
-        stampImage: data.metadata.image,
+        stampImage: data.metadata.image || "",
       };
     });
   }
@@ -349,6 +349,19 @@ export const updateTournament = async (
   return (await tournamentRef.get()).data() as Tournament;
 };
 
+export const deleteTournament = async (tournamentId: TournamentID) => {
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentId) as DocumentReference<Tournament>;
+
+  await tournamentRef.update(
+    "timestamps.deletedAt",
+    Timestamp.now().toMillis() // soft delete
+  );
+
+  return (await tournamentRef.get()).data() as Tournament;
+};
+
 export const deleteWallet = async (
   userId: UserIdpID,
   walletId: WalletID
@@ -383,6 +396,9 @@ export const getUserTournaments = async (userId: UserID) => {
         timestamps: {
           createdAt: data.timestamps.createdAt,
           updatedAt: data.timestamps.updatedAt,
+          ...(data.timestamps.deletedAt && {
+            deletedAt: data.timestamps.deletedAt,
+          }),
         },
       };
     });

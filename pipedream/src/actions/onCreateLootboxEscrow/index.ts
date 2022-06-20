@@ -2,15 +2,15 @@ import { BlockTriggerEvent } from "defender-autotask-utils";
 import { defineAction } from "ironpipe";
 import { saveFileToGBucket } from "../../api/gbucket";
 import { decodeEVMLogs } from "../../api/evm";
+import { stampNewLootbox } from "../../api/stamp";
 import {
   Address,
   ContractAddress,
   convertHexToDecimal,
   BLOCKCHAINS,
 } from "../../manifest/types.helpers";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import manifest from "../../manifest/manifest";
-import { encodeURISafe } from "../../api/helpers";
 import { EscrowLootboxCreated } from "../../api/event-abi";
 import {
   LootboxMetadata,
@@ -41,7 +41,7 @@ const action = defineAction({
   `,
   key: manifest.pipedream.actions.onCreateLootboxEscrow.slug,
   // version: manifest.pipedream.actions.onCreateLootboxEscrow.pipedreamSemver,
-  version: "0.1.0",
+  version: "0.2.0",
   type: "action",
   props: {
     googleCloud: {
@@ -54,7 +54,19 @@ const action = defineAction({
     },
   },
   async run() {
+    const {
+      SecretManagerServiceClient,
+    } = require("@google-cloud/secret-manager");
+
     const { data: bucketData, stamp: bucketStamp } = manifest.storage.buckets;
+
+    const stampNewLootboxSecretConfig = manifest.secretManager.secrets.find(
+      (secret) => secret.name === "STAMP_SECRET"
+    );
+
+    if (!stampNewLootboxSecretConfig) {
+      throw new Error("Secret config not set up in manifest");
+    }
 
     const credentials = JSON.parse((this as any).googleCloud.$auth.key_json);
     const { transaction, sentinel, timestamp } = (this as any)
@@ -71,6 +83,32 @@ const action = defineAction({
         ----- sentinel
     `);
     console.log(sentinel);
+
+    const gsmClient = new SecretManagerServiceClient({
+      projectId: credentials.project_id,
+      credentials: {
+        client_email: credentials.client_email,
+        private_key: credentials.private_key,
+      },
+    });
+
+    let secret = undefined;
+
+    try {
+      const [jwtSecretResponse] = await gsmClient.accessSecretVersion({
+        name: `projects/${manifest.googleCloud.projectID}/secrets/${stampNewLootboxSecretConfig.name}/versions/${stampNewLootboxSecretConfig.version}`,
+      });
+
+      secret = jwtSecretResponse?.payload?.data?.toString();
+
+      if (!secret) {
+        throw new Error("Stamp Secret Not Found");
+      }
+    } catch (err) {
+      console.log("Error fetching stamp secret");
+      console.error(err);
+      throw err;
+    }
 
     const factoryAddress = sentinel.addresses[0] as Address | undefined;
 
@@ -105,16 +143,24 @@ const action = defineAction({
       }
     }
 
-    const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${event.lootbox}`;
-
-    // Lootbox NFT ticket image
-    const stampFilePath = `${bucketStamp.id}/${event.lootbox}/lootbox.png`;
-    const stampDownloadablePath = `${
-      manifest.storage.downloadUrl
-    }/${encodeURISafe(stampFilePath)}?alt=media`;
+    const stampDownloadablePath = await stampNewLootbox(secret, {
+      logoImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.image || "",
+      backgroundImage:
+        _lootboxURI?.lootboxCustomSchema?.lootbox?.backgroundImage || "",
+      badgeImage: _lootboxURI?.lootboxCustomSchema?.lootbox?.badgeImage || "",
+      themeColor:
+        _lootboxURI?.lootboxCustomSchema?.lootbox?.lootboxThemeColor || "",
+      name: event.lootboxName,
+      ticketID: "0x",
+      lootboxAddress: event.lootbox as ContractAddress,
+      chainIdHex: chain.chainIdHex,
+      numShares: ethers.utils.formatEther(event.maxSharesSold),
+    });
 
     const tournamentId =
       _lootboxURI?.lootboxCustomSchema?.lootbox?.tournamentId;
+
+    const lootboxPublicUrl = `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${event.lootbox}`;
 
     const coercedLootboxURI: LootboxMetadata = {
       image: stampDownloadablePath, // the stamp
@@ -184,13 +230,21 @@ const action = defineAction({
       },
     };
 
-    const jsonDownloadPath = await saveFileToGBucket({
-      alias: `JSON for Escrow Lootbox ${event.lootbox} triggered by tx hash ${transaction.transactionHash}`,
-      credentials,
-      fileName: `${event.lootbox.toLowerCase()}/lootbox.json`,
-      bucket: bucketData.id,
-      data: JSON.stringify(coercedLootboxURI),
-    });
+    let jsonDownloadPath: string = "";
+
+    try {
+      jsonDownloadPath = await saveFileToGBucket({
+        alias: `JSON for Escrow Lootbox ${event.lootbox} triggered by tx hash ${transaction.transactionHash}`,
+        credentials,
+        fileName: `${event.lootbox.toLowerCase()}/lootbox.json`,
+        bucket: bucketData.id,
+        data: JSON.stringify(coercedLootboxURI),
+      });
+    } catch (err) {
+      console.log("error writting json", err?.message);
+      console.error(err);
+      throw err;
+    }
 
     const lootboxDatabaseSchema: Lootbox = {
       address: event.lootbox as Address,
@@ -224,6 +278,7 @@ const action = defineAction({
       publicUrl: lootboxPublicUrl,
       image: stampDownloadablePath,
       lootboxDatabaseSchema,
+      userEmail: coercedLootboxURI.lootboxCustomSchema?.socials.email || "",
     };
   },
 });

@@ -1,6 +1,6 @@
 import { EthLog } from "defender-autotask-utils";
 import { ethers } from "ethers";
-import { ABIUtilRepresenation } from '../manifest/types.helpers';
+import { ABIUtilRepresenation } from "../manifest/types.helpers";
 
 export const decodeEVMLogs = <T>({
   eventName,
@@ -30,7 +30,7 @@ export const decodeEVMLogs = <T>({
           {}
         );
       } catch (e) {
-        console.log(e);
+        // console.log(e);
         return;
       }
     })

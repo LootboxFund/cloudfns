@@ -10,6 +10,7 @@ const TournamentTypeDefs = gql`
   type TournamentTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
+    deletedAt: Timestamp
   }
 
   type LootboxTournamentSnapshot {
@@ -67,11 +68,19 @@ const TournamentTypeDefs = gql`
     tournament: Tournament!
   }
 
+  type DeleteTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+
   union CreateTournamentResponse =
       CreateTournamentResponseSuccess
     | ResponseError
 
   union EditTournamentResponse = EditTournamentResponseSuccess | ResponseError
+
+  union DeleteTournamentResponse =
+      DeleteTournamentResponseSuccess
+    | ResponseError
 
   input CreateTournamentPayload {
     title: String!
@@ -92,6 +101,7 @@ const TournamentTypeDefs = gql`
       payload: CreateTournamentPayload!
     ): CreateTournamentResponse!
     editTournament(payload: EditTournamentPayload!): EditTournamentResponse!
+    deleteTournament(id: ID!): DeleteTournamentResponse!
   }
 `;
 

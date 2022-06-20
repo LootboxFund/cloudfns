@@ -1,4 +1,3 @@
-import { ChainIDHex } from "../manifest/types.helpers";
 import manifest from "../manifest/manifest";
 import { encodeURISafe } from "./helpers";
 
@@ -33,11 +32,13 @@ export const saveFileToGBucket = async ({
   });
   const downloadablePath = `${
     manifest.storage.downloadUrl
-  }/${bucket}/${encodeURISafe(fileName)}?alt=media \n`;
+  }/${bucket}/${encodeURISafe(fileName)}?alt=media`;
   console.log(
     `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
   );
+  console.log("saving file to gbucket");
   await storage.bucket(bucket).file(fileName).save(data);
+  console.log("making file public");
   await storage.bucket(bucket).file(fileName).makePublic();
   console.log(`✅ Uploaded \n`);
   return downloadablePath;

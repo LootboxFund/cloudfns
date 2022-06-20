@@ -4,6 +4,7 @@ import { ContractAddress, ITicketMetadata } from "@wormgraph/helpers";
 import { TicketProps } from "./lib/components/Ticket";
 import { saveTicketMetadataToGBucket } from "./lib/api/gbucket";
 import { manifest } from "./manifest";
+import { getAuthenticationSecret } from "./lib/api/secrets";
 
 const router = express.Router();
 
@@ -36,10 +37,8 @@ router.post(
   "/stamp/new/lootbox",
   async (req: express.Request, res: express.Response, next) => {
     const { secret } = req.headers;
-    if (
-      secret !==
-      "kjnlkvsjdnlkjsfnlvksjdnlksjdnvrjgnwoeirwhoqiwhqowncasljcnalsknaslkcnvlkdnlsdknscldksdjfnskdjfbksdjfbskdjqlwekjqwlekjqwlj"
-    ) {
+    const verifiedSecret = await getAuthenticationSecret();
+    if (secret !== verifiedSecret) {
       return res.status(401).json({
         message: "Unauthorized",
       });

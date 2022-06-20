@@ -129,7 +129,7 @@ const source = {
 
     try {
       jwt.verify(jwtToken, secret, {
-        maxAge: "30s", // only accepts tokens up to 30 seconds old
+        maxAge: "120s", // only accepts tokens up to 120 seconds old
       });
       console.log("valid jwt");
     } catch (err) {
