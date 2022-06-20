@@ -7,6 +7,7 @@ import {
 } from "firebase-admin/firestore";
 import { db } from "./firebase";
 import {
+  BattleFeedEdge,
   EditTournamentPayload,
   Lootbox,
   LootboxSnapshot,
@@ -15,6 +16,7 @@ import {
   Tournament,
   User,
   Wallet,
+  PageInfo,
 } from "../graphql/generated/types";
 import { Address } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
@@ -379,7 +381,7 @@ export const deleteWallet = async (
 export const getUserTournaments = async (userId: UserID) => {
   const collectionRef = db
     .collection(Collection.Tournament)
-    .where("creatorId", "==", userId) as CollectionGroup<Tournament>;
+    .where("creatorId", "==", userId) as Query<Tournament>;
 
   const tournaments = await collectionRef.get();
 
@@ -402,5 +404,61 @@ export const getUserTournaments = async (userId: UserID) => {
         },
       };
     });
+  }
+};
+
+export const paginateBattleFeedEdgeQuery = async (
+  limit: number,
+  cursor: TournamentID
+): Promise<{
+  totalCount: number;
+  edges: BattleFeedEdge[];
+  pageInfo: PageInfo;
+}> => {
+  let tournamentQuery = db
+    .collection(Collection.Tournament)
+    .orderBy("timestamps.createdAt", "desc") as Query<Tournament>;
+
+  if (cursor) {
+    const cursorRef = db
+      .collection(Collection.Tournament)
+      .doc(cursor) as DocumentReference<Tournament>;
+
+    const cursorData = (await cursorRef.get()).data();
+    if (cursorData) {
+      tournamentQuery = tournamentQuery.startAfter(
+        cursorData.timestamps.createdAt
+      );
+    }
+  }
+
+  tournamentQuery = tournamentQuery.limit(limit);
+
+  const tournamentSnapshot = await tournamentQuery.get();
+
+  if (tournamentSnapshot.empty) {
+    return {
+      edges: [],
+      totalCount: -1,
+      pageInfo: {
+        endCursor: undefined,
+        hasNextPage: false,
+      },
+    };
+  } else {
+    const docs = tournamentSnapshot.docs.slice(0, limit);
+    return {
+      edges: docs.map((doc) => {
+        return {
+          node: doc.data(),
+          cursor: doc.id,
+        };
+      }),
+      totalCount: -1,
+      pageInfo: {
+        endCursor: docs[docs.length - 1].id,
+        hasNextPage: tournamentSnapshot.docs.length === limit + 1,
+      },
+    };
   }
 };

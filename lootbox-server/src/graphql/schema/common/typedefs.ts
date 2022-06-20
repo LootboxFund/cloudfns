@@ -32,6 +32,11 @@ const CommonTypeDefs = gql`
   type ResponseError {
     error: Status!
   }
+
+  type PageInfo {
+    endCursor: String # ID of the last document
+    hasNextPage: Boolean!
+  }
 `;
 
 export default CommonTypeDefs;
