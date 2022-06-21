@@ -5,7 +5,7 @@ import {
   createTournament,
   updateTournament,
   deleteTournament,
-  paginateBattleFeedEdgeQuery,
+  paginateBattleFeedQuery,
 } from "../../../api/firestore";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { TournamentID } from "../../../lib/types";
@@ -94,7 +94,7 @@ const TournamentResolvers = {
       _,
       { first, after }: { first: number; after: TournamentID }
     ): Promise<BattleFeedResponse> => {
-      const response = await paginateBattleFeedEdgeQuery(first, after);
+      const response = await paginateBattleFeedQuery(first, after);
       return response;
     },
   },
@@ -126,6 +126,9 @@ const TournamentResolvers = {
           description: payload.description,
           tournamentLink: payload.tournamentLink,
           creatorId: context.userId,
+          coverPhoto: payload.coverPhoto,
+          prize: payload.prize,
+          tournamentDate: payload.tournamentDate,
         });
 
         return { tournament };

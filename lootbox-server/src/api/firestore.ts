@@ -295,12 +295,18 @@ export interface CreateTournamentArgs {
   description: string;
   tournamentLink?: string | null;
   creatorId: UserIdpID;
+  prize?: string | null;
+  coverPhoto?: string | null;
+  tournamentDate: number;
 }
 export const createTournament = async ({
   title,
   description,
   tournamentLink,
   creatorId,
+  prize,
+  coverPhoto,
+  tournamentDate,
 }: CreateTournamentArgs): Promise<Tournament> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -311,7 +317,12 @@ export const createTournament = async ({
     title,
     description,
     creatorId,
+    ...(!!prize && { prize }),
+    ...(!!coverPhoto && { coverPhoto }),
     ...(!!tournamentLink && { tournamentLink }),
+    ...(!!tournamentDate && {
+      tournamentDate: Number(tournamentDate),
+    }),
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -344,6 +355,11 @@ export const updateTournament = async (
       tournamentLink: payload.tournamentLink,
     }),
     ...(payload.magicLink != undefined && { magicLink: payload.magicLink }),
+    ...(payload.coverPhoto != undefined && { coverPhoto: payload.coverPhoto }),
+    ...(payload.prize != undefined && { prize: payload.prize }),
+    ...(payload.tournamentDate != undefined && {
+      tournamentDate: Number(payload.tournamentDate),
+    }),
   };
 
   await tournamentRef.update(updatePayload);
@@ -378,7 +394,9 @@ export const deleteWallet = async (
   return;
 };
 
-export const getUserTournaments = async (userId: UserID) => {
+export const getUserTournaments = async (
+  userId: UserID
+): Promise<Tournament[]> => {
   const collectionRef = db
     .collection(Collection.Tournament)
     .where("creatorId", "==", userId) as Query<Tournament>;
@@ -402,12 +420,15 @@ export const getUserTournaments = async (userId: UserID) => {
             deletedAt: data.timestamps.deletedAt,
           }),
         },
+        ...(data.tournamentDate != undefined && {
+          tournamentDate: data.tournamentDate,
+        }),
       };
     });
   }
 };
 
-export const paginateBattleFeedEdgeQuery = async (
+export const paginateBattleFeedQuery = async (
   limit: number,
   cursor: TournamentID
 ): Promise<{

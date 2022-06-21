@@ -38,6 +38,9 @@ const TournamentTypeDefs = gql`
     lootboxSnapshots: [LootboxTournamentSnapshot!]
     creatorId: ID!
     magicLink: String
+    tournamentDate: Timestamp
+    prize: String
+    coverPhoto: String
   }
 
   type TournamentResponseSuccess {
@@ -99,6 +102,9 @@ const TournamentTypeDefs = gql`
     title: String!
     description: String!
     tournamentLink: String
+    coverPhoto: String
+    prize: String
+    tournamentDate: Timestamp!
   }
 
   input EditTournamentPayload {
@@ -107,6 +113,9 @@ const TournamentTypeDefs = gql`
     description: String
     tournamentLink: String
     magicLink: String
+    coverPhoto: String
+    prize: String
+    tournamentDate: Timestamp
   }
 
   extend type Mutation {
