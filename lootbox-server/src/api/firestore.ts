@@ -81,6 +81,7 @@ export const createUser = async (
     email: idpUser.email,
     createdAt: Timestamp.now().toMillis(),
     updatedAt: Timestamp.now().toMillis(),
+    deletedAt: null,
   };
 
   if (idpUser.phoneNumber) {
@@ -326,6 +327,7 @@ export const createTournament = async ({
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
+      deletedAt: null,
     },
   };
 
@@ -438,6 +440,7 @@ export const paginateBattleFeedQuery = async (
 }> => {
   let tournamentQuery = db
     .collection(Collection.Tournament)
+    .where("timestamps.deletedAt", "==", null)
     .orderBy("timestamps.createdAt", "desc") as Query<Tournament>;
 
   if (cursor) {
@@ -453,7 +456,7 @@ export const paginateBattleFeedQuery = async (
     }
   }
 
-  tournamentQuery = tournamentQuery.limit(limit);
+  tournamentQuery = tournamentQuery.limit(limit + 1);
 
   const tournamentSnapshot = await tournamentQuery.get();
 
