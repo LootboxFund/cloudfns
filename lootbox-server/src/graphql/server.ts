@@ -9,12 +9,16 @@ export interface Context {
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
+
 const server = new ApolloServer({
   schema,
   csrfPrevention: true,
-  introspection: false,
+  introspection: process.env.NODE_ENV === "dev",
   cors: {
-    origin: ["https://lootbox.fund", "https://www.lootbox.fund"],
+    origin:
+      process.env.NODE_ENV === "dev"
+        ? "*"
+        : ["https://lootbox.fund", "https://www.lootbox.fund"],
   },
   context: async ({ req }): Promise<Context> => {
     try {
