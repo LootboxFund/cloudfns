@@ -5,6 +5,7 @@ import {
   createTournament,
   updateTournament,
   deleteTournament,
+  paginateBattleFeedQuery,
 } from "../../../api/firestore";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { TournamentID } from "../../../lib/types";
@@ -20,6 +21,7 @@ import {
   LootboxTournamentSnapshot,
   DeleteTournamentResponse,
   MutationDeleteTournamentArgs,
+  BattleFeedResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 
@@ -88,6 +90,13 @@ const TournamentResolvers = {
         };
       }
     },
+    battleFeed: async (
+      _,
+      { first, after }: { first: number; after: TournamentID }
+    ): Promise<BattleFeedResponse> => {
+      const response = await paginateBattleFeedQuery(first, after);
+      return response;
+    },
   },
   Tournament: {
     lootboxSnapshots: async (
@@ -117,6 +126,9 @@ const TournamentResolvers = {
           description: payload.description,
           tournamentLink: payload.tournamentLink,
           creatorId: context.userId,
+          coverPhoto: payload.coverPhoto,
+          prize: payload.prize,
+          tournamentDate: payload.tournamentDate,
         });
 
         return { tournament };
@@ -269,6 +281,19 @@ const TournamentResolvers = {
     __resolveType: (obj: EditTournamentResponse) => {
       if ("tournament" in obj) {
         return "EditTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  BattleFeedResponse: {
+    __resolveType: (obj: BattleFeedResponse) => {
+      if ("edges" in obj) {
+        return "BattleFeedResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

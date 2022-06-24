@@ -7,6 +7,7 @@ import {
 } from "firebase-admin/firestore";
 import { db } from "./firebase";
 import {
+  BattleFeedEdge,
   EditTournamentPayload,
   Lootbox,
   LootboxSnapshot,
@@ -15,6 +16,7 @@ import {
   Tournament,
   User,
   Wallet,
+  PageInfo,
 } from "../graphql/generated/types";
 import { Address } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
@@ -79,6 +81,7 @@ export const createUser = async (
     email: idpUser.email,
     createdAt: Timestamp.now().toMillis(),
     updatedAt: Timestamp.now().toMillis(),
+    deletedAt: null,
   };
 
   if (idpUser.phoneNumber) {
@@ -293,12 +296,18 @@ export interface CreateTournamentArgs {
   description: string;
   tournamentLink?: string | null;
   creatorId: UserIdpID;
+  prize?: string | null;
+  coverPhoto?: string | null;
+  tournamentDate: number;
 }
 export const createTournament = async ({
   title,
   description,
   tournamentLink,
   creatorId,
+  prize,
+  coverPhoto,
+  tournamentDate,
 }: CreateTournamentArgs): Promise<Tournament> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -309,10 +318,16 @@ export const createTournament = async ({
     title,
     description,
     creatorId,
+    ...(!!prize && { prize }),
+    ...(!!coverPhoto && { coverPhoto }),
     ...(!!tournamentLink && { tournamentLink }),
+    ...(!!tournamentDate && {
+      tournamentDate: Number(tournamentDate),
+    }),
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
+      deletedAt: null,
     },
   };
 
@@ -342,6 +357,11 @@ export const updateTournament = async (
       tournamentLink: payload.tournamentLink,
     }),
     ...(payload.magicLink != undefined && { magicLink: payload.magicLink }),
+    ...(payload.coverPhoto != undefined && { coverPhoto: payload.coverPhoto }),
+    ...(payload.prize != undefined && { prize: payload.prize }),
+    ...(payload.tournamentDate != undefined && {
+      tournamentDate: Number(payload.tournamentDate),
+    }),
   };
 
   await tournamentRef.update(updatePayload);
@@ -376,10 +396,12 @@ export const deleteWallet = async (
   return;
 };
 
-export const getUserTournaments = async (userId: UserID) => {
+export const getUserTournaments = async (
+  userId: UserID
+): Promise<Tournament[]> => {
   const collectionRef = db
     .collection(Collection.Tournament)
-    .where("creatorId", "==", userId) as CollectionGroup<Tournament>;
+    .where("creatorId", "==", userId) as Query<Tournament>;
 
   const tournaments = await collectionRef.get();
 
@@ -400,7 +422,67 @@ export const getUserTournaments = async (userId: UserID) => {
             deletedAt: data.timestamps.deletedAt,
           }),
         },
+        ...(data.tournamentDate != undefined && {
+          tournamentDate: data.tournamentDate,
+        }),
       };
     });
+  }
+};
+
+export const paginateBattleFeedQuery = async (
+  limit: number,
+  cursor: TournamentID
+): Promise<{
+  totalCount: number;
+  edges: BattleFeedEdge[];
+  pageInfo: PageInfo;
+}> => {
+  let tournamentQuery = db
+    .collection(Collection.Tournament)
+    .where("timestamps.deletedAt", "==", null)
+    .orderBy("timestamps.createdAt", "desc") as Query<Tournament>;
+
+  if (cursor) {
+    const cursorRef = db
+      .collection(Collection.Tournament)
+      .doc(cursor) as DocumentReference<Tournament>;
+
+    const cursorData = (await cursorRef.get()).data();
+    if (cursorData) {
+      tournamentQuery = tournamentQuery.startAfter(
+        cursorData.timestamps.createdAt
+      );
+    }
+  }
+
+  tournamentQuery = tournamentQuery.limit(limit + 1);
+
+  const tournamentSnapshot = await tournamentQuery.get();
+
+  if (tournamentSnapshot.empty) {
+    return {
+      edges: [],
+      totalCount: -1,
+      pageInfo: {
+        endCursor: undefined,
+        hasNextPage: false,
+      },
+    };
+  } else {
+    const docs = tournamentSnapshot.docs.slice(0, limit);
+    return {
+      edges: docs.map((doc) => {
+        return {
+          node: doc.data(),
+          cursor: doc.id,
+        };
+      }),
+      totalCount: -1,
+      pageInfo: {
+        endCursor: docs[docs.length - 1].id,
+        hasNextPage: tournamentSnapshot.docs.length === limit + 1,
+      },
+    };
   }
 };

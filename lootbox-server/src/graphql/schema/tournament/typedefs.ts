@@ -38,6 +38,9 @@ const TournamentTypeDefs = gql`
     lootboxSnapshots: [LootboxTournamentSnapshot!]
     creatorId: ID!
     magicLink: String
+    tournamentDate: Timestamp
+    prize: String
+    coverPhoto: String
   }
 
   type TournamentResponseSuccess {
@@ -48,12 +51,25 @@ const TournamentTypeDefs = gql`
     tournament: Tournament!
   }
 
+  type BattleFeedEdge {
+    node: Tournament!
+    cursor: ID!
+  }
+
+  type BattleFeedResponseSuccess {
+    totalCount: Int!
+    pageInfo: PageInfo!
+    edges: [BattleFeedEdge!]!
+  }
+
   union TournamentResponse = TournamentResponseSuccess | ResponseError
   union MyTournamentResponse = MyTournamentResponseSuccess | ResponseError
+  union BattleFeedResponse = BattleFeedResponseSuccess | ResponseError
 
   extend type Query {
     tournament(id: ID!): TournamentResponse!
     myTournament(id: ID!): MyTournamentResponse!
+    battleFeed(first: Int, after: ID): BattleFeedResponse!
   }
 
   type CreateTournamentResponseSuccess {
@@ -86,6 +102,9 @@ const TournamentTypeDefs = gql`
     title: String!
     description: String!
     tournamentLink: String
+    coverPhoto: String
+    prize: String
+    tournamentDate: Timestamp!
   }
 
   input EditTournamentPayload {
@@ -94,6 +113,9 @@ const TournamentTypeDefs = gql`
     description: String
     tournamentLink: String
     magicLink: String
+    coverPhoto: String
+    prize: String
+    tournamentDate: Timestamp
   }
 
   extend type Mutation {
