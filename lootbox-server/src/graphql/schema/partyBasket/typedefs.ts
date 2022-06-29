@@ -42,7 +42,7 @@ const PartyBasketTypeDefs = gql`
     ): GetWhitelistSignaturesResponse!
   }
 
-  type CreatePartyBasketPayload {
+  input CreatePartyBasketPayload {
     address: ID!
     chainId: String!
     factory: ID!
@@ -53,7 +53,7 @@ const PartyBasketTypeDefs = gql`
     partyBasket: PartyBasket!
   }
 
-  type BulkWhitelistPayload {
+  input BulkWhitelistPayload {
     whitelistAddresses: [ID!]! # Address of the user being whitelisted
     partyBasketAddress: ID!
   }
@@ -67,7 +67,7 @@ const PartyBasketTypeDefs = gql`
     signature: PartyBasketWhitelistSignature!
   }
 
-  type RedeemSignaturePayload {
+  input RedeemSignaturePayload {
     signatureId: ID!
     message: String!
     signedMessage: String!
