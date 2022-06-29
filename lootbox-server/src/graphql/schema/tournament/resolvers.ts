@@ -22,14 +22,20 @@ import {
   DeleteTournamentResponse,
   MutationDeleteTournamentArgs,
   BattleFeedResponse,
+  QueryMyTournamentArgs,
+  QueryTournamentArgs,
+  QueryBattleFeedArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 
 const TournamentResolvers = {
   Query: {
-    tournament: async (_, { id }): Promise<TournamentResponse> => {
+    tournament: async (
+      _,
+      { id }: QueryTournamentArgs
+    ): Promise<TournamentResponse> => {
       try {
-        const tournament = await getTournamentById(id);
+        const tournament = await getTournamentById(id as TournamentID);
         if (!tournament) {
           return {
             error: {
@@ -50,7 +56,7 @@ const TournamentResolvers = {
     },
     myTournament: async (
       _,
-      { id },
+      { id }: QueryMyTournamentArgs,
       context: Context
     ): Promise<TournamentResponse> => {
       if (!context.userId) {
@@ -63,7 +69,7 @@ const TournamentResolvers = {
       }
 
       try {
-        const tournament = await getTournamentById(id);
+        const tournament = await getTournamentById(id as TournamentID);
         if (!tournament) {
           return {
             error: {
@@ -92,9 +98,12 @@ const TournamentResolvers = {
     },
     battleFeed: async (
       _,
-      { first, after }: { first: number; after: TournamentID }
+      { first, after }: QueryBattleFeedArgs
     ): Promise<BattleFeedResponse> => {
-      const response = await paginateBattleFeedQuery(first, after);
+      const response = await paginateBattleFeedQuery(
+        first,
+        after as TournamentID | null | undefined
+      );
       return response;
     },
   },

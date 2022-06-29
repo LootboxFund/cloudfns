@@ -69,7 +69,7 @@ const TournamentTypeDefs = gql`
   extend type Query {
     tournament(id: ID!): TournamentResponse!
     myTournament(id: ID!): MyTournamentResponse!
-    battleFeed(first: Int, after: ID): BattleFeedResponse!
+    battleFeed(first: Int!, after: ID): BattleFeedResponse!
   }
 
   type CreateTournamentResponseSuccess {

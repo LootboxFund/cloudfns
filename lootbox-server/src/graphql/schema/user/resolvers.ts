@@ -16,6 +16,7 @@ import {
   MutationRemoveWalletArgs,
   RemoveWalletResponse,
   Tournament,
+  PartyBasket,
 } from "../../generated/types";
 import {
   getUser,
@@ -24,7 +25,7 @@ import {
   createUser,
   createUserWallet,
   getLootboxSnapshotsForWallet,
-  getUserWalletById,
+  getUserPartyBaskets,
   deleteWallet,
   getUserTournaments,
 } from "../../../api/firestore";
@@ -83,6 +84,12 @@ const UserResolvers = {
     tournaments: async (user: User): Promise<Tournament[]> => {
       const tournaments = await getUserTournaments(user.id as UserID);
       return tournaments.filter((tourny) => !tourny.timestamps.deletedAt);
+    },
+    partyBaskets: async (user: User): Promise<PartyBasket[]> => {
+      const partyBaskets = await getUserPartyBaskets(user.id as UserID);
+      return partyBaskets.filter(
+        (partyBasket) => !partyBasket.timestamps.deletedAt
+      );
     },
   },
   Wallet: {

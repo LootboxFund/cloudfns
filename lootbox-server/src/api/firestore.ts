@@ -17,6 +17,8 @@ import {
   User,
   Wallet,
   PageInfo,
+  PartyBasketWhitelistSignature,
+  PartyBasket,
 } from "../graphql/generated/types";
 import { Address } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
@@ -26,6 +28,8 @@ import {
   LootboxID,
   TournamentID,
   WalletID,
+  PartyBasketID,
+  WhitelistSignatureID,
 } from "../lib/types";
 
 // TODO: extract this to helpers
@@ -35,6 +39,8 @@ export enum Collection {
   "User" = "user",
   "Wallet" = "wallet",
   "Tournament" = "tournament",
+  "PartyBasket" = "party-basket",
+  "WhitelistSignature" = "whitelist-signature",
 }
 
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
@@ -139,6 +145,23 @@ export const getUserWallets = async (
     return [];
   } else {
     return walletSnapshot.docs.map((doc) => {
+      return doc.data();
+    });
+  }
+};
+
+export const getUserPartyBaskets = async (
+  id: UserID
+): Promise<PartyBasket[]> => {
+  const partyBaskets = db
+    .collection(Collection.PartyBasket)
+    .where("creatorId", "==", id) as Query<PartyBasket>;
+
+  const partyBasketSnapshot = await partyBaskets.get();
+  if (partyBasketSnapshot.empty) {
+    return [];
+  } else {
+    return partyBasketSnapshot.docs.map((doc) => {
       return doc.data();
     });
   }
@@ -396,6 +419,76 @@ export const deleteWallet = async (
   return;
 };
 
+export const getPartyBasketByAddress = async (
+  address: Address
+): Promise<PartyBasket | undefined> => {
+  const collectionRef = db
+    .collection(Collection.PartyBasket)
+    .where("address", "==", address) as Query<PartyBasket>;
+
+  const collectionSnapshot = await collectionRef.get();
+
+  if (collectionSnapshot.empty) {
+    return undefined;
+  } else {
+    const doc = collectionSnapshot.docs[0];
+    const data = doc.data();
+    return {
+      id: doc.id,
+      address: data.address,
+      factory: data.factory,
+      creatorId: data.creatorId,
+      name: data.name,
+      chainId: data.chainId,
+      timestamps: {
+        ...data.timestamps,
+      },
+    };
+  }
+};
+
+export const getWhitelistSignaturesByAddress = async (
+  whitelistedAddress: Address
+): Promise<PartyBasketWhitelistSignature[]> => {
+  const collectionRef = db
+    .collectionGroup(Collection.WhitelistSignature)
+    .where(
+      "whitelistedAddress",
+      "==",
+      whitelistedAddress
+    ) as Query<PartyBasketWhitelistSignature>;
+
+  const collectionSnapshot = await collectionRef.get();
+
+  if (collectionSnapshot.empty) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return data;
+    });
+  }
+};
+
+export const getWhitelistSignature = async (
+  id: WhitelistSignatureID,
+  partyBasketId: PartyBasketID
+): Promise<PartyBasketWhitelistSignature | undefined> => {
+  const ref = db
+    .collection(Collection.PartyBasket)
+    .doc(partyBasketId)
+    .collection(Collection.WhitelistSignature)
+    .doc(id) as DocumentReference<PartyBasketWhitelistSignature>;
+
+  const snapshot = await ref.get();
+
+  if (!snapshot.exists) {
+    return undefined;
+  } else {
+    return snapshot.data();
+  }
+};
+
 export const getUserTournaments = async (
   userId: UserID
 ): Promise<Tournament[]> => {
@@ -432,7 +525,7 @@ export const getUserTournaments = async (
 
 export const paginateBattleFeedQuery = async (
   limit: number,
-  cursor: TournamentID
+  cursor?: TournamentID | null
 ): Promise<{
   totalCount: number;
   edges: BattleFeedEdge[];
@@ -485,4 +578,96 @@ export const paginateBattleFeedQuery = async (
       },
     };
   }
+};
+
+interface CreateWhitelistSignatureRequest {
+  signature: string;
+  signer: Address;
+  whitelistedAddress: Address;
+  partyBasketId: PartyBasketID;
+  partyBasketAddress: Address;
+}
+export const createWhitelistSignature = async ({
+  signature,
+  signer,
+  whitelistedAddress,
+  partyBasketId,
+  partyBasketAddress,
+}: CreateWhitelistSignatureRequest): Promise<PartyBasketWhitelistSignature> => {
+  const signatureRef = db
+    .collection(Collection.PartyBasket)
+    .doc(partyBasketId)
+    .collection(Collection.WhitelistSignature)
+    .doc() as DocumentReference<PartyBasketWhitelistSignature>;
+
+  const signatureDocument = {
+    isRedeemed: false,
+    partyBasketAddress,
+    whitelistedAddress,
+    signature,
+    signer,
+    timestamps: {
+      createdAt: Timestamp.now().toMillis(),
+      updatedAt: Timestamp.now().toMillis(),
+    },
+  };
+
+  await signatureRef.set(signatureDocument);
+
+  return signatureDocument;
+};
+
+export const redeemSignature = async (
+  signatureId: WhitelistSignatureID,
+  partyBasketId: PartyBasketID
+): Promise<PartyBasketWhitelistSignature> => {
+  const signatureRef = db
+    .collection(Collection.PartyBasket)
+    .doc(partyBasketId)
+    .collection(Collection.WhitelistSignature)
+    .doc(signatureId) as DocumentReference<PartyBasketWhitelistSignature>;
+
+  const updatePayload: Partial<PartyBasketWhitelistSignature> = {
+    isRedeemed: true,
+  };
+
+  await signatureRef.update(updatePayload);
+
+  return (await signatureRef.get()).data() as PartyBasketWhitelistSignature;
+};
+
+interface CreatePartyBasketRequest {
+  address: Address;
+  factory: Address;
+  creatorId: UserIdpID | UserID;
+  name: string;
+  chainId: string;
+}
+export const createPartyBasket = async ({
+  address,
+  factory,
+  creatorId,
+  name,
+  chainId,
+}: CreatePartyBasketRequest) => {
+  const partyBasketRef = db
+    .collection(Collection.PartyBasket)
+    .doc() as DocumentReference<PartyBasket>;
+
+  const partyBasketDocument = {
+    id: partyBasketRef.id,
+    address,
+    factory,
+    creatorId,
+    name,
+    chainId,
+    timestamps: {
+      createdAt: Timestamp.now().toMillis(),
+      updatedAt: Timestamp.now().toMillis(),
+    },
+  };
+
+  await partyBasketRef.set(partyBasketDocument);
+
+  return partyBasketDocument;
 };
