@@ -12,8 +12,10 @@ const PartyBasketTypeDefs = gql`
     address: ID!
     factory: ID!
     creatorId: ID!
+    creatorAddress: ID!
+    lootboxAddress: ID!
     name: String!
-    chainId: String!
+    chainIdHex: String!
     timestamps: PartyBasketTimestamps!
     # whitelistSignatures: [String!]
   }
@@ -44,9 +46,11 @@ const PartyBasketTypeDefs = gql`
 
   input CreatePartyBasketPayload {
     address: ID!
-    chainId: String!
+    chainIdHex: String!
     factory: ID!
     name: String!
+    lootboxAddress: ID!
+    creatorAddress: ID!
   }
 
   type CreatePartyBasketResponseSuccess {

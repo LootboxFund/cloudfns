@@ -150,6 +150,26 @@ export const getUserWallets = async (
   }
 };
 
+export const getUserPartyBasketsForLootbox = async (
+  id: UserID,
+  lootbox: Address
+): Promise<PartyBasket[]> => {
+  const partyBaskets = db
+    .collection(Collection.PartyBasket)
+    .where("creatorId", "==", id)
+    .where("lootboxAddress", "==", lootbox)
+    .where("timestamps.deletedAt", "==", null) as Query<PartyBasket>;
+
+  const partyBasketSnapshot = await partyBaskets.get();
+  if (partyBasketSnapshot.empty) {
+    return [];
+  } else {
+    return partyBasketSnapshot.docs.map((doc) => {
+      return doc.data();
+    });
+  }
+};
+
 export const getUserPartyBaskets = async (
   id: UserID
 ): Promise<PartyBasket[]> => {
@@ -439,7 +459,9 @@ export const getPartyBasketByAddress = async (
       factory: data.factory,
       creatorId: data.creatorId,
       name: data.name,
-      chainId: data.chainId,
+      chainIdHex: data.chainIdHex,
+      lootboxAddress: data.lootboxAddress,
+      creatorAddress: data.creatorAddress,
       timestamps: {
         ...data.timestamps,
       },
@@ -641,14 +663,18 @@ interface CreatePartyBasketRequest {
   factory: Address;
   creatorId: UserIdpID | UserID;
   name: string;
-  chainId: string;
+  chainIdHex: string;
+  lootboxAddress: Address;
+  creatorAddress: Address;
 }
 export const createPartyBasket = async ({
   address,
   factory,
   creatorId,
   name,
-  chainId,
+  chainIdHex,
+  lootboxAddress,
+  creatorAddress,
 }: CreatePartyBasketRequest) => {
   const partyBasketRef = db
     .collection(Collection.PartyBasket)
@@ -660,10 +686,13 @@ export const createPartyBasket = async ({
     factory,
     creatorId,
     name,
-    chainId,
+    lootboxAddress,
+    chainIdHex,
+    creatorAddress,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
+      deletedAt: null,
     },
   };
 

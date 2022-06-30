@@ -103,8 +103,10 @@ const PartyBasketResolvers: Resolvers = {
           address: payload.address as Address,
           factory: payload.factory as Address,
           name: payload.name,
-          chainId: payload.chainId,
+          chainIdHex: payload.chainIdHex,
           creatorId: context.userId,
+          lootboxAddress: payload.lootboxAddress as Address,
+          creatorAddress: payload.creatorAddress as Address,
         });
 
         return {
@@ -201,7 +203,7 @@ const PartyBasketResolvers: Resolvers = {
             const nonce = generateNonce();
 
             const signature = await whitelistPartyBasketSignature(
-              partyBasket.chainId,
+              partyBasket.chainIdHex,
               partyBasket.address,
               whitelistAddress,
               whitelisterPrivateKey,

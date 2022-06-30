@@ -104,6 +104,7 @@ const LootboxTypeDefs = gql`
     metadata: LootboxMetadata!
 
     tournamentMetadata: TournamentMetadata # Optional, if lootboxes are associated to a tournament - TODO: refactor this to be a subcollection under the tournament collection
+    partyBaskets: [PartyBasket!]
   }
 
   type LootboxSnapshotTimestamps {
