@@ -18,7 +18,7 @@ const PartyBasketTypeDefs = gql`
     chainIdHex: String!
     timestamps: PartyBasketTimestamps!
     lootboxSnapshot: LootboxSnapshot
-    # whitelistSignatures: [String!]
+    # whitelistSignatures: [PartyBasketWhitelistSignature!]
   }
 
   type PartyBasketWhitelistSignature {
@@ -45,10 +45,6 @@ const PartyBasketTypeDefs = gql`
     | ResponseError
 
   extend type Query {
-    getWhitelistSignatures(
-      message: String!
-      signedMessage: String!
-    ): GetWhitelistSignaturesResponse!
     getPartyBasket(address: ID!): GetPartyBasketResponse!
   }
 
@@ -86,6 +82,11 @@ const PartyBasketTypeDefs = gql`
     partyBasketId: ID!
   }
 
+  input GetWhitelistSignaturesPayload {
+    message: String!
+    signedMessage: String!
+  }
+
   union RedeemSignatureResponse = RedeemSignatureResponseSuccess | ResponseError
 
   union CreatePartyBasketResponse =
@@ -100,6 +101,9 @@ const PartyBasketTypeDefs = gql`
     ): CreatePartyBasketResponse!
     bulkWhitelist(payload: BulkWhitelistPayload!): BulkWhitelistResponse!
     redeemSignature(payload: RedeemSignaturePayload!): RedeemSignatureResponse!
+    getWhitelistSignatures(
+      payload: GetWhitelistSignaturesPayload!
+    ): GetWhitelistSignaturesResponse!
   }
 `;
 

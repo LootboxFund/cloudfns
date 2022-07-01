@@ -1,6 +1,5 @@
 import {
   Resolvers,
-  QueryGetWhitelistSignaturesArgs,
   MutationCreatePartyBasketArgs,
   MutationBulkWhitelistArgs,
   BulkWhitelistResponse,
@@ -13,6 +12,7 @@ import {
   GetPartyBasketResponse,
   QueryGetPartyBasketArgs,
   LootboxSnapshot,
+  MutationGetWhitelistSignaturesArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -28,6 +28,7 @@ import {
 import { getSecret } from "../../../api/secrets";
 import { manifest } from "../../../manifest";
 import {
+  validatePartyBasketSignature,
   validateSignature,
   whitelistPartyBasketSignature,
 } from "../../../api/ethers";
@@ -41,52 +42,6 @@ import { convertLootboxToSnapshot } from "../../../lib/lootbox";
 
 const PartyBasketResolvers: Resolvers = {
   Query: {
-    getWhitelistSignatures: async (
-      _,
-      args: QueryGetWhitelistSignaturesArgs
-    ): Promise<GetWhitelistSignaturesResponse> => {
-      let address: Address;
-      let nonce: string;
-
-      try {
-        const res = await validateSignature(args?.message, args?.signedMessage);
-
-        address = res.address;
-        nonce = res.nonce;
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-
-      try {
-        const partyBasket = await getPartyBasketByAddress(address as Address);
-        if (!partyBasket) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: `PartyBasket not found`,
-            },
-          };
-        }
-        const whitelistSignature = await getWhitelistSignaturesByAddress(
-          address
-        );
-        return {
-          signatures: whitelistSignature,
-        };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-    },
     getPartyBasket: async (
       _,
       args: QueryGetPartyBasketArgs
@@ -137,6 +92,55 @@ const PartyBasketResolvers: Resolvers = {
   },
 
   Mutation: {
+    /**
+     * Gets the party basket whitelist signatures, authenticated by a simple signature.
+     *
+     * This is a Mutation, because TODO: we need to add the Nonce to the database to avoid reuse
+     */
+    getWhitelistSignatures: async (
+      _,
+      { payload }: MutationGetWhitelistSignaturesArgs
+    ): Promise<GetWhitelistSignaturesResponse> => {
+      let address: Address;
+      let nonce: string;
+      let partyBasketAddress: Address;
+
+      try {
+        const res = await validatePartyBasketSignature(
+          payload?.message,
+          payload?.signedMessage
+        );
+
+        address = res.address;
+        nonce = res.nonce;
+        partyBasketAddress = res.partyBasket;
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+
+      try {
+        // TODO: add the nonce to the database to avoid reuse
+        const whitelistSignatures = await getWhitelistSignaturesByAddress(
+          address,
+          partyBasketAddress
+        );
+        return {
+          signatures: whitelistSignatures,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     createPartyBasket: async (
       _,
       { payload }: MutationCreatePartyBasketArgs,

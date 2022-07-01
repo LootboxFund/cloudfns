@@ -485,14 +485,16 @@ export const getPartyBasketByAddress = async (
 };
 
 export const getWhitelistSignaturesByAddress = async (
-  whitelistedAddress: Address
+  whitelistedAddress: Address,
+  partyBasketAddress: Address
 ): Promise<PartyBasketWhitelistSignature[]> => {
   const collectionRef = db
     .collectionGroup(Collection.WhitelistSignature)
+    .where("whitelistedAddress", "==", whitelistedAddress)
     .where(
-      "whitelistedAddress",
+      "partyBasketAddress",
       "==",
-      whitelistedAddress
+      partyBasketAddress
     ) as Query<PartyBasketWhitelistSignature>;
 
   const collectionSnapshot = await collectionRef.get();
