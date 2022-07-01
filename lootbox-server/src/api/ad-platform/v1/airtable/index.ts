@@ -1,5 +1,6 @@
 import * as Airtable from "airtable";
 import { FieldSet } from "airtable";
+import { IAirtableAdSetRecord } from "./transformer";
 
 const AD_SETS_AIRTABLE = "appzkVG6HRIr325X7";
 
@@ -8,11 +9,11 @@ export const initAirtable = async () => {
   await Airtable.configure({ apiKey: process.env.AIRTABLE_API_KEY });
 };
 
-export const getScrollFeedAds = async (): Promise<FieldSet[]> => {
+export const getScrollFeedAds = async (): Promise<IAirtableAdSetRecord[]> => {
   console.log(`Querying base ${AD_SETS_AIRTABLE}`);
   const base = Airtable.base(AD_SETS_AIRTABLE);
-  const p: Promise<FieldSet[]> = new Promise((res, rej) => {
-    const adSets: FieldSet[] = [];
+  const p: Promise<IAirtableAdSetRecord[]> = new Promise((res, rej) => {
+    const adSets: IAirtableAdSetRecord[] = [];
     base("Ad Sets")
       .select({
         // Selecting the first 3 records in Grid view:

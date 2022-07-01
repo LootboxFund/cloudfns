@@ -1,3 +1,4 @@
+export type AirtableRecordID = string & { readonly _: unique symbol };
 export type AdID = string & { readonly _: unique symbol };
 export type AdSetID = string & { readonly _: unique symbol };
 export type CampaignID = string & { readonly _: unique symbol };
@@ -14,11 +15,18 @@ export enum AdEventType {
   CLICK = "CLICK",
 }
 
+export enum AdType {
+  CAROUSEL = "Carousel",
+  TRAILER = "Trailer",
+  SOCIAL_PREVIEW = "Social Preview",
+  ACTIVATION_ASK = "Activation Ask",
+}
+
 export enum AdCreativeType {
-  IMAGE = "IMAGE",
-  GIF = "GIF",
-  VIDEO = "VIDEO",
-  URL = "URL",
+  IMAGE = "Image",
+  GIF = "Gif",
+  VIDEO = "Video",
+  URL = "Url",
 }
 
 export enum SocialNetwork {
