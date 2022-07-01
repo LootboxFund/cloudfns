@@ -173,6 +173,7 @@ const PartyBasketResolvers: Resolvers = {
           creatorId: context.userId,
           lootboxAddress: payload.lootboxAddress as Address,
           creatorAddress: payload.creatorAddress as Address,
+          nftBountyValue: payload.nftBountyValue || undefined,
         });
 
         return {

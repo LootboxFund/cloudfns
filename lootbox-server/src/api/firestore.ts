@@ -477,6 +477,7 @@ export const getPartyBasketByAddress = async (
       chainIdHex: data.chainIdHex,
       lootboxAddress: data.lootboxAddress,
       creatorAddress: data.creatorAddress,
+      nftBountyValue: data.nftBountyValue || null,
       timestamps: {
         ...data.timestamps,
       },
@@ -683,6 +684,7 @@ interface CreatePartyBasketRequest {
   chainIdHex: string;
   lootboxAddress: Address;
   creatorAddress: Address;
+  nftBountyValue?: string;
 }
 export const createPartyBasket = async ({
   address,
@@ -692,12 +694,13 @@ export const createPartyBasket = async ({
   chainIdHex,
   lootboxAddress,
   creatorAddress,
+  nftBountyValue,
 }: CreatePartyBasketRequest) => {
   const partyBasketRef = db
     .collection(Collection.PartyBasket)
     .doc() as DocumentReference<PartyBasket>;
 
-  const partyBasketDocument = {
+  const partyBasketDocument: PartyBasket = {
     id: partyBasketRef.id,
     address,
     factory,
@@ -712,6 +715,10 @@ export const createPartyBasket = async ({
       deletedAt: null,
     },
   };
+
+  if (nftBountyValue) {
+    partyBasketDocument.nftBountyValue = nftBountyValue;
+  }
 
   await partyBasketRef.set(partyBasketDocument);
 
