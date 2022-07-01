@@ -36,7 +36,7 @@ const TournamentResolvers = {
     ): Promise<TournamentResponse> => {
       try {
         const tournament = await getTournamentById(id as TournamentID);
-        if (!tournament) {
+        if (!tournament || !!tournament.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
@@ -70,7 +70,7 @@ const TournamentResolvers = {
 
       try {
         const tournament = await getTournamentById(id as TournamentID);
-        if (!tournament) {
+        if (!tournament || !!tournament.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
@@ -179,6 +179,13 @@ const TournamentResolvers = {
             error: {
               code: StatusCode.Forbidden,
               message: `You do not own this tournament`,
+            },
+          };
+        } else if (!!tournament?.timestamps?.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.InvalidOperation,
+              message: `Tournament is deleted`,
             },
           };
         }
