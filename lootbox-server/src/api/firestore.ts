@@ -439,6 +439,21 @@ export const deleteWallet = async (
   return;
 };
 
+export const getPartyBasketById = async (
+  id: PartyBasketID
+): Promise<PartyBasket | undefined> => {
+  const partyBasketRef = db
+    .collection(Collection.PartyBasket)
+    .doc(id) as DocumentReference<PartyBasket>;
+
+  const partyBasketSnapshot = await partyBasketRef.get();
+  if (!partyBasketSnapshot.exists) {
+    return undefined;
+  } else {
+    return partyBasketSnapshot.data();
+  }
+};
+
 export const getPartyBasketByAddress = async (
   address: Address
 ): Promise<PartyBasket | undefined> => {

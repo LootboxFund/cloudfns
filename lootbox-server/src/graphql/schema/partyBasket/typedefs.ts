@@ -17,6 +17,7 @@ const PartyBasketTypeDefs = gql`
     name: String!
     chainIdHex: String!
     timestamps: PartyBasketTimestamps!
+    lootboxSnapshot: LootboxSnapshot
     # whitelistSignatures: [String!]
   }
 
@@ -28,6 +29,12 @@ const PartyBasketTypeDefs = gql`
     isRedeemed: Boolean!
     timestamps: PartyBasketTimestamps!
   }
+
+  type GetPartyBasketResponseSuccess {
+    partyBasket: PartyBasket!
+  }
+
+  union GetPartyBasketResponse = GetPartyBasketResponseSuccess | ResponseError
 
   type GetWhitelistSignaturesResponseSuccess {
     signatures: [PartyBasketWhitelistSignature]!
@@ -42,6 +49,7 @@ const PartyBasketTypeDefs = gql`
       message: String!
       signedMessage: String!
     ): GetWhitelistSignaturesResponse!
+    getPartyBasket(address: ID!): GetPartyBasketResponse!
   }
 
   input CreatePartyBasketPayload {

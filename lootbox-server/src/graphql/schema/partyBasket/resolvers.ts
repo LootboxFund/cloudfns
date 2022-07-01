@@ -10,6 +10,9 @@ import {
   MutationRedeemSignatureArgs,
   GetWhitelistSignaturesResponse,
   RedeemSignatureResponse,
+  GetPartyBasketResponse,
+  QueryGetPartyBasketArgs,
+  LootboxSnapshot,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -19,6 +22,8 @@ import {
   getWhitelistSignature,
   getWhitelistSignaturesByAddress,
   redeemSignature,
+  getPartyBasketById,
+  getLootboxByAddress,
 } from "../../../api/firestore";
 import { getSecret } from "../../../api/secrets";
 import { manifest } from "../../../manifest";
@@ -32,13 +37,14 @@ import { ethers } from "ethers";
 import { PartyBasketID, WhitelistSignatureID } from "../../../lib/types";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import { convertLootboxToSnapshot } from "../../../lib/lootbox";
 
 const PartyBasketResolvers: Resolvers = {
   Query: {
     getWhitelistSignatures: async (
       _,
       args: QueryGetWhitelistSignaturesArgs
-    ) => {
+    ): Promise<GetWhitelistSignaturesResponse> => {
       let address: Address;
       let nonce: string;
 
@@ -81,6 +87,53 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
     },
+    getPartyBasket: async (
+      _,
+      args: QueryGetPartyBasketArgs
+    ): Promise<GetPartyBasketResponse> => {
+      try {
+        const partyBasket = await getPartyBasketByAddress(
+          args.address as Address
+        );
+        if (!partyBasket) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Party Basket not found`,
+            },
+          };
+        }
+        return {
+          partyBasket,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+
+  PartyBasket: {
+    lootboxSnapshot: async (
+      partyBasket: PartyBasket
+    ): Promise<LootboxSnapshot | null> => {
+      try {
+        const lootbox = await getLootboxByAddress(
+          partyBasket.lootboxAddress as Address
+        );
+        if (!lootbox) {
+          return null;
+        }
+        return convertLootboxToSnapshot(lootbox);
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    },
   },
 
   Mutation: {
@@ -88,12 +141,21 @@ const PartyBasketResolvers: Resolvers = {
       _,
       { payload }: MutationCreatePartyBasketArgs,
       context: Context
-    ) => {
+    ): Promise<CreatePartyBasketResponse> => {
       if (!context.userId) {
         return {
           error: {
             code: StatusCode.Unauthorized,
             message: `Unauthorized`,
+          },
+        };
+      }
+
+      if (!ethers.utils.isAddress(payload.address)) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `Invalid Party Basket address`,
           },
         };
       }
@@ -126,7 +188,7 @@ const PartyBasketResolvers: Resolvers = {
       _,
       { payload }: MutationBulkWhitelistArgs,
       context: Context
-    ) => {
+    ): Promise<BulkWhitelistResponse> => {
       if (!context.userId) {
         return {
           error: {
@@ -137,6 +199,24 @@ const PartyBasketResolvers: Resolvers = {
       }
 
       const { partyBasketAddress, whitelistAddresses } = payload;
+
+      if (whitelistAddresses.length > 50) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `Too many addresses. At free tier, you can only whitelist up to 50 addresses at a time.`,
+          },
+        };
+      }
+
+      if (!ethers.utils.isAddress(partyBasketAddress)) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `Invalid party basket address.`,
+          },
+        };
+      }
 
       let partyBasket: PartyBasket;
 
@@ -199,7 +279,10 @@ const PartyBasketResolvers: Resolvers = {
         const signer = new ethers.Wallet(whitelisterPrivateKey);
 
         const res = await Promise.allSettled(
-          payload.whitelistAddresses.map(async (whitelistAddress: string) => {
+          whitelistAddresses.map(async (whitelistAddress: string) => {
+            if (!ethers.utils.isAddress(whitelistAddress)) {
+              throw new Error("Invalid Address");
+            }
             const nonce = generateNonce();
 
             const signature = await whitelistPartyBasketSignature(
@@ -224,7 +307,6 @@ const PartyBasketResolvers: Resolvers = {
 
         const signatures: (string | null)[] = [];
         const partialErrors: (string | null)[] = [];
-
         res.forEach((result) => {
           if (result.status === "fulfilled") {
             signatures.push(result.value);
@@ -237,7 +319,7 @@ const PartyBasketResolvers: Resolvers = {
 
         return {
           signatures,
-          partialErrors,
+          errors: partialErrors.every((err) => !!err) ? partialErrors : null,
         };
       } catch (err) {
         console.error(err);
@@ -249,7 +331,10 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
     },
-    redeemSignature: async (_, { payload }: MutationRedeemSignatureArgs) => {
+    redeemSignature: async (
+      _,
+      { payload }: MutationRedeemSignatureArgs
+    ): Promise<RedeemSignatureResponse> => {
       let address: Address;
       let nonce: string;
 
@@ -322,6 +407,19 @@ const PartyBasketResolvers: Resolvers = {
     },
   },
 
+  GetPartyBasketResponse: {
+    __resolveType: (obj: GetPartyBasketResponse) => {
+      if ("partyBasket" in obj) {
+        return "GetPartyBasketResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
   CreatePartyBasketResponse: {
     __resolveType: (obj: CreatePartyBasketResponse) => {
       if ("partyBasket" in obj) {
@@ -337,7 +435,7 @@ const PartyBasketResolvers: Resolvers = {
 
   BulkWhitelistResponse: {
     __resolveType: (obj: BulkWhitelistResponse) => {
-      if ("signature" in obj) {
+      if ("signatures" in obj) {
         return "BulkWhitelistResponseSuccess";
       }
       if ("error" in obj) {
