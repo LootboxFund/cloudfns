@@ -4,7 +4,6 @@ const CommonTypeDefs = gql`
   scalar EmailAddress
   scalar PhoneNumber
   scalar Timestamp
-  scalar Any
 
   enum StatusCode {
     Success
