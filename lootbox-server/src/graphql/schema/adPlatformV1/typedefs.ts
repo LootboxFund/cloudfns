@@ -1,13 +1,6 @@
 import { gql } from "apollo-server";
 
 const AdPlatformV1TypeDefs = gql`
-  enum AdZone {
-    SCROLL_FEED
-    FOCUS_TRAILER
-    SOCIAL_PREVIEW
-    ACTIVATION_ASK
-  }
-
   enum ScrollAdCreativeType {
     IMAGE
     GIF
@@ -17,8 +10,7 @@ const AdPlatformV1TypeDefs = gql`
   type ScrollFeedAd {
     title: String!
     description: String!
-    creatives: [ScrollFeedAdCreative!]
-    slug: AdZone!
+    creatives: [ScrollFeedAdCreative!]!
   }
 
   type ScrollFeedAdCreative {
@@ -28,7 +20,7 @@ const AdPlatformV1TypeDefs = gql`
   }
 
   type AdsScrollFeedV1ResponseSuccess {
-    scrollFeedAds: [Any!]
+    scrollFeedAds: [ScrollFeedAd!]!
   }
 
   union AdsScrollFeedV1Response = AdsScrollFeedV1ResponseSuccess | ResponseError
@@ -37,9 +29,5 @@ const AdPlatformV1TypeDefs = gql`
     myScrollFeed: AdsScrollFeedV1Response!
   }
 `;
-
-// type AdsScrollFeedV1ResponseSuccess {
-//   scrollFeedAds: [ScrollFeedAd!]
-// }
 
 export default AdPlatformV1TypeDefs;

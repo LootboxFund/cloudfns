@@ -1,5 +1,6 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { retrieveScrollFeedAds } from "../../../api/ad-platform/v1";
+import { getScrollFeedAds } from "../../../api/ad-platform/v1/scrollFeed";
+
 import { AdsScrollFeedV1Response, StatusCode } from "../../generated/types";
 import { Context } from "../../server";
 
@@ -20,7 +21,7 @@ const AdPlatformResolversV1 = {
       // }
 
       try {
-        const scrollFeedAds = await retrieveScrollFeedAds();
+        const scrollFeedAds = await getScrollFeedAds();
         return { scrollFeedAds };
       } catch (err) {
         return {
@@ -34,7 +35,7 @@ const AdPlatformResolversV1 = {
   },
   AdsScrollFeedV1Response: {
     __resolveType: (obj: AdsScrollFeedV1Response) => {
-      if ("adsScrollFeedV1" in obj) {
+      if ("scrollFeedAds" in obj) {
         return "AdsScrollFeedV1ResponseSuccess";
       }
       if ("error" in obj) {

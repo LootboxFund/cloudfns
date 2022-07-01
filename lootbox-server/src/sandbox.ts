@@ -9,7 +9,6 @@ const main = async () => {
   const records = await getScrollFeedAds();
   console.log(`---- GOT RECORDS ----`);
   console.log(records[0]);
-  console.log(JSON.stringify(records[0].fields));
 };
 
 main();
