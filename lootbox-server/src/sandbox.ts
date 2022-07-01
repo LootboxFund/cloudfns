@@ -2,7 +2,7 @@ require("dotenv").config();
 import {
   getScrollFeedAds,
   initAirtable,
-} from "./api/ad-platform/v1/airtable/index";
+} from "./api/ad-platform/v1/scrollFeed/index";
 
 const main = async () => {
   await initAirtable();

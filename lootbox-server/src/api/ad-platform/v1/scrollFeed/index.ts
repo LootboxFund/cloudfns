@@ -1,24 +1,23 @@
 import * as Airtable from "airtable";
-import { FieldSet } from "airtable";
-import { IAirtableAdSetRecord } from "./transformer";
+import { ScrollFeedAdSetRecord } from "./scrollFeed.types";
 
-const AD_SETS_AIRTABLE = "appzkVG6HRIr325X7";
+const SCROLL_FEED_AD_SETS_AIRTABLE = "appdaZ0qJ6RnF1m0Y";
 
 export const initAirtable = async () => {
   console.log("Initializing Airtable...");
   await Airtable.configure({ apiKey: process.env.AIRTABLE_API_KEY });
 };
 
-export const getScrollFeedAds = async (): Promise<IAirtableAdSetRecord[]> => {
-  console.log(`Querying base ${AD_SETS_AIRTABLE}`);
-  const base = Airtable.base(AD_SETS_AIRTABLE);
-  const p: Promise<IAirtableAdSetRecord[]> = new Promise((res, rej) => {
-    const adSets: IAirtableAdSetRecord[] = [];
-    base("Ad Sets")
+export const getScrollFeedAds = async (): Promise<ScrollFeedAdSetRecord[]> => {
+  console.log(`Querying base ${SCROLL_FEED_AD_SETS_AIRTABLE}`);
+  const base = Airtable.base(SCROLL_FEED_AD_SETS_AIRTABLE);
+  const p: Promise<ScrollFeedAdSetRecord[]> = new Promise((res, rej) => {
+    const adSets: ScrollFeedAdSetRecord[] = [];
+    base("Scroll Feed AdSet")
       .select({
         // Selecting the first 3 records in Grid view:
         maxRecords: 50,
-        view: "Active Ad Sets - Scroll Feed",
+        view: "Active",
       })
       .eachPage(
         function page(records, fetchNextPage) {

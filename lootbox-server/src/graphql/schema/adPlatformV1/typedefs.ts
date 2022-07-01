@@ -8,24 +8,23 @@ const AdPlatformV1TypeDefs = gql`
     ACTIVATION_ASK
   }
 
-  enum AdCreativeType {
+  enum ScrollAdCreativeType {
     IMAGE
     GIF
     VIDEO
-    URL
   }
 
   type ScrollFeedAd {
     title: String!
     description: String!
-    creatives: [AdCreative!]
+    creatives: [ScrollFeedAdCreative!]
     slug: AdZone!
   }
 
-  type AdCreative {
+  type ScrollFeedAdCreative {
     alias: String!
     url: String!
-    type: AdCreativeType!
+    type: ScrollAdCreativeType!
   }
 
   type AdsScrollFeedV1ResponseSuccess {
