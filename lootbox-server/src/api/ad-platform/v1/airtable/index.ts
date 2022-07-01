@@ -1,13 +1,15 @@
 import * as Airtable from "airtable";
 import { FieldSet } from "airtable";
 
-const AD_SETS_AIRTABLE = "tbl5ngJHkqd2lRiR1";
+const AD_SETS_AIRTABLE = "appzkVG6HRIr325X7";
 
 export const initAirtable = async () => {
-  Airtable.configure({ apiKey: process.env.AIRTABLE_API_KEY });
+  console.log("Initializing Airtable...");
+  await Airtable.configure({ apiKey: process.env.AIRTABLE_API_KEY });
 };
 
 export const getScrollFeedAds = async (): Promise<FieldSet[]> => {
+  console.log(`Querying base ${AD_SETS_AIRTABLE}`);
   const base = Airtable.base(AD_SETS_AIRTABLE);
   const p: Promise<FieldSet[]> = new Promise((res, rej) => {
     const adSets: FieldSet[] = [];

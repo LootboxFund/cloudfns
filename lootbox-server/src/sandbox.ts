@@ -6,7 +6,9 @@ import {
 
 const main = async () => {
   await initAirtable();
-  // await getScrollFeedAds();
+  const records = await getScrollFeedAds();
+  console.log(`---- GOT RECORDS ----`);
+  console.log(records);
 };
 
 main();
