@@ -376,7 +376,7 @@ const PartyBasketResolvers: Resolvers = {
           };
         }
 
-        if (signatureDocument.signer !== address) {
+        if (signatureDocument.whitelistedAddress !== address) {
           return {
             error: {
               code: StatusCode.Unauthorized,

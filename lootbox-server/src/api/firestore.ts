@@ -505,7 +505,10 @@ export const getWhitelistSignaturesByAddress = async (
   } else {
     return collectionSnapshot.docs.map((doc) => {
       const data = doc.data();
-      return data;
+      return {
+        ...data,
+        id: doc.id,
+      };
     });
   }
 };
@@ -544,7 +547,7 @@ export const getUserTournaments = async (
     return tournaments.docs.map((doc) => {
       const data = doc.data();
       return {
-        id: data.id,
+        id: doc.id,
         title: data.title,
         description: data.description,
         creatorId: data.creatorId,
@@ -643,6 +646,7 @@ export const createWhitelistSignature = async ({
     .doc() as DocumentReference<PartyBasketWhitelistSignature>;
 
   const signatureDocument: PartyBasketWhitelistSignature = {
+    id: signatureRef.id,
     isRedeemed: false,
     partyBasketAddress,
     whitelistedAddress,

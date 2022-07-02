@@ -23,6 +23,7 @@ const PartyBasketTypeDefs = gql`
   }
 
   type PartyBasketWhitelistSignature {
+    id: ID!
     signature: String!
     signer: ID! # Address of the signer
     whitelistedAddress: ID! # Address of the user being whitelisted
