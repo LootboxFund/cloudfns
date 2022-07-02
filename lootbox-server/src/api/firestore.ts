@@ -626,6 +626,7 @@ interface CreateWhitelistSignatureRequest {
   whitelistedAddress: Address;
   partyBasketId: PartyBasketID;
   partyBasketAddress: Address;
+  nonce: string;
 }
 export const createWhitelistSignature = async ({
   signature,
@@ -633,6 +634,7 @@ export const createWhitelistSignature = async ({
   whitelistedAddress,
   partyBasketId,
   partyBasketAddress,
+  nonce,
 }: CreateWhitelistSignatureRequest): Promise<PartyBasketWhitelistSignature> => {
   const signatureRef = db
     .collection(Collection.PartyBasket)
@@ -640,12 +642,13 @@ export const createWhitelistSignature = async ({
     .collection(Collection.WhitelistSignature)
     .doc() as DocumentReference<PartyBasketWhitelistSignature>;
 
-  const signatureDocument = {
+  const signatureDocument: PartyBasketWhitelistSignature = {
     isRedeemed: false,
     partyBasketAddress,
     whitelistedAddress,
     signature,
     signer,
+    nonce,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),

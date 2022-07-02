@@ -304,6 +304,7 @@ const PartyBasketResolvers: Resolvers = {
               whitelistedAddress: whitelistAddress as Address,
               partyBasketId: partyBasket.id as PartyBasketID,
               partyBasketAddress: partyBasketAddress as Address,
+              nonce,
             });
 
             return signature;
@@ -453,7 +454,7 @@ const PartyBasketResolvers: Resolvers = {
 
   GetWhitelistSignaturesResponse: {
     __resolveType: (obj: GetWhitelistSignaturesResponse) => {
-      if ("signature" in obj) {
+      if ("signatures" in obj) {
         return "GetWhitelistSignaturesResponseSuccess";
       }
       if ("error" in obj) {

@@ -29,6 +29,7 @@ const PartyBasketTypeDefs = gql`
     partyBasketAddress: ID!
     isRedeemed: Boolean!
     timestamps: PartyBasketTimestamps!
+    nonce: String!
   }
 
   type GetPartyBasketResponseSuccess {
