@@ -7,7 +7,6 @@ export const getSecret = async (
   secretName: string,
   secretVersion: number | string
 ): Promise<string> => {
-  console.log("fetching secret", secretName, secretVersion);
   const [secretPayload] = await client.accessSecretVersion({
     name: `projects/${manifest.googleCloud.projectID}/secrets/${secretName}/versions/${secretVersion}`,
   });

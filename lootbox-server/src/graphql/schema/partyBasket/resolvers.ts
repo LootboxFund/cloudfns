@@ -251,9 +251,9 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
-      const secretConfig = manifest.secretManager.secrets.find((secret) => {
-        secret.name === "PARTY_BASKET_WHITELISTER_PRIVATE_KEY";
-      });
+      const secretConfig = manifest.secretManager.secrets.find(
+        (secret) => secret.name === "PARTY_BASKET_WHITELISTER_PRIVATE_KEY"
+      );
 
       if (!secretConfig) {
         console.error(
