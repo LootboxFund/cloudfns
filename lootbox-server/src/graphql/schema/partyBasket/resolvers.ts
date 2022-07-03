@@ -256,6 +256,9 @@ const PartyBasketResolvers: Resolvers = {
       });
 
       if (!secretConfig) {
+        console.error(
+          'No secret config found for "PARTY_BASKET_WHITELISTER_PRIVATE_KEY"'
+        );
         return {
           error: {
             code: StatusCode.ServerError,
