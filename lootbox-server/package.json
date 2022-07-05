@@ -12,10 +12,13 @@
     "deploy:prod": "yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod"
   },
   "dependencies": {
+    "@google-cloud/secret-manager": "^4.0.0",
     "@graphql-tools/resolvers-composition": "^6.4.12",
     "@graphql-tools/schema": "^8.3.13",
     "@wormgraph/helpers": "^0.1.12",
+    "@wormgraph/manifest": "0.3.109",
     "apollo-server": "^3.8.1",
+    "crypto": "^1.0.1",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.8",
     "firebase-admin": "^10.2.0",

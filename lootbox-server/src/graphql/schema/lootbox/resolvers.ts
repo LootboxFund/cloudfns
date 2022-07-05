@@ -1,11 +1,17 @@
 import {
   GetLootboxByAddressResponse,
+  Lootbox,
   QueryGetLootboxByAddressArgs,
   Resolvers,
   StatusCode,
 } from "../../generated/types";
-import { getLootboxByAddress } from "../../../api/firestore";
+import {
+  getLootboxByAddress,
+  getUserPartyBasketsForLootbox,
+} from "../../../api/firestore";
 import { Address } from "@wormgraph/helpers";
+import { Context } from "../../server";
+import { UserID } from "../../../lib/types";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -24,12 +30,31 @@ const LootboxResolvers: Resolvers = {
           lootbox,
         };
       } catch (err) {
+        console.error(err);
         return {
           error: {
             code: StatusCode.ServerError,
             message: err instanceof Error ? err.message : "",
           },
         };
+      }
+    },
+  },
+
+  Lootbox: {
+    partyBaskets: async (lootbox: Lootbox, _, context: Context) => {
+      if (!context.userId) {
+        return [];
+      }
+      try {
+        const baskets = await getUserPartyBasketsForLootbox(
+          context.userId as unknown as UserID,
+          lootbox.address as Address
+        );
+        return baskets;
+      } catch (err) {
+        console.error(err);
+        return [];
       }
     },
   },

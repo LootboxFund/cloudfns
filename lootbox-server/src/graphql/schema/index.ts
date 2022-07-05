@@ -10,6 +10,8 @@ import TournamentTypeDefs from "./tournament/typedefs";
 import LootboxResolvers from "./lootbox/resolvers";
 import UserResolvers from "./user/resolvers";
 import TournamentResolvers from "./tournament/resolvers";
+import PartyBasketTypeDefs from "./partyBasket/typedefs";
+import PartyBasketResolvers from "./partyBasket/resolvers";
 
 const typeDefs = [
   ...ScalarTypeDefs,
@@ -17,6 +19,7 @@ const typeDefs = [
   LootboxTypeDefs,
   UserTypeDefs,
   TournamentTypeDefs,
+  PartyBasketTypeDefs,
 ];
 
 const resolvers = {
@@ -24,17 +27,20 @@ const resolvers = {
   ...LootboxResolvers,
   ...UserResolvers,
   ...TournamentResolvers,
+  ...PartyBasketResolvers,
   Query: {
     ...ScalarResolvers.Query,
     ...LootboxResolvers.Query,
     ...UserResolvers.Query,
     ...TournamentResolvers.Query,
+    ...PartyBasketResolvers.Query,
   },
   Mutation: {
     ...ScalarResolvers.Mutation,
     ...LootboxResolvers.Mutation,
     ...UserResolvers.Mutation,
     ...TournamentResolvers.Mutation,
+    ...PartyBasketResolvers.Mutation,
   },
 };
 

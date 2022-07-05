@@ -10,12 +10,11 @@ import {
   Wallet,
   AuthenticateWalletResponse,
   User,
-  Lootbox,
-  ResponseError,
   LootboxSnapshot,
   MutationRemoveWalletArgs,
   RemoveWalletResponse,
   Tournament,
+  PartyBasket,
 } from "../../generated/types";
 import {
   getUser,
@@ -24,9 +23,9 @@ import {
   createUser,
   createUserWallet,
   getLootboxSnapshotsForWallet,
-  getUserWalletById,
   deleteWallet,
   getUserTournaments,
+  getUserPartyBasketsForLootbox,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../api/ethers";
 import { Address } from "@wormgraph/helpers";
@@ -83,6 +82,18 @@ const UserResolvers = {
     tournaments: async (user: User): Promise<Tournament[]> => {
       const tournaments = await getUserTournaments(user.id as UserID);
       return tournaments.filter((tourny) => !tourny.timestamps.deletedAt);
+    },
+    partyBaskets: async (
+      user: User,
+      lootbox: Address
+    ): Promise<PartyBasket[]> => {
+      const partyBaskets = await getUserPartyBasketsForLootbox(
+        user.id as UserID,
+        lootbox
+      );
+      return partyBaskets.filter(
+        (partyBasket) => !partyBasket.timestamps.deletedAt
+      );
     },
   },
   Wallet: {

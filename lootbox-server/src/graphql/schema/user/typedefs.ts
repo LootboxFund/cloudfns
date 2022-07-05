@@ -20,6 +20,7 @@ const UserTypeDefs = gql`
     deletedAt: Timestamp
     wallets: [Wallet!]
     tournaments: [Tournament!]
+    partyBaskets: [PartyBasket!]
   }
 
   # Queries
