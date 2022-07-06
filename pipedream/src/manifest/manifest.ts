@@ -3,4 +3,357 @@
  * (I'm not sure how to use the JSON file with Pipedream)
  */
 
-export default {"alias":"0.6.3-demo","description":"\n    Demo version of Lootbox with Web2 + Bulk Minting!\n  ","chains":[{"slug":"BSC_TESTNET","chainIdHex":"0x61","chainIdDecimal":"97","chainName":"Binance Smart Chain (Testnet)","displayName":"BSC Testnet","nativeCurrency":{"name":"BNB","symbol":"BNB","decimals":18},"rpcUrls":["https://data-seed-prebsc-1-s1.binance.org:8545/"],"blockExplorerUrls":["https://testnet.bscscan.com/"],"currentNetworkLogo":"https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png","priceFeedUSD":"0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526"},{"slug":"POLYGON_TESTNET","chainIdHex":"0x13881","chainIdDecimal":"80001","chainName":"Polygon Mumbai (Testnet)","displayName":"Mumbai","nativeCurrency":{"name":"Matic","symbol":"MATIC","decimals":18},"rpcUrls":["https://rpc-mumbai.matic.today"],"blockExplorerUrls":["https://mumbai.polygonscan.com/"],"currentNetworkLogo":"https://firebasestorage.googleapis.com/v0/b/guildfx-exchange.appspot.com/o/assets%2Ftokens%2FMATIC_COLORED.png?alt=media","priceFeedUSD":"0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada"}],"date":"2022-06-28T01:03:13.000Z","semver":{"major":0,"minor":6,"patch":3,"prerelease":["demo"],"build":[],"id":"0.6.3-demo"},"openZeppelin":{"alias":"0.6.3-demo","multiSigs":{"0x61":{"LootboxDAO":{"alias":"LootboxDAO","address":"0xb9a608a29979421461838047BDe9166Cd7ea647f","signers":["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288"],"chainHexID":"0x61","threshold":1,"slug":"LootboxDAO"},"LootboxDAO_Treasury":{"alias":"LootboxDAO Treasury","address":"0x228586A4564B999a7CB673581d7055EcbB9287F3","signers":["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288"],"chainHexID":"0x61","threshold":1,"slug":"LootboxDAO"}},"0x13881":{"LootboxDAO":{"alias":"LootboxDAO","address":"0xae069b7d5dfe85CCf056170af7a65F6374588776","signers":["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288"],"chainHexID":"0x13881","threshold":1,"slug":"LootboxDAO"},"LootboxDAO_Treasury":{"alias":"LootboxDAO Treasury","address":"0xC2e94223edf8470f32fa318D53564ABe283960B2","signers":["0x2C83b49EdB3f00A38331028e2D8bFA3Cd93B8288"],"chainHexID":"0x13881","threshold":1,"slug":"LootboxDAO"}}},"contracts":{"0x61":{"LootboxInstantFactory":{"address":"__________________________________________","slug":"LootboxInstantFactory"},"LootboxEscrowFactory":{"address":"__________________________________________","slug":"LootboxEscrowFactory"}},"0x13881":{"LootboxInstantFactory":{"address":"__________________________________________","slug":"LootboxInstantFactory"},"LootboxEscrowFactory":{"address":"__________________________________________","slug":"LootboxEscrowFactory"}}},"secrets":[{"name":"JWT_ON_CREATE_LOOTBOX"}],"autoTasks":{"onCreateLootboxInstant":{"id":"__________________________________________","alias":"On creation of an Instant Lootbox","semver":"0.6.3-demo","slug":"onCreateLootboxInstant"},"onCreateLootboxEscrow":{"id":"__________________________________________","alias":"On creation of an Escrow Lootbox","semver":"0.6.3-demo","slug":"onCreateLootboxEscrow"}},"sentinels":{"0x61":{"onCreateLootboxInstant":{"id":"__________________________________________","alias":"[0.6.3-demo] Instant Lootbox onCreate","semver":"0.6.3-demo","slug":"onCreateLootboxInstant","ozChainSlug":"bsctest","contractWatchAddress":"__________________________________________"},"onCreateLootboxEscrow":{"id":"__________________________________________","alias":"[0.6.3-demo] Escrow Lootbox onCreate","semver":"0.6.3-demo","slug":"onCreateLootboxEscrow","ozChainSlug":"bsctest","contractWatchAddress":"__________________________________________"}},"0x13881":{"onCreateLootboxInstant":{"id":"__________________________________________","alias":"[0.6.3-demo] Instant Lootbox onCreate","semver":"0.6.3-demo","slug":"onCreateLootboxInstant","ozChainSlug":"mumbai","contractWatchAddress":"__________________________________________"},"onCreateLootboxEscrow":{"id":"__________________________________________","alias":"[0.6.3-demo] Escrow Lootbox onCreate","semver":"0.6.3-demo","slug":"onCreateLootboxEscrow","ozChainSlug":"mumbai","contractWatchAddress":"__________________________________________"}}},"semver":"0.6.3-demo"},"pipedream":{"alias":"0.6.3-demo","email":"0_4_0_demo_newton@lootbox.fund","sources":{"onCreateLootboxInstant":{"alias":"[0.6.3-demo] onCreateLootboxInstant","pipedreamID":"__________________________________________","semver":"0.1.0","webhookEndpoint":"https://__________________________________________.m.pipedream.net","slug":"0-6-3-demo-onCreateLootboxInstant"},"onCreateLootboxEscrow":{"alias":"[0.6.3-demo] onCreateLootboxEscrow","pipedreamID":"__________________________________________","semver":"0.1.0","webhookEndpoint":"https://__________________________________________.m.pipedream.net","slug":"0-6-3-demo-onCreateLootboxEscrow"}},"actions":{"onCreateLootboxInstant":{"alias":"[0.6.3-demo] onCreateLootboxInstant","pipedreamID":"__________________________________________","pipedreamSemver":"0.1.0","slug":"0-6-3-demo-onCreateLootboxInstant"},"onCreateLootboxEscrow":{"alias":"[0.6.3-demo] onCreateLootboxEscrow","pipedreamID":"__________________________________________","pipedreamSemver":"0.1.0","slug":"0-6-3-demo-onCreateLootboxEscrow"}},"semver":"0.6.3-demo"},"cloudRun":{"alias":"string","semver":"0.6.3-demo","containers":{"stampNewLootbox":{"slug":"stampNewLootbox","fullRoute":"https://stamp-nft-0-6-3-demo-wpkp2xisuq-ue.a.run.app/stamp/new/lootbox"},"stampNewTicket":{"slug":"stampNewTicket","fullRoute":"https://stamp-nft-0-6-3-demo-wpkp2xisuq-ue.a.run.app/stamp/new/ticket"},"lootboxServer":{"slug":"lootboxServer","fullRoute":"https://lootbox-server-wpkp2xisuq-ue.a.run.app/graphql"}}},"googleCloud":{"alias":"0.6.3-demo","projectID":"lootbox-fund-staging","semver":"0.6.3-demo"},"storage":{"downloadUrl":"https://storage.googleapis.com","buckets":{"abi":{"id":"lootbox-abi-staging"},"stamp":{"id":"lootbox-stamp-staging"},"data":{"id":"lootbox-data-staging"},"constants":{"id":"lootbox-constants-staging"},"widgets":{"id":"lootbox-widgets-staging"}}},"secretManager":{"secrets":[{"name":"PARTY_BASKET_WHITELISTER_PRIVATE_KEY","version":1},{"name":"OZ_DEFENDER_API_KEY","version":3},{"name":"OZ_DEFENDER_API_SECRET","version":3},{"name":"PD_ABI_UPLOADER_SECRET","version":3},{"name":"JWT_ON_CREATE_LOOTBOX","version":3},{"name":"STAMP_SECRET","version":1}]},"microfrontends":{"alias":"0.6.3-demo","semver":"0.6.3-demo","widgets":{"fundraiserPage":{"alias":"fundraiserPage","semver":"0.6.3-demo","slug":"fundraiserPage"},"createLootbox":{"alias":"createLootbox","semver":"0.6.3-demo","slug":"createLootbox"},"manageLootbox":{"alias":"manageLootbox","semver":"0.6.3-demo","slug":"manageLootbox"}},"webflow":{"alias":"0.6.0-demo","semver":"0.6.0-demo","email":"support@lootbox.fund","lootboxUrl":"https://www.lootbox.fund/demo/0-6-3-demo/buy","createPage":"https://www.lootbox.fund/demo/0-6-3-demo/create","managePage":"https://www.lootbox.fund/demo/0-6-3-demo/manage","authPage":"https://www.lootbox.fund/demo/0-6-3-demo/auth","myProfilePage":"https://www.lootbox.fund/demo/0-6-3-demo/profile","tournamentManagePage":"https://www.lootbox.fund/demo/0-6-3-demo/tournament/manage","tournamentCreatePage":"https://www.lootbox.fund/demo/0-6-3-demo/tournament/create","tournamentPublicPage":"https://www.lootbox.fund/demo/0-6-3-demo/tournament","myFundraisersPage":"https://www.lootbox.fund/demo/0-6-3-demo/my-fundraisers","myCollectionsPage":"https://www.lootbox.fund/demo/0-6-3-demo/my-collections","battleFeed":"https://www.lootbox.fund/demo/0-6-3-demo/battle-feed","basketRedeemPage":"https://www.lootbox.fund/demo/0-6-3-demo/basket/redeem","basketManagePage":"https://www.lootbox.fund/demo/0-6-3-demo/basket/manage"}},"lootbox":{"alias":"0.6.3-demo","semver":"0.6.3-demo","contracts":{"0x61":{"LootboxInstantFactory":{"address":"__________________________________________","slug":"LootboxInstantFactory","bulkMinterSuperStaff":"__________________________________________"},"LootboxEscrowFactory":{"address":"__________________________________________","slug":"LootboxEscrowFactory","bulkMinterSuperStaff":"__________________________________________"},"PartyBasketFactory":{"address":"__________________________________________","slug":"LootboxEscrowFactory","whitelister":"0xEf3a69a53F65D5bFa688Fb9FE621Aa5c41F1f9aF"}},"0x13881":{"LootboxInstantFactory":{"address":"__________________________________________","slug":"LootboxInstantFactory","bulkMinterSuperStaff":"__________________________________________"},"LootboxEscrowFactory":{"address":"__________________________________________","slug":"LootboxEscrowFactory","bulkMinterSuperStaff":"__________________________________________"},"PartyBasketFactory":{"address":"__________________________________________","slug":"LootboxEscrowFactory","whitelister":"0xEf3a69a53F65D5bFa688Fb9FE621Aa5c41F1f9aF"}}}},"firebase":{"apiKey":"AIzaSyB8NCUR9bmlBSSkjW313FWeuStrdzcfXLg","authDomain":"lootbox-fund-staging.firebaseapp.com","projectId":"lootbox-fund-staging","storageBucket":"lootbox-fund-staging.appspot.com","messagingSenderId":"874567421974","appId":"1:874567421974:web:cad45dbef9102978dca537"}};
+export default {
+  alias: "0.6.3-prod",
+  description:
+    "\n    Prod version of Lootbox with Party Basket + Bulk whitelisting!\n  ",
+  chains: [
+    {
+      chainIdHex: "0x38",
+      chainIdDecimal: "56",
+      chainName: "Binance Smart Chain",
+      displayName: "BSC Mainnet",
+      nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+      rpcUrls: ["https://bsc-dataseed.binance.org/"],
+      blockExplorerUrls: ["https://bscscan.com/"],
+      currentNetworkLogo:
+        "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png",
+      slug: "BSC_MAINNET",
+      priceFeedUSD: "0x0567f2323251f0aab15c8dfb1967e4e8a7d42aee",
+    },
+    {
+      slug: "POLYGON_MAINNET",
+      chainIdHex: "0x89",
+      chainIdDecimal: "137",
+      chainName: "Polygon (Mainnet)",
+      displayName: "Polygon Mainnet",
+      nativeCurrency: { name: "Matic", symbol: "MATIC", decimals: 18 },
+      rpcUrls: ["https://polygon-rpc.com/"],
+      blockExplorerUrls: ["https://polygonscan.com/"],
+      currentNetworkLogo:
+        "https://firebasestorage.googleapis.com/v0/b/guildfx-exchange.appspot.com/o/assets%2Ftokens%2FMATIC_COLORED.png?alt=media",
+      priceFeedUSD: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
+    },
+  ],
+  date: "2022-07-05T22:53:04.000Z",
+  semver: {
+    major: 0,
+    minor: 6,
+    patch: 3,
+    prerelease: ["prod"],
+    build: [],
+    id: "0.6.3-prod",
+  },
+  openZeppelin: {
+    alias: "0.6.3-prod",
+    multiSigs: {
+      "0x38": {
+        LootboxDAO: {
+          alias: "LootboxDAO",
+          address: "0x0a284530Eb51033D363648281BDe68F581188Df1",
+          signers: [
+            "0xE0eC4d917a9E6754801Ed503582399D8cBa91858",
+            "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+          ],
+          chainHexID: "0x38",
+          threshold: 2,
+          slug: "LootboxDAO",
+        },
+        LootboxDAO_Treasury: {
+          alias: "LootboxDAO Treasury",
+          address: "0x96779B26982bcB9684fA2ec2Ae53585266733A03",
+          signers: [
+            "0xE0eC4d917a9E6754801Ed503582399D8cBa91858",
+            "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+          ],
+          chainHexID: "0x38",
+          threshold: 2,
+          slug: "LootboxDAO_Treasury",
+        },
+      },
+      "0x89": {
+        LootboxDAO: {
+          alias: "LootboxDAO",
+          address: "0x0d928c9baE570f5F526F1785874cA99523bEd4cA",
+          signers: [
+            "0xE0eC4d917a9E6754801Ed503582399D8cBa91858",
+            "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+          ],
+          chainHexID: "0x89",
+          threshold: 2,
+          slug: "LootboxDAO",
+        },
+        LootboxDAO_Treasury: {
+          alias: "LootboxDAO Treasury",
+          address: "0x67Ad5E1b4e7CC0458C3c7bBC8Fa6292b78425aAe",
+          signers: [
+            "0xE0eC4d917a9E6754801Ed503582399D8cBa91858",
+            "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+          ],
+          chainHexID: "0x89",
+          threshold: 2,
+          slug: "LootboxDAO_Treasury",
+        },
+      },
+    },
+    contracts: {
+      "0x38": {
+        LootboxInstantFactory: {
+          address: "__________________________________________",
+          slug: "LootboxInstantFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        LootboxEscrowFactory: {
+          address: "__________________________________________",
+          slug: "LootboxEscrowFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        PartyBasketFactory: {
+          address: "__________________________________________",
+          slug: "PartyBasketFactory",
+          whitelister: "0xc84a10D6011006ea12FBAa7b9BB91df1d713A667",
+        },
+      },
+      "0x89": {
+        LootboxInstantFactory: {
+          address: "__________________________________________",
+          slug: "LootboxInstantFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        LootboxEscrowFactory: {
+          address: "__________________________________________",
+          slug: "LootboxEscrowFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        PartyBasketFactory: {
+          address: "__________________________________________",
+          slug: "PartyBasketFactory",
+          whitelister: "0xc84a10D6011006ea12FBAa7b9BB91df1d713A667",
+        },
+      },
+    },
+    secrets: [{ name: "JWT_ON_CREATE_LOOTBOX" }],
+    autoTasks: {
+      onCreateLootboxInstant: {
+        id: "__________________________________________",
+        alias: "On creation of an Instant Lootbox",
+        semver: "0.6.3-prod",
+        slug: "onCreateLootboxInstant",
+      },
+      onCreateLootboxEscrow: {
+        id: "__________________________________________",
+        alias: "On creation of an Escrow Lootbox",
+        semver: "0.6.3-prod",
+        slug: "onCreateLootboxEscrow",
+      },
+    },
+    sentinels: {
+      "0x38": {
+        onCreateLootboxInstant: {
+          id: "__________________________________________",
+          alias: "[0.6.3-prod] Instant Lootbox onCreate",
+          semver: "0.6.3-prod",
+          slug: "onCreateLootboxInstant",
+          ozChainSlug: "bsc",
+          contractWatchAddress: "__________________________________________",
+        },
+        onCreateLootboxEscrow: {
+          id: "__________________________________________",
+          alias: "[0.6.3-prod] Escrow Lootbox onCreate",
+          semver: "0.6.3-prod",
+          slug: "onCreateLootboxEscrow",
+          ozChainSlug: "bsc",
+          contractWatchAddress: "__________________________________________",
+        },
+      },
+      "0x89": {
+        onCreateLootboxInstant: {
+          id: "__________________________________________",
+          alias: "[0.6.3-prod] Instant Lootbox onCreate",
+          semver: "0.6.3-prod",
+          slug: "onCreateLootboxInstant",
+          ozChainSlug: "matic",
+          contractWatchAddress: "__________________________________________",
+        },
+        onCreateLootboxEscrow: {
+          id: "__________________________________________",
+          alias: "[0.6.3-prod] Escrow Lootbox onCreate",
+          semver: "0.6.3-prod",
+          slug: "onCreateLootboxEscrow",
+          ozChainSlug: "matic",
+          contractWatchAddress: "__________________________________________",
+        },
+      },
+    },
+    semver: "0.6.3-prod",
+  },
+  pipedream: {
+    alias: "0.6.3-prod",
+    email: "0xnewton@lootbox.fund",
+    sources: {
+      onCreateLootboxInstant: {
+        alias: "[0.6.3-prod] onCreateLootboxInstant",
+        pipedreamID: "__________________________________________",
+        semver: "0.1.0",
+        webhookEndpoint:
+          "https://__________________________________________.m.pipedream.net",
+        slug: "0-6-3-prod-onCreateLootboxInstant",
+      },
+      onCreateLootboxEscrow: {
+        alias: "[0.6.3-prod] onCreateLootboxEscrow",
+        pipedreamID: "__________________________________________",
+        semver: "0.1.0",
+        webhookEndpoint:
+          "https://__________________________________________.m.pipedream.net",
+        slug: "0-6-3-prod-onCreateLootboxEscrow",
+      },
+    },
+    actions: {
+      onCreateLootboxInstant: {
+        alias: "[0.6.3-prod] onCreateLootboxInstant",
+        pipedreamID: "__________________________________________",
+        pipedreamSemver: "0.1.0",
+        slug: "0-6-3-prod-onCreateLootboxInstant",
+      },
+      onCreateLootboxEscrow: {
+        alias: "[0.6.3-prod] onCreateLootboxEscrow",
+        pipedreamID: "__________________________________________",
+        pipedreamSemver: "0.1.0",
+        slug: "0-6-3-prod-onCreateLootboxEscrow",
+      },
+    },
+    semver: "0.6.3-prod",
+  },
+  cloudRun: {
+    alias: "string",
+    semver: "0.6.3-prod",
+    containers: {
+      stampNewLootbox: {
+        slug: "stampNewLootbox",
+        fullRoute:
+          "https://stamp-nft-0-6-3-prod-qrmywylbhq-ue.a.run.app/stamp/new/lootbox",
+      },
+      stampNewTicket: {
+        slug: "stampNewTicket",
+        fullRoute:
+          "https://stamp-nft-0-6-3-prod-qrmywylbhq-ue.a.run.app/stamp/new/ticket",
+      },
+      lootboxServer: {
+        slug: "lootboxServer",
+        fullRoute: "https://lootbox-server-qrmywylbhq-ue.a.run.app/graphql",
+      },
+    },
+  },
+  googleCloud: {
+    alias: "0.6.3-prod",
+    projectID: "lootbox-fund-prod",
+    semver: "0.6.3-prod",
+  },
+  storage: {
+    downloadUrl: "https://storage.googleapis.com",
+    buckets: {
+      abi: { id: "lootbox-abi-prod" },
+      stamp: { id: "lootbox-stamp-prod" },
+      data: { id: "lootbox-data-prod" },
+      constants: { id: "lootbox-constants-prod" },
+      widgets: { id: "lootbox-widgets-prod" },
+    },
+  },
+  secretManager: {
+    secrets: [
+      { name: "PARTY_BASKET_WHITELISTER_PRIVATE_KEY", version: 1 },
+      { name: "OZ_DEFENDER_API_KEY", version: 2 },
+      { name: "OZ_DEFENDER_API_SECRET", version: 2 },
+      { name: "PD_ABI_UPLOADER_SECRET", version: 1 },
+      { name: "JWT_ON_CREATE_LOOTBOX", version: 1 },
+      { name: "STAMP_SECRET", version: 1 },
+    ],
+  },
+  microfrontends: {
+    alias: "0.6.3-prod",
+    semver: "0.6.3-prod",
+    widgets: {
+      fundraiserPage: {
+        alias: "fundraiserPage",
+        semver: "0.6.3-prod",
+        slug: "fundraiserPage",
+      },
+      createLootbox: {
+        alias: "createLootbox",
+        semver: "0.6.3-prod",
+        slug: "createLootbox",
+      },
+      manageLootbox: {
+        alias: "manageLootbox",
+        semver: "0.6.3-prod",
+        slug: "manageLootbox",
+      },
+    },
+    webflow: {
+      alias: "0.6.3-prod",
+      semver: "0.6.3-prod",
+      email: "support@lootbox.fund",
+      lootboxUrl: "https://www.lootbox.fund/buy",
+      createPage: "https://www.lootbox.fund/create",
+      managePage: "https://www.lootbox.fund/manage",
+      authPage: "https://www.lootbox.fund/auth",
+      myProfilePage: "https://www.lootbox.fund/profile",
+      tournamentManagePage: "https://www.lootbox.fund/tournament/manage",
+      tournamentCreatePage: "https://www.lootbox.fund/tournament/create",
+      tournamentPublicPage: "https://www.lootbox.fund/tournament",
+      myFundraisersPage: "https://www.lootbox.fund/my-fundraisers",
+      myCollectionsPage: "https://www.lootbox.fund/my-collections",
+      battleFeed: "https://www.lootbox.fund/battle-feed",
+      basketRedeemPage: "https://www.lootbox.fund/basket/redeem",
+      basketManagePage: "https://www.lootbox.fund/basket/manage",
+    },
+  },
+  lootbox: {
+    alias: "0.6.3-prod",
+    semver: "0.6.3-prod",
+    contracts: {
+      "0x38": {
+        LootboxInstantFactory: {
+          address: "__________________________________________",
+          slug: "LootboxInstantFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        LootboxEscrowFactory: {
+          address: "__________________________________________",
+          slug: "LootboxEscrowFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        PartyBasketFactory: {
+          address: "__________________________________________",
+          slug: "PartyBasketFactory",
+          whitelister: "0xc84a10D6011006ea12FBAa7b9BB91df1d713A667",
+        },
+      },
+      "0x89": {
+        LootboxInstantFactory: {
+          address: "__________________________________________",
+          slug: "LootboxInstantFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        LootboxEscrowFactory: {
+          address: "__________________________________________",
+          slug: "LootboxEscrowFactory",
+          bulkMinterSuperStaff: "0xFEe4e44F532688aF5281D14DE3cc0bEaBa73E0Be",
+        },
+        PartyBasketFactory: {
+          address: "__________________________________________",
+          slug: "PartyBasketFactory",
+          whitelister: "0xc84a10D6011006ea12FBAa7b9BB91df1d713A667",
+        },
+      },
+    },
+  },
+  firebase: {
+    apiKey: "AIzaSyBWx_NB1ztvNMayG5VWBjYz3xtgPLoXH8c",
+    authDomain: "lootbox-fund-prod.firebaseapp.com",
+    projectId: "lootbox-fund-prod",
+    storageBucket: "lootbox-fund-prod.appspot.com",
+    messagingSenderId: "2446790853",
+    appId: "1:2446790853:web:e3254f0f0f151f138ea0ac",
+  },
+};
