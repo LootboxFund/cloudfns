@@ -6,6 +6,8 @@ export const convertLootboxToSnapshot = (data: Lootbox): LootboxSnapshot => {
     issuer: data.issuer,
     name: data.name,
     metadataDownloadUrl: data.metadataDownloadUrl,
+    description:
+      data?.metadata?.lootboxCustomSchema?.lootbox?.description || "",
     timestamps: {
       updatedAt: data.timestamps.updatedAt,
       createdAt: data.timestamps.createdAt,
