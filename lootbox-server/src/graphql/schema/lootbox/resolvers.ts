@@ -4,18 +4,24 @@ import {
   QueryGetLootboxByAddressArgs,
   Resolvers,
   StatusCode,
+  QueryLootboxFeedArgs,
+  LootboxFeedResponse,
 } from "../../generated/types";
 import {
   getLootboxByAddress,
   getUserPartyBasketsForLootbox,
+  paginateLootboxFeedQuery,
 } from "../../../api/firestore";
 import { Address } from "@wormgraph/helpers";
 import { Context } from "../../server";
-import { UserID } from "../../../lib/types";
+import { LootboxID, UserID } from "../../../lib/types";
 
 const LootboxResolvers: Resolvers = {
   Query: {
-    getLootboxByAddress: async (_, args: QueryGetLootboxByAddressArgs) => {
+    getLootboxByAddress: async (
+      _,
+      args: QueryGetLootboxByAddressArgs
+    ): Promise<GetLootboxByAddressResponse> => {
       try {
         const lootbox = await getLootboxByAddress(args.address as Address);
         if (!lootbox) {
@@ -39,6 +45,16 @@ const LootboxResolvers: Resolvers = {
         };
       }
     },
+    lootboxFeed: async (
+      _,
+      { first, after }: QueryLootboxFeedArgs
+    ): Promise<LootboxFeedResponse> => {
+      const response = await paginateLootboxFeedQuery(
+        first,
+        after as LootboxID | null | undefined
+      );
+      return response;
+    },
   },
 
   Lootbox: {
@@ -56,6 +72,19 @@ const LootboxResolvers: Resolvers = {
         console.error(err);
         return [];
       }
+    },
+  },
+
+  LootboxFeedResponse: {
+    __resolveType: (obj: LootboxFeedResponse) => {
+      if ("edges" in obj) {
+        return "LootboxFeedResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
     },
   },
 
