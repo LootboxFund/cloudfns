@@ -115,9 +115,10 @@ const LootboxTypeDefs = gql`
   type LootboxSnapshot {
     address: ID!
     issuer: ID!
+    description: String!
 
     name: String!
-    stampImage: String!
+    stampImage: String
     image: String!
     backgroundColor: String!
     backgroundImage: String!

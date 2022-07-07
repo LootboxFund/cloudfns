@@ -31,6 +31,7 @@ import {
   PartyBasketID,
   WhitelistSignatureID,
 } from "../lib/types";
+import { convertLootboxToSnapshot } from "../lib/lootbox";
 
 // TODO: extract this to helpers
 //       this is copied over in @cloudfns/firebase
@@ -262,22 +263,7 @@ export const getLootboxSnapshotsForWallet = async (
   } else {
     return lootboxSnapshot.docs.map((doc) => {
       const data = doc.data();
-      return {
-        address: data.address,
-        issuer: data.issuer,
-        name: data.name,
-        metadataDownloadUrl: data.metadataDownloadUrl,
-        timestamps: {
-          updatedAt: data.timestamps.updatedAt,
-          createdAt: data.timestamps.createdAt,
-        },
-        backgroundColor:
-          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundColor || "",
-        backgroundImage:
-          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
-        image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
-        stampImage: data.metadata.image || "",
-      };
+      return convertLootboxToSnapshot(data);
     });
   }
 };
