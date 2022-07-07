@@ -118,7 +118,7 @@ const LootboxTypeDefs = gql`
     description: String!
 
     name: String!
-    stampImage: String!
+    stampImage: String
     image: String!
     backgroundColor: String!
     backgroundImage: String!
