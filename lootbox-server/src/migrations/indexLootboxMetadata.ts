@@ -188,6 +188,8 @@ const parseDBDocument = (
     metadata,
     metadataDownloadUrl: jsonPublicPath,
     variant: "____________________________________" as LootboxVariant,
+    // @ts-ignore - this is not in the typing, but we add it to track backfilled documents
+    __backfilledAt: new Date().valueOf(),
   };
 
   return lootboxDatabaseSchema;
