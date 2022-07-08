@@ -2,7 +2,11 @@
  * Migration script to index every lootbox JSON metadata file we have for a lootbox in cloud storage into our
  * firestore database. Run in your nodejs environment.
  *
- * You'll have to authenticate with `gcloud auth application-default-login` before running the script.
+ * You'll have to authenticate with before running the script:
+ * > $ gcloud auth application-default-login
+ * > $ gcloud config set project lootbox-fund-staging
+ *
+ * You might need to temporarily grant your account firestore write permission.
  *
  * to run:
  * npx ts-node --script-mode ./src/migrations/indexLootboxMetadata.ts [env]
@@ -82,6 +86,8 @@ const run = async () => {
   // Lists files in the bucket
   let [files] = await storage.bucket(config.bucketName).getFiles();
 
+  //   files = files.slice(0, 10);
+
   for (let idx = 0; idx < files.length; idx++) {
     console.log("\nreading ", idx);
     const file = files[idx];
@@ -137,20 +143,12 @@ const run = async () => {
       continue;
     }
 
-    console.log(
-      "writing to firestore...",
-      data?.metadata?.lootboxCustomSchema?.chain,
-      data?.metadata?.lootboxCustomSchema?.lootbox,
-      data?.metadata?.lootboxCustomSchema?.socials
-    );
+    console.log("writing to firestore...");
 
     // UNCOMMENT THIS TO WRITE TO FIRESTORE
-    // const docRef = await admin
-    //   .firestore()
-    //   .collection("lootbox")
-    //   .add(lootboxDocumentData);
+    const docRef = await admin.firestore().collection("lootbox").add(data);
 
-    // console.log("wrote document ", docRef.id);
+    console.log("wrote document ", docRef.id);
   }
 };
 
@@ -172,8 +170,8 @@ const parseDBDocument = (
     // factoryAddress || "",
     name: metadata.lootboxCustomSchema?.lootbox?.name || "",
     chainIdHex: metadata.lootboxCustomSchema?.chain.chainIdHex || "",
-    issuer: "____________________________________",
-    treasury: "____________________________________",
+    issuer: "#BACKFILL",
+    treasury: "#BACKFILL",
     targetSharesSold:
       metadata.lootboxCustomSchema?.lootbox?.fundraisingTarget || "",
     maxSharesSold:
@@ -187,7 +185,7 @@ const parseDBDocument = (
     },
     metadata,
     metadataDownloadUrl: jsonPublicPath,
-    variant: "____________________________________" as LootboxVariant,
+    variant: "#BACKFILL" as LootboxVariant,
     // @ts-ignore - this is not in the typing, but we add it to track backfilled documents
     __backfilledAt: new Date().valueOf(),
   };
