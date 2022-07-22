@@ -166,6 +166,7 @@ export const createTournamentStreams = async (
     batch.set(streamRef, streamDocumentData);
     createdStreams.push(streamDocumentData);
   });
+  await batch.commit();
   return createdStreams;
 };
 
