@@ -21,6 +21,10 @@ import {
   PartyBasket,
   LootboxFeedEdge,
   LootboxFeedResponseSuccess,
+  Stream,
+  StreamInput,
+  EditStreamPayload,
+  StreamType,
 } from "../graphql/generated/types";
 import { Address } from "@wormgraph/helpers";
 import { IIdpUser } from "./identityProvider/interface";
@@ -32,6 +36,7 @@ import {
   WalletID,
   PartyBasketID,
   WhitelistSignatureID,
+  StreamID,
 } from "../lib/types";
 import { convertLootboxToSnapshot } from "../lib/lootbox";
 
@@ -44,6 +49,7 @@ export enum Collection {
   "Tournament" = "tournament",
   "PartyBasket" = "party-basket",
   "WhitelistSignature" = "whitelist-signature",
+  "Stream" = "stream",
 }
 
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
@@ -57,8 +63,6 @@ interface CreateFirestoreUserPayload {
   firstName?: string;
   lastName?: string;
 }
-
-type TournamentWithoutLootboxSnapshots = Omit<Tournament, "lootboxSnapshots">;
 
 export const getLootboxByAddress = async (
   address: Address
@@ -320,6 +324,120 @@ export const getLootboxSnapshotsForTournament = async (
       };
     });
   }
+};
+
+export const getStreamById = async (
+  id: StreamID
+): Promise<Stream | undefined> => {
+  const streamRef = db
+    .collectionGroup(Collection.Stream)
+    .where("id", "==", id) as Query<Stream>;
+
+  const streamSnapshot = await streamRef.get();
+
+  if (streamSnapshot.empty) {
+    return undefined;
+  } else {
+    const doc = streamSnapshot.docs[0];
+    return doc.data();
+  }
+};
+
+export const deleteStream = async (
+  streamId: StreamID,
+  tournamentId: TournamentID
+): Promise<Stream> => {
+  const streamRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentId)
+    .collection(Collection.Stream)
+    .doc(streamId) as DocumentReference<Stream>;
+
+  await streamRef.update(
+    "timestamps.deletedAt",
+    Timestamp.now().toMillis() // soft delete
+  );
+
+  return (await streamRef.get()).data() as Stream;
+};
+
+export const getTournamentStreams = async (
+  tournamentID: TournamentID
+): Promise<Stream[]> => {
+  const collectionRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.Stream)
+    .where("timestamps.deletedAt", "==", null) as Query<Stream>;
+
+  const collectionSnapshot = await collectionRef.get();
+
+  if (collectionSnapshot.empty) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => {
+      return doc.data();
+    });
+  }
+};
+
+export const createTournamentStreams = async (
+  userId: UserID | UserIdpID,
+  tournamentId: TournamentID,
+  streams: (StreamInput | EditStreamPayload)[]
+): Promise<Stream[]> => {
+  const streamCollection = db
+    .collection(Collection.Tournament)
+    .doc(tournamentId)
+    .collection(Collection.Stream) as CollectionReference<Stream>;
+
+  const batch = streamCollection.firestore.batch();
+  const createdStreams: Stream[] = [];
+  streams.forEach((stream) => {
+    const streamRef = streamCollection.doc();
+    const streamDocumentData: Stream = {
+      creatorId: userId,
+      type: stream.type,
+      url: stream.url,
+      name: stream.name,
+      id: streamRef.id,
+      tournamentId: tournamentId,
+      timestamps: {
+        createdAt: Timestamp.now().toMillis(),
+        updatedAt: Timestamp.now().toMillis(),
+        deletedAt: null,
+      },
+    };
+    batch.set(streamRef, streamDocumentData);
+    createdStreams.push(streamDocumentData);
+  });
+  return createdStreams;
+};
+
+interface UpdateStreamPayload {
+  type: StreamType;
+  url: String;
+  name: String;
+}
+export const updateStream = async (
+  streamId: StreamID,
+  tournamentId: TournamentID,
+  stream: UpdateStreamPayload
+): Promise<Stream> => {
+  const streamRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentId)
+    .collection(Collection.Stream)
+    .doc(streamId) as DocumentReference<Stream>;
+
+  await streamRef.update({
+    type: stream.type,
+    url: stream.url,
+    name: stream.name,
+    "timestamps.updatedAt": Timestamp.now().toMillis(), // soft delete
+  });
+
+  return (await streamRef.get()).data() as Stream;
 };
 
 export interface CreateTournamentArgs {
