@@ -56,6 +56,8 @@ export const getLootboxSnapshotsForTournament = async (
         issuer: data.issuer,
         name: data.name,
         metadataDownloadUrl: data.metadataDownloadUrl,
+        description:
+          data?.metadata?.lootboxCustomSchema?.lootbox?.description || "",
         timestamps: {
           updatedAt: data.timestamps.updatedAt,
           createdAt: data.timestamps.createdAt,
@@ -68,6 +70,12 @@ export const getLootboxSnapshotsForTournament = async (
         stampImage: data.metadata.image,
         status:
           data?.tournamentMetadata?.status || LootboxTournamentStatus.Pending,
+        socials: data?.metadata?.lootboxCustomSchema?.socials
+          ? {
+              ...data?.metadata?.lootboxCustomSchema?.socials,
+              email: undefined,
+            }
+          : {},
       };
     });
   }

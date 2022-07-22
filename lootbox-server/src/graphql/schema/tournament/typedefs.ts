@@ -29,17 +29,16 @@ const TournamentTypeDefs = gql`
   type LootboxTournamentSnapshot {
     address: ID!
     issuer: ID!
-
+    description: String!
     name: String!
     stampImage: String!
     image: String!
     backgroundColor: String!
     backgroundImage: String!
-
     metadataDownloadUrl: String
     timestamps: LootboxSnapshotTimestamps!
-
     status: LootboxTournamentStatus!
+    socials: LootboxSocialsWithoutEmail!
   }
 
   type Tournament {
