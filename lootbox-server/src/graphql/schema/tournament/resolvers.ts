@@ -279,7 +279,7 @@ const TournamentResolvers = {
         };
       }
     },
-    addTournamentStream: async (
+    addStream: async (
       _,
       { payload }: MutationAddStreamArgs,
       context: Context
@@ -346,108 +346,107 @@ const TournamentResolvers = {
         };
       }
     },
-  },
-
-  deleteStream: async (
-    _,
-    { id: streamId }: MutationDeleteStreamArgs,
-    context: Context
-  ): Promise<DeleteStreamResponse> => {
-    if (!context.userId) {
-      return {
-        error: {
-          code: StatusCode.Unauthorized,
-          message: `Unauthorized`,
-        },
-      };
-    }
-
-    try {
-      // Make sure the user owns the stream
-      const stream = await getStreamById(streamId as StreamID);
-
-      if (!stream || !!stream?.timestamps?.deletedAt) {
+    deleteStream: async (
+      _,
+      { id: streamId }: MutationDeleteStreamArgs,
+      context: Context
+    ): Promise<DeleteStreamResponse> => {
+      if (!context.userId) {
         return {
           error: {
-            code: StatusCode.NotFound,
-            message: `Stream not found`,
-          },
-        };
-      } else if (stream.creatorId !== context.userId) {
-        return {
-          error: {
-            code: StatusCode.Forbidden,
-            message: `You do not own this stream`,
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
           },
         };
       }
 
-      const deletedStream = await deleteStream(
-        streamId as StreamID,
-        stream.tournamentId as TournamentID
-      );
+      try {
+        // Make sure the user owns the stream
+        const stream = await getStreamById(streamId as StreamID);
 
-      return { stream: deletedStream };
-    } catch (err) {
-      return {
-        error: {
-          code: StatusCode.ServerError,
-          message: err instanceof Error ? err.message : "",
-        },
-      };
-    }
-  },
-  editStream: async (
-    _,
-    { payload }: MutationEditStreamArgs,
-    context: Context
-  ): Promise<EditStreamResponse> => {
-    if (!context.userId) {
-      return {
-        error: {
-          code: StatusCode.Unauthorized,
-          message: `Unauthorized`,
-        },
-      };
-    }
+        if (!stream || !!stream?.timestamps?.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Stream not found`,
+            },
+          };
+        } else if (stream.creatorId !== context.userId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: `You do not own this stream`,
+            },
+          };
+        }
 
-    try {
-      // Make sure the user owns the stream
-      const stream = await getStreamById(payload.id as StreamID);
+        const deletedStream = await deleteStream(
+          streamId as StreamID,
+          stream.tournamentId as TournamentID
+        );
 
-      if (!stream || !!stream?.timestamps?.deletedAt) {
+        return { stream: deletedStream };
+      } catch (err) {
         return {
           error: {
-            code: StatusCode.NotFound,
-            message: `Stream not found`,
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
           },
         };
-      } else if (stream.creatorId !== context.userId) {
+      }
+    },
+    editStream: async (
+      _,
+      { payload }: MutationEditStreamArgs,
+      context: Context
+    ): Promise<EditStreamResponse> => {
+      if (!context.userId) {
         return {
           error: {
-            code: StatusCode.Forbidden,
-            message: `You do not own this stream`,
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
           },
         };
       }
 
-      const { id: streamId, ...rest } = payload;
+      try {
+        // Make sure the user owns the stream
+        const stream = await getStreamById(payload.id as StreamID);
 
-      const updatedStream = await updateStream(
-        streamId as StreamID,
-        stream.tournamentId as TournamentID,
-        rest
-      );
+        if (!stream || !!stream?.timestamps?.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Stream not found`,
+            },
+          };
+        } else if (stream.creatorId !== context.userId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: `You do not own this stream`,
+            },
+          };
+        }
 
-      return { stream: updatedStream };
-    } catch (err) {
-      return {
-        error: {
-          code: StatusCode.ServerError,
-          message: err instanceof Error ? err.message : "",
-        },
-      };
-    }
+        const { id: streamId, ...rest } = payload;
+
+        const updatedStream = await updateStream(
+          streamId as StreamID,
+          stream.tournamentId as TournamentID,
+          rest
+        );
+
+        return { stream: updatedStream };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   TournamentResponse: {
@@ -527,6 +526,47 @@ const TournamentResolvers = {
       return null;
     },
   },
+
+  AddStreamResponse: {
+    __resolveType: (obj: AddStreamResponse) => {
+      if ("stream" in obj) {
+        return "AddStreamResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  DeleteStreamResponse: {
+    __resolveType: (obj: DeleteStreamResponse) => {
+      if ("stream" in obj) {
+        return "DeleteStreamResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  EditStreamResponse: {
+    __resolveType: (obj: EditStreamResponse) => {
+      if ("stream" in obj) {
+        return "EditStreamResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const tournamentResolverComposition = {
@@ -534,7 +574,7 @@ const tournamentResolverComposition = {
   "Mutation.editTournament": [isAuthenticated()],
   "Mutation.deleteTournament": [isAuthenticated()],
   "Mutation.addStream": [isAuthenticated()],
-  "Mutation.removeStream": [isAuthenticated()],
+  "Mutation.deleteStream": [isAuthenticated()],
   "Mutation.editStream": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
 };
