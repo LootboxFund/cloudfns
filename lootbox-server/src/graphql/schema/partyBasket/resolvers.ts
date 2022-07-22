@@ -22,7 +22,6 @@ import {
   getWhitelistSignature,
   getWhitelistSignaturesByAddress,
   redeemSignature,
-  getPartyBasketById,
   getLootboxByAddress,
 } from "../../../api/firestore";
 import { getSecret } from "../../../api/secrets";
