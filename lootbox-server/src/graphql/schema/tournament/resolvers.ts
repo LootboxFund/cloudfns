@@ -1,4 +1,5 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
+import { Address } from "@wormgraph/helpers";
 import {
   getLootboxSnapshotsForTournament,
   getTournamentById,
@@ -11,6 +12,7 @@ import {
   getStreamById,
   deleteStream,
   updateStream,
+  getPartyBasketsForLootbox,
 } from "../../../api/firestore";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { StreamID, TournamentID } from "../../../lib/types";
@@ -37,6 +39,7 @@ import {
   EditStreamResponse,
   MutationDeleteStreamArgs,
   DeleteStreamResponse,
+  PartyBasket,
 } from "../../generated/types";
 import { Context } from "../../server";
 
@@ -127,6 +130,14 @@ const TournamentResolvers = {
     },
     streams: async (tournament: Tournament): Promise<Stream[]> => {
       return getTournamentStreams(tournament.id as TournamentID);
+    },
+  },
+
+  LootboxTournamentSnapshot: {
+    partyBaskets: async (
+      snapshot: LootboxTournamentSnapshot
+    ): Promise<PartyBasket[]> => {
+      return getPartyBasketsForLootbox(snapshot.address as Address);
     },
   },
 

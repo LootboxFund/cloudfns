@@ -39,6 +39,7 @@ const TournamentTypeDefs = gql`
     timestamps: LootboxSnapshotTimestamps!
     status: LootboxTournamentStatus!
     socials: LootboxSocialsWithoutEmail!
+    partyBaskets: [PartyBasket!]
   }
 
   type Tournament {

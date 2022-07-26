@@ -33,6 +33,24 @@ export const getUserPartyBasketsForLootbox = async (
   }
 };
 
+export const getPartyBasketsForLootbox = async (
+  lootbox: Address
+): Promise<PartyBasket[]> => {
+  const partyBaskets = db
+    .collection(Collection.PartyBasket)
+    .where("lootboxAddress", "==", lootbox)
+    .where("timestamps.deletedAt", "==", null) as Query<PartyBasket>;
+
+  const partyBasketSnapshot = await partyBaskets.get();
+  if (partyBasketSnapshot.empty) {
+    return [];
+  } else {
+    return partyBasketSnapshot.docs.map((doc) => {
+      return doc.data();
+    });
+  }
+};
+
 export const getUserPartyBaskets = async (
   id: UserID
 ): Promise<PartyBasket[]> => {
