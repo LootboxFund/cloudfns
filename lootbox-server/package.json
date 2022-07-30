@@ -8,8 +8,8 @@
     "build": "yarn codegen && tsc",
     "start": "NODE_ENV=production npx ts-node ./src",
     "start:dev": "NODE_ENV=dev npx ts-node ./src",
-    "deploy": "yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging",
-    "deploy:prod": "yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod"
+    "deploy": "yarn install && yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging",
+    "deploy:prod": "yarn install && yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod"
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^4.0.0",
