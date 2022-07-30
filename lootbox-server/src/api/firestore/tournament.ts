@@ -146,11 +146,11 @@ export const createTournamentStreams = async (
     .doc(tournamentId)
     .collection(Collection.Stream) as CollectionReference<Stream>;
 
-  const batch = streamCollection.firestore.batch();
   const createdStreams: Stream[] = [];
-  streams.forEach((stream) => {
+
+  for (const stream of streams) {
     const streamRef = streamCollection.doc();
-    const streamDocumentData: Stream = {
+    const documentToWrite = {
       creatorId: userId,
       type: stream.type,
       url: stream.url,
@@ -163,10 +163,31 @@ export const createTournamentStreams = async (
         deletedAt: null,
       },
     };
-    batch.set(streamRef, streamDocumentData);
-    createdStreams.push(streamDocumentData);
-  });
-  await batch.commit();
+
+    await streamRef.set(documentToWrite);
+    createdStreams.push(documentToWrite);
+  }
+  // const batch = db.batch();
+  // const createdStreams: Stream[] = [];
+  // streams.forEach((stream) => {
+  //   const streamRef = streamCollection.doc();
+  //   const streamDocumentData: Stream = {
+  //     creatorId: userId,
+  //     type: stream.type,
+  //     url: stream.url,
+  //     name: stream.name,
+  //     id: streamRef.id,
+  //     tournamentId: tournamentId,
+  //     timestamps: {
+  //       createdAt: Timestamp.now().toMillis(),
+  //       updatedAt: Timestamp.now().toMillis(),
+  //       deletedAt: null,
+  //     },
+  //   };
+  //   batch.set(streamRef, streamDocumentData);
+  //   createdStreams.push(streamDocumentData);
+  // });
+  // await batch.commit();
   return createdStreams;
 };
 
