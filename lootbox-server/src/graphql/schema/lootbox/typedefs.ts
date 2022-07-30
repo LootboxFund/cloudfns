@@ -48,6 +48,18 @@ const LootboxTypeDefs = gql`
     web: String
   }
 
+  type LootboxSocialsWithoutEmail {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    youtube: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
   type LootboxCustomSchema {
     version: String!
     chain: LootboxChain!
