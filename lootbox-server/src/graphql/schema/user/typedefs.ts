@@ -13,7 +13,7 @@ const UserTypeDefs = gql`
     id: ID!
     firstName: String
     lastName: String
-    email: String!
+    email: String
     phoneNumber: String
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -104,6 +104,7 @@ const UserTypeDefs = gql`
       payload: AuthenticateWalletPayload!
     ): AuthenticateWalletResponse!
     removeWallet(payload: RemoveWalletPayload!): RemoveWalletResponse!
+    createUserRecord: CreateUserResponse!
   }
 `;
 

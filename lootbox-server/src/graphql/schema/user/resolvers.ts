@@ -34,6 +34,7 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { UserID, WalletID } from "../../../lib/types";
+import { IIdpUser } from "../../../api/identityProvider/interface";
 
 const UserResolvers = {
   Query: {
@@ -103,6 +104,70 @@ const UserResolvers = {
   },
 
   Mutation: {
+    /**
+     * Used primarily in phone sign up
+     * User IDP object gets created in the frontend, so we expect this call to be authenticated
+     * However, corresponding user database object does not get created, so this function will create that object
+     * if it dosent exist. If it already exists, this function returns the existing user object from the database
+     */
+    createUserRecord: async (
+      _,
+      __,
+      context: Context
+    ): Promise<CreateUserResponse> => {
+      if (!context.userId) {
+        // Phone number auth - the user actually gets created in the frontend
+        // So this request should be authenticated
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You are not authenticated!",
+          },
+        };
+      }
+
+      let idpUser: IIdpUser;
+
+      try {
+        const _idpUser = await identityProvider.getUserById(context.userId);
+        if (!_idpUser) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        idpUser = _idpUser;
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+
+      try {
+        const dbUser = await getUser(context.userId);
+
+        if (!!dbUser) {
+          // User is already created
+          return { user: dbUser };
+        } else {
+          // User does not exist in database, create it
+          const user = await createUser(idpUser, {});
+          return { user };
+        }
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     createUserWithPassword: async (
       _,
       { payload }: MutationCreateUserWithPasswordArgs
@@ -474,6 +539,7 @@ const userResolversComposition = {
   "Query.getMyProfile": [isAuthenticated()],
   "Mutation.connectWallet": [isAuthenticated()],
   "Mutation.removeWallet": [isAuthenticated()],
+  "Mutation.createUserRecord": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(UserResolvers, userResolversComposition);
