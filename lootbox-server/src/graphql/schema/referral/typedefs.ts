@@ -34,10 +34,16 @@ const ReferralTypeDefs = gql`
     chosenPartyBasketId: ID
     rewardFromClaim: ID
     claimerUserId: ID
-    claimerIsNewUeser: Boolean
+    claimerIsNewUser: Boolean
     status: ClaimStatus!
     type: ClaimType!
     timestamps: ClaimTimestamps!
+    chosenPartyBasket: PartyBasket
+  }
+
+  type ClaimEdge {
+    node: Claim!
+    cursor: ID!
   }
 
   type Referral {
@@ -50,7 +56,7 @@ const ReferralTypeDefs = gql`
     campaignName: String!
     nConversions: Int!
     timestamps: ReferralTimestamps!
-    claims: [Claim]
+    claims: [Claim!]
     tournament: Tournament
   }
 
@@ -88,14 +94,23 @@ const ReferralTypeDefs = gql`
     claim: Claim!
   }
 
+  type UserClaimsResponseSuccess {
+    totalCount: Int!
+    pageInfo: PageInfo!
+    edges: [ClaimEdge!]!
+  }
+
   union StartClaimResponse = StartClaimResponseSuccess | ResponseError
 
   union CompleteClaimResponse = CompleteClaimResponseSuccess | ResponseError
 
   union CreateReferralResponse = CreateReferralResponseSuccess | ResponseError
 
+  union UserClaimsResponse = UserClaimsResponseSuccess | ResponseError
+
   extend type Query {
     referral(slug: ID!): ReferralResponse!
+    userClaims(userId: ID!, first: Int!, after: Int): UserClaimsResponse!
   }
 
   extend type Mutation {

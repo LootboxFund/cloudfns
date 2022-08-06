@@ -16,6 +16,9 @@ import {
   QueryReferralArgs,
   ReferralResponse,
   Tournament,
+  UserClaimsResponse,
+  PartyBasket,
+  QueryUserClaimsArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -30,6 +33,8 @@ import {
   completeClaim,
   createRewardClaim,
   getAllClaimsForReferral,
+  paginateUserClaims,
+  getLootboxByAddress,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -67,6 +72,41 @@ const ReferralResolvers: Resolvers = {
           },
         };
       }
+    },
+    userClaims: async (
+      _,
+      { userId, first, after }: QueryUserClaimsArgs
+    ): Promise<UserClaimsResponse> => {
+      try {
+        const response = await paginateUserClaims(
+          userId as UserIdpID,
+          first,
+          after
+        );
+
+        return response;
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+
+  Claim: {
+    chosenPartyBasket: async (claim: Claim): Promise<PartyBasket | null> => {
+      if (!claim.chosenPartyBasketId) {
+        return null;
+      }
+
+      const partyBasket = await getPartyBasketById(
+        claim.chosenPartyBasketId as PartyBasketID
+      );
+
+      return !partyBasket ? null : partyBasket;
     },
   },
 
@@ -332,6 +372,18 @@ const ReferralResolvers: Resolvers = {
     __resolveType: (obj: ReferralResponse) => {
       if ("referral" in obj) {
         return "ReferralResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+
+  UserClaimsResponse: {
+    __resolveType: (obj: UserClaimsResponse) => {
+      if ("edges" in obj) {
+        return "UserClaimsResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

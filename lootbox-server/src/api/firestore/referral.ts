@@ -5,6 +5,8 @@ import {
   ClaimStatus,
   Tournament,
   ClaimType,
+  PageInfo,
+  ClaimEdge,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -176,7 +178,7 @@ export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
     status: ClaimStatus.Complete,
     chosenPartyBasketId: req.chosenPartyBasketId,
     claimerUserId: req.claimerUserId,
-    claimerIsNewUeser: req.isNewUser,
+    claimerIsNewUser: req.isNewUser,
   };
 
   // This is to update nested object in non-destructive way
@@ -240,7 +242,9 @@ export const getCompletedClaimsForUserReferral = async (
   }
 };
 
-export const getAllClaimsForReferral = async (referralId: ReferralID) => {
+export const getAllClaimsForReferral = async (
+  referralId: ReferralID
+): Promise<Claim[]> => {
   const collectionRef = db
     .collection(Collection.Referral)
     .doc(referralId)
@@ -252,5 +256,54 @@ export const getAllClaimsForReferral = async (referralId: ReferralID) => {
     return [];
   } else {
     return collectionSnapshot.docs.map((doc) => doc.data());
+  }
+};
+
+export const paginateUserClaims = async (
+  userId: UserIdpID,
+  limit: number,
+  cursor?: number | null // timestamps.createdAt
+): Promise<{
+  totalCount: number;
+  edges: ClaimEdge[];
+  pageInfo: PageInfo;
+}> => {
+  let claimQuery = db
+    .collectionGroup(Collection.Claim)
+    .where("claimerUserId", "==", userId)
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+
+  if (cursor) {
+    claimQuery = claimQuery.startAfter(cursor);
+  }
+
+  claimQuery = claimQuery.limit(limit + 1);
+
+  const claimsSnapshot = await claimQuery.get();
+
+  if (claimsSnapshot.empty) {
+    return {
+      edges: [],
+      totalCount: -1,
+      pageInfo: {
+        endCursor: null,
+        hasNextPage: false,
+      },
+    };
+  } else {
+    const docs = claimsSnapshot.docs.slice(0, limit);
+    return {
+      edges: docs.map((doc) => {
+        return {
+          node: doc.data(),
+          cursor: doc.id,
+        };
+      }),
+      totalCount: -1,
+      pageInfo: {
+        endCursor: docs[docs.length - 1].id,
+        hasNextPage: claimsSnapshot.docs.length === limit + 1,
+      },
+    };
   }
 };
