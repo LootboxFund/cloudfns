@@ -167,6 +167,8 @@ interface CompleteClaimReq {
   chosenPartyBasketId: PartyBasketID;
   claimerUserId: UserIdpID;
   isNewUser: boolean;
+  chosenPartyBasketAddress: Address;
+  lootboxAddress: Address;
 }
 export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
   const referralRef = db.collection(Collection.Referral).doc(req.referralId);
@@ -179,6 +181,8 @@ export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
     chosenPartyBasketId: req.chosenPartyBasketId,
     claimerUserId: req.claimerUserId,
     claimerIsNewUser: req.isNewUser,
+    chosenPartyBasketAddress: req.chosenPartyBasketAddress,
+    lootboxAddress: req.lootboxAddress,
   };
 
   // This is to update nested object in non-destructive way

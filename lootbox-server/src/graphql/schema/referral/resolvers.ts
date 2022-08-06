@@ -44,6 +44,7 @@ import {
   TournamentID,
   UserIdpID,
 } from "../../../lib/types";
+import { Address } from "@wormgraph/helpers";
 
 const ReferralResolvers: Resolvers = {
   Query: {
@@ -301,6 +302,8 @@ const ReferralResolvers: Resolvers = {
           claimId: claim.id as ClaimID,
           referralId: claim.referralId as ReferralID,
           chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
+          chosenPartyBasketAddress: partyBasket.address as Address,
+          lootboxAddress: partyBasket.lootboxAddress as Address,
           claimerUserId: context.userId,
           isNewUser: payload.isNewUser,
         });

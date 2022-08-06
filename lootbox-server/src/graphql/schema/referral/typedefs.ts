@@ -32,6 +32,8 @@ const ReferralTypeDefs = gql`
     tournamentId: ID!
     referrerId: ID
     chosenPartyBasketId: ID
+    chosenPartyBasketAddress: ID
+    lootboxAddress: ID
     rewardFromClaim: ID
     claimerUserId: ID
     claimerIsNewUser: Boolean
