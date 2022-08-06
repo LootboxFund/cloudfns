@@ -17,7 +17,12 @@ import {
 } from "../../lib/types";
 import { Collection } from "./collection.types";
 import { db } from "../firebase";
-import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
+import {
+  DocumentReference,
+  FieldValue,
+  Query,
+  Timestamp,
+} from "firebase-admin/firestore";
 import { Address } from "@wormgraph/helpers";
 
 export const getReferralBySlug = async (
@@ -142,24 +147,38 @@ interface CompleteClaimReq {
   isNewUser: boolean;
 }
 export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
-  const documentRef = db
-    .collection(Collection.Referral)
-    .doc(req.referralId)
+  const referralRef = db.collection(Collection.Referral).doc(req.referralId);
+  const claimRef = referralRef
     .collection(Collection.Claim)
     .doc(req.claimId) as DocumentReference<Claim>;
 
-  const updateRequest: Partial<Claim> = {
+  const updateClaimRequest: Partial<Claim> = {
     status: ClaimStatus.Complete,
     chosenPartyBasketId: req.chosenPartyBasketId,
     claimerUserId: req.claimerUserId,
     claimerIsNewUeser: req.isNewUser,
   };
+
   // This is to update nested object in non-destructive way
-  updateRequest["timestamps.updatedAt"] = Timestamp.now().toMillis();
+  updateClaimRequest["timestamps.updatedAt"] = Timestamp.now().toMillis();
 
-  await documentRef.update(updateRequest);
+  // This updates the claim & increments the parent referral's nConversion
+  // Get a new write batch
+  var batch = db.batch();
 
-  const snapshot = await documentRef.get();
+  // Update the population of 'SF'
+  // var sfRef = db.collection("cities").doc("SF");
+  batch.update(claimRef, updateClaimRequest);
+  batch.update(referralRef, {
+    nConversions: FieldValue.increment(1),
+  });
+
+  // Commit the batch
+  await batch.commit();
+
+  // await documentRef.update(updateRequest);
+
+  const snapshot = await claimRef.get();
 
   const claim = snapshot.data();
 
