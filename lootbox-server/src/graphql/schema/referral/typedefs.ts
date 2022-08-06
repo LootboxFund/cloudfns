@@ -51,6 +51,7 @@ const ReferralTypeDefs = gql`
     nConversions: Int!
     timestamps: ReferralTimestamps!
     claims: [Claim]
+    tournament: Tournament
   }
 
   type ReferralResponseSuccess {

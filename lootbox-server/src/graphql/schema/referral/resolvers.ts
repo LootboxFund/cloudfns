@@ -15,6 +15,7 @@ import {
   Claim,
   QueryReferralArgs,
   ReferralResponse,
+  Tournament,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -72,6 +73,12 @@ const ReferralResolvers: Resolvers = {
   Referral: {
     claims: async (referral: Referral): Promise<Claim[]> => {
       return getAllClaimsForReferral(referral.id as ReferralID);
+    },
+    tournament: async (referral: Referral): Promise<Tournament | null> => {
+      const tournament = await getTournamentById(
+        referral.tournamentId as TournamentID
+      );
+      return !tournament ? null : tournament;
     },
   },
 
