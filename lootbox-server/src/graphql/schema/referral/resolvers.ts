@@ -10,6 +10,7 @@ import {
   MutationStartClaimArgs,
   StartClaimResponse,
   ClaimStatus,
+  ClaimType,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -22,6 +23,7 @@ import {
   getClaimById,
   getCompletedClaimsForUserReferral,
   completeClaim,
+  createRewardClaim,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -169,6 +171,13 @@ const ReferralResolvers: Resolvers = {
               message: "Claim not found",
             },
           };
+        } else if (context.userId === claim.referrerId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: "You cannot redeem your own referral link!",
+            },
+          };
         } else if (!partyBasket || !!partyBasket?.timestamps?.deletedAt) {
           return {
             error: {
@@ -208,6 +217,19 @@ const ReferralResolvers: Resolvers = {
           claimerUserId: context.userId,
           isNewUser: payload.isNewUser,
         });
+
+        // Now write the referrers claim (type=REWARD)
+        try {
+          await createRewardClaim({
+            referralId: claim.referralId as ReferralID,
+            tournamentId: claim.tournamentId as TournamentID,
+            referralSlug: claim.referralSlug as ReferralSlug,
+            rewardFromClaim: claim.id as ClaimID,
+          });
+        } catch (err) {
+          // If error here, we just make a log... but we dont return an error to client
+          console.error("Error writting reward claim", err);
+        }
 
         return {
           claim: updatedClaim,

@@ -133,9 +133,29 @@ interface CreateStartClaimReq {
 }
 export const createStartingClaim = async (req: CreateStartClaimReq) => {
   return await _createClaim({
-    ...req,
+    referralId: req.referralId,
+    tournamentId: req.tournamentId,
+    referrerId: req.referrerId,
+    referralSlug: req.referralSlug,
     status: ClaimStatus.Pending,
     type: ClaimType.Referral,
+  });
+};
+
+interface CreateRewardClaimReq {
+  referralId: ReferralID;
+  tournamentId: TournamentID;
+  referralSlug: ReferralSlug;
+  rewardFromClaim: ClaimID;
+}
+export const createRewardClaim = async (req: CreateRewardClaimReq) => {
+  return await _createClaim({
+    referralId: req.referralId,
+    tournamentId: req.tournamentId,
+    referralSlug: req.referralSlug,
+    rewardFromClaim: req.rewardFromClaim,
+    status: ClaimStatus.Complete,
+    type: ClaimType.Reward,
   });
 };
 
