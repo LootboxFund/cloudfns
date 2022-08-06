@@ -53,6 +53,12 @@ const ReferralTypeDefs = gql`
     claims: [Claim]
   }
 
+  type ReferralResponseSuccess {
+    referral: Referral!
+  }
+
+  union ReferralResponse = ReferralResponseSuccess | ResponseError
+
   input CreateReferralPayload {
     campaignName: String!
     tournamentId: ID!
@@ -86,6 +92,10 @@ const ReferralTypeDefs = gql`
   union CompleteClaimResponse = CompleteClaimResponseSuccess | ResponseError
 
   union CreateReferralResponse = CreateReferralResponseSuccess | ResponseError
+
+  extend type Query {
+    referral(slug: ID!): ReferralResponse!
+  }
 
   extend type Mutation {
     createReferral(payload: CreateReferralPayload!): CreateReferralResponse!

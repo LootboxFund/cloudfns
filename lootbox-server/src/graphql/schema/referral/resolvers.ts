@@ -11,6 +11,10 @@ import {
   StartClaimResponse,
   ClaimStatus,
   ClaimType,
+  Referral,
+  Claim,
+  QueryReferralArgs,
+  ReferralResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -24,6 +28,7 @@ import {
   getCompletedClaimsForUserReferral,
   completeClaim,
   createRewardClaim,
+  getAllClaimsForReferral,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -35,6 +40,41 @@ import {
 } from "../../../lib/types";
 
 const ReferralResolvers: Resolvers = {
+  Query: {
+    referral: async (
+      _,
+      { slug }: QueryReferralArgs
+    ): Promise<ReferralResponse> => {
+      try {
+        const referral = await getReferralBySlug(slug as ReferralSlug);
+
+        if (!referral) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Referral not found",
+            },
+          };
+        }
+
+        return { referral };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+
+  Referral: {
+    claims: async (referral: Referral): Promise<Claim[]> => {
+      return getAllClaimsForReferral(referral.id as ReferralID);
+    },
+  },
+
   Mutation: {
     createReferral: async (
       _,
@@ -273,6 +313,18 @@ const ReferralResolvers: Resolvers = {
     __resolveType: (obj: CompleteClaimResponse) => {
       if ("claim" in obj) {
         return "CompleteClaimResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+
+  ReferralResponse: {
+    __resolveType: (obj: ReferralResponse) => {
+      if ("referral" in obj) {
+        return "ReferralResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

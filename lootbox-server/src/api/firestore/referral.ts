@@ -239,3 +239,18 @@ export const getCompletedClaimsForUserReferral = async (
     return collectionSnapshot.docs.map((doc) => doc.data());
   }
 };
+
+export const getAllClaimsForReferral = async (referralId: ReferralID) => {
+  const collectionRef = db
+    .collection(Collection.Referral)
+    .doc(referralId)
+    .collection(Collection.Claim)
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+
+  const collectionSnapshot = await collectionRef.get();
+  if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => doc.data());
+  }
+};
