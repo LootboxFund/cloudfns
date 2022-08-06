@@ -13,34 +13,30 @@ const ReferralTypeDefs = gql`
     deletedAt: Timestamp
   }
 
-  enum ReferralStatus {
+  enum ClaimType {
+    referral
+    reward
+  }
+
+  enum ClaimStatus {
     pending
     pending_verification
     verification_sent
     complete
   }
 
-  type Referee {
-    userId: ID!
-    isNewUser: Boolean!
-  }
-
-  type ClaimMetadataPartyBasket {
-    tournamentId: ID!
-    chosenPartyBasketId: ID!
-  }
-
-  type ReferralMetadataPartyBasket {
-    tournamentId: ID!
-    seedPartyBasketId: ID
-  }
-
   type Claim {
     id: ID!
-    referrerId: ID!
-    referee: Referee
-    status: ReferralStatus!
-    metadata: ClaimMetadataPartyBasket
+    referralId: ID!
+    referralSlug: ID!
+    tournamentId: ID!
+    referrerId: ID
+    chosenPartyBasketId: ID
+    rewardFromClaim: ID
+    claimerUserId: ID
+    claimerIsNewUeser: Boolean
+    status: ClaimStatus!
+    type: ClaimType!
     timestamps: ClaimTimestamps!
   }
 
@@ -49,9 +45,10 @@ const ReferralTypeDefs = gql`
     referrerId: ID!
     creatorId: ID!
     slug: ID!
-    campaignName: String
+    tournamentId: ID!
+    seedPartyBasketId: ID
+    campaignName: String!
     nConversions: Int!
-    metadata: ReferralMetadataPartyBasket!
     timestamps: ReferralTimestamps!
     claims: [Claim]
   }
@@ -62,14 +59,38 @@ const ReferralTypeDefs = gql`
     partyBasketId: ID
   }
 
-  type CreateReferralResponseSuccess {
-    referral: Referral
+  input CompleteClaimPayload {
+    claimId: ID!
+    chosenPartyBasketId: ID!
+    isNewUser: Boolean!
   }
+
+  input StartClaimPayload {
+    referralSlug: ID!
+  }
+
+  type CreateReferralResponseSuccess {
+    referral: Referral!
+  }
+
+  type CompleteClaimResponseSuccess {
+    claim: Claim!
+  }
+
+  type StartClaimResponseSuccess {
+    claim: Claim!
+  }
+
+  union StartClaimResponse = StartClaimResponseSuccess | ResponseError
+
+  union CompleteClaimResponse = CompleteClaimResponseSuccess | ResponseError
 
   union CreateReferralResponse = CreateReferralResponseSuccess | ResponseError
 
   extend type Mutation {
     createReferral(payload: CreateReferralPayload!): CreateReferralResponse!
+    startClaim(payload: StartClaimPayload!): StartClaimResponse!
+    completeClaim(payload: CompleteClaimPayload!): CompleteClaimResponse!
   }
 `;
 

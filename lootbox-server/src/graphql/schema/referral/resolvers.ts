@@ -5,6 +5,11 @@ import {
   MutationCreateReferralArgs,
   Resolvers,
   StatusCode,
+  MutationCompleteClaimArgs,
+  CompleteClaimResponse,
+  MutationStartClaimArgs,
+  StartClaimResponse,
+  ClaimStatus,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -13,8 +18,19 @@ import {
   createReferral,
   getTournamentById,
   getPartyBasketById,
+  createStartingClaim,
+  getClaimById,
+  getCompletedClaimsForUserReferral,
+  completeClaim,
 } from "../../../api/firestore";
-import { PartyBasketID, ReferralSlug, TournamentID } from "../../../lib/types";
+import {
+  ClaimID,
+  PartyBasketID,
+  ReferralID,
+  ReferralSlug,
+  TournamentID,
+  UserIdpID,
+} from "../../../lib/types";
 
 const ReferralResolvers: Resolvers = {
   Mutation: {
@@ -32,7 +48,7 @@ const ReferralResolvers: Resolvers = {
         };
       }
 
-      const slug = nanoid(12) as ReferralSlug;
+      const slug = nanoid(10) as ReferralSlug;
 
       try {
         const [existingReferral, tournament, partyBasket] = await Promise.all([
@@ -76,6 +92,135 @@ const ReferralResolvers: Resolvers = {
         };
       }
     },
+    startClaim: async (
+      _,
+      { payload }: MutationStartClaimArgs
+    ): Promise<StartClaimResponse> => {
+      try {
+        const referral = await getReferralBySlug(
+          payload.referralSlug as ReferralSlug
+        );
+
+        if (!referral || !!referral.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Referral not found",
+            },
+          };
+        }
+
+        const tournament = await getTournamentById(
+          referral.tournamentId as TournamentID
+        );
+
+        if (!tournament || !!tournament.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Tournament not found",
+            },
+          };
+        }
+
+        const claim = await createStartingClaim({
+          referralId: referral.id as ReferralID,
+          tournamentId: referral.tournamentId as TournamentID,
+          referrerId: referral.referrerId as UserIdpID,
+          referralSlug: payload.referralSlug as ReferralSlug,
+        });
+
+        return {
+          claim,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    completeClaim: async (
+      _,
+      { payload }: MutationCompleteClaimArgs,
+      context: Context
+    ): Promise<CompleteClaimResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You must be logged in to complete a claim",
+          },
+        };
+      }
+
+      try {
+        const [claim, partyBasket] = await Promise.all([
+          getClaimById(payload.claimId as ClaimID),
+          getPartyBasketById(payload.chosenPartyBasketId as PartyBasketID),
+        ]);
+
+        if (!claim || !!claim?.timestamps?.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Claim not found",
+            },
+          };
+        } else if (!partyBasket || !!partyBasket?.timestamps?.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Party Basket not found",
+            },
+          };
+        } else if (claim.status === ClaimStatus.Complete) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Claim already completed",
+            },
+          };
+        }
+
+        // Make sure the user has not accepted one of these referrals before
+        const previousClaimsForReferral =
+          await getCompletedClaimsForUserReferral(
+            context.userId,
+            claim.referralId as ReferralID
+          );
+
+        if (previousClaimsForReferral.length > 0) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "You have already accepted a referral",
+            },
+          };
+        }
+
+        const updatedClaim = await completeClaim({
+          claimId: claim.id as ClaimID,
+          referralId: claim.referralId as ReferralID,
+          chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
+          claimerUserId: context.userId,
+          isNewUser: payload.isNewUser,
+        });
+
+        return {
+          claim: updatedClaim,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   CreateReferralResponse: {
@@ -89,10 +234,35 @@ const ReferralResolvers: Resolvers = {
       return null;
     },
   },
+
+  StartClaimResponse: {
+    __resolveType: (obj: StartClaimResponse) => {
+      if ("claim" in obj) {
+        return "StartClaimResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+
+  CompleteClaimResponse: {
+    __resolveType: (obj: CompleteClaimResponse) => {
+      if ("claim" in obj) {
+        return "CompleteClaimResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
 };
 
 const referralResolverComposition = {
   "Mutation.createReferral": [isAuthenticated()],
+  "Mutation.completeClaim": [isAuthenticated()],
 };
 
 const referralResolvers = composeResolvers(
