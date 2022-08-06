@@ -6,4 +6,6 @@ export enum Collection {
   "PartyBasket" = "party-basket",
   "WhitelistSignature" = "whitelist-signature",
   "Stream" = "stream",
+  "Referral" = "referral",
+  "Claim" = "claim",
 }

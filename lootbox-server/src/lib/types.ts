@@ -6,3 +6,6 @@ export type TournamentID = string & { readonly _: unique symbol };
 export type PartyBasketID = string & { readonly _: unique symbol };
 export type WhitelistSignatureID = string & { readonly _: unique symbol };
 export type StreamID = string & { readonly _: unique symbol };
+export type ReferralSlug = string & { readonly _: unique symbol };
+export type ReferralID = string & { readonly _: unique symbol };
+export type ClaimID = string & { readonly _: unique symbol };
