@@ -5,6 +5,9 @@ import {
   ClaimStatus,
   Tournament,
   ClaimType,
+  PageInfo,
+  ClaimEdge,
+  ClaimPageInfo,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -125,13 +128,13 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   return newClaim;
 };
 
-interface CreateStartClaimReq {
+interface CreateCreateClaimReq {
   referralId: ReferralID;
   tournamentId: TournamentID;
   referrerId?: UserIdpID;
   referralSlug: ReferralSlug;
 }
-export const createStartingClaim = async (req: CreateStartClaimReq) => {
+export const createStartingClaim = async (req: CreateCreateClaimReq) => {
   return await _createClaim({
     referralId: req.referralId,
     tournamentId: req.tournamentId,
@@ -165,6 +168,8 @@ interface CompleteClaimReq {
   chosenPartyBasketId: PartyBasketID;
   claimerUserId: UserIdpID;
   isNewUser: boolean;
+  chosenPartyBasketAddress: Address;
+  lootboxAddress: Address;
 }
 export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
   const referralRef = db.collection(Collection.Referral).doc(req.referralId);
@@ -176,7 +181,9 @@ export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
     status: ClaimStatus.Complete,
     chosenPartyBasketId: req.chosenPartyBasketId,
     claimerUserId: req.claimerUserId,
-    claimerIsNewUeser: req.isNewUser,
+    claimerIsNewUser: req.isNewUser,
+    chosenPartyBasketAddress: req.chosenPartyBasketAddress,
+    lootboxAddress: req.lootboxAddress,
   };
 
   // This is to update nested object in non-destructive way
@@ -237,5 +244,72 @@ export const getCompletedClaimsForUserReferral = async (
     return [];
   } else {
     return collectionSnapshot.docs.map((doc) => doc.data());
+  }
+};
+
+export const getAllClaimsForReferral = async (
+  referralId: ReferralID
+): Promise<Claim[]> => {
+  const collectionRef = db
+    .collection(Collection.Referral)
+    .doc(referralId)
+    .collection(Collection.Claim)
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+
+  const collectionSnapshot = await collectionRef.get();
+  if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => doc.data());
+  }
+};
+
+export const paginateUserClaims = async (
+  userId: UserIdpID,
+  limit: number,
+  cursor?: Timestamp | null // timestamps.createdAt
+): Promise<{
+  totalCount: number;
+  edges: ClaimEdge[];
+  pageInfo: ClaimPageInfo;
+}> => {
+  let claimQuery = db
+    .collectionGroup(Collection.Claim)
+    .where("claimerUserId", "==", userId)
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+
+  if (cursor) {
+    claimQuery = claimQuery.startAfter(cursor);
+  }
+
+  claimQuery = claimQuery.limit(limit + 1);
+
+  const claimsSnapshot = await claimQuery.get();
+
+  if (claimsSnapshot.empty) {
+    return {
+      edges: [],
+      totalCount: -1,
+      pageInfo: {
+        endCursor: null,
+        hasNextPage: false,
+      },
+    };
+  } else {
+    const docs = claimsSnapshot.docs.slice(0, limit);
+    return {
+      edges: docs.map((doc) => {
+        const data = doc.data();
+        return {
+          node: data,
+          cursor: data.timestamps.createdAt,
+        };
+      }),
+      totalCount: -1,
+      pageInfo: {
+        endCursor: docs[docs.length - 1].data().timestamps.createdAt,
+        hasNextPage: claimsSnapshot.docs.length === limit + 1,
+      },
+    };
   }
 };

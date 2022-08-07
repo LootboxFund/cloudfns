@@ -7,10 +7,18 @@ import {
   StatusCode,
   MutationCompleteClaimArgs,
   CompleteClaimResponse,
-  MutationStartClaimArgs,
-  StartClaimResponse,
+  MutationCreateClaimArgs,
   ClaimStatus,
   ClaimType,
+  Referral,
+  Claim,
+  QueryReferralArgs,
+  ReferralResponse,
+  Tournament,
+  UserClaimsResponse,
+  PartyBasket,
+  QueryUserClaimsArgs,
+  CreateClaimResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -24,6 +32,9 @@ import {
   getCompletedClaimsForUserReferral,
   completeClaim,
   createRewardClaim,
+  getAllClaimsForReferral,
+  paginateUserClaims,
+  getLootboxByAddress,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -33,8 +44,97 @@ import {
   TournamentID,
   UserIdpID,
 } from "../../../lib/types";
+import { Address } from "@wormgraph/helpers";
 
 const ReferralResolvers: Resolvers = {
+  Query: {
+    referral: async (
+      _,
+      { slug }: QueryReferralArgs
+    ): Promise<ReferralResponse> => {
+      try {
+        const referral = await getReferralBySlug(slug as ReferralSlug);
+
+        if (!referral) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Referral not found",
+            },
+          };
+        }
+
+        return { referral };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    userClaims: async (
+      _,
+      { userId, first, after }: QueryUserClaimsArgs
+    ): Promise<UserClaimsResponse> => {
+      try {
+        const response = await paginateUserClaims(
+          userId as UserIdpID,
+          first,
+          after
+        );
+
+        return response;
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+
+  Claim: {
+    chosenPartyBasket: async (claim: Claim): Promise<PartyBasket | null> => {
+      if (!claim.chosenPartyBasketId) {
+        return null;
+      }
+
+      const partyBasket = await getPartyBasketById(
+        claim.chosenPartyBasketId as PartyBasketID
+      );
+
+      return !partyBasket ? null : partyBasket;
+    },
+  },
+
+  Referral: {
+    claims: async (referral: Referral): Promise<Claim[]> => {
+      return getAllClaimsForReferral(referral.id as ReferralID);
+    },
+    tournament: async (referral: Referral): Promise<Tournament | null> => {
+      const tournament = await getTournamentById(
+        referral.tournamentId as TournamentID
+      );
+      return !tournament ? null : tournament;
+    },
+    seedPartyBasket: async (
+      referral: Referral
+    ): Promise<PartyBasket | null> => {
+      if (!referral.seedPartyBasketId) {
+        return null;
+      }
+      const partyBasket = await getPartyBasketById(
+        referral.seedPartyBasketId as PartyBasketID
+      );
+
+      return !partyBasket ? null : partyBasket;
+    },
+  },
+
   Mutation: {
     createReferral: async (
       _,
@@ -94,10 +194,10 @@ const ReferralResolvers: Resolvers = {
         };
       }
     },
-    startClaim: async (
+    createClaim: async (
       _,
-      { payload }: MutationStartClaimArgs
-    ): Promise<StartClaimResponse> => {
+      { payload }: MutationCreateClaimArgs
+    ): Promise<CreateClaimResponse> => {
       try {
         const referral = await getReferralBySlug(
           payload.referralSlug as ReferralSlug
@@ -214,6 +314,8 @@ const ReferralResolvers: Resolvers = {
           claimId: claim.id as ClaimID,
           referralId: claim.referralId as ReferralID,
           chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
+          chosenPartyBasketAddress: partyBasket.address as Address,
+          lootboxAddress: partyBasket.lootboxAddress as Address,
           claimerUserId: context.userId,
           isNewUser: payload.isNewUser,
         });
@@ -257,10 +359,10 @@ const ReferralResolvers: Resolvers = {
     },
   },
 
-  StartClaimResponse: {
-    __resolveType: (obj: StartClaimResponse) => {
+  CreateClaimResponse: {
+    __resolveType: (obj: CreateClaimResponse) => {
       if ("claim" in obj) {
-        return "StartClaimResponseSuccess";
+        return "CreateClaimResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
@@ -273,6 +375,30 @@ const ReferralResolvers: Resolvers = {
     __resolveType: (obj: CompleteClaimResponse) => {
       if ("claim" in obj) {
         return "CompleteClaimResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+
+  ReferralResponse: {
+    __resolveType: (obj: ReferralResponse) => {
+      if ("referral" in obj) {
+        return "ReferralResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+
+  UserClaimsResponse: {
+    __resolveType: (obj: UserClaimsResponse) => {
+      if ("edges" in obj) {
+        return "UserClaimsResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
