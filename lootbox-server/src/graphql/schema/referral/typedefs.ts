@@ -45,7 +45,7 @@ const ReferralTypeDefs = gql`
 
   type ClaimEdge {
     node: Claim!
-    cursor: ID!
+    cursor: Timestamp!
   }
 
   type Referral {
@@ -60,6 +60,7 @@ const ReferralTypeDefs = gql`
     timestamps: ReferralTimestamps!
     claims: [Claim!]
     tournament: Tournament
+    seedPartyBasket: PartyBasket
   }
 
   type ReferralResponseSuccess {
@@ -80,7 +81,7 @@ const ReferralTypeDefs = gql`
     isNewUser: Boolean!
   }
 
-  input StartClaimPayload {
+  input CreateClaimPayload {
     referralSlug: ID!
   }
 
@@ -92,17 +93,22 @@ const ReferralTypeDefs = gql`
     claim: Claim!
   }
 
-  type StartClaimResponseSuccess {
+  type CreateClaimResponseSuccess {
     claim: Claim!
+  }
+
+  type ClaimPageInfo {
+    endCursor: Timestamp! # Time of last claim timestamps.createdAt
+    hasNextPage: Boolean!
   }
 
   type UserClaimsResponseSuccess {
     totalCount: Int!
-    pageInfo: PageInfo!
+    pageInfo: ClaimPageInfo!
     edges: [ClaimEdge!]!
   }
 
-  union StartClaimResponse = StartClaimResponseSuccess | ResponseError
+  union CreateClaimResponse = CreateClaimResponseSuccess | ResponseError
 
   union CompleteClaimResponse = CompleteClaimResponseSuccess | ResponseError
 
@@ -112,12 +118,12 @@ const ReferralTypeDefs = gql`
 
   extend type Query {
     referral(slug: ID!): ReferralResponse!
-    userClaims(userId: ID!, first: Int!, after: Int): UserClaimsResponse!
+    userClaims(userId: ID!, first: Int!, after: Timestamp): UserClaimsResponse!
   }
 
   extend type Mutation {
     createReferral(payload: CreateReferralPayload!): CreateReferralResponse!
-    startClaim(payload: StartClaimPayload!): StartClaimResponse!
+    createClaim(payload: CreateClaimPayload!): CreateClaimResponse!
     completeClaim(payload: CompleteClaimPayload!): CompleteClaimResponse!
   }
 `;

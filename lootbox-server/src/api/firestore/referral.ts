@@ -7,6 +7,7 @@ import {
   ClaimType,
   PageInfo,
   ClaimEdge,
+  ClaimPageInfo,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -127,13 +128,13 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   return newClaim;
 };
 
-interface CreateStartClaimReq {
+interface CreateCreateClaimReq {
   referralId: ReferralID;
   tournamentId: TournamentID;
   referrerId?: UserIdpID;
   referralSlug: ReferralSlug;
 }
-export const createStartingClaim = async (req: CreateStartClaimReq) => {
+export const createStartingClaim = async (req: CreateCreateClaimReq) => {
   return await _createClaim({
     referralId: req.referralId,
     tournamentId: req.tournamentId,
@@ -266,11 +267,11 @@ export const getAllClaimsForReferral = async (
 export const paginateUserClaims = async (
   userId: UserIdpID,
   limit: number,
-  cursor?: number | null // timestamps.createdAt
+  cursor?: Timestamp | null // timestamps.createdAt
 ): Promise<{
   totalCount: number;
   edges: ClaimEdge[];
-  pageInfo: PageInfo;
+  pageInfo: ClaimPageInfo;
 }> => {
   let claimQuery = db
     .collectionGroup(Collection.Claim)
@@ -298,14 +299,15 @@ export const paginateUserClaims = async (
     const docs = claimsSnapshot.docs.slice(0, limit);
     return {
       edges: docs.map((doc) => {
+        const data = doc.data();
         return {
-          node: doc.data(),
-          cursor: doc.id,
+          node: data,
+          cursor: data.timestamps.createdAt,
         };
       }),
       totalCount: -1,
       pageInfo: {
-        endCursor: docs[docs.length - 1].id,
+        endCursor: docs[docs.length - 1].data().timestamps.createdAt,
         hasNextPage: claimsSnapshot.docs.length === limit + 1,
       },
     };

@@ -7,8 +7,7 @@ import {
   StatusCode,
   MutationCompleteClaimArgs,
   CompleteClaimResponse,
-  MutationStartClaimArgs,
-  StartClaimResponse,
+  MutationCreateClaimArgs,
   ClaimStatus,
   ClaimType,
   Referral,
@@ -19,6 +18,7 @@ import {
   UserClaimsResponse,
   PartyBasket,
   QueryUserClaimsArgs,
+  CreateClaimResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -121,6 +121,18 @@ const ReferralResolvers: Resolvers = {
       );
       return !tournament ? null : tournament;
     },
+    seedPartyBasket: async (
+      referral: Referral
+    ): Promise<PartyBasket | null> => {
+      if (!referral.seedPartyBasketId) {
+        return null;
+      }
+      const partyBasket = await getPartyBasketById(
+        referral.seedPartyBasketId as PartyBasketID
+      );
+
+      return !partyBasket ? null : partyBasket;
+    },
   },
 
   Mutation: {
@@ -182,10 +194,10 @@ const ReferralResolvers: Resolvers = {
         };
       }
     },
-    startClaim: async (
+    createClaim: async (
       _,
-      { payload }: MutationStartClaimArgs
-    ): Promise<StartClaimResponse> => {
+      { payload }: MutationCreateClaimArgs
+    ): Promise<CreateClaimResponse> => {
       try {
         const referral = await getReferralBySlug(
           payload.referralSlug as ReferralSlug
@@ -347,10 +359,10 @@ const ReferralResolvers: Resolvers = {
     },
   },
 
-  StartClaimResponse: {
-    __resolveType: (obj: StartClaimResponse) => {
+  CreateClaimResponse: {
+    __resolveType: (obj: CreateClaimResponse) => {
       if ("claim" in obj) {
-        return "StartClaimResponseSuccess";
+        return "CreateClaimResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
