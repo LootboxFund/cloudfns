@@ -36,7 +36,6 @@ const ReferralTypeDefs = gql`
     lootboxAddress: ID
     rewardFromClaim: ID
     claimerUserId: ID
-    claimerIsNewUser: Boolean
     status: ClaimStatus!
     type: ClaimType!
     timestamps: ClaimTimestamps!
@@ -78,7 +77,6 @@ const ReferralTypeDefs = gql`
   input CompleteClaimPayload {
     claimId: ID!
     chosenPartyBasketId: ID!
-    isNewUser: Boolean!
   }
 
   input CreateClaimPayload {
