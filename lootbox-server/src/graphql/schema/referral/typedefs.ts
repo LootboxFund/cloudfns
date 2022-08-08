@@ -96,7 +96,7 @@ const ReferralTypeDefs = gql`
   }
 
   type ClaimPageInfo {
-    endCursor: Timestamp! # Time of last claim timestamps.createdAt
+    endCursor: Timestamp # Time of last claim timestamps.createdAt
     hasNextPage: Boolean!
   }
 
