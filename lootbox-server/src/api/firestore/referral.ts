@@ -265,7 +265,7 @@ export const getAllClaimsForReferral = async (
 export const paginateUserClaims = async (
   userId: UserIdpID,
   limit: number,
-  cursor?: Timestamp | null // timestamps.createdAt
+  cursor?: number | null // timestamps.createdAt
 ): Promise<{
   totalCount: number;
   edges: ClaimEdge[];
@@ -277,7 +277,7 @@ export const paginateUserClaims = async (
     .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
 
   if (cursor) {
-    claimQuery = claimQuery.startAfter(cursor);
+    claimQuery = claimQuery.startAfter(Number(cursor));
   }
 
   claimQuery = claimQuery.limit(limit + 1);

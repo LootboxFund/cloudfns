@@ -173,11 +173,13 @@ const ReferralResolvers: Resolvers = {
           throw new Error("Party Basket not found");
         }
 
+        const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
+
         const referral = await createReferral({
           slug,
           referrerId: context.userId,
           creatorId: context.userId,
-          campaignName: payload.campaignName,
+          campaignName,
           tournamentId: payload.tournamentId as TournamentID,
           seedPartyBasketId: payload.partyBasketId
             ? (payload.partyBasketId as PartyBasketID)
