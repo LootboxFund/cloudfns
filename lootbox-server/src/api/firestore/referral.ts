@@ -167,7 +167,6 @@ interface CompleteClaimReq {
   referralId: ReferralID;
   chosenPartyBasketId: PartyBasketID;
   claimerUserId: UserIdpID;
-  isNewUser: boolean;
   chosenPartyBasketAddress: Address;
   lootboxAddress: Address;
 }
@@ -181,7 +180,6 @@ export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
     status: ClaimStatus.Complete,
     chosenPartyBasketId: req.chosenPartyBasketId,
     claimerUserId: req.claimerUserId,
-    claimerIsNewUser: req.isNewUser,
     chosenPartyBasketAddress: req.chosenPartyBasketAddress,
     lootboxAddress: req.lootboxAddress,
   };

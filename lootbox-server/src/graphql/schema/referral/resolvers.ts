@@ -317,7 +317,6 @@ const ReferralResolvers: Resolvers = {
           chosenPartyBasketAddress: partyBasket.address as Address,
           lootboxAddress: partyBasket.lootboxAddress as Address,
           claimerUserId: context.userId,
-          isNewUser: payload.isNewUser,
         });
 
         // Now write the referrers claim (type=REWARD)
