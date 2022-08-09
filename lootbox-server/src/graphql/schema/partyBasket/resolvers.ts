@@ -163,7 +163,9 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
-      const lootbox = await getLootboxByAddress(payload.address as Address);
+      const lootbox = await getLootboxByAddress(
+        payload.lootboxAddress as Address
+      );
 
       if (!lootbox) {
         return {
