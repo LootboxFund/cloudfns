@@ -307,7 +307,7 @@ const ReferralResolvers: Resolvers = {
           return {
             error: {
               code: StatusCode.BadRequest,
-              message: "You have already accepted a referral",
+              message: "You have already accepted this referral",
             },
           };
         }
