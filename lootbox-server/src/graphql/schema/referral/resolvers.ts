@@ -298,11 +298,23 @@ const ReferralResolvers: Resolvers = {
         }
 
         // Make sure the user has not accepted a claim for a tournament before
-        const previousClaims =
-          await getCompletedUserReferralClaimsForTournament(
+        const [previousClaims, tournament] = await Promise.all([
+          getCompletedUserReferralClaimsForTournament(
             context.userId,
             claim.tournamentId as TournamentID
-          );
+          ),
+          getTournamentById(claim.tournamentId as TournamentID),
+        ]);
+
+        if (!tournament || !!tournament.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Tournament not found",
+            },
+          };
+        }
+
         // const previousClaimsForReferral =
         //   await getCompletedClaimsForUserReferral(
         //     context.userId,
