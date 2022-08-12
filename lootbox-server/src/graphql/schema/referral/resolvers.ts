@@ -313,15 +313,7 @@ const ReferralResolvers: Resolvers = {
               message: "Tournament not found",
             },
           };
-        }
-
-        // const previousClaimsForReferral =
-        //   await getCompletedClaimsForUserReferral(
-        //     context.userId,
-        //     claim.referralId as ReferralID
-        //   );
-
-        if (previousClaims.length > 0) {
+        } else if (previousClaims.length > 0) {
           return {
             error: {
               code: StatusCode.BadRequest,
