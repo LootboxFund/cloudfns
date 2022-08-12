@@ -35,6 +35,7 @@ import {
   getAllClaimsForReferral,
   paginateUserClaims,
   getLootboxByAddress,
+  getCompletedUserReferralClaimsForTournament,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -296,18 +297,26 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        // Make sure the user has not accepted one of these referrals before
-        const previousClaimsForReferral =
-          await getCompletedClaimsForUserReferral(
+        // Make sure the user has not accepted a claim for a tournament before
+        const previousClaims =
+          await getCompletedUserReferralClaimsForTournament(
             context.userId,
-            claim.referralId as ReferralID
+            claim.tournamentId as TournamentID
           );
+        // const previousClaimsForReferral =
+        //   await getCompletedClaimsForUserReferral(
+        //     context.userId,
+        //     claim.referralId as ReferralID
+        //   );
 
-        if (previousClaimsForReferral.length > 0) {
+        if (previousClaims.length > 0) {
           return {
             error: {
               code: StatusCode.BadRequest,
-              message: "You have already accepted this referral",
+              // WARNING - this message is stupidly parsed in the frontend for internationalization.
+              //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+              message:
+                "You have already accepted a referral for this tournament",
             },
           };
         }

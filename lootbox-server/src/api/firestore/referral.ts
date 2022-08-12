@@ -227,6 +227,28 @@ export const getClaimById = async (
   }
 };
 
+export const getCompletedUserReferralClaimsForTournament = async (
+  userId: UserIdpID,
+  tournamentId: TournamentID
+): Promise<Claim[]> => {
+  const collectionRef = db
+    .collectionGroup(Collection.Claim)
+    .where("tournamentId", "==", tournamentId)
+    .where("claimerUserId", "==", userId)
+    .where("type", "==", ClaimType.Referral)
+    .where("status", "==", ClaimStatus.Complete) as Query<Claim>;
+
+  const collectionSnapshot = await collectionRef.get();
+  if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => doc.data());
+  }
+};
+
+/**
+ * @deprecated use getCompletedUserClaimsForTournament
+ */
 export const getCompletedClaimsForUserReferral = async (
   userId: UserIdpID,
   referralId: ReferralID
