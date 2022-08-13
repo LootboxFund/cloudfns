@@ -16,7 +16,6 @@ const UserTypeDefs = gql`
     lastName: String @deprecated(reason: "Replaced with username!")
     avatar: String
     email: String
-    socials: UserSocials
     phoneNumber: String
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -26,16 +25,16 @@ const UserTypeDefs = gql`
     partyBaskets: [PartyBasket!]
   }
 
-  type UserSocials {
-    twitter: String
-    instagram: String
-    tiktok: String
-    facebook: String
-    discord: String
-    snapchat: String
-    twitch: String
-    web: String
-  }
+  # type UserSocials {
+  #   twitter: String
+  #   instagram: String
+  #   tiktok: String
+  #   facebook: String
+  #   discord: String
+  #   snapchat: String
+  #   twitch: String
+  #   web: String
+  # }
 
   # Queries
 
