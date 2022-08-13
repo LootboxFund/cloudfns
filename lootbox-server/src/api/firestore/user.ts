@@ -4,15 +4,7 @@ import { db } from "../firebase";
 import { User } from "../../graphql/generated/types";
 import { IIdpUser } from "../identityProvider/interface";
 
-interface CreateFirestoreUserPayload {
-  firstName?: string;
-  lastName?: string;
-}
-
-export const createUser = async (
-  idpUser: IIdpUser,
-  payload: CreateFirestoreUserPayload
-): Promise<User> => {
+export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   const userRef = db
     .collection(Collection.User)
     .doc(idpUser.id) as DocumentReference<User>;
@@ -26,13 +18,6 @@ export const createUser = async (
     updatedAt: Timestamp.now().toMillis(),
     deletedAt: null,
   };
-
-  if (!!payload.firstName) {
-    user.firstName = payload.firstName;
-  }
-  if (!!payload.lastName) {
-    user.lastName = payload.lastName;
-  }
 
   await userRef.set(user);
 
@@ -59,8 +44,6 @@ export const getUser = async (
     const user = userSnapshot.data() as User;
     return {
       id: userSnapshot.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
       email: user.email,
       username: user.username,
       avatar: user.avatar,

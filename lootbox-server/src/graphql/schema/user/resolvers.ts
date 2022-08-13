@@ -172,7 +172,7 @@ const UserResolvers = {
         }
 
         // User does not exist in database, create it
-        const user = await createUser(idpUser, {});
+        const user = await createUser(idpUser);
 
         return { user };
       } catch (err) {
@@ -199,10 +199,7 @@ const UserResolvers = {
           username,
         });
 
-        const user = await createUser(idpUser, {
-          firstName: payload.firstName || undefined,
-          lastName: payload.lastName || undefined,
-        });
+        const user = await createUser(idpUser);
         user.wallets = [];
         return { user };
       } catch (err) {
@@ -270,10 +267,7 @@ const UserResolvers = {
           username,
         });
 
-        const user = await createUser(idpUser, {
-          firstName: payload.firstName || undefined,
-          lastName: payload.lastName || undefined,
-        });
+        const user = await createUser(idpUser);
         const wallet = await createUserWallet({
           userId: idpUser.id,
           address,

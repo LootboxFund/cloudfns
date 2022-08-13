@@ -12,8 +12,6 @@ const UserTypeDefs = gql`
   type User {
     id: ID!
     username: String
-    firstName: String @deprecated(reason: "Replaced with username!")
-    lastName: String @deprecated(reason: "Replaced with username!")
     avatar: String
     email: String
     phoneNumber: String
@@ -55,16 +53,12 @@ const UserTypeDefs = gql`
   union CreateUserResponse = CreateUserResponseSuccess | ResponseError
 
   input CreateUserWithPasswordPayload {
-    firstName: String
-    lastName: String
     email: EmailAddress!
     phoneNumber: PhoneNumber
     password: String!
   }
 
   input CreateUserWithWalletPayload {
-    firstName: String
-    lastName: String
     email: EmailAddress!
     phoneNumber: PhoneNumber
     message: String!
