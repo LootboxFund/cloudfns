@@ -115,6 +115,7 @@ interface CreateClaimCall {
   chosenPartyBasketNFTBountyValue?: string;
   lootboxName?: string;
   lootboxAddress?: string;
+  isAlreadyCompleted?: boolean;
 }
 const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   const ref = db
@@ -122,6 +123,8 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     .doc(req.referralId)
     .collection(Collection.Claim)
     .doc();
+
+  const timestamp = Timestamp.now().toMillis();
   const newClaim: Claim = {
     id: ref.id,
     referralId: req.referralId,
@@ -132,10 +135,10 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     status: req.status,
     type: req.type,
     timestamps: {
-      createdAt: Timestamp.now().toMillis(),
-      updatedAt: Timestamp.now().toMillis(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
       deletedAt: null,
-      completedAt: null,
+      completedAt: !!req.isAlreadyCompleted ? timestamp : null,
     },
   };
 
@@ -205,6 +208,7 @@ export const createStartingClaim = async (req: CreateCreateClaimReq) => {
     originPartyBasketId: req.originPartyBasketId,
     status: ClaimStatus.Pending,
     type: ClaimType.Referral,
+    isAlreadyCompleted: false,
   });
 };
 
@@ -238,6 +242,7 @@ export const createRewardClaim = async (req: CreateRewardClaimReq) => {
     lootboxAddress: req.lootboxAddress,
     status: ClaimStatus.Complete,
     type: ClaimType.Reward,
+    isAlreadyCompleted: true,
   });
 };
 
