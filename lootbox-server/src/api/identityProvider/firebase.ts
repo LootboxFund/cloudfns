@@ -36,6 +36,7 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     password,
     phoneNumber,
     emailVerified = true,
+    username,
   }: ICreateUserRequest): Promise<IIdpUser> {
     const userRecord = await this.authInstance.createUser({
       email,
@@ -43,16 +44,12 @@ class FirebaseIdentityProvider implements IIdentityProvider {
       emailVerified,
       phoneNumber,
       disabled: false,
+      displayName: username,
     });
 
     // await this.generateEmailVerificationLink(email);
 
-    return {
-      id: userRecord.uid as UserIdpID,
-      email,
-      phoneNumber,
-      isEnabled: !userRecord.disabled,
-    };
+    return convertUserRecordToUser(userRecord);
   }
 
   async updateUser(id: string, request: UpdateUserRequest): Promise<IIdpUser> {

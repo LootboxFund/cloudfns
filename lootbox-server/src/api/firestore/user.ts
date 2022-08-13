@@ -9,7 +9,6 @@ interface CreateFirestoreUserPayload {
   lastName?: string;
 }
 
-// NEED TO UPDATE THIS
 export const createUser = async (
   idpUser: IIdpUser,
   payload: CreateFirestoreUserPayload
@@ -22,6 +21,7 @@ export const createUser = async (
     id: idpUser.id,
     ...(!!idpUser.email && { email: idpUser.email }),
     ...(!!idpUser.phoneNumber && { phoneNumber: idpUser.phoneNumber }),
+    ...(!!idpUser.username && { username: idpUser.username }),
     createdAt: Timestamp.now().toMillis(),
     updatedAt: Timestamp.now().toMillis(),
     deletedAt: null,

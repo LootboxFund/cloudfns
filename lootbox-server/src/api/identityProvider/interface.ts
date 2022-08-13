@@ -15,6 +15,7 @@ export interface ICreateUserRequest {
   email: string;
   password?: string; // Optional because we can use wallet signature instead
   emailVerified?: boolean;
+  username?: string;
 }
 
 export interface UpdateUserRequest {

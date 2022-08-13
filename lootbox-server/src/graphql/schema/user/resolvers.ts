@@ -38,6 +38,7 @@ import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { UserID, WalletID } from "../../../lib/types";
 import { IIdpUser } from "../../../api/identityProvider/interface";
+import { generateUsername } from "../../../lib/rng";
 
 const UserResolvers = {
   Query: {
@@ -141,7 +142,7 @@ const UserResolvers = {
             },
           };
         }
-        idpUser = _idpUser;
+        idpUser = { ..._idpUser };
       } catch (err) {
         return {
           error: {
@@ -153,15 +154,27 @@ const UserResolvers = {
 
       try {
         const dbUser = await getUser(context.userId);
-
         if (!!dbUser) {
           // User is already created
           return { user: dbUser };
-        } else {
-          // User does not exist in database, create it
-          const user = await createUser(idpUser, {});
-          return { user };
         }
+
+        // Update the idp username if needed
+        // let updatedUserIdp: IIdpUser | undefined = undefined;
+        if (!idpUser.username) {
+          const updatedUserIdp = await identityProvider.updateUser(
+            context.userId,
+            {
+              username: generateUsername(),
+            }
+          );
+          idpUser = { ...updatedUserIdp };
+        }
+
+        // User does not exist in database, create it
+        const user = await createUser(idpUser, {});
+
+        return { user };
       } catch (err) {
         return {
           error: {
@@ -177,11 +190,13 @@ const UserResolvers = {
     ): Promise<CreateUserResponse> => {
       try {
         // Create the user in the IDP
+        const username = generateUsername();
         const idpUser = await identityProvider.createUser({
           email: payload.email,
           phoneNumber: payload.phoneNumber || undefined,
           emailVerified: false,
           password: payload.password,
+          username,
         });
 
         const user = await createUser(idpUser, {
@@ -245,11 +260,14 @@ const UserResolvers = {
       }
 
       try {
+        const username = generateUsername();
+
         // Create the user in the IDP
         const idpUser = await identityProvider.createUser({
           email: payload.email,
           phoneNumber: payload.phoneNumber,
           emailVerified: false,
+          username,
         });
 
         const user = await createUser(idpUser, {
