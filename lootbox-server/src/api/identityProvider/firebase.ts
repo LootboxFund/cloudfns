@@ -7,6 +7,7 @@ const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
   return {
     id: userRecord.uid as UserIdpID,
     email: userRecord.email ?? "",
+    phoneNumber: userRecord.phoneNumber ?? "",
     isEnabled: !userRecord.disabled,
   };
 };

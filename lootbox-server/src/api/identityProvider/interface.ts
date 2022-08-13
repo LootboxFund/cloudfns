@@ -2,7 +2,7 @@ import { UserIdpID } from "../../lib/types";
 
 export interface IIdpUser {
   id: UserIdpID;
-  email: string;
+  email?: string;
   isEnabled: boolean;
   phoneNumber?: string;
   // claims: IClaims;

@@ -19,15 +19,13 @@ export const createUser = async (
 
   const user: User = {
     id: idpUser.id,
-    email: idpUser.email,
+    ...(idpUser.email && { email: idpUser.email }),
+    ...(idpUser.phoneNumber && { phoneNumber: idpUser.phoneNumber }),
     createdAt: Timestamp.now().toMillis(),
     updatedAt: Timestamp.now().toMillis(),
     deletedAt: null,
   };
 
-  if (idpUser.phoneNumber) {
-    user.phoneNumber = idpUser.phoneNumber;
-  }
   if (payload.firstName) {
     user.firstName = payload.firstName;
   }

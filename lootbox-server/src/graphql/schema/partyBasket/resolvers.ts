@@ -163,6 +163,19 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
+      const lootbox = await getLootboxByAddress(
+        payload.lootboxAddress as Address
+      );
+
+      if (!lootbox) {
+        return {
+          error: {
+            code: StatusCode.NotFound,
+            message: `The Lootbox does not exist`,
+          },
+        };
+      }
+
       try {
         const partyBasket = await createPartyBasket({
           address: payload.address as Address,
