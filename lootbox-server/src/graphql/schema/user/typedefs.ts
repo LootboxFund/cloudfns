@@ -24,6 +24,17 @@ const UserTypeDefs = gql`
     partyBaskets: [PartyBasket!]
   }
 
+  type PublicUser {
+    id: ID!
+    username: String
+    avatar: String
+    socials: UserSocials
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    deletedAt: Timestamp
+    claims(first: Int!, after: Timestamp): UserClaimsResponseSuccess
+  }
+
   type UserSocials {
     twitter: String
     instagram: String
@@ -52,10 +63,17 @@ const UserTypeDefs = gql`
     user: User!
   }
 
+  type PublicUserResponseSuccess {
+    user: PublicUser!
+  }
+
   union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
+
+  union PublicUserResponse = PublicUserResponseSuccess | ResponseError
 
   extend type Query {
     getMyProfile: GetMyProfileResponse!
+    publicUser(id: ID!): PublicUserResponse!
   }
 
   type CreateUserResponseSuccess {

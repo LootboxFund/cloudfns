@@ -33,7 +33,7 @@ export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   return user;
 };
 
-type UserWithoutWalletsOrLootboxSnapshots = Omit<
+export type UserWithoutWalletsOrLootboxSnapshots = Omit<
   User,
   "wallets" | "lootboxSnapshots"
 >;

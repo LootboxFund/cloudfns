@@ -17,6 +17,11 @@ import {
   PartyBasket,
   MutationUpdateUserArgs,
   UpdateUserResponse,
+  QueryPublicUserArgs,
+  PublicUserResponse,
+  QueryUserClaimsArgs,
+  UserClaimsResponse,
+  PublicUser,
 } from "../../generated/types";
 import {
   getUser,
@@ -36,9 +41,11 @@ import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { UserID, WalletID } from "../../../lib/types";
+import { UserID, UserIdpID, WalletID } from "../../../lib/types";
 import { IIdpUser } from "../../../api/identityProvider/interface";
 import { generateUsername } from "../../../lib/rng";
+import { convertUserToPublicUser } from "./utils";
+import { paginateUserClaims } from "../../../api/firestore";
 
 const UserResolvers = {
   Query: {
@@ -78,6 +85,45 @@ const UserResolvers = {
           },
         };
       }
+    },
+    publicUser: async (
+      _,
+      { id }: QueryPublicUserArgs
+    ): Promise<PublicUserResponse> => {
+      try {
+        const user = await getUser(id);
+        if (!user) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        const publicUser = convertUserToPublicUser(user);
+
+        return {
+          user: publicUser,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+  PublicUser: {
+    claims: async (user: PublicUser, { first, after }: QueryUserClaimsArgs) => {
+      const response = await paginateUserClaims(
+        user.id as UserIdpID,
+        first,
+        after
+      );
+
+      return response;
     },
   },
   User: {
@@ -660,6 +706,19 @@ const UserResolvers = {
     __resolveType: (obj: RemoveWalletResponse) => {
       if ("id" in obj) {
         return "RemoveWalletResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  PublicUserResponse: {
+    __resolveType: (obj: PublicUserResponse) => {
+      if ("user" in obj) {
+        return "PublicUserResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
