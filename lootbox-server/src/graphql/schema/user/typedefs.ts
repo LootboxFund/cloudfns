@@ -15,6 +15,7 @@ const UserTypeDefs = gql`
     avatar: String
     email: String
     phoneNumber: String
+    socials: UserSocials
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
@@ -23,16 +24,27 @@ const UserTypeDefs = gql`
     partyBaskets: [PartyBasket!]
   }
 
-  # type UserSocials {
-  #   twitter: String
-  #   instagram: String
-  #   tiktok: String
-  #   facebook: String
-  #   discord: String
-  #   snapchat: String
-  #   twitch: String
-  #   web: String
-  # }
+  type UserSocials {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
+  input UserSocialsInput {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
 
   # Queries
 
@@ -68,6 +80,7 @@ const UserTypeDefs = gql`
   input UpdateUserPayload {
     username: String
     avatar: String
+    socials: UserSocialsInput
   }
 
   type ConnectWalletResponseSuccess {

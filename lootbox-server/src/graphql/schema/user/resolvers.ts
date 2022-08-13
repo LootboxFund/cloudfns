@@ -520,7 +520,7 @@ const UserResolvers = {
 
       try {
         // Make sure the user exists
-        const [userIdp, userRecord] = await Promise.all([
+        let [userIdp, userRecord] = await Promise.all([
           identityProvider.getUserById(context.userId),
           getUser(context.userId),
         ]);
@@ -540,14 +540,25 @@ const UserResolvers = {
           };
         }
 
-        const newUserIdp = await identityProvider.updateUser(context.userId, {
-          avatar: !!payload.avatar ? payload.avatar : undefined,
-          username: !!payload.username ? payload.username : undefined,
-        });
+        const shouldUpdateIdp =
+          payload.username !== userIdp.username ||
+          payload.avatar !== userIdp.avatar;
+
+        if (shouldUpdateIdp) {
+          const updatedUserIdp = await identityProvider.updateUser(
+            context.userId,
+            {
+              avatar: !!payload.avatar ? payload.avatar : undefined,
+              username: !!payload.username ? payload.username : undefined,
+            }
+          );
+          userIdp = { ...updatedUserIdp };
+        }
 
         const newUserRecord = await updateUser(context.userId, {
-          avatar: newUserIdp.avatar,
-          username: newUserIdp.username,
+          avatar: userIdp.avatar,
+          username: userIdp.username,
+          socials: payload.socials ? payload.socials : undefined,
         });
 
         // let newUserRecord: User;
