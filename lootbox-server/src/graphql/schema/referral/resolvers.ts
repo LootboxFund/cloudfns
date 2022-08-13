@@ -36,6 +36,7 @@ import {
   paginateUserClaims,
   getLootboxByAddress,
   getCompletedUserReferralClaimsForTournament,
+  getReferralById,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -229,10 +230,15 @@ const ReferralResolvers: Resolvers = {
         }
 
         const claim = await createStartingClaim({
+          referralCampaignName: referral.campaignName,
           referralId: referral.id as ReferralID,
           tournamentId: referral.tournamentId as TournamentID,
           referrerId: referral.referrerId as UserIdpID,
           referralSlug: payload.referralSlug as ReferralSlug,
+          tournamentName: tournament.title,
+          originPartyBasketId: !!referral.seedPartyBasketId
+            ? (referral.seedPartyBasketId as PartyBasketID)
+            : undefined,
         });
 
         return {
@@ -298,15 +304,32 @@ const ReferralResolvers: Resolvers = {
         }
 
         // Make sure the user has not accepted a claim for a tournament before
-        const [previousClaims, tournament] = await Promise.all([
-          getCompletedUserReferralClaimsForTournament(
-            context.userId,
-            claim.tournamentId as TournamentID
-          ),
-          getTournamentById(claim.tournamentId as TournamentID),
-        ]);
+        const [previousClaims, tournament, referral, lootbox] =
+          await Promise.all([
+            getCompletedUserReferralClaimsForTournament(
+              context.userId,
+              claim.tournamentId as TournamentID
+            ),
+            getTournamentById(claim.tournamentId as TournamentID),
+            getReferralById(claim.referralId as ReferralID),
+            getLootboxByAddress(partyBasket.lootboxAddress as Address),
+          ]);
 
-        if (!tournament || !!tournament.timestamps.deletedAt) {
+        if (!lootbox) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Lootbox not found",
+            },
+          };
+        } else if (!referral || !!referral.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Referral not found",
+            },
+          };
+        } else if (!tournament || !!tournament.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
@@ -330,17 +353,32 @@ const ReferralResolvers: Resolvers = {
           referralId: claim.referralId as ReferralID,
           chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
           chosenPartyBasketAddress: partyBasket.address as Address,
-          lootboxAddress: partyBasket.lootboxAddress as Address,
+          chosenPartyBasketName: partyBasket.name,
+          chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
+            ? partyBasket.nftBountyValue
+            : undefined,
+          lootboxAddress: lootbox.address as Address,
+          lootboxName: lootbox.name,
           claimerUserId: context.userId,
         });
 
         // Now write the referrers claim (type=REWARD)
         try {
           await createRewardClaim({
+            referralCampaignName: referral.campaignName,
             referralId: claim.referralId as ReferralID,
             tournamentId: claim.tournamentId as TournamentID,
             referralSlug: claim.referralSlug as ReferralSlug,
             rewardFromClaim: claim.id as ClaimID,
+            tournamentName: tournament.title,
+            chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
+            chosenPartyBasketAddress: partyBasket.address as Address,
+            chosenPartyBasketName: partyBasket.name,
+            lootboxAddress: lootbox.address,
+            lootboxName: lootbox.name,
+            chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
+              ? partyBasket.nftBountyValue
+              : undefined,
           });
         } catch (err) {
           // If error here, we just make a log... but we dont return an error to client
