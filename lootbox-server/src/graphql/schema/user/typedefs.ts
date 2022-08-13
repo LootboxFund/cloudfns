@@ -11,9 +11,12 @@ const UserTypeDefs = gql`
 
   type User {
     id: ID!
-    firstName: String
-    lastName: String
+    username: String
+    firstName: String @deprecated(reason: "Replaced with username!")
+    lastName: String @deprecated(reason: "Replaced with username!")
+    avatar: String
     email: String
+    socials: UserSocials
     phoneNumber: String
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -21,6 +24,17 @@ const UserTypeDefs = gql`
     wallets: [Wallet!]
     tournaments: [Tournament!]
     partyBaskets: [PartyBasket!]
+  }
+
+  type UserSocials {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    snapchat: String
+    twitch: String
+    web: String
   }
 
   # Queries
@@ -58,6 +72,11 @@ const UserTypeDefs = gql`
     signedMessage: String!
   }
 
+  input UpdateUserPayload {
+    username: String
+    avatar: String
+  }
+
   type ConnectWalletResponseSuccess {
     wallet: Wallet!
   }
@@ -66,9 +85,15 @@ const UserTypeDefs = gql`
     id: ID!
   }
 
+  type UpdateUserResponseSuccess {
+    user: User!
+  }
+
   union ConnectWalletResponse = ConnectWalletResponseSuccess | ResponseError
 
   union RemoveWalletResponse = RemoveWalletResponseSuccess | ResponseError
+
+  union UpdateUserResponse = UpdateUserResponseSuccess | ResponseError
 
   input ConnectWalletPayload {
     message: String!
@@ -105,6 +130,7 @@ const UserTypeDefs = gql`
     ): AuthenticateWalletResponse!
     removeWallet(payload: RemoveWalletPayload!): RemoveWalletResponse!
     createUserRecord: CreateUserResponse!
+    updateUser(payload: UpdateUserPayload!): UpdateUserResponse!
   }
 `;
 
