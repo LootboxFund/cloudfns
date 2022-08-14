@@ -313,7 +313,8 @@ export const getUserTournaments = async (
 ): Promise<Tournament[]> => {
   const collectionRef = db
     .collection(Collection.Tournament)
-    .where("creatorId", "==", userId) as Query<Tournament>;
+    .where("creatorId", "==", userId)
+    .orderBy("timestamps.createdAt", "desc") as Query<Tournament>;
 
   const tournaments = await collectionRef.get();
 
