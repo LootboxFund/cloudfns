@@ -124,6 +124,7 @@ const ReferralTypeDefs = gql`
   extend type Query {
     referral(slug: ID!): ReferralResponse!
     userClaims(userId: ID!, first: Int!, after: Timestamp): UserClaimsResponse!
+      @deprecated(reason: "Use public user resolver")
   }
 
   extend type Mutation {
