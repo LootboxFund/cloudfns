@@ -9,6 +9,7 @@ const ReferralTypeDefs = gql`
 
   type ClaimTimestamps {
     createdAt: Timestamp!
+    completedAt: Timestamp
     updatedAt: Timestamp!
     deletedAt: Timestamp
   }
@@ -27,13 +28,19 @@ const ReferralTypeDefs = gql`
 
   type Claim {
     id: ID!
+    referrerId: ID
+    referralCampaignName: String
     referralId: ID!
     referralSlug: ID!
     tournamentId: ID!
-    referrerId: ID
+    tournamentName: String
+    originPartyBasketId: ID
     chosenPartyBasketId: ID
     chosenPartyBasketAddress: ID
+    chosenPartyBasketName: String
+    chosenPartyBasketNFTBountyValue: String
     lootboxAddress: ID
+    lootboxName: String
     rewardFromClaim: ID
     claimerUserId: ID
     status: ClaimStatus!
@@ -117,6 +124,7 @@ const ReferralTypeDefs = gql`
   extend type Query {
     referral(slug: ID!): ReferralResponse!
     userClaims(userId: ID!, first: Int!, after: Timestamp): UserClaimsResponse!
+      @deprecated(reason: "Use public user resolver")
   }
 
   extend type Mutation {

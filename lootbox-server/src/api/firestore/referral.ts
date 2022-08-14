@@ -11,6 +11,7 @@ import {
 } from "../../graphql/generated/types";
 import {
   ClaimID,
+  LootboxID,
   PartyBasketID,
   ReferralID,
   ReferralSlug,
@@ -22,6 +23,7 @@ import { Collection } from "./collection.types";
 import { db } from "../firebase";
 import {
   DocumentReference,
+  DocumentSnapshot,
   FieldValue,
   Query,
   Timestamp,
@@ -42,6 +44,21 @@ export const getReferralBySlug = async (
     return undefined;
   } else {
     return collectionSnapshot.docs[0].data();
+  }
+};
+
+export const getReferralById = async (
+  id: ReferralID
+): Promise<Referral | undefined> => {
+  const collectionRef = (await db
+    .collection(Collection.Referral)
+    .doc(id)
+    .get()) as DocumentSnapshot<Referral>;
+
+  if (collectionRef.exists) {
+    return collectionRef.data();
+  } else {
+    return undefined;
   }
 };
 
@@ -84,12 +101,22 @@ export const createReferral = async (
 interface CreateClaimCall {
   referralId: ReferralID;
   tournamentId: TournamentID;
+  tournamentName: string;
   referrerId?: UserIdpID;
+  referralCampaignName: string;
   referralSlug: ReferralSlug;
   chosenPartyBasketId?: PartyBasketID;
+  originPartyBasketId?: PartyBasketID;
   rewardFromClaim?: ClaimID;
   status: ClaimStatus;
   type: ClaimType;
+  chosenPartyBasketAddress?: Address;
+  chosenPartyBasketName?: string;
+  chosenPartyBasketNFTBountyValue?: string;
+  lootboxName?: string;
+  lootboxAddress?: string;
+  isAlreadyCompleted?: boolean;
+  claimerUserId?: UserID;
 }
 const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   const ref = db
@@ -97,19 +124,36 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     .doc(req.referralId)
     .collection(Collection.Claim)
     .doc();
+
+  const timestamp = Timestamp.now().toMillis();
   const newClaim: Claim = {
     id: ref.id,
     referralId: req.referralId,
     tournamentId: req.tournamentId,
+    tournamentName: req.tournamentName,
     referralSlug: req.referralSlug,
+    referralCampaignName: req.referralCampaignName,
     status: req.status,
     type: req.type,
     timestamps: {
-      createdAt: Timestamp.now().toMillis(),
-      updatedAt: Timestamp.now().toMillis(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
       deletedAt: null,
+      completedAt: !!req.isAlreadyCompleted ? timestamp : null,
     },
   };
+
+  if (!!req.claimerUserId) {
+    newClaim.claimerUserId = req.claimerUserId;
+  }
+
+  if (!!req.lootboxAddress) {
+    newClaim.lootboxAddress = req.lootboxAddress;
+  }
+
+  if (!!req.lootboxName) {
+    newClaim.lootboxName = req.lootboxName;
+  }
 
   if (!!req.referrerId) {
     newClaim.referrerId = req.referrerId;
@@ -119,8 +163,29 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     newClaim.chosenPartyBasketId = req.chosenPartyBasketId;
   }
 
+  if (!!req.chosenPartyBasketName) {
+    newClaim.chosenPartyBasketName = req.chosenPartyBasketName;
+  }
+
+  if (!!req.chosenPartyBasketNFTBountyValue) {
+    newClaim.chosenPartyBasketNFTBountyValue =
+      req.chosenPartyBasketNFTBountyValue;
+  }
+
+  if (!!req.chosenPartyBasketId) {
+    newClaim.chosenPartyBasketId = req.chosenPartyBasketId;
+  }
+
+  if (!!req.originPartyBasketId) {
+    newClaim.originPartyBasketId = req.originPartyBasketId;
+  }
+
   if (!!req.rewardFromClaim) {
     newClaim.rewardFromClaim = req.rewardFromClaim;
+  }
+
+  if (!!req.chosenPartyBasketAddress) {
+    newClaim.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
   }
 
   await ref.set(newClaim);
@@ -131,8 +196,11 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
 interface CreateCreateClaimReq {
   referralId: ReferralID;
   tournamentId: TournamentID;
+  tournamentName: string;
+  referralCampaignName: string;
   referrerId?: UserIdpID;
   referralSlug: ReferralSlug;
+  originPartyBasketId?: PartyBasketID;
 }
 export const createStartingClaim = async (req: CreateCreateClaimReq) => {
   return await _createClaim({
@@ -140,25 +208,48 @@ export const createStartingClaim = async (req: CreateCreateClaimReq) => {
     tournamentId: req.tournamentId,
     referrerId: req.referrerId,
     referralSlug: req.referralSlug,
+    referralCampaignName: req.referralCampaignName,
+    tournamentName: req.tournamentName,
+    originPartyBasketId: req.originPartyBasketId,
     status: ClaimStatus.Pending,
     type: ClaimType.Referral,
+    isAlreadyCompleted: false,
   });
 };
 
 interface CreateRewardClaimReq {
   referralId: ReferralID;
+  claimerId: UserID;
+  referralCampaignName: string;
   tournamentId: TournamentID;
+  tournamentName: string;
   referralSlug: ReferralSlug;
   rewardFromClaim: ClaimID;
+  chosenPartyBasketId: PartyBasketID;
+  chosenPartyBasketAddress: Address;
+  chosenPartyBasketName: string;
+  chosenPartyBasketNFTBountyValue?: string;
+  lootboxName: string;
+  lootboxAddress: string;
 }
 export const createRewardClaim = async (req: CreateRewardClaimReq) => {
   return await _createClaim({
+    referralCampaignName: req.referralCampaignName,
     referralId: req.referralId,
     tournamentId: req.tournamentId,
     referralSlug: req.referralSlug,
     rewardFromClaim: req.rewardFromClaim,
+    tournamentName: req.tournamentName,
+    chosenPartyBasketId: req.chosenPartyBasketId,
+    chosenPartyBasketAddress: req.chosenPartyBasketAddress,
+    chosenPartyBasketName: req.chosenPartyBasketName,
+    chosenPartyBasketNFTBountyValue: req.chosenPartyBasketNFTBountyValue,
+    lootboxName: req.lootboxName,
+    lootboxAddress: req.lootboxAddress,
     status: ClaimStatus.Complete,
     type: ClaimType.Reward,
+    isAlreadyCompleted: true,
+    claimerUserId: req.claimerId,
   });
 };
 
@@ -168,7 +259,10 @@ interface CompleteClaimReq {
   chosenPartyBasketId: PartyBasketID;
   claimerUserId: UserIdpID;
   chosenPartyBasketAddress: Address;
+  chosenPartyBasketName: string;
+  chosenPartyBasketNFTBountyValue?: string;
   lootboxAddress: Address;
+  lootboxName: string;
 }
 export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
   const referralRef = db.collection(Collection.Referral).doc(req.referralId);
@@ -181,11 +275,20 @@ export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
     chosenPartyBasketId: req.chosenPartyBasketId,
     claimerUserId: req.claimerUserId,
     chosenPartyBasketAddress: req.chosenPartyBasketAddress,
+    chosenPartyBasketName: req.chosenPartyBasketName,
     lootboxAddress: req.lootboxAddress,
+    lootboxName: req.lootboxName,
   };
 
+  if (req.chosenPartyBasketNFTBountyValue) {
+    updateClaimRequest.chosenPartyBasketNFTBountyValue =
+      req.chosenPartyBasketNFTBountyValue;
+  }
+
   // This is to update nested object in non-destructive way
-  updateClaimRequest["timestamps.updatedAt"] = Timestamp.now().toMillis();
+  const nowMillis = Timestamp.now().toMillis();
+  updateClaimRequest["timestamps.updatedAt"] = nowMillis;
+  updateClaimRequest["timestamps.completedAt"] = nowMillis;
 
   // This updates the claim & increments the parent referral's nConversion
   // Get a new write batch
