@@ -17,6 +17,11 @@ import {
   PartyBasket,
   MutationUpdateUserArgs,
   UpdateUserResponse,
+  QueryPublicUserArgs,
+  PublicUserResponse,
+  QueryUserClaimsArgs,
+  UserClaimsResponse,
+  PublicUser,
 } from "../../generated/types";
 import {
   getUser,
@@ -36,9 +41,11 @@ import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { UserID, WalletID } from "../../../lib/types";
+import { UserID, UserIdpID, WalletID } from "../../../lib/types";
 import { IIdpUser } from "../../../api/identityProvider/interface";
 import { generateUsername } from "../../../lib/rng";
+import { convertUserToPublicUser } from "./utils";
+import { paginateUserClaims } from "../../../api/firestore";
 
 const UserResolvers = {
   Query: {
@@ -78,6 +85,45 @@ const UserResolvers = {
           },
         };
       }
+    },
+    publicUser: async (
+      _,
+      { id }: QueryPublicUserArgs
+    ): Promise<PublicUserResponse> => {
+      try {
+        const user = await getUser(id);
+        if (!user) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        const publicUser = convertUserToPublicUser(user);
+
+        return {
+          user: publicUser,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+  PublicUser: {
+    claims: async (user: PublicUser, { first, after }: QueryUserClaimsArgs) => {
+      const response = await paginateUserClaims(
+        user.id as UserIdpID,
+        first,
+        after
+      );
+
+      return response;
     },
   },
   User: {
@@ -520,7 +566,7 @@ const UserResolvers = {
 
       try {
         // Make sure the user exists
-        const [userIdp, userRecord] = await Promise.all([
+        let [userIdp, userRecord] = await Promise.all([
           identityProvider.getUserById(context.userId),
           getUser(context.userId),
         ]);
@@ -540,14 +586,25 @@ const UserResolvers = {
           };
         }
 
-        const newUserIdp = await identityProvider.updateUser(context.userId, {
-          avatar: !!payload.avatar ? payload.avatar : undefined,
-          username: !!payload.username ? payload.username : undefined,
-        });
+        const shouldUpdateIdp =
+          payload.username !== userIdp.username ||
+          payload.avatar !== userIdp.avatar;
+
+        if (shouldUpdateIdp) {
+          const updatedUserIdp = await identityProvider.updateUser(
+            context.userId,
+            {
+              avatar: !!payload.avatar ? payload.avatar : undefined,
+              username: !!payload.username ? payload.username : undefined,
+            }
+          );
+          userIdp = { ...updatedUserIdp };
+        }
 
         const newUserRecord = await updateUser(context.userId, {
-          avatar: newUserIdp.avatar,
-          username: newUserIdp.username,
+          avatar: userIdp.avatar,
+          username: userIdp.username,
+          socials: payload.socials ? payload.socials : undefined,
         });
 
         // let newUserRecord: User;
@@ -649,6 +706,19 @@ const UserResolvers = {
     __resolveType: (obj: RemoveWalletResponse) => {
       if ("id" in obj) {
         return "RemoveWalletResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  PublicUserResponse: {
+    __resolveType: (obj: PublicUserResponse) => {
+      if ("user" in obj) {
+        return "PublicUserResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

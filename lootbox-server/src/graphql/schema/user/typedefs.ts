@@ -15,6 +15,7 @@ const UserTypeDefs = gql`
     avatar: String
     email: String
     phoneNumber: String
+    socials: UserSocials
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
@@ -23,16 +24,38 @@ const UserTypeDefs = gql`
     partyBaskets: [PartyBasket!]
   }
 
-  # type UserSocials {
-  #   twitter: String
-  #   instagram: String
-  #   tiktok: String
-  #   facebook: String
-  #   discord: String
-  #   snapchat: String
-  #   twitch: String
-  #   web: String
-  # }
+  type PublicUser {
+    id: ID!
+    username: String
+    avatar: String
+    socials: UserSocials
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    deletedAt: Timestamp
+    claims(first: Int!, after: Timestamp): UserClaimsResponseSuccess
+  }
+
+  type UserSocials {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
+  input UserSocialsInput {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
 
   # Queries
 
@@ -40,10 +63,17 @@ const UserTypeDefs = gql`
     user: User!
   }
 
+  type PublicUserResponseSuccess {
+    user: PublicUser!
+  }
+
   union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
+
+  union PublicUserResponse = PublicUserResponseSuccess | ResponseError
 
   extend type Query {
     getMyProfile: GetMyProfileResponse!
+    publicUser(id: ID!): PublicUserResponse!
   }
 
   type CreateUserResponseSuccess {
@@ -68,6 +98,7 @@ const UserTypeDefs = gql`
   input UpdateUserPayload {
     username: String
     avatar: String
+    socials: UserSocialsInput
   }
 
   type ConnectWalletResponseSuccess {
