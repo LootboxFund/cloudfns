@@ -116,6 +116,7 @@ interface CreateClaimCall {
   lootboxName?: string;
   lootboxAddress?: string;
   isAlreadyCompleted?: boolean;
+  claimerUserId?: UserID;
 }
 const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   const ref = db
@@ -141,6 +142,10 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
       completedAt: !!req.isAlreadyCompleted ? timestamp : null,
     },
   };
+
+  if (!!req.claimerUserId) {
+    newClaim.claimerUserId = req.claimerUserId;
+  }
 
   if (!!req.lootboxAddress) {
     newClaim.lootboxAddress = req.lootboxAddress;
@@ -214,6 +219,7 @@ export const createStartingClaim = async (req: CreateCreateClaimReq) => {
 
 interface CreateRewardClaimReq {
   referralId: ReferralID;
+  claimerId: UserID;
   referralCampaignName: string;
   tournamentId: TournamentID;
   tournamentName: string;
@@ -243,6 +249,7 @@ export const createRewardClaim = async (req: CreateRewardClaimReq) => {
     status: ClaimStatus.Complete,
     type: ClaimType.Reward,
     isAlreadyCompleted: true,
+    claimerUserId: req.claimerId,
   });
 };
 

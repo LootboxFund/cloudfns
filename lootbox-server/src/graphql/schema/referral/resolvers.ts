@@ -44,6 +44,7 @@ import {
   ReferralID,
   ReferralSlug,
   TournamentID,
+  UserID,
   UserIdpID,
 } from "../../../lib/types";
 import { Address } from "@wormgraph/helpers";
@@ -364,22 +365,25 @@ const ReferralResolvers: Resolvers = {
 
         // Now write the referrers claim (type=REWARD)
         try {
-          await createRewardClaim({
-            referralCampaignName: referral.campaignName,
-            referralId: claim.referralId as ReferralID,
-            tournamentId: claim.tournamentId as TournamentID,
-            referralSlug: claim.referralSlug as ReferralSlug,
-            rewardFromClaim: claim.id as ClaimID,
-            tournamentName: tournament.title,
-            chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
-            chosenPartyBasketAddress: partyBasket.address as Address,
-            chosenPartyBasketName: partyBasket.name,
-            lootboxAddress: lootbox.address,
-            lootboxName: lootbox.name,
-            chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
-              ? partyBasket.nftBountyValue
-              : undefined,
-          });
+          if (referral.referrerId) {
+            await createRewardClaim({
+              referralCampaignName: referral.campaignName,
+              referralId: claim.referralId as ReferralID,
+              tournamentId: claim.tournamentId as TournamentID,
+              referralSlug: claim.referralSlug as ReferralSlug,
+              rewardFromClaim: claim.id as ClaimID,
+              tournamentName: tournament.title,
+              chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
+              chosenPartyBasketAddress: partyBasket.address as Address,
+              chosenPartyBasketName: partyBasket.name,
+              lootboxAddress: lootbox.address,
+              lootboxName: lootbox.name,
+              claimerId: referral.referrerId as UserID,
+              chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
+                ? partyBasket.nftBountyValue
+                : undefined,
+            });
+          }
         } catch (err) {
           // If error here, we just make a log... but we dont return an error to client
           console.error("Error writting reward claim", err);
