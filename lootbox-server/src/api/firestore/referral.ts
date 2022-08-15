@@ -8,6 +8,9 @@ import {
   PageInfo,
   ClaimEdge,
   ClaimPageInfo,
+  User,
+  ClaimsCsvRow,
+  Lootbox,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -29,6 +32,10 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { Address } from "@wormgraph/helpers";
+import { manifest } from "../../manifest";
+import { getPartyBasketByAddress, getPartyBasketById } from "./partyBasket";
+import { getLootboxByAddress } from "./lootbox";
+import { getUser } from "./user";
 
 export const getReferralBySlug = async (
   slug: ReferralSlug
@@ -435,4 +442,122 @@ export const paginateUserClaims = async (
       },
     };
   }
+};
+
+export const getAllClaimsForTournament = async (
+  tournamentId: TournamentID
+): Promise<Claim[]> => {
+  let claimQuery = db
+    .collectionGroup(Collection.Claim)
+    .where("tournamentId", "==", tournamentId)
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+
+  const claimsSnapshot = await claimQuery.get();
+
+  if (claimsSnapshot.empty) {
+    return [];
+  } else {
+    return claimsSnapshot.docs.map((doc) => doc.data());
+  }
+};
+
+export interface ClaimsCsvData {}
+export const getClaimsCsvData = async (
+  tournamentId: TournamentID
+): Promise<ClaimsCsvRow[]> => {
+  const claimerUserMapping: Record<UserID, User> = {};
+  const referrerUserMapping: Record<UserID, User> = {};
+
+  const allClaims = await getAllClaimsForTournament(tournamentId);
+
+  const result: ClaimsCsvRow[] = [];
+  for (const claim of allClaims) {
+    let claimer: User | undefined = undefined;
+    let referrer: User | undefined = undefined;
+
+    if (claim.claimerUserId) {
+      if (!claimerUserMapping[claim.claimerUserId]) {
+        claimer = await getUser(claim.claimerUserId);
+        claimerUserMapping[claim.claimerUserId] = claimer;
+      } else {
+        claimer = claimerUserMapping[claim.claimerUserId];
+      }
+    }
+
+    if (claim.referrerId) {
+      if (!referrerUserMapping[claim.referrerId]) {
+        referrer = await getUser(claim.referrerId);
+        referrerUserMapping[claim.referrerId] = referrer;
+      } else {
+        referrer = referrerUserMapping[claim.referrerId];
+      }
+    }
+
+    result.push(convertClaimToCsvRow(claim, claimer, referrer));
+  }
+
+  return result;
+};
+
+const convertClaimToCsvRow = (
+  claim: Claim,
+  claimer?: User,
+  referrer?: User
+): ClaimsCsvRow => {
+  return {
+    tournamentId: claim.tournamentId,
+    tournamentName: claim.tournamentName || "",
+    referralId: claim.referralId,
+    referralCampaignName: claim.referralCampaignName || "",
+    referralSlug: claim.referralSlug || "",
+    referralLink: `${manifest.microfrontends.webflow.referral}/r?r=${claim.referralSlug}`,
+    claimId: claim.id,
+    claimStatus: claim.status,
+    claimType: claim.type,
+    rewardFromClaim: claim.rewardFromClaim || "",
+    claimerId: claimer?.id || "",
+    claimerUsername: claimer?.username || "",
+    claimerSocial_Facebook: claimer?.socials?.facebook || "",
+    claimerSocial_Twitter: claimer?.socials?.twitter || "",
+    claimerSocial_Instagram: claimer?.socials?.instagram || "",
+    claimerSocial_TikTok: claimer?.socials?.tiktok || "",
+    claimerSocial_Discord: claimer?.socials?.discord || "",
+    claimerSocial_Snapchat: claimer?.socials?.snapchat || "",
+    claimerSocial_Twitch: claimer?.socials?.twitch || "",
+    claimerSocial_Web: claimer?.socials?.web || "",
+    claimerProfileLink: claim.claimerUserId
+      ? `${manifest.microfrontends.webflow.publicProfile}?uid=${claim.claimerUserId}`
+      : "",
+    referrerId: referrer?.id || "",
+    referrerUsername: referrer?.username || "",
+    referrerSocial_Facebook: referrer?.socials?.facebook || "",
+    referrerSocial_Twitter: referrer?.socials?.twitter || "",
+    referrerSocial_Instagram: referrer?.socials?.instagram || "",
+    referrerSocial_TikTok: referrer?.socials?.tiktok || "",
+    referrerSocial_Discord: referrer?.socials?.discord || "",
+    referrerSocial_Snapchat: referrer?.socials?.snapchat || "",
+    referrerSocial_Twitch: referrer?.socials?.twitch || "",
+    referrerSocial_Web: referrer?.socials?.web || "",
+    referrerProfileLink: claim.referrerId
+      ? `${manifest.microfrontends.webflow.publicProfile}?uid=${claim.referrerId}`
+      : "",
+    lootboxAddress: claim.lootboxAddress || "",
+    lootboxName: claim.lootboxName || "",
+    lootboxLink: claim.lootboxAddress
+      ? `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${claim.lootboxAddress}`
+      : "",
+    originPartyBasketId: claim.originPartyBasketId || "",
+    partyBasketNFTBountyValue: claim.chosenPartyBasketNFTBountyValue || "",
+    partyBasketAddress: claim.chosenPartyBasketAddress || "",
+    partyBasketId: claim.chosenPartyBasketId || "",
+    partyBasketName: claim.chosenPartyBasketName || "",
+    partyBasketManageLink: claim.chosenPartyBasketAddress
+      ? `${manifest.microfrontends.webflow.basketManagePage}?basket=${claim.chosenPartyBasketAddress}`
+      : "",
+    partyBasketRedeemLink: claim.chosenPartyBasketAddress
+      ? `${manifest.microfrontends.webflow.basketRedeemPage}?basket=${claim.chosenPartyBasketAddress}`
+      : "",
+    claimCreatedAt: claim.timestamps.createdAt,
+    claimUpdatedAt: claim.timestamps.updatedAt,
+  };
 };

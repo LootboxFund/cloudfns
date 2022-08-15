@@ -73,6 +73,71 @@ const ReferralTypeDefs = gql`
     referral: Referral!
   }
 
+  type ClaimsCsvRow {
+    # tournament
+    tournamentId: String!
+    tournamentName: String!
+
+    # referral
+    referralId: String!
+    referralCampaignName: String!
+    referralSlug: String!
+    referralLink: String!
+
+    # claim
+    claimId: String!
+    claimStatus: ClaimStatus!
+    claimType: ClaimType!
+    rewardFromClaim: String!
+
+    # user (claimer) & referrer
+    claimerId: String!
+    claimerUsername: String!
+    claimerProfileLink: String!
+    claimerSocial_Facebook: String!
+    claimerSocial_Twitter: String!
+    claimerSocial_Instagram: String!
+    claimerSocial_TikTok: String!
+    claimerSocial_Discord: String!
+    claimerSocial_Snapchat: String!
+    claimerSocial_Twitch: String!
+    claimerSocial_Web: String!
+
+    # socials for referrer
+    referrerId: String!
+    referrerUsername: String!
+    referrerProfileLink: String!
+    referrerSocial_Facebook: String!
+    referrerSocial_Twitter: String!
+    referrerSocial_Instagram: String!
+    referrerSocial_TikTok: String!
+    referrerSocial_Discord: String!
+    referrerSocial_Snapchat: String!
+    referrerSocial_Twitch: String!
+    referrerSocial_Web: String!
+
+    # lootbox + party baskets
+    lootboxAddress: String!
+    lootboxName: String!
+    lootboxLink: String!
+
+    partyBasketId: String!
+    partyBasketName: String!
+    partyBasketRedeemLink: String!
+    partyBasketManageLink: String!
+    partyBasketAddress: String!
+    partyBasketNFTBountyValue: String!
+
+    originPartyBasketId: String!
+    # originPartyBasketName: String!
+    # originPartyBasketLink: String!
+    # originPartyBasketAddress: String!
+
+    # timestamp
+    claimCreatedAt: Timestamp!
+    claimUpdatedAt: Timestamp!
+  }
+
   union ReferralResponse = ReferralResponseSuccess | ResponseError
 
   input CreateReferralPayload {
@@ -90,6 +155,10 @@ const ReferralTypeDefs = gql`
     referralSlug: ID!
   }
 
+  input GenerateClaimsCsvPayload {
+    tournamentId: ID!
+  }
+
   type CreateReferralResponseSuccess {
     referral: Referral!
   }
@@ -100,6 +169,10 @@ const ReferralTypeDefs = gql`
 
   type CreateClaimResponseSuccess {
     claim: Claim!
+  }
+
+  type GenerateClaimsCsvResponseSuccess {
+    csv: String!
   }
 
   type ClaimPageInfo {
@@ -121,6 +194,10 @@ const ReferralTypeDefs = gql`
 
   union UserClaimsResponse = UserClaimsResponseSuccess | ResponseError
 
+  union GenerateClaimsCsvResponse =
+      GenerateClaimsCsvResponseSuccess
+    | ResponseError
+
   extend type Query {
     referral(slug: ID!): ReferralResponse!
     userClaims(userId: ID!, first: Int!, after: Timestamp): UserClaimsResponse!
@@ -131,6 +208,9 @@ const ReferralTypeDefs = gql`
     createReferral(payload: CreateReferralPayload!): CreateReferralResponse!
     createClaim(payload: CreateClaimPayload!): CreateClaimResponse!
     completeClaim(payload: CompleteClaimPayload!): CompleteClaimResponse!
+    generateClaimsCsv(
+      payload: GenerateClaimsCsvPayload!
+    ): GenerateClaimsCsvResponse!
   }
 `;
 
