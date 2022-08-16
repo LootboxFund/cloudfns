@@ -19,6 +19,8 @@ import {
   PartyBasket,
   QueryUserClaimsArgs,
   CreateClaimResponse,
+  MutationGenerateClaimsCsvArgs,
+  GenerateClaimsCsvResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -29,14 +31,14 @@ import {
   getPartyBasketById,
   createStartingClaim,
   getClaimById,
-  getCompletedClaimsForUserReferral,
   completeClaim,
   createRewardClaim,
   getAllClaimsForReferral,
   paginateUserClaims,
-  getLootboxByAddress,
   getCompletedUserReferralClaimsForTournament,
   getReferralById,
+  getClaimsCsvData,
+  getLootboxByAddress,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -48,6 +50,8 @@ import {
   UserIdpID,
 } from "../../../lib/types";
 import { Address } from "@wormgraph/helpers";
+import { saveCsvToStorage } from "../../../api/storage";
+import { manifest } from "../../../manifest";
 
 const ReferralResolvers: Resolvers = {
   Query: {
@@ -401,6 +405,84 @@ const ReferralResolvers: Resolvers = {
         };
       }
     },
+    generateClaimsCsv: async (
+      _,
+      { payload }: MutationGenerateClaimsCsvArgs,
+      context: Context
+    ): Promise<GenerateClaimsCsvResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You must be logged in to generate a CSV",
+          },
+        };
+      }
+
+      try {
+        const tournament = await getTournamentById(
+          payload.tournamentId as TournamentID
+        );
+
+        if (!tournament || !!tournament.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Tournament not found",
+            },
+          };
+        } else if (tournament?.creatorId !== context.userId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message:
+                "You do not have permission to generate a CSV for this tournament",
+            },
+          };
+        }
+
+        const csvData = await getClaimsCsvData(
+          payload.tournamentId as TournamentID
+        );
+
+        var lineArray: string[] = [];
+        csvData.forEach(function (claimsRow, index) {
+          // If index == 0, then we are at the header row
+          if (index == 0) {
+            const titles = Object.keys(claimsRow);
+            lineArray.push(titles.join(","));
+          }
+
+          const values = Object.values(claimsRow);
+          var line = values.join(",");
+          // lineArray.push(
+          //   index == 0 ? "data:text/csv;charset=utf-8," + line : line
+          // );
+          lineArray.push(line);
+        });
+        var csvContent = lineArray.join("\n");
+
+        const downloadUrl = await saveCsvToStorage({
+          fileName: `claims/${
+            (tournament?.id ? `${tournament.id}-` : "") + nanoid()
+          }.csv`,
+          data: csvContent,
+          bucket: manifest.firebase.storageBucket,
+        });
+
+        return {
+          csv: downloadUrl,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   CreateReferralResponse: {
@@ -462,11 +544,24 @@ const ReferralResolvers: Resolvers = {
       return null;
     },
   },
+
+  GenerateClaimsCsvResponse: {
+    __resolveType: (obj: GenerateClaimsCsvResponse) => {
+      if ("csv" in obj) {
+        return "GenerateClaimsCsvResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
 };
 
 const referralResolverComposition = {
   "Mutation.createReferral": [isAuthenticated()],
   "Mutation.completeClaim": [isAuthenticated()],
+  "Mutation.generateClaimsCsv": [isAuthenticated()],
 };
 
 const referralResolvers = composeResolvers(
