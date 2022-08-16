@@ -188,6 +188,10 @@ const ReferralResolvers: Resolvers = {
           creatorId: context.userId,
           campaignName,
           tournamentId: payload.tournamentId as TournamentID,
+          isRewardDisabled:
+            payload.isRewardDisabled == undefined
+              ? false
+              : payload.isRewardDisabled,
           seedPartyBasketId: payload.partyBasketId
             ? (payload.partyBasketId as PartyBasketID)
             : undefined,
@@ -369,7 +373,7 @@ const ReferralResolvers: Resolvers = {
 
         // Now write the referrers claim (type=REWARD)
         try {
-          if (referral.referrerId) {
+          if (referral.referrerId && !referral.isRewardDisabled) {
             await createRewardClaim({
               referralCampaignName: referral.campaignName,
               referralId: claim.referralId as ReferralID,

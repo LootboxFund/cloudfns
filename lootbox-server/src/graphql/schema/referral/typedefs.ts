@@ -67,6 +67,7 @@ const ReferralTypeDefs = gql`
     claims: [Claim!]
     tournament: Tournament
     seedPartyBasket: PartyBasket
+    isRewardDisabled: Boolean
   }
 
   type ReferralResponseSuccess {
@@ -144,6 +145,7 @@ const ReferralTypeDefs = gql`
     campaignName: String
     tournamentId: ID!
     partyBasketId: ID
+    isRewardDisabled: Boolean
   }
 
   input CompleteClaimPayload {

@@ -76,6 +76,7 @@ interface CreateReferralCall {
   campaignName: string;
   tournamentId: TournamentID;
   seedPartyBasketId?: PartyBasketID;
+  isRewardDisabled: boolean;
 }
 export const createReferral = async (
   req: CreateReferralCall
@@ -88,6 +89,7 @@ export const createReferral = async (
     referrerId: req.referrerId,
     campaignName: req.campaignName,
     tournamentId: req.tournamentId,
+    isRewardDisabled: req.isRewardDisabled,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
