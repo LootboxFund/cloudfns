@@ -56,6 +56,8 @@ export const getUser = async (
       email: user.email,
       username: user.username,
       avatar: user.avatar,
+      biography: user.biography,
+      headshot: user.headshot,
       socials: { ...user.socials },
       phoneNumber: user.phoneNumber,
       createdAt: user.createdAt,
