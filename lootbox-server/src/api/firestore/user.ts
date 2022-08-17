@@ -68,6 +68,8 @@ interface UpdateUserRequest {
   username?: string;
   avatar?: string;
   socials?: UserSocials;
+  headshot?: string;
+  biography?: string;
 }
 export const updateUser = async (
   id: string,
@@ -82,58 +84,66 @@ export const updateUser = async (
   const userData = user.data();
   if (!user.exists || !userData) {
     throw new Error("User not found");
-  } else {
-    const updatedUser: Partial<User> = {
-      updatedAt: Timestamp.now().toMillis(),
-    };
-
-    if (request.username !== undefined) {
-      updatedUser.username = request.username;
-    }
-
-    if (request.avatar !== undefined) {
-      updatedUser.avatar = request.avatar;
-    }
-
-    if (request.socials !== undefined) {
-      const newSocials: Partial<UserSocials> = { ...userData.socials };
-
-      if (request.socials.facebook !== undefined) {
-        newSocials.facebook = request.socials.facebook;
-      }
-
-      if (request.socials.twitter !== undefined) {
-        newSocials.twitter = request.socials.twitter;
-      }
-
-      if (request.socials.discord !== undefined) {
-        newSocials.discord = request.socials.discord;
-      }
-
-      if (request.socials.instagram !== undefined) {
-        newSocials.instagram = request.socials.instagram;
-      }
-
-      if (request.socials.tiktok !== undefined) {
-        newSocials.tiktok = request.socials.tiktok;
-      }
-
-      if (request.socials.snapchat !== undefined) {
-        newSocials.snapchat = request.socials.snapchat;
-      }
-
-      if (request.socials.twitch !== undefined) {
-        newSocials.twitch = request.socials.twitch;
-      }
-
-      if (request.socials.web !== undefined) {
-        newSocials.web = request.socials.web;
-      }
-
-      updatedUser.socials = newSocials;
-    }
-
-    await userRef.update(updatedUser);
-    return { ...userData, ...updatedUser };
   }
+
+  const updatedUser: Partial<User> = {
+    updatedAt: Timestamp.now().toMillis(),
+  };
+
+  if (request.username !== undefined) {
+    updatedUser.username = request.username;
+  }
+
+  if (request.avatar !== undefined) {
+    updatedUser.avatar = request.avatar;
+  }
+
+  if (request.biography !== undefined) {
+    updatedUser.biography = request.biography;
+  }
+
+  if (request.headshot !== undefined) {
+    updatedUser.headshot = [request.headshot];
+  }
+
+  if (request.socials !== undefined) {
+    const newSocials: Partial<UserSocials> = { ...userData.socials };
+
+    if (request.socials.facebook !== undefined) {
+      newSocials.facebook = request.socials.facebook;
+    }
+
+    if (request.socials.twitter !== undefined) {
+      newSocials.twitter = request.socials.twitter;
+    }
+
+    if (request.socials.discord !== undefined) {
+      newSocials.discord = request.socials.discord;
+    }
+
+    if (request.socials.instagram !== undefined) {
+      newSocials.instagram = request.socials.instagram;
+    }
+
+    if (request.socials.tiktok !== undefined) {
+      newSocials.tiktok = request.socials.tiktok;
+    }
+
+    if (request.socials.snapchat !== undefined) {
+      newSocials.snapchat = request.socials.snapchat;
+    }
+
+    if (request.socials.twitch !== undefined) {
+      newSocials.twitch = request.socials.twitch;
+    }
+
+    if (request.socials.web !== undefined) {
+      newSocials.web = request.socials.web;
+    }
+
+    updatedUser.socials = newSocials;
+  }
+
+  await userRef.update(updatedUser);
+  return { ...userData, ...updatedUser };
 };

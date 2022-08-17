@@ -15,6 +15,8 @@ const UserTypeDefs = gql`
     avatar: String
     email: String
     phoneNumber: String
+    biography: String
+    headshot: [String!]
     socials: UserSocials
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -28,6 +30,8 @@ const UserTypeDefs = gql`
     id: ID!
     username: String
     avatar: String
+    biography: String
+    headshot: [String!]
     socials: UserSocials
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -99,6 +103,8 @@ const UserTypeDefs = gql`
     username: String
     avatar: String
     socials: UserSocialsInput
+    biography: String
+    headshot: String
   }
 
   type ConnectWalletResponseSuccess {
