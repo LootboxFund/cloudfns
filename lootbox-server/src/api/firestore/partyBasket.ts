@@ -230,7 +230,7 @@ interface CreatePartyBasketRequest {
   lootboxAddress: Address;
   creatorAddress: Address;
   nftBountyValue?: string;
-  socialLink?: string;
+  joinCommunityUrl?: string;
 }
 export const createPartyBasket = async ({
   address,
@@ -241,7 +241,7 @@ export const createPartyBasket = async ({
   lootboxAddress,
   creatorAddress,
   nftBountyValue,
-  socialLink,
+  joinCommunityUrl,
 }: CreatePartyBasketRequest) => {
   const partyBasketRef = db
     .collection(Collection.PartyBasket)
@@ -267,8 +267,8 @@ export const createPartyBasket = async ({
     partyBasketDocument.nftBountyValue = nftBountyValue;
   }
 
-  if (socialLink) {
-    partyBasketDocument.socialLink = socialLink;
+  if (joinCommunityUrl) {
+    partyBasketDocument.joinCommunityUrl = joinCommunityUrl;
   }
 
   await partyBasketRef.set(partyBasketDocument);

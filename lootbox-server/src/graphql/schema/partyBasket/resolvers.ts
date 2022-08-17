@@ -186,7 +186,7 @@ const PartyBasketResolvers: Resolvers = {
           lootboxAddress: payload.lootboxAddress as Address,
           creatorAddress: payload.creatorAddress as Address,
           nftBountyValue: payload.nftBountyValue || undefined,
-          socialLink: payload.socialLink || undefined,
+          joinCommunityUrl: payload.joinCommunityUrl || undefined,
         });
 
         return {
