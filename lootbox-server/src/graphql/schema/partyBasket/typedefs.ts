@@ -19,6 +19,7 @@ const PartyBasketTypeDefs = gql`
     timestamps: PartyBasketTimestamps!
     lootboxSnapshot: LootboxSnapshot
     nftBountyValue: String
+    joinCommunityUrl: String
     # whitelistSignatures: [PartyBasketWhitelistSignature!]
   }
 
@@ -59,6 +60,7 @@ const PartyBasketTypeDefs = gql`
     lootboxAddress: ID!
     creatorAddress: ID!
     nftBountyValue: String # e.g. "150 SLP"
+    joinCommunityUrl: String
   }
 
   type CreatePartyBasketResponseSuccess {
