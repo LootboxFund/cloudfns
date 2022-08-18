@@ -21,6 +21,7 @@ import {
   CreateClaimResponse,
   MutationGenerateClaimsCsvArgs,
   GenerateClaimsCsvResponse,
+  PublicUser,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -39,6 +40,7 @@ import {
   getReferralById,
   getClaimsCsvData,
   getLootboxByAddress,
+  getUser,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -52,6 +54,7 @@ import {
 import { Address } from "@wormgraph/helpers";
 import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
+import { convertUserToPublicUser } from "../user/utils";
 
 const ReferralResolvers: Resolvers = {
   Query: {
@@ -105,6 +108,39 @@ const ReferralResolvers: Resolvers = {
   },
 
   Claim: {
+    userLink: async (claim: Claim): Promise<PublicUser | null> => {
+      if (claim.type === ClaimType.Referral) {
+        if (!claim.referrerId) {
+          return null;
+        }
+
+        try {
+          const user = await getUser(claim.referrerId);
+          const publicUser = user ? convertUserToPublicUser(user) : null;
+
+          return publicUser;
+        } catch (err) {
+          console.error(err);
+          return null;
+        }
+      } else if (claim.type === ClaimType.Reward) {
+        if (!claim.claimerUserId) {
+          return null;
+        }
+
+        try {
+          const user = await getUser(claim.claimerUserId);
+          const publicUser = user ? convertUserToPublicUser(user) : null;
+
+          return publicUser;
+        } catch (err) {
+          console.error(err);
+          return null;
+        }
+      }
+
+      return null;
+    },
     chosenPartyBasket: async (claim: Claim): Promise<PartyBasket | null> => {
       if (!claim.chosenPartyBasketId) {
         return null;
