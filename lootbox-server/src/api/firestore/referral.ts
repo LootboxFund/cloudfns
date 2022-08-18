@@ -126,6 +126,7 @@ interface CreateClaimCall {
   lootboxAddress?: string;
   isAlreadyCompleted?: boolean;
   claimerUserId?: UserID;
+  rewardFromFriendReferred?: UserID;
 }
 const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   const ref = db
@@ -197,6 +198,10 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     newClaim.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
   }
 
+  if (!!req.rewardFromFriendReferred) {
+    newClaim.rewardFromFriendReferred = req.rewardFromFriendReferred;
+  }
+
   await ref.set(newClaim);
 
   return newClaim;
@@ -240,6 +245,7 @@ interface CreateRewardClaimReq {
   chosenPartyBasketNFTBountyValue?: string;
   lootboxName: string;
   lootboxAddress: string;
+  rewardFromFriendReferred: UserID;
 }
 export const createRewardClaim = async (req: CreateRewardClaimReq) => {
   return await _createClaim({
@@ -259,6 +265,7 @@ export const createRewardClaim = async (req: CreateRewardClaimReq) => {
     type: ClaimType.Reward,
     isAlreadyCompleted: true,
     claimerUserId: req.claimerId,
+    rewardFromFriendReferred: req.rewardFromFriendReferred,
   });
 };
 

@@ -225,6 +225,7 @@ export interface CreateTournamentArgs {
   prize?: string | null;
   coverPhoto?: string | null;
   tournamentDate: number;
+  campaignCompleteURL?: string | null;
 }
 export const createTournament = async ({
   title,
@@ -234,6 +235,7 @@ export const createTournament = async ({
   prize,
   coverPhoto,
   tournamentDate,
+  campaignCompleteURL,
 }: CreateTournamentArgs): Promise<Tournament> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -244,18 +246,32 @@ export const createTournament = async ({
     title,
     description,
     creatorId,
-    ...(!!prize && { prize }),
-    ...(!!coverPhoto && { coverPhoto }),
-    ...(!!tournamentLink && { tournamentLink }),
-    ...(!!tournamentDate && {
-      tournamentDate: Number(tournamentDate),
-    }),
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
       deletedAt: null,
     },
   };
+
+  if (!!prize) {
+    tournament.prize = prize;
+  }
+
+  if (!!coverPhoto) {
+    tournament.coverPhoto = coverPhoto;
+  }
+
+  if (!!tournamentLink) {
+    tournament.tournamentLink = tournamentLink;
+  }
+
+  if (!!tournamentDate) {
+    tournament.tournamentDate = Number(tournamentDate);
+  }
+
+  if (!!campaignCompleteURL) {
+    tournament.campaignCompleteURL = campaignCompleteURL;
+  }
 
   await tournamentRef.set(tournament);
 
@@ -274,21 +290,39 @@ export const updateTournament = async (
     .collection(Collection.Tournament)
     .doc(id) as DocumentReference<Tournament>;
 
-  const updatePayload = {
-    ...(payload.title != undefined && { title: payload.title }),
-    ...(payload.description != undefined && {
-      description: payload.description,
-    }),
-    ...(payload.tournamentLink != undefined && {
-      tournamentLink: payload.tournamentLink,
-    }),
-    ...(payload.magicLink != undefined && { magicLink: payload.magicLink }),
-    ...(payload.coverPhoto != undefined && { coverPhoto: payload.coverPhoto }),
-    ...(payload.prize != undefined && { prize: payload.prize }),
-    ...(payload.tournamentDate != undefined && {
-      tournamentDate: Number(payload.tournamentDate),
-    }),
-  };
+  const updatePayload: Partial<Tournament> = {};
+
+  if (payload.title != undefined) {
+    updatePayload.title = payload.title;
+  }
+
+  if (payload.description != undefined) {
+    updatePayload.description = payload.description;
+  }
+
+  if (payload.tournamentLink != undefined) {
+    updatePayload.tournamentLink = payload.tournamentLink;
+  }
+
+  if (payload.magicLink != undefined) {
+    updatePayload.magicLink = payload.magicLink;
+  }
+
+  if (payload.coverPhoto != undefined) {
+    updatePayload.coverPhoto = payload.coverPhoto;
+  }
+
+  if (payload.prize != undefined) {
+    updatePayload.prize = payload.prize;
+  }
+
+  if (payload.tournamentDate != undefined) {
+    updatePayload.tournamentDate = Number(payload.tournamentDate);
+  }
+
+  if (payload.campaignCompleteURL != undefined) {
+    updatePayload.campaignCompleteURL = payload.campaignCompleteURL;
+  }
 
   await tournamentRef.update(updatePayload);
 

@@ -54,6 +54,7 @@ const TournamentTypeDefs = gql`
     tournamentDate: Timestamp
     prize: String
     coverPhoto: String
+    campaignCompleteURL: String
     streams: [Stream!]
   }
 
@@ -153,6 +154,7 @@ const TournamentTypeDefs = gql`
     coverPhoto: String
     prize: String
     tournamentDate: Timestamp!
+    campaignCompleteURL: String
     streams: [StreamInput!]
   }
 
@@ -164,6 +166,7 @@ const TournamentTypeDefs = gql`
     magicLink: String
     coverPhoto: String
     prize: String
+    campaignCompleteURL: String
     tournamentDate: Timestamp
   }
 
