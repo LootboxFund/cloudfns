@@ -116,6 +116,17 @@ const ReferralResolvers: Resolvers = {
 
       return !partyBasket ? null : partyBasket;
     },
+    tournament: async (claim: Claim): Promise<Tournament | null> => {
+      if (!claim.tournamentId) {
+        return null;
+      }
+
+      const tournament = await getTournamentById(
+        claim.tournamentId as TournamentID
+      );
+
+      return !tournament ? null : tournament;
+    },
   },
 
   Referral: {
@@ -387,6 +398,7 @@ const ReferralResolvers: Resolvers = {
               lootboxAddress: lootbox.address,
               lootboxName: lootbox.name,
               claimerId: referral.referrerId as UserID,
+              rewardFromFriendReferred: context.userId as unknown as UserID,
               chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
                 ? partyBasket.nftBountyValue
                 : undefined,

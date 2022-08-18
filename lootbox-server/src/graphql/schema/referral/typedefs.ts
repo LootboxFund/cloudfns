@@ -42,11 +42,13 @@ const ReferralTypeDefs = gql`
     lootboxAddress: ID
     lootboxName: String
     rewardFromClaim: ID
+    rewardFromFriendReferred: ID
     claimerUserId: ID
     status: ClaimStatus!
     type: ClaimType!
     timestamps: ClaimTimestamps!
     chosenPartyBasket: PartyBasket
+    tournament: Tournament
   }
 
   type ClaimEdge {
