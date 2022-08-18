@@ -48,6 +48,7 @@ const ReferralTypeDefs = gql`
     type: ClaimType!
     timestamps: ClaimTimestamps!
     chosenPartyBasket: PartyBasket
+    tournament: Tournament
   }
 
   type ClaimEdge {
