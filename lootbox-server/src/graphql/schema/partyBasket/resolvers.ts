@@ -13,6 +13,8 @@ import {
   QueryGetPartyBasketArgs,
   LootboxSnapshot,
   MutationGetWhitelistSignaturesArgs,
+  EditPartyBasketResponse,
+  MutationEditPartyBasketArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -23,6 +25,8 @@ import {
   getWhitelistSignaturesByAddress,
   redeemSignature,
   getLootboxByAddress,
+  getPartyBasketById,
+  editPartyBasket,
 } from "../../../api/firestore";
 import { getSecret } from "../../../api/secrets";
 import { manifest } from "../../../manifest";
@@ -427,6 +431,86 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
     },
+    editPartyBasket: async (
+      _,
+      { payload }: MutationEditPartyBasketArgs,
+      context: Context
+    ): Promise<EditPartyBasketResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `You are not logged in`,
+          },
+        };
+      }
+
+      const { id, ...args } = payload;
+
+      if (Object.values(args).every((value) => value != undefined)) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `No arguments provided`,
+          },
+        };
+      }
+
+      try {
+        const partyBasket = await getPartyBasketById(
+          payload.id as PartyBasketID
+        );
+
+        if (!partyBasket || !!partyBasket?.timestamps?.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Party Basket not found`,
+            },
+          };
+        } else if (partyBasket.creatorId !== context.userId) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: `You do not own this Party Basket`,
+            },
+          };
+        }
+
+        const updatedPartyBasket = await editPartyBasket({
+          id: payload.id as PartyBasketID,
+          name: payload.name,
+          nftBountyValue: payload.nftBountyValue,
+          joinCommunityUrl: payload.joinCommunityUrl,
+          status: payload.status,
+        });
+
+        return {
+          partyBasket: updatedPartyBasket,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+
+  EditPartyBasketResponse: {
+    __resolveType: (obj: EditPartyBasketResponse) => {
+      if ("partyBasket" in obj) {
+        return "EditPartyBasketResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
   },
 
   GetPartyBasketResponse: {
@@ -498,6 +582,7 @@ const PartyBasketResolvers: Resolvers = {
 const partyBasketResolverComposition = {
   "Mutation.createPartyBasket": [isAuthenticated()],
   "Mutation.bulkWhitelist": [isAuthenticated()],
+  "Mutation.editPartyBasket": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(

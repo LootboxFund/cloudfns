@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import {
   PartyBasketWhitelistSignature,
   PartyBasket,
+  PartyBasketStatus,
 } from "../../graphql/generated/types";
 import { Address } from "@wormgraph/helpers";
 import {
@@ -256,6 +257,7 @@ export const createPartyBasket = async ({
     lootboxAddress,
     chainIdHex,
     creatorAddress,
+    status: PartyBasketStatus.Active,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -274,4 +276,45 @@ export const createPartyBasket = async ({
   await partyBasketRef.set(partyBasketDocument);
 
   return partyBasketDocument;
+};
+
+interface EditPartyBasketRequest {
+  id: PartyBasketID;
+  name?: string | null;
+  nftBountyValue?: string | null;
+  joinCommunityUrl?: string | null;
+  status?: PartyBasketStatus | null;
+}
+
+export const editPartyBasket = async ({
+  id,
+  name,
+  nftBountyValue,
+  joinCommunityUrl,
+  status,
+}: EditPartyBasketRequest): Promise<PartyBasket> => {
+  const partyBasketRef = db
+    .collection(Collection.PartyBasket)
+    .doc(id) as DocumentReference<PartyBasket>;
+
+  const updatePayload: Partial<PartyBasket> = {};
+
+  if (name != undefined) {
+    updatePayload.name = name;
+  }
+  if (nftBountyValue != undefined) {
+    updatePayload.nftBountyValue = nftBountyValue;
+  }
+  if (joinCommunityUrl != undefined) {
+    updatePayload.joinCommunityUrl = joinCommunityUrl;
+  }
+  if (status != undefined) {
+    updatePayload.status = status;
+  }
+
+  updatePayload["timestamps.updatedAt"] = Timestamp.now().toMillis();
+
+  await partyBasketRef.update(updatePayload);
+
+  return (await partyBasketRef.get()).data() as PartyBasket;
 };
