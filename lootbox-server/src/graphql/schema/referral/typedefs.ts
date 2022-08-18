@@ -42,6 +42,7 @@ const ReferralTypeDefs = gql`
     lootboxAddress: ID
     lootboxName: String
     rewardFromClaim: ID
+    rewardFromFriendReferred: ID
     claimerUserId: ID
     status: ClaimStatus!
     type: ClaimType!

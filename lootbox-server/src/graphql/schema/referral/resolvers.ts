@@ -387,6 +387,7 @@ const ReferralResolvers: Resolvers = {
               lootboxAddress: lootbox.address,
               lootboxName: lootbox.name,
               claimerId: referral.referrerId as UserID,
+              rewardFromFriendReferred: context.userId,
               chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
                 ? partyBasket.nftBountyValue
                 : undefined,
