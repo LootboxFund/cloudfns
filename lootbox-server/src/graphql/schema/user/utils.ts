@@ -8,6 +8,7 @@ export const convertUserToPublicUser = (
     id: user.id,
     username: user.username,
     avatar: user.avatar,
+    biography: user.biography,
     socials: { ...user.socials },
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,

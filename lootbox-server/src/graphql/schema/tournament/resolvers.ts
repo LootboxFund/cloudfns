@@ -164,6 +164,7 @@ const TournamentResolvers = {
           coverPhoto: payload.coverPhoto,
           prize: payload.prize,
           tournamentDate: payload.tournamentDate,
+          campaignCompleteURL: payload.campaignCompleteURL,
         });
 
         let streams: Stream[] = [];

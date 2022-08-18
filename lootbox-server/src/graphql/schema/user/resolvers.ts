@@ -604,7 +604,9 @@ const UserResolvers = {
         const newUserRecord = await updateUser(context.userId, {
           avatar: userIdp.avatar,
           username: userIdp.username,
+          biography: payload.biography ? payload.biography : undefined,
           socials: payload.socials ? payload.socials : undefined,
+          headshot: payload.headshot ? payload.headshot : undefined,
         });
 
         // let newUserRecord: User;
