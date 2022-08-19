@@ -33,8 +33,6 @@ import {
 } from "firebase-admin/firestore";
 import { Address } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
-import { getPartyBasketByAddress, getPartyBasketById } from "./partyBasket";
-import { getLootboxByAddress } from "./lootbox";
 import { getUser } from "./user";
 
 export const getReferralBySlug = async (
