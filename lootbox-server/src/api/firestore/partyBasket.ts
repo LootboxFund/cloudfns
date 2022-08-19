@@ -108,6 +108,8 @@ export const getPartyBasketByAddress = async (
       lootboxAddress: data.lootboxAddress,
       creatorAddress: data.creatorAddress,
       nftBountyValue: data.nftBountyValue || null,
+      status: data.status,
+      joinCommunityUrl: data.joinCommunityUrl,
       timestamps: {
         ...data.timestamps,
       },

@@ -447,7 +447,7 @@ const PartyBasketResolvers: Resolvers = {
 
       const { id, ...args } = payload;
 
-      if (Object.values(args).every((value) => value != undefined)) {
+      if (Object.values(args).every((value) => value == undefined)) {
         return {
           error: {
             code: StatusCode.BadRequest,
