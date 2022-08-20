@@ -42,7 +42,8 @@ export const getLootboxSnapshotsForTournament = async (
 ): Promise<LootboxTournamentSnapshot[]> => {
   const collectionRef = db
     .collection(Collection.Lootbox)
-    .where("tournamentId", "==", tournamentID) as Query<Lootbox>;
+    .where("tournamentId", "==", tournamentID)
+    .orderBy("timestamps.createdAt", "asc") as Query<Lootbox>;
 
   const collectionSnapshot = await collectionRef.get();
 
@@ -225,7 +226,7 @@ export interface CreateTournamentArgs {
   prize?: string | null;
   coverPhoto?: string | null;
   tournamentDate: number;
-  campaignCompleteURL?: string | null;
+  communityURL?: string | null;
 }
 export const createTournament = async ({
   title,
@@ -235,7 +236,7 @@ export const createTournament = async ({
   prize,
   coverPhoto,
   tournamentDate,
-  campaignCompleteURL,
+  communityURL,
 }: CreateTournamentArgs): Promise<Tournament> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -269,8 +270,8 @@ export const createTournament = async ({
     tournament.tournamentDate = Number(tournamentDate);
   }
 
-  if (!!campaignCompleteURL) {
-    tournament.campaignCompleteURL = campaignCompleteURL;
+  if (!!communityURL) {
+    tournament.communityURL = communityURL;
   }
 
   await tournamentRef.set(tournament);
@@ -320,8 +321,8 @@ export const updateTournament = async (
     updatePayload.tournamentDate = Number(payload.tournamentDate);
   }
 
-  if (payload.campaignCompleteURL != undefined) {
-    updatePayload.campaignCompleteURL = payload.campaignCompleteURL;
+  if (payload.communityURL != undefined) {
+    updatePayload.communityURL = payload.communityURL;
   }
 
   await tournamentRef.update(updatePayload);
