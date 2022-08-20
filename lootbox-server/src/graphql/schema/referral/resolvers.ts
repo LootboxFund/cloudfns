@@ -111,12 +111,12 @@ const ReferralResolvers: Resolvers = {
   Claim: {
     userLink: async (claim: Claim): Promise<PublicUser | null> => {
       if (claim.type === ClaimType.Referral) {
-        if (!claim.claimerUserId) {
+        if (!claim.referrerId) {
           return null;
         }
 
         try {
-          const user = await getUser(claim.claimerUserId);
+          const user = await getUser(claim.referrerId);
           const publicUser = user ? convertUserToPublicUser(user) : null;
 
           return publicUser;
@@ -125,12 +125,12 @@ const ReferralResolvers: Resolvers = {
           return null;
         }
       } else if (claim.type === ClaimType.Reward) {
-        if (!claim.claimerUserId) {
+        if (!claim.rewardFromFriendReferred) {
           return null;
         }
 
         try {
-          const user = await getUser(claim.claimerUserId);
+          const user = await getUser(claim.rewardFromFriendReferred);
           const publicUser = user ? convertUserToPublicUser(user) : null;
 
           return publicUser;
