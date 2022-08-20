@@ -22,6 +22,7 @@ import {
   MutationGenerateClaimsCsvArgs,
   GenerateClaimsCsvResponse,
   PublicUser,
+  PartyBasketStatus,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -225,6 +226,12 @@ const ReferralResolvers: Resolvers = {
         } else if (partyBasket === undefined) {
           // Makesure the party basket exists
           throw new Error("Party Basket not found");
+        } else if (
+          partyBasket?.status === PartyBasketStatus.Disabled ||
+          partyBasket?.status === PartyBasketStatus.SoldOut
+        ) {
+          // Make sure the party basket is not disabled
+          throw new Error("Party Basket is disabled or sold out");
         }
 
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
@@ -355,6 +362,16 @@ const ReferralResolvers: Resolvers = {
             error: {
               code: StatusCode.BadRequest,
               message: "Claim already completed",
+            },
+          };
+        } else if (
+          partyBasket.status === PartyBasketStatus.Disabled ||
+          partyBasket.status === PartyBasketStatus.SoldOut
+        ) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Tickets are sold out, please choose another team.",
             },
           };
         }
