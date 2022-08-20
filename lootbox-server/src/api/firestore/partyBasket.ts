@@ -40,7 +40,8 @@ export const getPartyBasketsForLootbox = async (
   const partyBaskets = db
     .collection(Collection.PartyBasket)
     .where("lootboxAddress", "==", lootbox)
-    .where("timestamps.deletedAt", "==", null) as Query<PartyBasket>;
+    .where("timestamps.deletedAt", "==", null)
+    .orderBy("timestamps.createdAt", "asc") as Query<PartyBasket>;
 
   const partyBasketSnapshot = await partyBaskets.get();
   if (partyBasketSnapshot.empty) {

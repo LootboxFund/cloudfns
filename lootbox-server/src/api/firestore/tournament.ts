@@ -42,7 +42,8 @@ export const getLootboxSnapshotsForTournament = async (
 ): Promise<LootboxTournamentSnapshot[]> => {
   const collectionRef = db
     .collection(Collection.Lootbox)
-    .where("tournamentId", "==", tournamentID) as Query<Lootbox>;
+    .where("tournamentId", "==", tournamentID)
+    .orderBy("timestamps.createdAt", "asc") as Query<Lootbox>;
 
   const collectionSnapshot = await collectionRef.get();
 
