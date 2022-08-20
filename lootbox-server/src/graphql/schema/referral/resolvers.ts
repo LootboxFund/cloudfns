@@ -111,12 +111,12 @@ const ReferralResolvers: Resolvers = {
   Claim: {
     userLink: async (claim: Claim): Promise<PublicUser | null> => {
       if (claim.type === ClaimType.Referral) {
-        if (!claim.referrerId) {
+        if (!claim.claimerUserId) {
           return null;
         }
 
         try {
-          const user = await getUser(claim.referrerId);
+          const user = await getUser(claim.claimerUserId);
           const publicUser = user ? convertUserToPublicUser(user) : null;
 
           return publicUser;
