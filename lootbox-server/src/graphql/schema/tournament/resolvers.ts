@@ -40,6 +40,7 @@ import {
   MutationDeleteStreamArgs,
   DeleteStreamResponse,
   PartyBasket,
+  PartyBasketStatus,
 } from "../../generated/types";
 import { Context } from "../../server";
 
@@ -137,7 +138,12 @@ const TournamentResolvers = {
     partyBaskets: async (
       snapshot: LootboxTournamentSnapshot
     ): Promise<PartyBasket[]> => {
-      return getPartyBasketsForLootbox(snapshot.address as Address);
+      const partyBaskets = await getPartyBasketsForLootbox(
+        snapshot.address as Address
+      );
+      return partyBaskets.filter(
+        (p) => p.status !== PartyBasketStatus.Disabled
+      );
     },
   },
 
