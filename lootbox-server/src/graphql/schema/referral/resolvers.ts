@@ -21,6 +21,8 @@ import {
   CreateClaimResponse,
   MutationGenerateClaimsCsvArgs,
   GenerateClaimsCsvResponse,
+  PublicUser,
+  PartyBasketStatus,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -39,6 +41,7 @@ import {
   getReferralById,
   getClaimsCsvData,
   getLootboxByAddress,
+  getUser,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -52,6 +55,7 @@ import {
 import { Address } from "@wormgraph/helpers";
 import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
+import { convertUserToPublicUser } from "../user/utils";
 
 const ReferralResolvers: Resolvers = {
   Query: {
@@ -105,6 +109,39 @@ const ReferralResolvers: Resolvers = {
   },
 
   Claim: {
+    userLink: async (claim: Claim): Promise<PublicUser | null> => {
+      if (claim.type === ClaimType.Referral) {
+        if (!claim.referrerId) {
+          return null;
+        }
+
+        try {
+          const user = await getUser(claim.referrerId);
+          const publicUser = user ? convertUserToPublicUser(user) : null;
+
+          return publicUser;
+        } catch (err) {
+          console.error(err);
+          return null;
+        }
+      } else if (claim.type === ClaimType.Reward) {
+        if (!claim.claimerUserId) {
+          return null;
+        }
+
+        try {
+          const user = await getUser(claim.claimerUserId);
+          const publicUser = user ? convertUserToPublicUser(user) : null;
+
+          return publicUser;
+        } catch (err) {
+          console.error(err);
+          return null;
+        }
+      }
+
+      return null;
+    },
     chosenPartyBasket: async (claim: Claim): Promise<PartyBasket | null> => {
       if (!claim.chosenPartyBasketId) {
         return null;
@@ -189,6 +226,12 @@ const ReferralResolvers: Resolvers = {
         } else if (partyBasket === undefined) {
           // Makesure the party basket exists
           throw new Error("Party Basket not found");
+        } else if (
+          partyBasket?.status === PartyBasketStatus.Disabled ||
+          partyBasket?.status === PartyBasketStatus.SoldOut
+        ) {
+          // Make sure the party basket is not disabled
+          throw new Error("Party Basket is disabled or sold out");
         }
 
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
@@ -319,6 +362,16 @@ const ReferralResolvers: Resolvers = {
             error: {
               code: StatusCode.BadRequest,
               message: "Claim already completed",
+            },
+          };
+        } else if (
+          partyBasket.status === PartyBasketStatus.Disabled ||
+          partyBasket.status === PartyBasketStatus.SoldOut
+        ) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Tickets are sold out, please choose another team.",
             },
           };
         }
