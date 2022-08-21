@@ -18,7 +18,6 @@ const ReferralTypeDefs = gql`
     referral
     reward
     one_time
-    genesis
   }
 
   enum ReferralType {

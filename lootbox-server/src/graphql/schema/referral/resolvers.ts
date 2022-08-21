@@ -309,18 +309,17 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        let claimType:
-          | ClaimType.OneTime
-          | ClaimType.Referral
-          | ClaimType.Genesis;
+        let claimType: ClaimType.OneTime | ClaimType.Referral;
         if (referral.type === ReferralType.OneTime) {
           claimType = ClaimType.OneTime;
-        } else if (referral.type === ReferralType.Viral) {
+        } else if (
+          referral.type === ReferralType.Viral ||
+          referral.type === ReferralType.Genesis
+        ) {
           claimType = ClaimType.Referral;
-        } else if (referral.type === ReferralType.Genesis) {
-          claimType = ClaimType.Genesis;
         } else {
           console.warn("invalid referral", referral);
+          // This should throw an error, but allowed to allow old referrals to work (when referral.tyle===undefined)
           // default to viral
           claimType = ClaimType.Referral;
         }
@@ -409,6 +408,13 @@ const ReferralResolvers: Resolvers = {
               message: "Tickets are sold out, please choose another team.",
             },
           };
+        } else if (claim.type === ClaimType.Reward) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: "Error",
+            },
+          };
         }
 
         // Make sure the user has not accepted a claim for a tournament before
@@ -440,6 +446,15 @@ const ReferralResolvers: Resolvers = {
             },
           };
         }
+
+        if (referral.referrerId === context.userId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: "You cannot redeem your own referral link!",
+            },
+          };
+        }
         if (!tournament || !!tournament.timestamps.deletedAt) {
           return {
             error: {
@@ -463,7 +478,11 @@ const ReferralResolvers: Resolvers = {
           }
         } else {
           // New validation logic
-          if (referral.type === ReferralType.Viral) {
+          if (
+            referral.type === ReferralType.Viral ||
+            referral.type === ReferralType.Genesis ||
+            claim.type === ClaimType.Referral
+          ) {
             if (previousClaims.length > 0) {
               return {
                 error: {
@@ -474,18 +493,9 @@ const ReferralResolvers: Resolvers = {
                 },
               };
             }
-          } else if (referral.type === ReferralType.Genesis) {
-            if (previousClaims.length > 0) {
-              return {
-                error: {
-                  code: StatusCode.BadRequest,
-                  // WARNING - this message is stupidly parsed in the frontend for internationalization.
-                  //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
-                  message: HACKY_MESSAGE,
-                },
-              };
-            }
-          } else if (referral.type === ReferralType.OneTime) {
+          }
+
+          if (referral.type === ReferralType.OneTime) {
             const previousClaimsForReferral =
               await getCompletedClaimsForReferral(referral.id as ReferralID, 1);
             if (previousClaimsForReferral.length > 0) {
@@ -496,14 +506,6 @@ const ReferralResolvers: Resolvers = {
                 },
               };
             }
-          } else {
-            console.error("bad referral type", referral.type);
-            return {
-              error: {
-                code: StatusCode.BadRequest,
-                message: "Invalid referral type",
-              },
-            };
           }
         }
 
