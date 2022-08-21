@@ -23,6 +23,7 @@ import {
   GenerateClaimsCsvResponse,
   PublicUser,
   PartyBasketStatus,
+  ReferralType,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -42,6 +43,7 @@ import {
   getClaimsCsvData,
   getLootboxByAddress,
   getUser,
+  getCompletedClaimsForReferral,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -56,6 +58,11 @@ import { Address } from "@wormgraph/helpers";
 import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
 import { convertUserToPublicUser } from "../user/utils";
+
+// WARNING - this message is stupidly parsed in the frontend for internationalization.
+//           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+const HACKY_MESSAGE =
+  "You have already accepted a referral for this tournament";
 
 const ReferralResolvers: Resolvers = {
   Query: {
@@ -206,6 +213,8 @@ const ReferralResolvers: Resolvers = {
       }
 
       const slug = nanoid(10) as ReferralSlug;
+      const requestedReferralType =
+        payload.type == undefined ? ReferralType.Viral : payload.type;
 
       try {
         const [existingReferral, tournament, partyBasket] = await Promise.all([
@@ -220,13 +229,24 @@ const ReferralResolvers: Resolvers = {
           // Make sure the slug does not already exist
           console.error("Referral slug already exists");
           throw new Error("Please try again");
-        } else if (!tournament) {
+        }
+        if (!tournament) {
           // Make sure the tournament exists
           throw new Error("Tournament not found");
-        } else if (partyBasket === undefined) {
+        }
+        if (partyBasket === undefined) {
           // Makesure the party basket exists
           throw new Error("Party Basket not found");
-        } else if (
+        }
+        if (
+          requestedReferralType === ReferralType.OneTime &&
+          context.userId !== tournament.creatorId
+        ) {
+          throw new Error(
+            "You must own the tournament to make a one time referral"
+          );
+        }
+        if (
           partyBasket?.status === PartyBasketStatus.Disabled ||
           partyBasket?.status === PartyBasketStatus.SoldOut
         ) {
@@ -241,11 +261,8 @@ const ReferralResolvers: Resolvers = {
           referrerId: context.userId,
           creatorId: context.userId,
           campaignName,
+          type: requestedReferralType,
           tournamentId: payload.tournamentId as TournamentID,
-          isRewardDisabled:
-            payload.isRewardDisabled == undefined
-              ? false
-              : payload.isRewardDisabled,
           seedPartyBasketId: payload.partyBasketId
             ? (payload.partyBasketId as PartyBasketID)
             : undefined,
@@ -299,6 +316,7 @@ const ReferralResolvers: Resolvers = {
           referrerId: referral.referrerId as UserIdpID,
           referralSlug: payload.referralSlug as ReferralSlug,
           tournamentName: tournament.title,
+          referralType: referral.type || ReferralType.Viral,
           originPartyBasketId: !!referral.seedPartyBasketId
             ? (referral.seedPartyBasketId as PartyBasketID)
             : undefined,
@@ -395,30 +413,80 @@ const ReferralResolvers: Resolvers = {
               message: "Lootbox not found",
             },
           };
-        } else if (!referral || !!referral.timestamps.deletedAt) {
+        }
+        if (!referral || !!referral.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: "Referral not found",
             },
           };
-        } else if (!tournament || !!tournament.timestamps.deletedAt) {
+        }
+        if (!tournament || !!tournament.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: "Tournament not found",
             },
           };
-        } else if (previousClaims.length > 0) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              // WARNING - this message is stupidly parsed in the frontend for internationalization.
-              //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
-              message:
-                "You have already accepted a referral for this tournament",
-            },
-          };
+        }
+
+        // Old logic TODO: remove it in a week or two
+        if (referral.type == undefined) {
+          if (previousClaims.length > 0) {
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                // WARNING - this message is stupidly parsed in the frontend for internationalization.
+                //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+                message: HACKY_MESSAGE,
+              },
+            };
+          }
+        } else {
+          // New validation logic
+          if (referral.type === ReferralType.Viral) {
+            if (previousClaims.length > 0) {
+              return {
+                error: {
+                  code: StatusCode.BadRequest,
+                  // WARNING - this message is stupidly parsed in the frontend for internationalization.
+                  //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+                  message: HACKY_MESSAGE,
+                },
+              };
+            }
+          } else if (referral.type === ReferralType.Genesis) {
+            if (previousClaims.length > 0) {
+              return {
+                error: {
+                  code: StatusCode.BadRequest,
+                  // WARNING - this message is stupidly parsed in the frontend for internationalization.
+                  //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+                  message: HACKY_MESSAGE,
+                },
+              };
+            }
+          } else if (referral.type === ReferralType.OneTime) {
+            const previousClaimsForReferral =
+              await getCompletedClaimsForReferral(referral.id as ReferralID);
+            if (previousClaimsForReferral.length > 0) {
+              return {
+                error: {
+                  code: StatusCode.BadRequest,
+                  message: "This referral link has already been used",
+                },
+              };
+            }
+          } else {
+            console.error("bad referral type", referral.type);
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                message: "Invalid referral type",
+              },
+            };
+          }
         }
 
         const updatedClaim = await completeClaim({
@@ -435,9 +503,15 @@ const ReferralResolvers: Resolvers = {
           claimerUserId: context.userId,
         });
 
-        // Now write the referrers claim (type=REWARD)
-        try {
-          if (referral.referrerId && !referral.isRewardDisabled) {
+        // Now write the referrers reward claim (type=REWARD)
+        if (
+          referral.type === ReferralType.Viral ||
+          // Old deprecated thing
+          (referral.type == undefined &&
+            referral.referrerId &&
+            !referral.isRewardDisabled)
+        ) {
+          try {
             await createRewardClaim({
               referralCampaignName: referral.campaignName,
               referralId: claim.referralId as ReferralID,
@@ -456,10 +530,10 @@ const ReferralResolvers: Resolvers = {
                 ? partyBasket.nftBountyValue
                 : undefined,
             });
+          } catch (err) {
+            // If error here, we just make a log... but we dont return an error to client
+            console.error("Error writting reward claim", err);
           }
-        } catch (err) {
-          // If error here, we just make a log... but we dont return an error to client
-          console.error("Error writting reward claim", err);
         }
 
         return {
