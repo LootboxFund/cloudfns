@@ -17,6 +17,8 @@ const ReferralTypeDefs = gql`
   enum ClaimType {
     referral
     reward
+    one_time
+    genesis
   }
 
   enum ReferralType {
@@ -34,7 +36,7 @@ const ReferralTypeDefs = gql`
 
   type Claim {
     id: ID!
-    referrerId: ID
+    referrerId: ID # not used for reward claims
     referralCampaignName: String
     referralId: ID!
     referralSlug: ID!

@@ -309,14 +309,31 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
+        let claimType:
+          | ClaimType.OneTime
+          | ClaimType.Referral
+          | ClaimType.Genesis;
+        if (referral.type === ReferralType.OneTime) {
+          claimType = ClaimType.OneTime;
+        } else if (referral.type === ReferralType.Viral) {
+          claimType = ClaimType.Referral;
+        } else if (referral.type === ReferralType.Genesis) {
+          claimType = ClaimType.Genesis;
+        } else {
+          console.warn("invalid referral", referral);
+          // default to viral
+          claimType = ClaimType.Referral;
+        }
+
         const claim = await createStartingClaim({
+          claimType,
           referralCampaignName: referral.campaignName,
           referralId: referral.id as ReferralID,
           tournamentId: referral.tournamentId as TournamentID,
           referrerId: referral.referrerId as UserIdpID,
           referralSlug: payload.referralSlug as ReferralSlug,
           tournamentName: tournament.title,
-          referralType: referral.type || ReferralType.Viral,
+          referralType: referral.type || ReferralType.Viral, // default to viral
           originPartyBasketId: !!referral.seedPartyBasketId
             ? (referral.seedPartyBasketId as PartyBasketID)
             : undefined,
@@ -399,7 +416,8 @@ const ReferralResolvers: Resolvers = {
           await Promise.all([
             getCompletedUserReferralClaimsForTournament(
               context.userId,
-              claim.tournamentId as TournamentID
+              claim.tournamentId as TournamentID,
+              1
             ),
             getTournamentById(claim.tournamentId as TournamentID),
             getReferralById(claim.referralId as ReferralID),
@@ -469,7 +487,7 @@ const ReferralResolvers: Resolvers = {
             }
           } else if (referral.type === ReferralType.OneTime) {
             const previousClaimsForReferral =
-              await getCompletedClaimsForReferral(referral.id as ReferralID);
+              await getCompletedClaimsForReferral(referral.id as ReferralID, 1);
             if (previousClaimsForReferral.length > 0) {
               return {
                 error: {
