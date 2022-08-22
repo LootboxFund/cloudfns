@@ -11,6 +11,7 @@ import {
   User,
   ClaimsCsvRow,
   Lootbox,
+  ReferralType,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -74,7 +75,7 @@ interface CreateReferralCall {
   campaignName: string;
   tournamentId: TournamentID;
   seedPartyBasketId?: PartyBasketID;
-  isRewardDisabled: boolean;
+  type: ReferralType;
 }
 export const createReferral = async (
   req: CreateReferralCall
@@ -87,7 +88,7 @@ export const createReferral = async (
     referrerId: req.referrerId,
     campaignName: req.campaignName,
     tournamentId: req.tournamentId,
-    isRewardDisabled: req.isRewardDisabled,
+    type: req.type,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -109,7 +110,7 @@ interface CreateClaimCall {
   referralId: ReferralID;
   tournamentId: TournamentID;
   tournamentName: string;
-  referrerId?: UserIdpID;
+  referrerId: UserIdpID | null;
   referralCampaignName: string;
   referralSlug: ReferralSlug;
   chosenPartyBasketId?: PartyBasketID;
@@ -122,9 +123,10 @@ interface CreateClaimCall {
   chosenPartyBasketNFTBountyValue?: string;
   lootboxName?: string;
   lootboxAddress?: string;
-  isAlreadyCompleted?: boolean;
+  completed?: boolean;
   claimerUserId?: UserID;
   rewardFromFriendReferred?: UserID;
+  referralType: ReferralType;
 }
 const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   const ref = db
@@ -136,6 +138,7 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
   const timestamp = Timestamp.now().toMillis();
   const newClaim: Claim = {
     id: ref.id,
+    referrerId: req.referrerId,
     referralId: req.referralId,
     tournamentId: req.tournamentId,
     tournamentName: req.tournamentName,
@@ -143,11 +146,12 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     referralCampaignName: req.referralCampaignName,
     status: req.status,
     type: req.type,
+    referralType: req.referralType,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
       deletedAt: null,
-      completedAt: !!req.isAlreadyCompleted ? timestamp : null,
+      completedAt: !!req.completed ? timestamp : null,
     },
   };
 
@@ -161,10 +165,6 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
 
   if (!!req.lootboxName) {
     newClaim.lootboxName = req.lootboxName;
-  }
-
-  if (!!req.referrerId) {
-    newClaim.referrerId = req.referrerId;
   }
 
   if (!!req.chosenPartyBasketId) {
@@ -210,9 +210,11 @@ interface CreateCreateClaimReq {
   tournamentId: TournamentID;
   tournamentName: string;
   referralCampaignName: string;
-  referrerId?: UserIdpID;
+  referrerId: UserIdpID;
   referralSlug: ReferralSlug;
   originPartyBasketId?: PartyBasketID;
+  referralType: ReferralType;
+  claimType: ClaimType;
 }
 export const createStartingClaim = async (req: CreateCreateClaimReq) => {
   return await _createClaim({
@@ -224,8 +226,9 @@ export const createStartingClaim = async (req: CreateCreateClaimReq) => {
     tournamentName: req.tournamentName,
     originPartyBasketId: req.originPartyBasketId,
     status: ClaimStatus.Pending,
-    type: ClaimType.Referral,
-    isAlreadyCompleted: false,
+    type: req.claimType,
+    referralType: req.referralType,
+    completed: false,
   });
 };
 
@@ -261,9 +264,11 @@ export const createRewardClaim = async (req: CreateRewardClaimReq) => {
     lootboxAddress: req.lootboxAddress,
     status: ClaimStatus.Complete,
     type: ClaimType.Reward,
-    isAlreadyCompleted: true,
     claimerUserId: req.claimerId,
     rewardFromFriendReferred: req.rewardFromFriendReferred,
+    referralType: ReferralType.Viral,
+    referrerId: null,
+    completed: true,
   });
 };
 
@@ -346,14 +351,40 @@ export const getClaimById = async (
 
 export const getCompletedUserReferralClaimsForTournament = async (
   userId: UserIdpID,
-  tournamentId: TournamentID
+  tournamentId: TournamentID,
+  limit?: number
 ): Promise<Claim[]> => {
-  const collectionRef = db
+  let collectionRef = db
     .collectionGroup(Collection.Claim)
     .where("tournamentId", "==", tournamentId)
     .where("claimerUserId", "==", userId)
     .where("type", "==", ClaimType.Referral)
     .where("status", "==", ClaimStatus.Complete) as Query<Claim>;
+
+  if (limit !== undefined) {
+    collectionRef = collectionRef.limit(limit);
+  }
+
+  const collectionSnapshot = await collectionRef.get();
+  if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => doc.data());
+  }
+};
+
+export const getCompletedClaimsForReferral = async (
+  referralId: ReferralID,
+  limit?: number
+): Promise<Claim[]> => {
+  let collectionRef = db
+    .collectionGroup(Collection.Claim)
+    .where("referralId", "==", referralId)
+    .where("status", "==", ClaimStatus.Complete) as Query<Claim>;
+
+  if (limit !== undefined) {
+    collectionRef = collectionRef.limit(limit);
+  }
 
   const collectionSnapshot = await collectionRef.get();
   if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
@@ -514,6 +545,7 @@ const convertClaimToCsvRow = (
   return {
     tournamentId: claim.tournamentId,
     tournamentName: claim.tournamentName || "",
+    referralType: claim.referralType || "",
     referralId: claim.referralId,
     referralCampaignName: claim.referralCampaignName || "",
     referralSlug: claim.referralSlug || "",
@@ -522,6 +554,7 @@ const convertClaimToCsvRow = (
     claimStatus: claim.status,
     claimType: claim.type,
     rewardFromClaim: claim.rewardFromClaim || "",
+    rewardFromFriendReferred: claim.rewardFromFriendReferred || "",
     claimerId: claimer?.id || "",
     claimerUsername: claimer?.username || "",
     claimerSocial_Facebook: claimer?.socials?.facebook || "",

@@ -23,6 +23,7 @@ import {
   GenerateClaimsCsvResponse,
   PublicUser,
   PartyBasketStatus,
+  ReferralType,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -42,6 +43,7 @@ import {
   getClaimsCsvData,
   getLootboxByAddress,
   getUser,
+  getCompletedClaimsForReferral,
 } from "../../../api/firestore";
 import {
   ClaimID,
@@ -56,6 +58,11 @@ import { Address } from "@wormgraph/helpers";
 import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
 import { convertUserToPublicUser } from "../user/utils";
+
+// WARNING - this message is stupidly parsed in the frontend for internationalization.
+//           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+const HACKY_MESSAGE =
+  "You have already accepted a referral for this tournament";
 
 const ReferralResolvers: Resolvers = {
   Query: {
@@ -125,12 +132,12 @@ const ReferralResolvers: Resolvers = {
           return null;
         }
       } else if (claim.type === ClaimType.Reward) {
-        if (!claim.claimerUserId) {
+        if (!claim.rewardFromFriendReferred) {
           return null;
         }
 
         try {
-          const user = await getUser(claim.claimerUserId);
+          const user = await getUser(claim.rewardFromFriendReferred);
           const publicUser = user ? convertUserToPublicUser(user) : null;
 
           return publicUser;
@@ -206,6 +213,8 @@ const ReferralResolvers: Resolvers = {
       }
 
       const slug = nanoid(10) as ReferralSlug;
+      const requestedReferralType =
+        payload.type == undefined ? ReferralType.Viral : payload.type;
 
       try {
         const [existingReferral, tournament, partyBasket] = await Promise.all([
@@ -220,13 +229,24 @@ const ReferralResolvers: Resolvers = {
           // Make sure the slug does not already exist
           console.error("Referral slug already exists");
           throw new Error("Please try again");
-        } else if (!tournament) {
+        }
+        if (!tournament) {
           // Make sure the tournament exists
           throw new Error("Tournament not found");
-        } else if (partyBasket === undefined) {
+        }
+        if (partyBasket === undefined) {
           // Makesure the party basket exists
           throw new Error("Party Basket not found");
-        } else if (
+        }
+        if (
+          requestedReferralType === ReferralType.OneTime &&
+          context.userId !== tournament.creatorId
+        ) {
+          throw new Error(
+            "You must own the tournament to make a one time referral"
+          );
+        }
+        if (
           partyBasket?.status === PartyBasketStatus.Disabled ||
           partyBasket?.status === PartyBasketStatus.SoldOut
         ) {
@@ -241,11 +261,8 @@ const ReferralResolvers: Resolvers = {
           referrerId: context.userId,
           creatorId: context.userId,
           campaignName,
+          type: requestedReferralType,
           tournamentId: payload.tournamentId as TournamentID,
-          isRewardDisabled:
-            payload.isRewardDisabled == undefined
-              ? false
-              : payload.isRewardDisabled,
           seedPartyBasketId: payload.partyBasketId
             ? (payload.partyBasketId as PartyBasketID)
             : undefined,
@@ -292,13 +309,30 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
+        let claimType: ClaimType.OneTime | ClaimType.Referral;
+        if (referral.type === ReferralType.OneTime) {
+          claimType = ClaimType.OneTime;
+        } else if (
+          referral.type === ReferralType.Viral ||
+          referral.type === ReferralType.Genesis
+        ) {
+          claimType = ClaimType.Referral;
+        } else {
+          console.warn("invalid referral", referral);
+          // This should throw an error, but allowed to allow old referrals to work (when referral.tyle===undefined)
+          // default to viral
+          claimType = ClaimType.Referral;
+        }
+
         const claim = await createStartingClaim({
+          claimType,
           referralCampaignName: referral.campaignName,
           referralId: referral.id as ReferralID,
           tournamentId: referral.tournamentId as TournamentID,
           referrerId: referral.referrerId as UserIdpID,
           referralSlug: payload.referralSlug as ReferralSlug,
           tournamentName: tournament.title,
+          referralType: referral.type || ReferralType.Viral, // default to viral
           originPartyBasketId: !!referral.seedPartyBasketId
             ? (referral.seedPartyBasketId as PartyBasketID)
             : undefined,
@@ -374,6 +408,13 @@ const ReferralResolvers: Resolvers = {
               message: "Tickets are sold out, please choose another team.",
             },
           };
+        } else if (claim.type === ClaimType.Reward) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: "Error",
+            },
+          };
         }
 
         // Make sure the user has not accepted a claim for a tournament before
@@ -381,7 +422,8 @@ const ReferralResolvers: Resolvers = {
           await Promise.all([
             getCompletedUserReferralClaimsForTournament(
               context.userId,
-              claim.tournamentId as TournamentID
+              claim.tournamentId as TournamentID,
+              1
             ),
             getTournamentById(claim.tournamentId as TournamentID),
             getReferralById(claim.referralId as ReferralID),
@@ -395,30 +437,76 @@ const ReferralResolvers: Resolvers = {
               message: "Lootbox not found",
             },
           };
-        } else if (!referral || !!referral.timestamps.deletedAt) {
+        }
+        if (!referral || !!referral.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: "Referral not found",
             },
           };
-        } else if (!tournament || !!tournament.timestamps.deletedAt) {
+        }
+
+        if (referral.referrerId === context.userId) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: "You cannot redeem your own referral link!",
+            },
+          };
+        }
+        if (!tournament || !!tournament.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: "Tournament not found",
             },
           };
-        } else if (previousClaims.length > 0) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              // WARNING - this message is stupidly parsed in the frontend for internationalization.
-              //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
-              message:
-                "You have already accepted a referral for this tournament",
-            },
-          };
+        }
+
+        // Old logic TODO: remove it in a week or two
+        if (referral.type == undefined) {
+          if (previousClaims.length > 0) {
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                // WARNING - this message is stupidly parsed in the frontend for internationalization.
+                //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+                message: HACKY_MESSAGE,
+              },
+            };
+          }
+        } else {
+          // New validation logic
+          if (
+            referral.type === ReferralType.Viral ||
+            referral.type === ReferralType.Genesis ||
+            claim.type === ClaimType.Referral
+          ) {
+            if (previousClaims.length > 0) {
+              return {
+                error: {
+                  code: StatusCode.BadRequest,
+                  // WARNING - this message is stupidly parsed in the frontend for internationalization.
+                  //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+                  message: HACKY_MESSAGE,
+                },
+              };
+            }
+          }
+
+          if (referral.type === ReferralType.OneTime) {
+            const previousClaimsForReferral =
+              await getCompletedClaimsForReferral(referral.id as ReferralID, 1);
+            if (previousClaimsForReferral.length > 0) {
+              return {
+                error: {
+                  code: StatusCode.BadRequest,
+                  message: "This referral link has already been used",
+                },
+              };
+            }
+          }
         }
 
         const updatedClaim = await completeClaim({
@@ -435,9 +523,15 @@ const ReferralResolvers: Resolvers = {
           claimerUserId: context.userId,
         });
 
-        // Now write the referrers claim (type=REWARD)
-        try {
-          if (referral.referrerId && !referral.isRewardDisabled) {
+        // Now write the referrers reward claim (type=REWARD)
+        if (
+          referral.type === ReferralType.Viral ||
+          // Old deprecated thing
+          (referral.type == undefined &&
+            referral.referrerId &&
+            !referral.isRewardDisabled)
+        ) {
+          try {
             await createRewardClaim({
               referralCampaignName: referral.campaignName,
               referralId: claim.referralId as ReferralID,
@@ -456,10 +550,10 @@ const ReferralResolvers: Resolvers = {
                 ? partyBasket.nftBountyValue
                 : undefined,
             });
+          } catch (err) {
+            // If error here, we just make a log... but we dont return an error to client
+            console.error("Error writting reward claim", err);
           }
-        } catch (err) {
-          // If error here, we just make a log... but we dont return an error to client
-          console.error("Error writting reward claim", err);
         }
 
         return {
