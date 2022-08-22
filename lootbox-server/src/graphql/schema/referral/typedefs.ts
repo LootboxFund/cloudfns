@@ -17,6 +17,13 @@ const ReferralTypeDefs = gql`
   enum ClaimType {
     referral
     reward
+    one_time
+  }
+
+  enum ReferralType {
+    viral
+    one_time
+    genesis
   }
 
   enum ClaimStatus {
@@ -28,10 +35,11 @@ const ReferralTypeDefs = gql`
 
   type Claim {
     id: ID!
-    referrerId: ID
+    referrerId: ID # not used for reward claims
     referralCampaignName: String
     referralId: ID!
     referralSlug: ID!
+    referralType: ReferralType
     tournamentId: ID!
     tournamentName: String
     originPartyBasketId: ID
@@ -70,7 +78,8 @@ const ReferralTypeDefs = gql`
     claims: [Claim!]
     tournament: Tournament
     seedPartyBasket: PartyBasket
-    isRewardDisabled: Boolean
+    isRewardDisabled: Boolean @deprecated(reason: "Use ReferralType instead")
+    type: ReferralType
   }
 
   type ReferralResponseSuccess {
@@ -87,12 +96,14 @@ const ReferralTypeDefs = gql`
     referralCampaignName: String!
     referralSlug: String!
     referralLink: String!
+    referralType: String!
 
     # claim
     claimId: String!
     claimStatus: ClaimStatus!
     claimType: ClaimType!
     rewardFromClaim: String!
+    rewardFromFriendReferred: String!
 
     # user (claimer) & referrer
     claimerId: String!
@@ -148,7 +159,8 @@ const ReferralTypeDefs = gql`
     campaignName: String
     tournamentId: ID!
     partyBasketId: ID
-    isRewardDisabled: Boolean
+    isRewardDisabled: Boolean @deprecated(reason: "User referral.type instead")
+    type: ReferralType # todo: make this required
   }
 
   input CompleteClaimPayload {
