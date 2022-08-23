@@ -155,6 +155,15 @@ const ReferralTypeDefs = gql`
 
   union ReferralResponse = ReferralResponseSuccess | ResponseError
 
+  input BulkCreateReferralPayload {
+    tournamentId: ID!
+    type: ReferralType!
+    numReferrals: Int!
+    campaignName: String
+    referrerId: ID # If null / undefined, uses the caller user id
+    partyBasketId: ID # Optional
+  }
+
   input CreateReferralPayload {
     campaignName: String
     tournamentId: ID!
@@ -180,6 +189,10 @@ const ReferralTypeDefs = gql`
     referral: Referral!
   }
 
+  type BulkCreateReferralResponseSuccess {
+    csv: String!
+  }
+
   type CompleteClaimResponseSuccess {
     claim: Claim!
   }
@@ -203,9 +216,18 @@ const ReferralTypeDefs = gql`
     edges: [ClaimEdge!]!
   }
 
+  type BulkReferralCSVRow {
+    error: String!
+    url: String!
+  }
+
   union CreateClaimResponse = CreateClaimResponseSuccess | ResponseError
 
   union CompleteClaimResponse = CompleteClaimResponseSuccess | ResponseError
+
+  union BulkCreateReferralResponse =
+      BulkCreateReferralResponseSuccess
+    | ResponseError
 
   union CreateReferralResponse = CreateReferralResponseSuccess | ResponseError
 
@@ -222,6 +244,9 @@ const ReferralTypeDefs = gql`
   }
 
   extend type Mutation {
+    bulkCreateReferral(
+      payload: BulkCreateReferralPayload!
+    ): BulkCreateReferralResponse!
     createReferral(payload: CreateReferralPayload!): CreateReferralResponse!
     createClaim(payload: CreateClaimPayload!): CreateClaimResponse!
     completeClaim(payload: CompleteClaimPayload!): CompleteClaimResponse!
