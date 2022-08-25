@@ -3,12 +3,12 @@
     "scripts": {
         "codegen": "graphql-codegen --config codegen.yml",
         "lint": "eslint --ext .js,.ts .",
-        "build": "yarn lint && tsc",
+        "build": "tsc",
         "build:watch": "tsc --watch",
         "serve": "yarn run build && firebase emulators:start --only functions",
         "shell": "yarn run build && firebase functions:shell",
         "start": "yarn run shell",
-        "deploy": "firebase deploy --only functions",
+        "deploy": "firebase deploy --only functions --project lootbox-fund-staging",
         "logs": "firebase functions:log"
     },
     "engines": {
