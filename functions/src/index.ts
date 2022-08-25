@@ -3,21 +3,25 @@ import * as functions from "firebase-functions";
 import { Claim, ClaimStatus, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
 import { Collection } from "./lib/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
+import { logger } from "firebase-functions";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
 export const onReferralWrite = functions.firestore
     .document(`/${Collection.Referral}/{referralId}/${Collection.Claim}/{claimId}`)
-    .onWrite(async (snap, context) => {
+    .onWrite(async (snap) => {
         // Grab the current value of what was written to Firestore.
         const oldClaim = snap.before.data() as Claim | undefined;
         const newClaim = snap.after.data() as Claim | undefined;
 
-        if (
-            newClaim?.status === ClaimStatus.Complete &&
-            newClaim?.status !== oldClaim?.status &&
-            newClaim?.chosenPartyBasketId
-        ) {
+        if (!newClaim) {
+            return;
+        }
+
+        const isStatusChanged = newClaim.status !== oldClaim?.status;
+
+        if (newClaim.status === ClaimStatus.Complete && isStatusChanged && newClaim.chosenPartyBasketId) {
+            logger.log("incrementing party basket completedClaims");
             try {
                 const partyBasketRef = db
                     .collection(Collection.PartyBasket)
@@ -29,28 +33,33 @@ export const onReferralWrite = functions.firestore
 
                 await partyBasketRef.update(updateReq);
             } catch (err) {
-                console.error("Error onReferralWrite");
-                console.error(err);
+                logger.error("Error onReferralWrite", err);
             }
         }
+
+        // // If it is a viral claim, write the reward claim...
+        // if (newClaim.status === ClaimStatus.Complete && isStatusChanged && newClaim.type === ClaimType.Referral) {
+        //     // write the reward claim TODO
+        // }
     });
 
 export const onPartyBasketWrite = functions.firestore
     .document(`/${Collection.PartyBasket}/{partyBasketId}`)
-    .onWrite(async (snap, context) => {
-        const oldPartyBasket = snap.before.data() as PartyBasket | undefined;
+    .onWrite(async (snap) => {
         const newPartyBasket = snap.after.data() as PartyBasket | undefined;
 
-        const maxCompletedClaims = newPartyBasket?.maxClaimsAllowed || DEFAULT_MAX_CLAIMS;
+        if (!newPartyBasket) {
+            return;
+        }
 
+        // If needed, update Party basket status to sold out
+        const maxCompletedClaims = newPartyBasket.maxClaimsAllowed || DEFAULT_MAX_CLAIMS;
         if (
-            !!newPartyBasket?.runningCompletedClaims &&
-            newPartyBasket.runningCompletedClaims !== oldPartyBasket?.runningCompletedClaims &&
+            !!newPartyBasket.runningCompletedClaims &&
             newPartyBasket.runningCompletedClaims >= maxCompletedClaims &&
             newPartyBasket.status !== PartyBasketStatus.SoldOut
         ) {
-            // Make the party basket sold out
-
+            logger.log("updating party basket to sold out", snap.after.id);
             try {
                 const partyBasketRef = db.collection(Collection.PartyBasket).doc(snap.after.id);
 
@@ -60,23 +69,7 @@ export const onPartyBasketWrite = functions.firestore
 
                 await partyBasketRef.update(updateReq);
             } catch (err) {
-                console.error("Error onPartyBasketWrite");
-                console.error(err);
+                logger.error("Error onPartyBasketWrite", err);
             }
         }
     });
-// exports.makeUppercase = functions.firestore.document('/messages/{documentId}')
-//     .onCreate((snap, context) => {
-//       // Grab the current value of what was written to Firestore.
-//       const original = snap.data().original;
-
-//       // Access the parameter `{documentId}` with `context.params`
-//       functions.logger.log('Uppercasing', context.params.documentId, original);
-
-//       const uppercase = original.toUpperCase();
-
-//       // You must return a Promise when performing asynchronous tasks inside a Functions such as
-//       // writing to Firestore.
-//       // Setting an 'uppercase' field in Firestore document returns a Promise.
-//       return snap.ref.set({uppercase}, {merge: true});
-//     });

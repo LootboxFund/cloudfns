@@ -1,11 +1,11 @@
 {
-    "extends": ["prettier"],
-    "plugins": ["prettier"],
-    "printWidth": 120,
-    "arrowParens": "always",
-    "bracketSpacing": true,
-    "tabWidth": 4,
-    "rules": {
-        "prettier/prettier": ["error"]
-    }
+  "extends": ["prettier"],
+  "plugins": ["prettier"],
+  "printWidth": 120,
+  "arrowParens": "always",
+  "bracketSpacing": true,
+  "tabWidth": 4,
+  "rules": {
+    "prettier/prettier": ["error"]
+  }
 }
