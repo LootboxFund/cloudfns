@@ -1,6 +1,7 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import {
+  BulkReferralCsvRow,
   CreateReferralResponse,
   MutationCreateReferralArgs,
   Resolvers,
@@ -24,6 +25,8 @@ import {
   PublicUser,
   PartyBasketStatus,
   ReferralType,
+  MutationBulkCreateReferralArgs,
+  BulkCreateReferralResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -198,6 +201,225 @@ const ReferralResolvers: Resolvers = {
   },
 
   Mutation: {
+    bulkCreateReferral: async (
+      _,
+      { payload }: MutationBulkCreateReferralArgs,
+      context: Context
+    ): Promise<BulkCreateReferralResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You must be logged in to bulk create a referral",
+          },
+        };
+      }
+
+      if (payload.numReferrals === 0) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Must be greater than zero",
+          },
+        };
+      }
+
+      if (payload.numReferrals > 300) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Must be less than or equal to 300",
+          },
+        };
+      }
+
+      const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
+
+      let tournament: Tournament | undefined;
+      let partyBasket: PartyBasket | undefined;
+
+      // Tournament checks
+      try {
+        tournament = await getTournamentById(
+          payload.tournamentId as TournamentID
+        );
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Tournament not found",
+            },
+          };
+        }
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "Error fetching tournament",
+          },
+        };
+      }
+
+      if (
+        payload.type === ReferralType.OneTime &&
+        context.userId !== tournament.creatorId
+      ) {
+        return {
+          error: {
+            code: StatusCode.Forbidden,
+            message: "You must own the tournament to make a one time referral",
+          },
+        };
+      }
+
+      // Party Basket checks
+      if (!!payload.partyBasketId) {
+        try {
+          partyBasket = await getPartyBasketById(
+            payload.partyBasketId as PartyBasketID
+          );
+        } catch (err) {
+          // Swallow error, proceed without party basket
+          console.log("error fetching party basket", err);
+        }
+      }
+
+      if (
+        !!partyBasket &&
+        (partyBasket?.status === PartyBasketStatus.Disabled ||
+          partyBasket?.status === PartyBasketStatus.SoldOut)
+      ) {
+        // Make sure the party basket is not disabled
+        return {
+          error: {
+            code: StatusCode.InvalidOperation,
+            message: "Party Basket is disabled or sold out",
+          },
+        };
+      }
+
+      if (!!payload.referrerId) {
+        try {
+          const user = await getUser(payload.referrerId);
+          if (!user) {
+            return {
+              error: {
+                code: StatusCode.NotFound,
+                message: "Referrer requested does not exist",
+              },
+            };
+          }
+        } catch (err) {
+          console.error(err);
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: "An error occured!",
+            },
+          };
+        }
+      }
+
+      try {
+        const referrals = await Promise.allSettled(
+          Array.from(Array(payload.numReferrals).keys()).map(async () => {
+            const referrer = (payload.referrerId || context.userId) as
+              | UserIdpID
+              | undefined;
+            const creator = context.userId as UserIdpID | undefined;
+            if (!referrer) {
+              console.error("Requested referrer not found", referrer);
+              throw new Error("Requested referrer not found");
+            }
+            if (!creator) {
+              console.error("User not authenticated", referrer);
+              throw new Error("Not authenticated");
+            }
+
+            let slug = nanoid(10) as ReferralSlug;
+            // Make sure the slug is not in use... :(
+            const _referral = await getReferralBySlug(slug);
+            if (!!_referral) {
+              // oh snap... try again lol
+              slug = nanoid(10) as ReferralSlug;
+              const _referral2 = await getReferralBySlug(slug);
+              if (!!_referral2) {
+                throw new Error(
+                  "Non-unique referral slug generated. Please try again."
+                );
+              }
+            }
+
+            const res = await createReferral({
+              slug,
+              referrerId: referrer,
+              creatorId: creator,
+              campaignName,
+              type: payload.type,
+              tournamentId: payload.tournamentId as TournamentID,
+              seedPartyBasketId: payload.partyBasketId
+                ? (payload.partyBasketId as PartyBasketID)
+                : undefined,
+            });
+
+            return res;
+          })
+        );
+
+        const data: BulkReferralCsvRow[] = [];
+        const errs: BulkReferralCsvRow[] = [];
+
+        referrals.map((a) => {
+          if (a.status === "fulfilled") {
+            data.push({
+              url: `${manifest.microfrontends.webflow.referral}?r=${a.value.slug}`,
+              error: "",
+            });
+          } else {
+            // rejected
+            errs.push({
+              url: "",
+              error: JSON.stringify(a.reason),
+            });
+          }
+        });
+
+        var lineArray: string[] = [];
+        [...errs, ...data].forEach(function (claimsRow, index) {
+          // If index == 0, then we are at the header row
+          if (index == 0) {
+            const titles = Object.keys(claimsRow);
+            lineArray.push(titles.join(","));
+          }
+
+          const values = Object.values(claimsRow);
+          var line = values.join(",");
+          lineArray.push(line);
+        });
+        var csvContent = lineArray.join("\n");
+
+        const downloadUrl = await saveCsvToStorage({
+          fileName: `referrals/${tournament.id}-${
+            payload.referrerId || context.userId
+          }-${nanoid()}.csv`,
+          data: csvContent,
+          bucket: manifest.firebase.storageBucket,
+        });
+
+        return {
+          csv: downloadUrl,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
+          },
+        };
+      }
+    },
     createReferral: async (
       _,
       { payload }: MutationCreateReferralArgs,
@@ -719,12 +941,25 @@ const ReferralResolvers: Resolvers = {
       return null;
     },
   },
+
+  BulkCreateReferralResponse: {
+    __resolveType: (obj: BulkCreateReferralResponse) => {
+      if ("csv" in obj) {
+        return "BulkCreateReferralResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
 };
 
 const referralResolverComposition = {
   "Mutation.createReferral": [isAuthenticated()],
   "Mutation.completeClaim": [isAuthenticated()],
   "Mutation.generateClaimsCsv": [isAuthenticated()],
+  "Mutation.bulkCreateReferral": [isAuthenticated()],
 };
 
 const referralResolvers = composeResolvers(
