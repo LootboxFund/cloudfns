@@ -27,6 +27,8 @@ const PartyBasketTypeDefs = gql`
     nftBountyValue: String
     joinCommunityUrl: String
     status: PartyBasketStatus
+    maxClaimsAllowed: Int
+    runningCompletedClaims: Int
     # whitelistSignatures: [PartyBasketWhitelistSignature!]
   }
 
@@ -68,6 +70,7 @@ const PartyBasketTypeDefs = gql`
     creatorAddress: ID!
     nftBountyValue: String # e.g. "150 SLP"
     joinCommunityUrl: String
+    maxClaimsAllowed: Int!
   }
 
   input EditPartyBasketPayload {
@@ -76,6 +79,7 @@ const PartyBasketTypeDefs = gql`
     nftBountyValue: String
     joinCommunityUrl: String
     status: PartyBasketStatus
+    maxClaimsAllowed: Int
   }
 
   type CreatePartyBasketResponseSuccess {

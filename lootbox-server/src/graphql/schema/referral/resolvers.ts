@@ -599,42 +599,47 @@ const ReferralResolvers: Resolvers = {
               message: "Claim not found",
             },
           };
-        } else if (context.userId === claim.referrerId) {
+        }
+        if (context.userId === claim.referrerId) {
           return {
             error: {
               code: StatusCode.Forbidden,
               message: "You cannot redeem your own referral link!",
             },
           };
-        } else if (!partyBasket || !!partyBasket?.timestamps?.deletedAt) {
+        }
+        if (!partyBasket || !!partyBasket?.timestamps?.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: "Party Basket not found",
             },
           };
-        } else if (claim.status === ClaimStatus.Complete) {
+        }
+        if (claim.status === ClaimStatus.Complete) {
           return {
             error: {
               code: StatusCode.BadRequest,
               message: "Claim already completed",
             },
           };
-        } else if (
+        }
+        if (
           partyBasket.status === PartyBasketStatus.Disabled ||
           partyBasket.status === PartyBasketStatus.SoldOut
         ) {
           return {
             error: {
               code: StatusCode.BadRequest,
-              message: "Tickets are sold out, please choose another team.",
+              message: "Out of stock! Please select a different team.",
             },
           };
-        } else if (claim.type === ClaimType.Reward) {
+        }
+        if (claim.type === ClaimType.Reward) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: "Error",
+              message: "Cannot complete a Reward type claim",
             },
           };
         }
@@ -746,12 +751,16 @@ const ReferralResolvers: Resolvers = {
         });
 
         // Now write the referrers reward claim (type=REWARD)
+        const currentAmount = partyBasket?.runningCompletedClaims || 0;
+        const maxAmount = partyBasket?.maxClaimsAllowed || 10000;
+        const isBonuxWithinLimit = currentAmount + 1 <= maxAmount; // +1 because we will be adding one bonus claim
         if (
-          referral.type === ReferralType.Viral ||
-          // Old deprecated thing
-          (referral.type == undefined &&
-            referral.referrerId &&
-            !referral.isRewardDisabled)
+          isBonuxWithinLimit &&
+          (referral.type === ReferralType.Viral ||
+            // Old deprecated thing
+            (referral.type == undefined &&
+              referral.referrerId &&
+              !referral.isRewardDisabled))
         ) {
           try {
             await createRewardClaim({
