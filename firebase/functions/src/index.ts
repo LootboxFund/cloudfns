@@ -7,7 +7,7 @@ import { logger } from "firebase-functions";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
-export const onReferralWrite = functions.firestore
+export const onClaimWrite = functions.firestore
     .document(`/${Collection.Referral}/{referralId}/${Collection.Claim}/{claimId}`)
     .onWrite(async (snap) => {
         // Grab the current value of what was written to Firestore.
@@ -33,7 +33,7 @@ export const onReferralWrite = functions.firestore
 
                 await partyBasketRef.update(updateReq);
             } catch (err) {
-                logger.error("Error onReferralWrite", err);
+                logger.error("Error onClaimWrite", err);
             }
         }
 
@@ -41,6 +41,8 @@ export const onReferralWrite = functions.firestore
         // if (newClaim.status === ClaimStatus.Complete && isStatusChanged && newClaim.type === ClaimType.Referral) {
         //     // write the reward claim TODO
         // }
+
+        return;
     });
 
 export const onPartyBasketWrite = functions.firestore
