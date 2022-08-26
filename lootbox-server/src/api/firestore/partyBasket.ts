@@ -99,22 +99,7 @@ export const getPartyBasketByAddress = async (
   } else {
     const doc = collectionSnapshot.docs[0];
     const data = doc.data();
-    return {
-      id: doc.id,
-      address: data.address,
-      factory: data.factory,
-      creatorId: data.creatorId,
-      name: data.name,
-      chainIdHex: data.chainIdHex,
-      lootboxAddress: data.lootboxAddress,
-      creatorAddress: data.creatorAddress,
-      nftBountyValue: data.nftBountyValue || null,
-      status: data.status,
-      joinCommunityUrl: data.joinCommunityUrl,
-      timestamps: {
-        ...data.timestamps,
-      },
-    };
+    return data;
   }
 };
 
@@ -235,6 +220,7 @@ interface CreatePartyBasketRequest {
   creatorAddress: Address;
   nftBountyValue?: string;
   joinCommunityUrl?: string;
+  maxClaimsAllowed: number;
 }
 export const createPartyBasket = async ({
   address,
@@ -246,6 +232,7 @@ export const createPartyBasket = async ({
   creatorAddress,
   nftBountyValue,
   joinCommunityUrl,
+  maxClaimsAllowed,
 }: CreatePartyBasketRequest) => {
   const partyBasketRef = db
     .collection(Collection.PartyBasket)
@@ -261,6 +248,7 @@ export const createPartyBasket = async ({
     chainIdHex,
     creatorAddress,
     status: PartyBasketStatus.Active,
+    maxClaimsAllowed: maxClaimsAllowed,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -287,6 +275,7 @@ interface EditPartyBasketRequest {
   nftBountyValue?: string | null;
   joinCommunityUrl?: string | null;
   status?: PartyBasketStatus | null;
+  maxClaimsAllowed?: number | null;
 }
 
 export const editPartyBasket = async ({
@@ -295,6 +284,7 @@ export const editPartyBasket = async ({
   nftBountyValue,
   joinCommunityUrl,
   status,
+  maxClaimsAllowed,
 }: EditPartyBasketRequest): Promise<PartyBasket> => {
   const partyBasketRef = db
     .collection(Collection.PartyBasket)
@@ -313,6 +303,10 @@ export const editPartyBasket = async ({
   }
   if (status != undefined) {
     updatePayload.status = status;
+  }
+
+  if (maxClaimsAllowed != undefined) {
+    updatePayload.maxClaimsAllowed = maxClaimsAllowed;
   }
 
   updatePayload["timestamps.updatedAt"] = Timestamp.now().toMillis();

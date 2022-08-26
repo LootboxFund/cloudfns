@@ -167,15 +167,36 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
-      const lootbox = await getLootboxByAddress(
-        payload.lootboxAddress as Address
-      );
+      if (
+        payload?.maxClaimsAllowed != undefined &&
+        payload.maxClaimsAllowed <= 0
+      ) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Max Claims Allowed must be greater than 0",
+          },
+        };
+      }
+
+      const [lootbox, partyBasket] = await Promise.all([
+        getLootboxByAddress(payload.lootboxAddress as Address),
+        getPartyBasketByAddress(payload.address as Address),
+      ]);
 
       if (!lootbox) {
         return {
           error: {
             code: StatusCode.NotFound,
             message: `The Lootbox does not exist`,
+          },
+        };
+      }
+      if (!!partyBasket) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "The Party Basket already exists!",
           },
         };
       }
@@ -191,6 +212,7 @@ const PartyBasketResolvers: Resolvers = {
           creatorAddress: payload.creatorAddress as Address,
           nftBountyValue: payload.nftBountyValue || undefined,
           joinCommunityUrl: payload.joinCommunityUrl || undefined,
+          maxClaimsAllowed: payload.maxClaimsAllowed || 5000,
         });
 
         return {
@@ -468,13 +490,24 @@ const PartyBasketResolvers: Resolvers = {
               message: `Party Basket not found`,
             },
           };
-        } else if (partyBasket.creatorId !== context.userId) {
+        }
+        if (partyBasket.creatorId !== context.userId) {
           return {
             error: {
               code: StatusCode.Unauthorized,
               message: `You do not own this Party Basket`,
             },
           };
+        }
+        if (payload?.maxClaimsAllowed != undefined) {
+          if (payload.maxClaimsAllowed <= 0) {
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                message: "Max Claims Allowed must be greater than 0",
+              },
+            };
+          }
         }
 
         const updatedPartyBasket = await editPartyBasket({
@@ -483,6 +516,7 @@ const PartyBasketResolvers: Resolvers = {
           nftBountyValue: payload.nftBountyValue,
           joinCommunityUrl: payload.joinCommunityUrl,
           status: payload.status,
+          maxClaimsAllowed: payload.maxClaimsAllowed,
         });
 
         return {
