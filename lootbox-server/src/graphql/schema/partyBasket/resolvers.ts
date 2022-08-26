@@ -179,15 +179,24 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
-      const lootbox = await getLootboxByAddress(
-        payload.lootboxAddress as Address
-      );
+      const [lootbox, partyBasket] = await Promise.all([
+        getLootboxByAddress(payload.lootboxAddress as Address),
+        getPartyBasketByAddress(payload.address as Address),
+      ]);
 
       if (!lootbox) {
         return {
           error: {
             code: StatusCode.NotFound,
             message: `The Lootbox does not exist`,
+          },
+        };
+      }
+      if (!!partyBasket) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "The Party Basket already exists!",
           },
         };
       }
