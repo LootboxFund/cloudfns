@@ -167,6 +167,18 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
+      if (
+        payload?.maxClaimsAllowed != undefined &&
+        payload.maxClaimsAllowed <= 0
+      ) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Max Claims Allowed must be greater than 0",
+          },
+        };
+      }
+
       const lootbox = await getLootboxByAddress(
         payload.lootboxAddress as Address
       );
@@ -469,13 +481,24 @@ const PartyBasketResolvers: Resolvers = {
               message: `Party Basket not found`,
             },
           };
-        } else if (partyBasket.creatorId !== context.userId) {
+        }
+        if (partyBasket.creatorId !== context.userId) {
           return {
             error: {
               code: StatusCode.Unauthorized,
               message: `You do not own this Party Basket`,
             },
           };
+        }
+        if (payload?.maxClaimsAllowed != undefined) {
+          if (payload.maxClaimsAllowed <= 0) {
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                message: "Max Claims Allowed must be greater than 0",
+              },
+            };
+          }
         }
 
         const updatedPartyBasket = await editPartyBasket({

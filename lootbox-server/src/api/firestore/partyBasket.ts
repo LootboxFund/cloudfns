@@ -99,22 +99,7 @@ export const getPartyBasketByAddress = async (
   } else {
     const doc = collectionSnapshot.docs[0];
     const data = doc.data();
-    return {
-      id: doc.id,
-      address: data.address,
-      factory: data.factory,
-      creatorId: data.creatorId,
-      name: data.name,
-      chainIdHex: data.chainIdHex,
-      lootboxAddress: data.lootboxAddress,
-      creatorAddress: data.creatorAddress,
-      nftBountyValue: data.nftBountyValue || null,
-      status: data.status,
-      joinCommunityUrl: data.joinCommunityUrl,
-      timestamps: {
-        ...data.timestamps,
-      },
-    };
+    return data;
   }
 };
 
