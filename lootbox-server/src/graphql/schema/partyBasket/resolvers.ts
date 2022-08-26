@@ -191,6 +191,7 @@ const PartyBasketResolvers: Resolvers = {
           creatorAddress: payload.creatorAddress as Address,
           nftBountyValue: payload.nftBountyValue || undefined,
           joinCommunityUrl: payload.joinCommunityUrl || undefined,
+          maxClaimsAllowed: payload.maxClaimsAllowed || 5000,
         });
 
         return {
@@ -483,6 +484,7 @@ const PartyBasketResolvers: Resolvers = {
           nftBountyValue: payload.nftBountyValue,
           joinCommunityUrl: payload.joinCommunityUrl,
           status: payload.status,
+          maxClaimsAllowed: payload.maxClaimsAllowed,
         });
 
         return {

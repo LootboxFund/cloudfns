@@ -70,7 +70,7 @@ const PartyBasketTypeDefs = gql`
     creatorAddress: ID!
     nftBountyValue: String # e.g. "150 SLP"
     joinCommunityUrl: String
-    maxClaimsAllowed: Int!
+    maxClaimsAllowed: Int
   }
 
   input EditPartyBasketPayload {
