@@ -59,17 +59,23 @@ export const onPartyBasketWrite = functions.firestore
             newPartyBasket.runningCompletedClaims >= maxCompletedClaims &&
             newPartyBasket.status !== PartyBasketStatus.SoldOut
         ) {
-            logger.log("updating party basket to sold out", snap.after.id);
-            try {
-                const partyBasketRef = db.collection(Collection.PartyBasket).doc(snap.after.id);
+            const oldPartyBasket = snap.before.data() as PartyBasket | undefined;
 
-                const updateReq: Partial<PartyBasket> = {
-                    status: PartyBasketStatus.SoldOut,
-                };
+            if (oldPartyBasket?.runningCompletedClaims !== newPartyBasket?.runningCompletedClaims) {
+                logger.log("updating party basket to sold out", snap.after.id);
+                try {
+                    const partyBasketRef = db.collection(Collection.PartyBasket).doc(snap.after.id);
 
-                await partyBasketRef.update(updateReq);
-            } catch (err) {
-                logger.error("Error onPartyBasketWrite", err);
+                    const updateReq: Partial<PartyBasket> = {
+                        status: PartyBasketStatus.SoldOut,
+                    };
+
+                    await partyBasketRef.update(updateReq);
+                } catch (err) {
+                    logger.error("Error onPartyBasketWrite", err);
+                }
             }
         }
+
+        return;
     });
