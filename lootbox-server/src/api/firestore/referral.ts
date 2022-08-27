@@ -9,7 +9,6 @@ import {
   ClaimEdge,
   ClaimPageInfo,
   User,
-  ClaimsCsvRow,
   Lootbox,
   ReferralType,
 } from "../../graphql/generated/types";
@@ -22,6 +21,7 @@ import {
   TournamentID,
   UserID,
   UserIdpID,
+  ClaimsCsvRow,
 } from "../../lib/types";
 import { Collection } from "./collection.types";
 import { db } from "../firebase";
@@ -35,6 +35,7 @@ import {
 import { Address } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 import { getUser } from "./user";
+import { getUserWallets } from "./wallet";
 
 export const getReferralBySlug = async (
   slug: ReferralSlug
@@ -499,7 +500,6 @@ export const getAllClaimsForTournament = async (
   }
 };
 
-export interface ClaimsCsvData {}
 export const getClaimsCsvData = async (
   tournamentId: TournamentID
 ): Promise<ClaimsCsvRow[]> => {
@@ -516,6 +516,9 @@ export const getClaimsCsvData = async (
     if (claim.claimerUserId) {
       if (!claimerUserMapping[claim.claimerUserId]) {
         claimer = await getUser(claim.claimerUserId);
+        if (claimer) {
+          claimer.wallets = await getUserWallets(claimer.id as UserID);
+        }
         claimerUserMapping[claim.claimerUserId] = claimer;
       } else {
         claimer = claimerUserMapping[claim.claimerUserId];
@@ -525,6 +528,9 @@ export const getClaimsCsvData = async (
     if (claim.referrerId) {
       if (!referrerUserMapping[claim.referrerId]) {
         referrer = await getUser(claim.referrerId);
+        if (referrer) {
+          referrer.wallets = await getUserWallets(referrer.id as UserID);
+        }
         referrerUserMapping[claim.referrerId] = referrer;
       } else {
         referrer = referrerUserMapping[claim.referrerId];
@@ -599,5 +605,73 @@ const convertClaimToCsvRow = (
       : "",
     claimCreatedAt: claim.timestamps.createdAt,
     claimUpdatedAt: claim.timestamps.updatedAt,
+
+    claimerAddress_0: claimer?.wallets
+      ? claimer?.wallets[0]?.address || ""
+      : "",
+    claimerAddress_1: claimer?.wallets
+      ? claimer?.wallets[1]?.address || ""
+      : "",
+    claimerAddress_2: claimer?.wallets
+      ? claimer?.wallets[2]?.address || ""
+      : "",
+    claimerAddress_3: claimer?.wallets
+      ? claimer?.wallets[3]?.address || ""
+      : "",
+    claimerAddress_4: claimer?.wallets
+      ? claimer?.wallets[4]?.address || ""
+      : "",
+    claimerAddress_5: claimer?.wallets
+      ? claimer?.wallets[5]?.address || ""
+      : "",
+    claimerAddress_6: claimer?.wallets
+      ? claimer?.wallets[6]?.address || ""
+      : "",
+    claimerAddress_7: claimer?.wallets
+      ? claimer?.wallets[7]?.address || ""
+      : "",
+    claimerAddress_8: claimer?.wallets
+      ? claimer?.wallets[8]?.address || ""
+      : "",
+    claimerAddress_9: claimer?.wallets
+      ? claimer?.wallets[9]?.address || ""
+      : "",
+    claimerAddress_10: claimer?.wallets
+      ? claimer?.wallets[10]?.address || ""
+      : "",
+
+    referrerAddress_0: referrer?.wallets
+      ? referrer?.wallets[0]?.address || ""
+      : "",
+    referrerAddress_1: referrer?.wallets
+      ? referrer?.wallets[1]?.address || ""
+      : "",
+    referrerAddress_2: referrer?.wallets
+      ? referrer?.wallets[2]?.address || ""
+      : "",
+    referrerAddress_3: referrer?.wallets
+      ? referrer?.wallets[3]?.address || ""
+      : "",
+    referrerAddress_4: referrer?.wallets
+      ? referrer?.wallets[4]?.address || ""
+      : "",
+    referrerAddress_5: referrer?.wallets
+      ? referrer?.wallets[5]?.address || ""
+      : "",
+    referrerAddress_6: referrer?.wallets
+      ? referrer?.wallets[6]?.address || ""
+      : "",
+    referrerAddress_7: referrer?.wallets
+      ? referrer?.wallets[7]?.address || ""
+      : "",
+    referrerAddress_8: referrer?.wallets
+      ? referrer?.wallets[8]?.address || ""
+      : "",
+    referrerAddress_9: referrer?.wallets
+      ? referrer?.wallets[9]?.address || ""
+      : "",
+    referrerAddress_10: referrer?.wallets
+      ? referrer?.wallets[10]?.address || ""
+      : "",
   };
 };
