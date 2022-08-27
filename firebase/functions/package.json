@@ -9,6 +9,7 @@
         "shell": "yarn run build && firebase functions:shell",
         "start": "yarn run shell",
         "deploy": "firebase deploy --only functions --project lootbox-fund-staging",
+        "deploy:prod": "firebase deploy --only functions --project lootbox-fund-prod",
         "logs": "firebase functions:log"
     },
     "engines": {
