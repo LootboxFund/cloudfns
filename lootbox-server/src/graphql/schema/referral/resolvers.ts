@@ -61,6 +61,7 @@ import { Address } from "@wormgraph/helpers";
 import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
 import { convertUserToPublicUser } from "../user/utils";
+import { csvCleaner } from "../../../lib/csv";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -847,7 +848,7 @@ const ReferralResolvers: Resolvers = {
             lineArray.push(titles.join(","));
           }
 
-          const values = Object.values(claimsRow);
+          const values = Object.values(claimsRow).map(csvCleaner);
           var line = values.join(",");
           // lineArray.push(
           //   index == 0 ? "data:text/csv;charset=utf-8," + line : line
