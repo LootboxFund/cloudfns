@@ -62,6 +62,7 @@ import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
 import { convertUserToPublicUser } from "../user/utils";
 import { csvCleaner } from "../../../lib/csv";
+import provider from "../../../api/identityProvider/firebase";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -588,11 +589,22 @@ const ReferralResolvers: Resolvers = {
       }
 
       try {
-        const [claim, partyBasket] = await Promise.all([
+        const [user, claim, partyBasket] = await Promise.all([
+          provider.getUserById(context.userId),
           getClaimById(payload.claimId as ClaimID),
           getPartyBasketById(payload.chosenPartyBasketId as PartyBasketID),
         ]);
 
+        if (!user || !user.phoneNumber) {
+          // Prevent abuse by requiring a phone number
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message:
+                "You need to login with your PHONE NUMBER to claim a ticket.",
+            },
+          };
+        }
         if (!claim || !!claim?.timestamps?.deletedAt) {
           return {
             error: {
