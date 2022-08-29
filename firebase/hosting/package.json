@@ -2,8 +2,8 @@
   "name": "lootbox-hosting",
   "scripts": {
     "emulator": "firebase emulators:start --only hosting",
-    "deploy": "firebase deploy --only hosting --project lootbox-fund-staging",
-    "deploy:prod": "firebase deploy --only hosting --project lootbox-fund-prod"
+    "deploy": "firebase deploy --only hosting:staging",
+    "deploy:prod": "firebase deploy --only hosting:prod"
   },
   "engines": {
     "node": "16"
