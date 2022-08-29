@@ -7,7 +7,11 @@
       "hosting": {
         "staging": [
           "lootbox-fund-staging"
-        ],
+        ]
+      }
+    },
+    "lootbox-fund-prod": {
+      "hosting": {
         "prod": [
           "lootbox-fund-prod"
         ]
