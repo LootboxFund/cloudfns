@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://www.googleapis.com" />
+    <link rel="preconnect" href="https://apis.google.com" />
+    <link
+      rel="preconnect"
+      href="https://lootbox-fund-staging.firebaseapp.com"
+    />
+    <!-- <meta charset="utf-8" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lootbox ESports Lottery</title>
+    <meta
+      name="description"
+      content="You've been gifted a free Lootbox NFT! Share with your friends to earn
+    more."
+    />
+    <script
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+      crossorigin
+    ></script>
+    <style media="screen">
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        background-color: #1c1c1c;
+      }
+      .mobile-container {
+        width: 100%;
+        height: 100%;
+      }
+      #viral-onboarding {
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mobile-container">
+      <div id="viral-onboarding"></div>
+    </div>
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-staging/widgets/0.6.3-demo/build-breaking-2/ViralOnboarding.production.js"
+    ></script>
+  </body>
+</html>

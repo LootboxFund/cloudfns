@@ -1,1 +1,18 @@
-{}
+{
+  "projects": {
+    "default": "lootbox-fund-staging"
+  },
+  "targets": {
+    "lootbox-fund-staging": {
+      "hosting": {
+        "staging": [
+          "lootbox-fund-staging"
+        ],
+        "prod": [
+          "lootbox-fund-prod"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
