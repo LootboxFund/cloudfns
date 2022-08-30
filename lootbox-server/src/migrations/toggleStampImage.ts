@@ -67,7 +67,7 @@ const run = async () => {
   // Lists files in the bucket
   let [files] = await storage.bucket(config.bucketName).getFiles();
 
-  // files = files.slice(0, 30);
+  console.log(`fetching... ${files.length} files`);
 
   for (let idx = 0; idx < files.length; idx++) {
     console.log("\nreading ", idx);
@@ -80,18 +80,19 @@ const run = async () => {
       console.log("already processed...");
       continue;
     }
-    const fileNameParts = file.name.split("/");
+    const originalFilename = file.name;
+    const fileNameParts = originalFilename.split("/");
     const filename = fileNameParts.pop();
     const tmpFilename = `tmp-${filename}`;
     console.log(
       `filename: ${filename}    --->    tmp filename: ${tmpFilename}`
     );
     const tmpFile = [...fileNameParts, tmpFilename].join("/");
-    const srcFile = [...fileNameParts, filename].join("/");
+    console.log(`orig: ${originalFilename}     --->   ${tmpFile}`);
 
     await file.rename(tmpFile);
     const newFile = storage.bucket(config.bucketName).file(tmpFile);
-    await newFile.rename(srcFile);
+    await newFile.rename(originalFilename);
   }
 };
 
