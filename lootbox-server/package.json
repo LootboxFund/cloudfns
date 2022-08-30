@@ -27,7 +27,6 @@
     "nanoid": "3.3.4"
   },
   "devDependencies": {
-    "@google-cloud/storage": "^6.2.2",
     "@graphql-codegen/cli": "^2.6.2",
     "@graphql-codegen/typescript": "^2.4.11",
     "@graphql-codegen/typescript-resolvers": "^2.6.4",
