@@ -1,0 +1,40 @@
+{
+    "name": "functions",
+    "scripts": {
+        "codegen": "graphql-codegen --config codegen.yml",
+        "lint": "eslint --ext .js,.ts .",
+        "build": "tsc",
+        "build:watch": "tsc --watch",
+        "serve": "yarn run build && firebase emulators:start --only functions",
+        "shell": "yarn run build && firebase functions:shell",
+        "start": "yarn run shell",
+        "deploy": "firebase deploy --only functions --project lootbox-fund-staging",
+        "deploy:prod": "firebase deploy --only functions --project lootbox-fund-prod",
+        "logs": "firebase functions:log"
+    },
+    "engines": {
+        "node": "16"
+    },
+    "main": "lib/index.js",
+    "dependencies": {
+        "firebase-admin": "^10.0.2",
+        "firebase-functions": "^3.18.0"
+    },
+    "devDependencies": {
+        "@graphql-codegen/cli": "^2.6.2",
+        "@graphql-codegen/typescript": "^2.4.11",
+        "@graphql-codegen/typescript-resolvers": "^2.6.4",
+        "@typescript-eslint/eslint-plugin": "^5.12.0",
+        "@typescript-eslint/parser": "^5.12.0",
+        "eslint": "^8.9.0",
+        "eslint-config-google": "^0.14.0",
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-import": "^2.25.4",
+        "eslint-plugin-prettier": "^4.2.1",
+        "firebase-functions-test": "^0.2.0",
+        "graphql": "^16.5.0",
+        "prettier": "^2.7.1",
+        "typescript": "^4.5.4"
+    },
+    "private": true
+}

@@ -1,13 +1,25 @@
 import { auth } from "../firebase";
-import { default as adminAuth, UserRecord } from "firebase-admin/auth";
-import { ICreateUserRequest, IIdentityProvider, IIdpUser } from "./interface";
+import {
+  default as adminAuth,
+  UpdateRequest as FirebaseUserUpdateRequest,
+  UserRecord,
+} from "firebase-admin/auth";
+import {
+  ICreateUserRequest,
+  IIdentityProvider,
+  IIdpUser,
+  UpdateUserRequest,
+} from "./interface";
 import { UserIdpID } from "../../lib/types";
 
 const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
   return {
     id: userRecord.uid as UserIdpID,
     email: userRecord.email ?? "",
+    phoneNumber: userRecord.phoneNumber ?? "",
     isEnabled: !userRecord.disabled,
+    username: userRecord.displayName ?? "",
+    avatar: userRecord.photoURL ?? "",
   };
 };
 
@@ -24,22 +36,34 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     password,
     phoneNumber,
     emailVerified = true,
+    username,
   }: ICreateUserRequest): Promise<IIdpUser> {
     const userRecord = await this.authInstance.createUser({
       email,
       password,
       emailVerified,
       phoneNumber,
+      disabled: false,
+      displayName: username,
     });
 
     // await this.generateEmailVerificationLink(email);
 
-    return {
-      id: userRecord.uid as UserIdpID,
-      email,
-      phoneNumber,
-      isEnabled: !userRecord.disabled,
-    };
+    return convertUserRecordToUser(userRecord);
+  }
+
+  async updateUser(id: string, request: UpdateUserRequest): Promise<IIdpUser> {
+    const updateRequest: FirebaseUserUpdateRequest = {};
+    if (!!request.username) {
+      updateRequest.displayName = request.username;
+    }
+    if (!!request.avatar) {
+      updateRequest.photoURL = request.avatar;
+    }
+
+    const userRecord = await this.authInstance.updateUser(id, updateRequest);
+
+    return convertUserRecordToUser(userRecord) as IIdpUser;
   }
 
   async getUserById(id: string): Promise<IIdpUser | null> {

@@ -15,6 +15,13 @@ import {
   RemoveWalletResponse,
   Tournament,
   PartyBasket,
+  MutationUpdateUserArgs,
+  UpdateUserResponse,
+  QueryPublicUserArgs,
+  PublicUserResponse,
+  QueryUserClaimsArgs,
+  UserClaimsResponse,
+  PublicUser,
 } from "../../generated/types";
 import {
   getUser,
@@ -26,6 +33,7 @@ import {
   deleteWallet,
   getUserTournaments,
   getUserPartyBasketsForLootbox,
+  updateUser,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../api/ethers";
 import { Address } from "@wormgraph/helpers";
@@ -33,7 +41,11 @@ import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { UserID, WalletID } from "../../../lib/types";
+import { UserID, UserIdpID, WalletID } from "../../../lib/types";
+import { IIdpUser } from "../../../api/identityProvider/interface";
+import { generateUsername } from "../../../lib/rng";
+import { convertUserToPublicUser } from "./utils";
+import { paginateUserClaims } from "../../../api/firestore";
 
 const UserResolvers = {
   Query: {
@@ -74,6 +86,45 @@ const UserResolvers = {
         };
       }
     },
+    publicUser: async (
+      _,
+      { id }: QueryPublicUserArgs
+    ): Promise<PublicUserResponse> => {
+      try {
+        const user = await getUser(id);
+        if (!user) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        const publicUser = convertUserToPublicUser(user);
+
+        return {
+          user: publicUser,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+  PublicUser: {
+    claims: async (user: PublicUser, { first, after }: QueryUserClaimsArgs) => {
+      const response = await paginateUserClaims(
+        user.id as UserIdpID,
+        first,
+        after
+      );
+
+      return response;
+    },
   },
   User: {
     wallets: async (user: User): Promise<Wallet[]> => {
@@ -103,23 +154,98 @@ const UserResolvers = {
   },
 
   Mutation: {
+    /**
+     * Used primarily in phone sign up
+     * User IDP object gets created in the frontend, so we expect this call to be authenticated
+     * However, corresponding user database object does not get created, so this function will create that object
+     * if it dosent exist. If it already exists, this function returns the existing user object from the database
+     */
+    createUserRecord: async (
+      _,
+      __,
+      context: Context
+    ): Promise<CreateUserResponse> => {
+      if (!context.userId) {
+        // Phone number auth - the user actually gets created in the frontend
+        // So this request should be authenticated
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You are not authenticated!",
+          },
+        };
+      }
+
+      let idpUser: IIdpUser;
+
+      try {
+        const _idpUser = await identityProvider.getUserById(context.userId);
+        if (!_idpUser) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        idpUser = { ..._idpUser };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+
+      try {
+        const dbUser = await getUser(context.userId);
+        if (!!dbUser) {
+          // User is already created
+          return { user: dbUser };
+        }
+
+        // Update the idp username if needed
+        // let updatedUserIdp: IIdpUser | undefined = undefined;
+        if (!idpUser.username) {
+          const updatedUserIdp = await identityProvider.updateUser(
+            context.userId,
+            {
+              username: generateUsername(),
+            }
+          );
+          idpUser = { ...updatedUserIdp };
+        }
+
+        // User does not exist in database, create it
+        const user = await createUser(idpUser);
+
+        return { user };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     createUserWithPassword: async (
       _,
       { payload }: MutationCreateUserWithPasswordArgs
     ): Promise<CreateUserResponse> => {
       try {
         // Create the user in the IDP
+        const username = generateUsername();
         const idpUser = await identityProvider.createUser({
           email: payload.email,
           phoneNumber: payload.phoneNumber || undefined,
           emailVerified: false,
           password: payload.password,
+          username,
         });
 
-        const user = await createUser(idpUser, {
-          firstName: payload.firstName || undefined,
-          lastName: payload.lastName || undefined,
-        });
+        const user = await createUser(idpUser);
         user.wallets = [];
         return { user };
       } catch (err) {
@@ -177,17 +303,17 @@ const UserResolvers = {
       }
 
       try {
+        const username = generateUsername();
+
         // Create the user in the IDP
         const idpUser = await identityProvider.createUser({
           email: payload.email,
           phoneNumber: payload.phoneNumber,
           emailVerified: false,
+          username,
         });
 
-        const user = await createUser(idpUser, {
-          firstName: payload.firstName || undefined,
-          lastName: payload.lastName || undefined,
-        });
+        const user = await createUser(idpUser);
         const wallet = await createUserWallet({
           userId: idpUser.id,
           address,
@@ -407,6 +533,116 @@ const UserResolvers = {
         };
       }
     },
+    updateUser: async (
+      _,
+      { payload }: MutationUpdateUserArgs,
+      context: Context
+    ): Promise<UpdateUserResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthenticated",
+          },
+        };
+      }
+
+      // Manually validate payload :(
+      if (!Object.values(payload).some((a) => a != undefined)) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "No fields to update",
+          },
+        };
+      } else if (payload.username != undefined && payload.username.length < 3) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Username must be at least 3 characters",
+          },
+        };
+      }
+
+      try {
+        // Make sure the user exists
+        let [userIdp, userRecord] = await Promise.all([
+          identityProvider.getUserById(context.userId),
+          getUser(context.userId),
+        ]);
+
+        if (
+          !userIdp ||
+          !userRecord ||
+          !userIdp.isEnabled ||
+          !!userRecord?.deletedAt
+        ) {
+          console.error("User not found");
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "User not found",
+            },
+          };
+        }
+
+        const shouldUpdateIdp =
+          payload.username !== userIdp.username ||
+          payload.avatar !== userIdp.avatar;
+
+        if (shouldUpdateIdp) {
+          const updatedUserIdp = await identityProvider.updateUser(
+            context.userId,
+            {
+              avatar: !!payload.avatar ? payload.avatar : undefined,
+              username: !!payload.username ? payload.username : undefined,
+            }
+          );
+          userIdp = { ...updatedUserIdp };
+        }
+
+        const newUserRecord = await updateUser(context.userId, {
+          avatar: userIdp.avatar,
+          username: userIdp.username,
+          biography: payload.biography ? payload.biography : undefined,
+          socials: payload.socials ? payload.socials : undefined,
+          headshot: payload.headshot ? payload.headshot : undefined,
+        });
+
+        // let newUserRecord: User;
+        // try {
+        //   newUserRecord = await updateUser(context.userId, {
+        //     avatar: newUserIdp.avatar,
+        //     username: newUserIdp.username,
+        //   });
+        // } catch (err) {
+        //   console.error(err);
+        //   console.debug("Error updating user record... unrolling changes...");
+        //   await identityProvider.updateUser(context.userId, {
+        //     avatar: userIdp.avatar,
+        //     username: userIdp.username,
+        //   });
+        //   return {
+        //     error: {
+        //       code: StatusCode.ServerError,
+        //       message: err instanceof Error ? err.message : "",
+        //     },
+        //   };
+        // }
+
+        return {
+          user: newUserRecord,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "Error updating user",
+          },
+        };
+      }
+    },
   },
   GetMyProfileResponse: {
     __resolveType: (obj: GetMyProfileResponse) => {
@@ -424,6 +660,18 @@ const UserResolvers = {
     __resolveType: (obj: CreateUserResponse) => {
       if ("user" in obj) {
         return "CreateUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  UpdateUserResponse: {
+    __resolveType: (obj: UpdateUserResponse) => {
+      if ("user" in obj) {
+        return "UpdateUserResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
@@ -468,12 +716,27 @@ const UserResolvers = {
       return null;
     },
   },
+
+  PublicUserResponse: {
+    __resolveType: (obj: PublicUserResponse) => {
+      if ("user" in obj) {
+        return "PublicUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const userResolversComposition = {
   "Query.getMyProfile": [isAuthenticated()],
   "Mutation.connectWallet": [isAuthenticated()],
   "Mutation.removeWallet": [isAuthenticated()],
+  "Mutation.createUserRecord": [isAuthenticated()],
+  "Mutation.updateUser": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(UserResolvers, userResolversComposition);

@@ -11,10 +11,13 @@ const UserTypeDefs = gql`
 
   type User {
     id: ID!
-    firstName: String
-    lastName: String
-    email: String!
+    username: String
+    avatar: String
+    email: String
     phoneNumber: String
+    biography: String
+    headshot: [String!]
+    socials: UserSocials
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
@@ -23,16 +26,58 @@ const UserTypeDefs = gql`
     partyBaskets: [PartyBasket!]
   }
 
+  type PublicUser {
+    id: ID!
+    username: String
+    avatar: String
+    biography: String
+    headshot: [String!]
+    socials: UserSocials
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    deletedAt: Timestamp
+    claims(first: Int!, after: Timestamp): UserClaimsResponseSuccess
+  }
+
+  type UserSocials {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
+  input UserSocialsInput {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
   # Queries
 
   type GetMyProfileSuccess {
     user: User!
   }
 
+  type PublicUserResponseSuccess {
+    user: PublicUser!
+  }
+
   union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
+
+  union PublicUserResponse = PublicUserResponseSuccess | ResponseError
 
   extend type Query {
     getMyProfile: GetMyProfileResponse!
+    publicUser(id: ID!): PublicUserResponse!
   }
 
   type CreateUserResponseSuccess {
@@ -42,20 +87,24 @@ const UserTypeDefs = gql`
   union CreateUserResponse = CreateUserResponseSuccess | ResponseError
 
   input CreateUserWithPasswordPayload {
-    firstName: String
-    lastName: String
     email: EmailAddress!
     phoneNumber: PhoneNumber
     password: String!
   }
 
   input CreateUserWithWalletPayload {
-    firstName: String
-    lastName: String
     email: EmailAddress!
     phoneNumber: PhoneNumber
     message: String!
     signedMessage: String!
+  }
+
+  input UpdateUserPayload {
+    username: String
+    avatar: String
+    socials: UserSocialsInput
+    biography: String
+    headshot: String
   }
 
   type ConnectWalletResponseSuccess {
@@ -66,9 +115,15 @@ const UserTypeDefs = gql`
     id: ID!
   }
 
+  type UpdateUserResponseSuccess {
+    user: User!
+  }
+
   union ConnectWalletResponse = ConnectWalletResponseSuccess | ResponseError
 
   union RemoveWalletResponse = RemoveWalletResponseSuccess | ResponseError
+
+  union UpdateUserResponse = UpdateUserResponseSuccess | ResponseError
 
   input ConnectWalletPayload {
     message: String!
@@ -104,6 +159,8 @@ const UserTypeDefs = gql`
       payload: AuthenticateWalletPayload!
     ): AuthenticateWalletResponse!
     removeWallet(payload: RemoveWalletPayload!): RemoveWalletResponse!
+    createUserRecord: CreateUserResponse!
+    updateUser(payload: UpdateUserPayload!): UpdateUserResponse!
   }
 `;
 

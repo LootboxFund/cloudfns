@@ -1,6 +1,12 @@
 import { gql } from "apollo-server";
 
 const PartyBasketTypeDefs = gql`
+  enum PartyBasketStatus {
+    active
+    soldOut
+    disabled
+  }
+
   type PartyBasketTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -19,6 +25,10 @@ const PartyBasketTypeDefs = gql`
     timestamps: PartyBasketTimestamps!
     lootboxSnapshot: LootboxSnapshot
     nftBountyValue: String
+    joinCommunityUrl: String
+    status: PartyBasketStatus
+    maxClaimsAllowed: Int
+    runningCompletedClaims: Int
     # whitelistSignatures: [PartyBasketWhitelistSignature!]
   }
 
@@ -59,6 +69,17 @@ const PartyBasketTypeDefs = gql`
     lootboxAddress: ID!
     creatorAddress: ID!
     nftBountyValue: String # e.g. "150 SLP"
+    joinCommunityUrl: String
+    maxClaimsAllowed: Int
+  }
+
+  input EditPartyBasketPayload {
+    id: String!
+    name: String
+    nftBountyValue: String
+    joinCommunityUrl: String
+    status: PartyBasketStatus
+    maxClaimsAllowed: Int
   }
 
   type CreatePartyBasketResponseSuccess {
@@ -77,6 +98,10 @@ const PartyBasketTypeDefs = gql`
 
   type RedeemSignatureResponseSuccess {
     signature: PartyBasketWhitelistSignature!
+  }
+
+  type EditPartyBasketResponseSuccess {
+    partyBasket: PartyBasket!
   }
 
   input RedeemSignaturePayload {
@@ -99,6 +124,8 @@ const PartyBasketTypeDefs = gql`
 
   union BulkWhitelistResponse = BulkWhitelistResponseSuccess | ResponseError
 
+  union EditPartyBasketResponse = EditPartyBasketResponseSuccess | ResponseError
+
   extend type Mutation {
     createPartyBasket(
       payload: CreatePartyBasketPayload!
@@ -108,6 +135,7 @@ const PartyBasketTypeDefs = gql`
     getWhitelistSignatures(
       payload: GetWhitelistSignaturesPayload!
     ): GetWhitelistSignaturesResponse!
+    editPartyBasket(payload: EditPartyBasketPayload!): EditPartyBasketResponse!
   }
 `;
 

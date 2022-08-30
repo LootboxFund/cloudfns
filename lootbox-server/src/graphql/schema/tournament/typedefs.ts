@@ -7,7 +7,20 @@ const TournamentTypeDefs = gql`
     rejected
   }
 
+  enum StreamType {
+    facebook
+    twitch
+    discord
+    youtube
+  }
+
   type TournamentTimestamps {
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    deletedAt: Timestamp
+  }
+
+  type StreamTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
@@ -16,17 +29,17 @@ const TournamentTypeDefs = gql`
   type LootboxTournamentSnapshot {
     address: ID!
     issuer: ID!
-
+    description: String!
     name: String!
     stampImage: String!
     image: String!
     backgroundColor: String!
     backgroundImage: String!
-
     metadataDownloadUrl: String
     timestamps: LootboxSnapshotTimestamps!
-
     status: LootboxTournamentStatus!
+    socials: LootboxSocialsWithoutEmail!
+    partyBaskets: [PartyBasket!]
   }
 
   type Tournament {
@@ -41,6 +54,24 @@ const TournamentTypeDefs = gql`
     tournamentDate: Timestamp
     prize: String
     coverPhoto: String
+    communityURL: String
+    streams: [Stream!]
+  }
+
+  type Stream {
+    id: ID!
+    creatorId: ID!
+    type: StreamType!
+    url: String!
+    name: String!
+    tournamentId: ID!
+    timestamps: StreamTimestamps!
+  }
+
+  input StreamInput {
+    type: StreamType!
+    url: String!
+    name: String!
   }
 
   type TournamentResponseSuccess {
@@ -88,6 +119,24 @@ const TournamentTypeDefs = gql`
     tournament: Tournament!
   }
 
+  type AddStreamResponseSuccess {
+    stream: Stream!
+  }
+
+  type DeleteStreamResponseSuccess {
+    stream: Stream!
+  }
+
+  type EditStreamResponseSuccess {
+    stream: Stream!
+  }
+
+  union AddStreamResponse = AddStreamResponseSuccess | ResponseError
+
+  union DeleteStreamResponse = DeleteStreamResponseSuccess | ResponseError
+
+  union EditStreamResponse = EditStreamResponseSuccess | ResponseError
+
   union CreateTournamentResponse =
       CreateTournamentResponseSuccess
     | ResponseError
@@ -105,6 +154,8 @@ const TournamentTypeDefs = gql`
     coverPhoto: String
     prize: String
     tournamentDate: Timestamp!
+    communityURL: String
+    streams: [StreamInput!]
   }
 
   input EditTournamentPayload {
@@ -115,7 +166,20 @@ const TournamentTypeDefs = gql`
     magicLink: String
     coverPhoto: String
     prize: String
+    communityURL: String
     tournamentDate: Timestamp
+  }
+
+  input AddStreamPayload {
+    tournamentId: ID!
+    stream: StreamInput!
+  }
+
+  input EditStreamPayload {
+    id: ID!
+    type: StreamType!
+    url: String!
+    name: String!
   }
 
   extend type Mutation {
@@ -124,6 +188,9 @@ const TournamentTypeDefs = gql`
     ): CreateTournamentResponse!
     editTournament(payload: EditTournamentPayload!): EditTournamentResponse!
     deleteTournament(id: ID!): DeleteTournamentResponse!
+    addStream(payload: AddStreamPayload!): AddStreamResponse!
+    deleteStream(id: ID!): DeleteStreamResponse!
+    editStream(payload: EditStreamPayload!): EditStreamResponse!
   }
 `;
 

@@ -48,6 +48,18 @@ const LootboxTypeDefs = gql`
     web: String
   }
 
+  type LootboxSocialsWithoutEmail {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    youtube: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
   type LootboxCustomSchema {
     version: String!
     chain: LootboxChain!
@@ -133,8 +145,22 @@ const LootboxTypeDefs = gql`
 
   union GetLootboxByAddressResponse = LootboxResponseSuccess | ResponseError
 
+  type LootboxFeedEdge {
+    node: LootboxSnapshot!
+    cursor: ID!
+  }
+
+  type LootboxFeedResponseSuccess {
+    totalCount: Int!
+    pageInfo: PageInfo!
+    edges: [LootboxFeedEdge!]!
+  }
+
+  union LootboxFeedResponse = LootboxFeedResponseSuccess | ResponseError
+
   extend type Query {
-    getLootboxByAddress(address: ID!): GetLootboxByAddressResponse
+    getLootboxByAddress(address: ID!): GetLootboxByAddressResponse!
+    lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
   }
 `;
 

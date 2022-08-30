@@ -1757,10 +1757,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/manifest@0.3.110":
-  version "0.3.110"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.110.tgz#3925b76a585e53b099916d4e7bb72c9fd5227a0e"
-  integrity sha512-Rnb5znBw0DFT5VHSYxG5T+6pAuivOOYm5ifePXvgr4q8ozJWa9h4x/NwCKbrO7R1n3aqYOgzAgqKb9kBHk6FVw==
+"@wormgraph/manifest@0.3.123":
+  version "0.3.123"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.123.tgz#304db6bb866f541290ac8e2e54402637db34b6ae"
+  integrity sha512-Ik11bc2zs8QhYWy8gXLlSxwDyxQUu4xlcj4ncCvjuUm6/piy80hawxbS3zHZOFOuirDbmvCfE5mc+xGH7iwXnw==
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
@@ -4232,6 +4232,11 @@ mute-stream@0.0.8:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
+
+nanoid@3.3.4:
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.4.tgz#730b67e3cd09e2deacf03c027c81c9d9dbc5e8ab"
+  integrity sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==
 
 negotiator@0.6.3:
   version "0.6.3"
