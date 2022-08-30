@@ -2,6 +2,9 @@
  * Migration script to index every lootbox JSON metadata file we have for a lootbox in cloud storage into our
  * firestore database. Run in your nodejs environment.
  *
+ * You'll have to install @google-cloud/storage
+ * > $ yarn add -D @google-cloud/storage
+ *
  * You'll have to authenticate with before running the script:
  * > $ gcloud auth application-default-login
  * > $ gcloud config set project lootbox-fund-staging
