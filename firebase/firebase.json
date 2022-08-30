@@ -9,6 +9,43 @@
     "predeploy": [
       "npm --prefix \"$RESOURCE_DIR\" run lint",
       "npm --prefix \"$RESOURCE_DIR\" run build"
-    ]
-  }
+    ],
+    "source": "functions"
+  },
+  "hosting": [
+    {
+      "target": "staging",
+      "public": "hosting/public/staging",
+      "ignore": [
+        "firebase.json",
+        "functions/**",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "project": "lootbox-fund-staging",
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "prod",
+      "public": "hosting/public/prod",
+      "ignore": [
+        "firebase.json",
+        "functions/**",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "project": "lootbox-fund-prod",
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ]
 }

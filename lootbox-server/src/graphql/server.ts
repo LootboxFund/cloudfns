@@ -18,7 +18,11 @@ const server = new ApolloServer({
     origin:
       process.env.NODE_ENV === "dev"
         ? "*"
-        : ["https://lootbox.fund", "https://www.lootbox.fund"],
+        : [
+            "https://lootbox.fund",
+            "https://www.lootbox.fund",
+            "https://go.lootbox.fund", // Viral onboarding
+          ],
   },
   context: async ({ req }): Promise<Context> => {
     try {
