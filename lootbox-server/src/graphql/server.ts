@@ -18,6 +18,12 @@ const server = new ApolloServer({
     origin:
       process.env.NODE_ENV === "dev"
         ? "*"
+        : process.env.NODE_ENV === "staging"
+        ? [
+            "https://lootbox.fund",
+            "https://www.lootbox.fund",
+            "https://staging.go.lootbox.fund", // Viral onboarding
+          ]
         : [
             "https://lootbox.fund",
             "https://www.lootbox.fund",

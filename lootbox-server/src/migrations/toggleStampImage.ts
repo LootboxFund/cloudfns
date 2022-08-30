@@ -2,6 +2,9 @@
  * Toggle all stamp images in storage (renaming, then renaming back lol) so that firebase extension resize will trigger
  * Run in your nodejs environment.
  *
+ * You'll have to install @google-cloud/storage
+ * > $ yarn add -D @google-cloud/storage
+ *
  * You'll have to authenticate with before running the script:
  * > $ gcloud auth application-default-login
  * > $ gcloud config set project lootbox-fund-staging
