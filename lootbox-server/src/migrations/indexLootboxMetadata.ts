@@ -17,6 +17,7 @@
  * [env]    `prod` | `staging`
  */
 import * as admin from "firebase-admin";
+// @ts-ignore ---> you need to run yarn add -D @google-cloud/storage
 import { Storage } from "@google-cloud/storage";
 import {
   Address,

@@ -103,6 +103,7 @@ const ReferralTypeDefs = gql`
     partyBasketId: ID
     isRewardDisabled: Boolean @deprecated(reason: "User referral.type instead")
     type: ReferralType # todo: make this required
+    referrerId: ID # If null / undefined, uses the caller user id
   }
 
   input CompleteClaimPayload {
