@@ -441,13 +441,22 @@ const ReferralResolvers: Resolvers = {
         payload.type == undefined ? ReferralType.Viral : payload.type;
 
       try {
-        const [existingReferral, tournament, partyBasket] = await Promise.all([
-          getReferralBySlug(slug),
-          getTournamentById(payload.tournamentId as TournamentID),
-          !!payload.partyBasketId
-            ? getPartyBasketById(payload.partyBasketId as PartyBasketID)
-            : null,
-        ]);
+        const [existingReferral, tournament, partyBasket, requestedReferrer] =
+          await Promise.all([
+            getReferralBySlug(slug),
+            getTournamentById(payload.tournamentId as TournamentID),
+            !!payload.partyBasketId
+              ? getPartyBasketById(payload.partyBasketId as PartyBasketID)
+              : null,
+            !!payload.referrerId
+              ? getUser(payload.referrerId) // returns undefined if not found
+              : null,
+          ]);
+
+        if (!!payload?.referrerId && !requestedReferrer) {
+          console.error("Referrer not found");
+          throw new Error("Requested referrer not found");
+        }
 
         if (!!existingReferral) {
           // Make sure the slug does not already exist
@@ -479,10 +488,13 @@ const ReferralResolvers: Resolvers = {
         }
 
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
+        const referrerIdToSet = payload.referrerId
+          ? (payload.referrerId as UserIdpID)
+          : context.userId;
 
         const referral = await createReferral({
           slug,
-          referrerId: context.userId,
+          referrerId: referrerIdToSet,
           creatorId: context.userId,
           campaignName,
           type: requestedReferralType,
