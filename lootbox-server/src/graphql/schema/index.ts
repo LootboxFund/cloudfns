@@ -14,6 +14,10 @@ import TournamentResolvers from "./tournament/resolvers";
 import PartyBasketTypeDefs from "./partyBasket/typedefs";
 import PartyBasketResolvers from "./partyBasket/resolvers";
 import ReferralResolvers from "./referral/resolvers";
+import AdTypeDefs from "./ad/typedefs";
+import AdResolvers from "./ad/resolvers";
+import CreativeResolvers from "./creative/resolvers";
+import CreativeTypeDefs from "./creative/typedefs";
 
 const typeDefs = [
   ...ScalarTypeDefs,
@@ -23,6 +27,8 @@ const typeDefs = [
   TournamentTypeDefs,
   PartyBasketTypeDefs,
   ReferralTypeDefs,
+  AdTypeDefs,
+  CreativeTypeDefs,
 ];
 
 const resolvers = {
@@ -32,6 +38,8 @@ const resolvers = {
   ...TournamentResolvers,
   ...PartyBasketResolvers,
   ...ReferralResolvers,
+  ...AdResolvers,
+  ...CreativeResolvers,
   Query: {
     ...ScalarResolvers.Query,
     ...LootboxResolvers.Query,
@@ -39,6 +47,8 @@ const resolvers = {
     ...TournamentResolvers.Query,
     ...PartyBasketResolvers.Query,
     ...ReferralResolvers.Query,
+    ...AdResolvers.Query,
+    ...CreativeResolvers.Query,
   },
   Mutation: {
     ...ScalarResolvers.Mutation,
@@ -47,6 +57,8 @@ const resolvers = {
     ...TournamentResolvers.Mutation,
     ...PartyBasketResolvers.Mutation,
     ...ReferralResolvers.Mutation,
+    ...AdResolvers.Mutation,
+    ...CreativeResolvers.Mutation,
   },
 };
 

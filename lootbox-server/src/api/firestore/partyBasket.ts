@@ -203,6 +203,7 @@ export const redeemSignature = async (
 
   const updatePayload: Partial<PartyBasketWhitelistSignature> = {
     isRedeemed: true,
+    // TODO: Update timestamp updatedAt!
   };
 
   await signatureRef.update(updatePayload);

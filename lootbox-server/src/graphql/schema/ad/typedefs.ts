@@ -1,46 +1,76 @@
 import { gql } from "apollo-server";
 
 const AdTypeDefs = gql`
+  enum AdStatus {
+    active
+    inactive
+    pending_review
+    rejected
+  }
 
-type Campaign {
-   # metadata
-   id: ID!
-   creatorId: ID!
-   campaignName: String
+  enum AdType {
+    noob_cup
+  }
 
-   # ad config data
-   callToActionText: String
-   callToActionUrl: String
-   videoUrl: String!
-   thumbnailUrl: String!
-   infographicUrl [potentially un-needed with the proposed UI using past winning tickets]
-   themeColor [optional]
+  enum AdEventAction {
+    view
+    click
+    timerElapsed
+    videoTimestamp
+  }
 
-   isVerificationImageRequired? boolean [optional]. # if they must submit photo evidence
+  type AdTimestamps {
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    deletedAt: Timestamp
+  }
 
-   # Ad subcollection (below)
-   # These are in flight or previously served ads
-   ads: Ad[]
-}
+  type Ad {
+    id: ID!
+    campaignId: ID!
+    flightId: ID!
+    creativeId: ID!
+    creatorId: ID!
+    status: AdStatus!
+    name: String
+    type: AdType!
 
+    timestamps: AdTimestamps!
 
+    impressions: Int!
+    clicks: Int!
 
+    creative: Creative
 
-  
-  
-  
+    events: [AdEvent]
+  }
+
+  type EventMetadata {
+    clickUrl: String
+    verificationUrl: String
+    timeElapsed: Int
+  }
+
+  type AdEvent {
+    timestamp: Timestamp!
+    adId: ID!
+    flightId: ID!
+    campaignId: ID!
+    action: AdEventAction!
+    metadata: EventMetadata
+  }
+
+  type DecisionAdApiBetaResponseSuccess {
+    ad: Ad
+  }
+
+  union DecisionAdApiBetaResponse =
+      DecisionAdApiBetaResponseSuccess
+    | ResponseError
+
   extend type Query {
-    getPartyBasket(address: ID!): GetPartyBasketResponse!
+    decisionAdApiBeta(tournamentId: ID!): DecisionAdApiBetaResponse!
   }
-
-
-
-
-
-  extend type Mutation {
-
-  }
-
 `;
 
 export default AdTypeDefs;
