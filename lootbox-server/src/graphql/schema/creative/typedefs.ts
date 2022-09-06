@@ -10,7 +10,7 @@ const CreativeTypeDefs = gql`
     creatorId: ID!
     advertiserId: ID! # [usually == creatorId, but can be a separate abstraction]
     creativeType: CreativeType!
-    creativeLink: String!
+    creativeLinks: [String!]! # For video, we need webm (ios) + mp4 (other) support for best coverage. thats why this is an array
     callToActionText: String
     url: String!
     clickUrl: String # kevel uses this and it seems like they redirect to url and track clicks that way...
