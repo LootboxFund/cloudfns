@@ -107,6 +107,10 @@ const UserTypeDefs = gql`
     headshot: String
   }
 
+  input UpdateUserAuthPayload {
+    email: String!
+  }
+
   type ConnectWalletResponseSuccess {
     wallet: Wallet!
   }
@@ -161,6 +165,7 @@ const UserTypeDefs = gql`
     removeWallet(payload: RemoveWalletPayload!): RemoveWalletResponse!
     createUserRecord: CreateUserResponse!
     updateUser(payload: UpdateUserPayload!): UpdateUserResponse!
+    updateUserAuth(payload: UpdateUserAuthPayload!): UpdateUserResponse!
   }
 `;
 
