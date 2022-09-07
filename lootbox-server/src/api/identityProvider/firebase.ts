@@ -12,6 +12,8 @@ import {
 } from "./interface";
 import { UserIdpID } from "../../lib/types";
 
+const ERROR_CODE_USER_NOT_FOUND = "auth/user-not-found";
+
 const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
   return {
     id: userRecord.uid as UserIdpID,
@@ -60,20 +62,54 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     if (!!request.avatar) {
       updateRequest.photoURL = request.avatar;
     }
+    if (!!request.email) {
+      updateRequest.email = request.email;
+      updateRequest.emailVerified = false;
+    }
 
     const userRecord = await this.authInstance.updateUser(id, updateRequest);
 
-    return convertUserRecordToUser(userRecord) as IIdpUser;
+    return convertUserRecordToUser(userRecord);
   }
 
   async getUserById(id: string): Promise<IIdpUser | null> {
-    const userRecord = await this.authInstance.getUser(id);
+    let userRecord: UserRecord | null = null;
+    try {
+      userRecord = await this.authInstance.getUser(id);
+    } catch (err) {
+      if ((err as any)?.code === ERROR_CODE_USER_NOT_FOUND) {
+        // catch this error and just return null
+        return null;
+      } else {
+        throw err;
+      }
+    }
 
     if (userRecord == null) {
       return null;
     }
 
-    return convertUserRecordToUser(userRecord) as IIdpUser;
+    return convertUserRecordToUser(userRecord);
+  }
+
+  async getUserByEmail(email: string): Promise<IIdpUser | null> {
+    let userRecord: UserRecord | null = null;
+    try {
+      userRecord = await this.authInstance.getUserByEmail(email);
+    } catch (err) {
+      if ((err as any)?.code === ERROR_CODE_USER_NOT_FOUND) {
+        // catch this error and just return null
+        return null;
+      } else {
+        throw err;
+      }
+    }
+
+    if (userRecord == null) {
+      return null;
+    }
+
+    return convertUserRecordToUser(userRecord);
   }
 
   async verifyIDToken(token: string): Promise<UserIdpID | null> {

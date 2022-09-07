@@ -22,6 +22,7 @@ import {
   QueryUserClaimsArgs,
   UserClaimsResponse,
   PublicUser,
+  MutationUpdateUserAuthArgs,
 } from "../../generated/types";
 import {
   getUser,
@@ -34,7 +35,9 @@ import {
   getUserTournaments,
   getUserPartyBasketsForLootbox,
   updateUser,
+  getUserByEmail,
 } from "../../../api/firestore";
+import { EmailIdentifier } from "firebase-admin/auth";
 import { validateSignature } from "../../../api/ethers";
 import { Address } from "@wormgraph/helpers";
 import identityProvider from "../../../api/identityProvider";
@@ -586,6 +589,16 @@ const UserResolvers = {
           };
         }
 
+        if (userIdp.id !== context.userId || userRecord.id !== context.userId) {
+          console.error("USER MISCONFIGURED");
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "An error occured",
+            },
+          };
+        }
+
         const shouldUpdateIdp =
           payload.username !== userIdp.username ||
           payload.avatar !== userIdp.avatar;
@@ -629,6 +642,130 @@ const UserResolvers = {
         //     },
         //   };
         // }
+
+        return {
+          user: newUserRecord,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "Error updating user",
+          },
+        };
+      }
+    },
+    /**
+     * I think this should be seperate from updateUser because it deals with sensitive data
+     */
+    updateUserAuth: async (
+      _,
+      { payload }: MutationUpdateUserAuthArgs,
+      context: Context
+    ): Promise<UpdateUserResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthenticated",
+          },
+        };
+      }
+
+      // Manually validate payload :(
+      if (!payload.email) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Missing email",
+          },
+        };
+      }
+
+      const formattedEmail = payload.email.toLowerCase().trim();
+
+      try {
+        // Make sure the user exists
+        let [userIdp, userIdpByEmail, userRecord, userRecordsByEmail] =
+          await Promise.all([
+            identityProvider.getUserById(context.userId),
+            identityProvider.getUserByEmail(formattedEmail),
+            getUser(context.userId),
+            getUserByEmail(formattedEmail),
+          ]);
+
+        if (
+          userIdp?.email === formattedEmail ||
+          userRecord?.email === formattedEmail
+        ) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "No change to email",
+            },
+          };
+        }
+
+        if (!!userIdpByEmail || userRecordsByEmail.length > 0) {
+          console.error("Email already use");
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Error updating user",
+            },
+          };
+        }
+
+        if (
+          !userIdp ||
+          !userRecord ||
+          !userIdp.isEnabled ||
+          !!userRecord?.deletedAt
+        ) {
+          console.error("User not found");
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "User not found",
+            },
+          };
+        }
+
+        if (userIdp.id !== context.userId || userRecord.id !== context.userId) {
+          console.error("USER MISCONFIGURED");
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "An error occured",
+            },
+          };
+        }
+
+        const shouldUpdateIdp = payload.email !== userIdp.email;
+
+        if (!shouldUpdateIdp) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "No changes detected",
+            },
+          };
+        }
+
+        if (shouldUpdateIdp) {
+          const updatedUserIdp = await identityProvider.updateUser(
+            context.userId,
+            {
+              email: formattedEmail,
+            }
+          );
+          userIdp = { ...updatedUserIdp };
+        }
+
+        const newUserRecord = await updateUser(context.userId, {
+          email: userIdp.email,
+        });
 
         return {
           user: newUserRecord,
@@ -737,6 +874,7 @@ const userResolversComposition = {
   "Mutation.removeWallet": [isAuthenticated()],
   "Mutation.createUserRecord": [isAuthenticated()],
   "Mutation.updateUser": [isAuthenticated()],
+  "Mutation.updateUserEmail": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(UserResolvers, userResolversComposition);
