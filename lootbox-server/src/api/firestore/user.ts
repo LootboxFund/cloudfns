@@ -1,5 +1,9 @@
 import { Collection } from "./collection.types";
-import { DocumentReference, Timestamp } from "firebase-admin/firestore";
+import {
+  CollectionReference,
+  DocumentReference,
+  Timestamp,
+} from "firebase-admin/firestore";
 import { db } from "../firebase";
 import { User, UserSocials } from "../../graphql/generated/types";
 import { IIdpUser } from "../identityProvider/interface";
@@ -33,6 +37,37 @@ export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   return user;
 };
 
+const parseUserData = (user: User): UserWithoutWalletsOrLootboxSnapshots => {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    avatar: user.avatar,
+    biography: user.biography,
+    headshot: user.headshot,
+    socials: { ...user.socials },
+    phoneNumber: user.phoneNumber,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+};
+
+export const getUserByEmail = async (
+  email: string
+): Promise<UserWithoutWalletsOrLootboxSnapshots[]> => {
+  const userRef = db
+    .collection(Collection.User)
+    .where("email", "==", email) as CollectionReference<User>;
+
+  const collectionSnapshot = await userRef.get();
+
+  if (collectionSnapshot.empty || collectionSnapshot.docs.length === 0) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => parseUserData(doc.data()));
+  }
+};
+
 export type UserWithoutWalletsOrLootboxSnapshots = Omit<
   User,
   "wallets" | "lootboxSnapshots"
@@ -51,18 +86,7 @@ export const getUser = async (
     return undefined;
   } else {
     const user = userSnapshot.data() as User;
-    return {
-      id: userSnapshot.id,
-      email: user.email,
-      username: user.username,
-      avatar: user.avatar,
-      biography: user.biography,
-      headshot: user.headshot,
-      socials: { ...user.socials },
-      phoneNumber: user.phoneNumber,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return parseUserData(user);
   }
 };
 
@@ -72,6 +96,7 @@ interface UpdateUserRequest {
   socials?: UserSocials;
   headshot?: string;
   biography?: string;
+  email?: string;
 }
 export const updateUser = async (
   id: string,
@@ -91,6 +116,10 @@ export const updateUser = async (
   const updatedUser: Partial<User> = {
     updatedAt: Timestamp.now().toMillis(),
   };
+
+  if (request.email !== undefined) {
+    updatedUser.email = request.email;
+  }
 
   if (request.username !== undefined) {
     updatedUser.username = request.username;

@@ -21,13 +21,14 @@ export interface ICreateUserRequest {
 export interface UpdateUserRequest {
   username?: string;
   avatar?: string;
+  email?: string;
 }
 
 export interface IIdentityProvider {
   readonly typeName: string;
   createUser(request: ICreateUserRequest): Promise<IIdpUser>;
   getUserById(id: string): Promise<IIdpUser | null>;
-  // getUserByEmail(email: string): Promise<IIdpUser | null>;
+  getUserByEmail(email: string): Promise<IIdpUser | null>;
   // getUsersById(ids: string[]): Promise<Map<string, IIdpUser | null>>;
   updateUser(id: string, request: UpdateUserRequest): Promise<IIdpUser>;
   getSigninToken(userId: string): Promise<string>;
