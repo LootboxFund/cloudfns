@@ -1,9 +1,12 @@
 import { db } from "./api/firebase";
 import * as functions from "firebase-functions";
-import { Claim, ClaimStatus, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
-import { Collection } from "./lib/types";
+import { AdEventAction, Claim, ClaimStatus, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
+import { AdID, CampaignID, Collection, FlightID } from "./lib/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
+import { Message } from "firebase-functions/v1/pubsub";
+import { extractURLStatePixelTracking } from "./lib/url";
+import { createAdEvent, getAdById } from "./api/firestore";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
@@ -80,4 +83,64 @@ export const onPartyBasketWrite = functions.firestore
         }
 
         return;
+    });
+
+export const pubsubPixelTracking = functions.pubsub
+    .topic("pixel-tracking-staging")
+    .onPublish(async (message: Message) => {
+        logger.log("PUB SUB TRIGGERED", message);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let jsonData: any;
+        try {
+            jsonData = message.json;
+            logger.log("parsed data", jsonData);
+        } catch (e) {
+            logger.error("PubSub message was not JSON", e);
+            return;
+        }
+
+        try {
+            const url = jsonData?.httpRequest?.requestUrl;
+            const cacheHit = jsonData?.httpRequest?.cacheHit;
+
+            if (!cacheHit || !url) {
+                logger.error("Cache not hit, or URL not in payload");
+                return;
+            }
+
+            const { adId, sessionId, eventAction } = extractURLStatePixelTracking(url);
+
+            if (!adId || !sessionId || !eventAction) {
+                logger.error("Malformed URL", url);
+                return;
+            }
+
+            if (!Object.values(AdEventAction).includes(eventAction as AdEventAction)) {
+                logger.error("Invalid event Action provided...");
+                return;
+            }
+
+            // make sure the ad exists
+            const ad = await getAdById(adId);
+
+            if (!ad) {
+                logger.error("Ad does not exist", adId);
+                return;
+            }
+
+            // Now write the AdEvent subcollection document
+            const createdEvent = await createAdEvent({
+                action: eventAction,
+                adId: ad.id as AdID,
+                campaignId: ad.campaignId as CampaignID,
+                flightId: ad.flightId as FlightID,
+                sessionId,
+            });
+
+            logger.info("Successfully created ad event", createdEvent.id);
+        } catch (err) {
+            logger.error("Pubsub error", err);
+            return;
+        }
     });

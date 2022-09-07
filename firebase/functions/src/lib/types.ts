@@ -11,6 +11,10 @@ export type StreamID = string & { readonly _: unique symbol };
 export type ReferralSlug = string & { readonly _: unique symbol };
 export type ReferralID = string & { readonly _: unique symbol };
 export type ClaimID = string & { readonly _: unique symbol };
+export type AdID = string & { readonly _: unique symbol };
+export type SessionID = string & { readonly _: unique symbol };
+export type CampaignID = string & { readonly _: unique symbol };
+export type FlightID = string & { readonly _: unique symbol };
 
 export enum Collection {
     "Lootbox" = "lootbox",
@@ -22,4 +26,7 @@ export enum Collection {
     "Stream" = "stream",
     "Referral" = "referral",
     "Claim" = "claim",
+    "Ad" = "ad",
+    "Creative" = "creative",
+    "AdEvent" = "ad-event",
 }
