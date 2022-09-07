@@ -52,9 +52,11 @@ const AdTypeDefs = gql`
   }
 
   type AdEvent {
+    id: ID!
     timestamp: Timestamp!
     adId: ID!
     flightId: ID!
+    sessionId: ID! # unique for this users session
     campaignId: ID!
     action: AdEventAction!
     metadata: EventMetadata
