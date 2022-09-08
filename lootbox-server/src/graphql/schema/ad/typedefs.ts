@@ -39,6 +39,7 @@ const AdTypeDefs = gql`
 
     impressions: Int!
     clicks: Int!
+    uniqueClicks: Int!
 
     creative: Creative
 
