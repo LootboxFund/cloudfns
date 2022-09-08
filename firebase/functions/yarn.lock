@@ -1441,6 +1441,14 @@
     undici "^5.8.0"
     web-streams-polyfill "^3.2.0"
 
+"@wormgraph/helpers@0.1.10":
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.10.tgz#bffab826dab34f22e1eecdfa1f9a41e829688305"
+  integrity sha512-ZqQjd8495/R6/Jz/CXNb5wVCzCqTFF2lMD3LUvwP0lg62Gr0hh/xWdfoStRWViZLZN7sSU9Dta6XNMYMVaEKww==
+  dependencies:
+    axios "0.25.0"
+    lodash "4.17.21"
+
 "@wormgraph/helpers@0.1.13":
   version "0.1.13"
   resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.13.tgz#b86fa3fae869c3381a6a26eccbc71cf52aa2e51d"
@@ -1448,6 +1456,13 @@
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
+
+"@wormgraph/manifest@0.3.127":
+  version "0.3.127"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.127.tgz#baf7a1bbafa660a53dd015cc001b24c61726049e"
+  integrity sha512-M4iqvHrmbx4zzu/49zlkX+00GzykPETC68J9Sidx/yGWWo5i5ITrp7D8wwphd9Q7HpGom6+yWsZwUpgkhB9rvQ==
+  dependencies:
+    "@wormgraph/helpers" "0.1.10"
 
 abort-controller@^3.0.0:
   version "3.0.0"

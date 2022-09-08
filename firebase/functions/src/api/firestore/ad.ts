@@ -49,15 +49,27 @@ export const createAdEvent = async (request: CreateAdEventRequest): Promise<AdEv
     return documentWithId;
 };
 
-export const getAdEventsBySessionId = async (adId: AdID, sessionId: SessionID, limit?: number): Promise<AdEvent[]> => {
+interface GetAdEventsBySessionIdOptions {
+    actionType?: AdEventAction;
+    limit?: number;
+}
+export const getAdEventsBySessionId = async (
+    adId: AdID,
+    sessionId: SessionID,
+    options: GetAdEventsBySessionIdOptions
+): Promise<AdEvent[]> => {
     let collectionRef = db
         .collection(Collection.Ad)
         .doc(adId)
         .collection(Collection.AdEvent)
         .where("sessionId", "==", sessionId) as Query<AdEvent>;
 
-    if (limit !== undefined) {
-        collectionRef = collectionRef.limit(limit);
+    if (options?.actionType !== undefined) {
+        collectionRef = collectionRef.where("action", "==", options?.actionType);
+    }
+
+    if (options?.limit !== undefined) {
+        collectionRef = collectionRef.limit(options?.limit);
     }
 
     const snapshot = await collectionRef.get();

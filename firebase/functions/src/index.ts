@@ -16,6 +16,7 @@ import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
 import { extractURLStatePixelTracking } from "./lib/url";
 import { createAdEvent, getAdById, getAdEventsBySessionId, updateAdCounts, getAdEventsByNonce } from "./api/firestore";
+import { manifest } from "./manifest";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
@@ -115,16 +116,15 @@ export const onPartyBasketWrite = functions.firestore
  * ```
  */
 export const pubsubPixelTracking = functions.pubsub
-    // TODO: topic from manifest
-    .topic("pixel-tracking-staging")
+    .topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
-        logger.log("PUB SUB TRIGGERED", message);
+        logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let jsonData: any;
         try {
             jsonData = message.json;
-            logger.log("parsed data", jsonData);
+            logger.log("parsed data", jsonData?.httpRequest);
         } catch (e) {
             logger.error("PubSub message was not JSON", e);
             return;
@@ -141,7 +141,6 @@ export const pubsubPixelTracking = functions.pubsub
 
         let ad: Ad;
         let createdEvent: AdEvent;
-
         try {
             if (!adId || !sessionId || !eventAction || !nonce) {
                 logger.error("Malformed URL", url);
@@ -190,23 +189,30 @@ export const pubsubPixelTracking = functions.pubsub
             return;
         }
 
-        // Now update the tallies on the ad (views, impressions, & unique clicks)
         const updateRequest: Partial<Ad> = {};
+        if (eventAction === AdEventAction.View) {
+            updateRequest.impressions = FieldValue.increment(1) as unknown as number;
+        }
+
         if (eventAction === AdEventAction.Click) {
             // Update clicks
             updateRequest.clicks = FieldValue.increment(1) as unknown as number;
-            // See if its unique click by the sessionId on the ad-events
+
+            // Check if unique click by session id
+            // A unique click is counted when only one click adEvent exists for a given sessionId
             try {
-                const sessionAdEvents = await getAdEventsBySessionId(ad.id as AdID, sessionId, 2);
+                const sessionAdEvents = await getAdEventsBySessionId(adId, sessionId, {
+                    actionType: AdEventAction.Click,
+                    limit: 2,
+                });
                 if (sessionAdEvents.length === 1) {
-                    // Update uniqueClicks
+                    // Recall, we previously just made an ad event so there should be one
                     updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
                 }
             } catch (err) {
-                logger.error("Error checking click uniqueness!", err);
+                logger.error(err);
+                // Just fail silently... although, this shouldnt really throw.
             }
-        } else if (eventAction === AdEventAction.View) {
-            updateRequest.impressions = FieldValue.increment(1) as unknown as number;
         }
 
         if (Object.keys(updateRequest).length === 0) {
@@ -215,10 +221,9 @@ export const pubsubPixelTracking = functions.pubsub
         }
 
         try {
-            await updateAdCounts(ad.id as AdID, updateRequest);
+            await updateAdCounts(adId, updateRequest);
         } catch (err) {
             logger.error("Error updating ad counts...", err);
-            return;
         }
 
         return;
