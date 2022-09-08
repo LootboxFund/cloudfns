@@ -1,7 +1,7 @@
 import { db } from "../firebase";
 import { AdID, Collection, CampaignID, FlightID, SessionID } from "../../lib/types";
 import { Ad, AdEvent, AdEventAction } from "../graphql/generated/types";
-import { DocumentReference, Timestamp } from "firebase-admin/firestore";
+import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 
 export const getAdById = async (id: AdID): Promise<Ad | undefined> => {
     const docRef = db.collection(Collection.Ad).doc(id) as DocumentReference<Ad>;
@@ -45,4 +45,35 @@ export const createAdEvent = async (request: CreateAdEventRequest): Promise<AdEv
     await docRef.set(documentWithId);
 
     return documentWithId;
+};
+
+export const getAdEventsBySessionId = async (adId: AdID, sessionId: SessionID, limit?: number): Promise<AdEvent[]> => {
+    let collectionRef = db
+        .collection(Collection.Ad)
+        .doc(adId)
+        .collection(Collection.AdEvent)
+        .where("sessionId", "==", sessionId) as Query<AdEvent>;
+
+    if (limit !== undefined) {
+        collectionRef = collectionRef.limit(limit);
+    }
+
+    const snapshot = await collectionRef.get();
+
+    if (snapshot.empty || snapshot.docs.length === 0) {
+        return [];
+    } else {
+        return snapshot.docs.map((doc) => doc.data());
+    }
+};
+
+interface UpdateAdCountsRequest {
+    clicks?: number;
+    uniqueClicks?: number;
+    impressions?: number;
+}
+export const updateAdCounts = async (adId: AdID, request: UpdateAdCountsRequest): Promise<void> => {
+    const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
+
+    await adRef.update(request);
 };

@@ -1,12 +1,20 @@
 import { db } from "./api/firebase";
 import * as functions from "firebase-functions";
-import { AdEventAction, Claim, ClaimStatus, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
+import {
+    Ad,
+    AdEvent,
+    AdEventAction,
+    Claim,
+    ClaimStatus,
+    PartyBasket,
+    PartyBasketStatus,
+} from "./api/graphql/generated/types";
 import { AdID, CampaignID, Collection, FlightID } from "./lib/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
 import { extractURLStatePixelTracking } from "./lib/url";
-import { createAdEvent, getAdById } from "./api/firestore";
+import { createAdEvent, getAdById, getAdEventsBySessionId, updateAdCounts } from "./api/firestore";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
@@ -85,7 +93,23 @@ export const onPartyBasketWrite = functions.firestore
         return;
     });
 
+/**
+ * Pubsub listens to log sink with something like the following query
+ *
+ * ```
+ * resource.type="http_load_balancer"
+ * resource.labels.project_id="lootbox-fund-staging"
+ * severity=INFO
+ * log_name="projects/lootbox-fund-staging/logs/requests"
+ * httpRequest.status=200
+ * resource.labels.forwarding_rule_name="lb-tracking-pixel-lootbox-staging-ssl"
+ * resource.labels.url_map_name="lb-lootbox-pixel-tracking"
+ * httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"
+ * ```
+ *
+ */
 export const pubsubPixelTracking = functions.pubsub
+    // TODO: topic from manifest
     .topic("pixel-tracking-staging")
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", message);
@@ -100,17 +124,19 @@ export const pubsubPixelTracking = functions.pubsub
             return;
         }
 
+        const url = jsonData?.httpRequest?.requestUrl;
+
+        if (!url) {
+            logger.error("Cache not hit, or URL not in payload");
+            return;
+        }
+
+        const { adId, sessionId, eventAction } = extractURLStatePixelTracking(url);
+
+        let ad: Ad;
+        let createdEvent: AdEvent;
+
         try {
-            const url = jsonData?.httpRequest?.requestUrl;
-            const cacheHit = jsonData?.httpRequest?.cacheHit;
-
-            if (!cacheHit || !url) {
-                logger.error("Cache not hit, or URL not in payload");
-                return;
-            }
-
-            const { adId, sessionId, eventAction } = extractURLStatePixelTracking(url);
-
             if (!adId || !sessionId || !eventAction) {
                 logger.error("Malformed URL", url);
                 return;
@@ -122,15 +148,17 @@ export const pubsubPixelTracking = functions.pubsub
             }
 
             // make sure the ad exists
-            const ad = await getAdById(adId);
+            const _ad = await getAdById(adId);
 
-            if (!ad) {
+            if (!_ad) {
                 logger.error("Ad does not exist", adId);
                 return;
             }
 
+            ad = _ad;
+
             // Now write the AdEvent subcollection document
-            const createdEvent = await createAdEvent({
+            createdEvent = await createAdEvent({
                 action: eventAction,
                 adId: ad.id as AdID,
                 campaignId: ad.campaignId as CampaignID,
@@ -143,4 +171,46 @@ export const pubsubPixelTracking = functions.pubsub
             logger.error("Pubsub error", err);
             return;
         }
+
+        // Now update the tallies on the ad (views, impressions, & unique clicks)
+        let isUniqueClick = false;
+        const isClick = eventAction === AdEventAction.Click;
+
+        if (isClick) {
+            try {
+                // See if its unique click
+                const sessionAdEvents = await getAdEventsBySessionId(ad.id as AdID, sessionId, 1);
+                if (sessionAdEvents?.length > 0) {
+                    isUniqueClick = true;
+                }
+            } catch (err) {
+                logger.error("Error checking click uniqueness!", err);
+            }
+        }
+
+        // Now update the tallies by incrementing
+        const updateRequest: Partial<Ad> = {};
+        if (isClick) {
+            updateRequest.clicks = FieldValue.increment(1) as unknown as number;
+        }
+        if (isClick && isUniqueClick) {
+            updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
+        }
+        if (eventAction === AdEventAction.View) {
+            updateRequest.impressions = FieldValue.increment(1) as unknown as number;
+        }
+
+        if (Object.keys(updateRequest).length === 0) {
+            // Nothing to update
+            return;
+        }
+
+        try {
+            await updateAdCounts(ad.id as AdID, updateRequest);
+        } catch (err) {
+            logger.error("Error updating ad counts...", err);
+            return;
+        }
+
+        return;
     });
