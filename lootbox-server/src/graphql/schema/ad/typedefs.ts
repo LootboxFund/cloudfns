@@ -61,6 +61,7 @@ const AdTypeDefs = gql`
     campaignId: ID!
     action: AdEventAction!
     metadata: EventMetadata
+    nonce: ID! # unique - prevents duplicate events
   }
 
   type DecisionAdApiBetaResponseSuccess {

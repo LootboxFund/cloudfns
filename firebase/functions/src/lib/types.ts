@@ -15,6 +15,7 @@ export type AdID = string & { readonly _: unique symbol };
 export type SessionID = string & { readonly _: unique symbol };
 export type CampaignID = string & { readonly _: unique symbol };
 export type FlightID = string & { readonly _: unique symbol };
+export type AdEventNonce = string & { readonly _: unique symbol };
 
 export enum Collection {
     "Lootbox" = "lootbox",

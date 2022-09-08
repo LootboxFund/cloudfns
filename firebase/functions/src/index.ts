@@ -4,6 +4,7 @@ import {
     Ad,
     AdEvent,
     AdEventAction,
+    AdStatus,
     Claim,
     ClaimStatus,
     PartyBasket,
@@ -14,7 +15,7 @@ import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
 import { extractURLStatePixelTracking } from "./lib/url";
-import { createAdEvent, getAdById, getAdEventsBySessionId, updateAdCounts } from "./api/firestore";
+import { createAdEvent, getAdById, getAdEventsBySessionId, updateAdCounts, getAdEventsByNonce } from "./api/firestore";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
@@ -132,17 +133,17 @@ export const pubsubPixelTracking = functions.pubsub
         const url = jsonData?.httpRequest?.requestUrl;
 
         if (!url) {
-            logger.error("Cache not hit, or URL not in payload");
+            logger.error("URL not in payload");
             return;
         }
 
-        const { adId, sessionId, eventAction } = extractURLStatePixelTracking(url);
+        const { adId, sessionId, eventAction, nonce } = extractURLStatePixelTracking(url);
 
         let ad: Ad;
         let createdEvent: AdEvent;
 
         try {
-            if (!adId || !sessionId || !eventAction) {
+            if (!adId || !sessionId || !eventAction || !nonce) {
                 logger.error("Malformed URL", url);
                 return;
             }
@@ -152,15 +153,26 @@ export const pubsubPixelTracking = functions.pubsub
                 return;
             }
 
-            // make sure the ad exists
+            // make sure the ad exists & active
             const _ad = await getAdById(adId);
 
             if (!_ad) {
-                logger.error("Ad does not exist", adId);
+                logger.error("Ad does not exist", { adId });
+                return;
+            }
+            if (_ad.status !== AdStatus.Active) {
+                logger.error("Ad is not active", { adId, status: _ad.status });
                 return;
             }
 
             ad = _ad;
+
+            const eventsByNonce = await getAdEventsByNonce(ad.id as AdID, nonce, 1);
+
+            if (eventsByNonce.length > 0) {
+                logger.error("Nonce already used", { adId, nonce });
+                return;
+            }
 
             // Now write the AdEvent subcollection document
             createdEvent = await createAdEvent({
@@ -169,9 +181,10 @@ export const pubsubPixelTracking = functions.pubsub
                 campaignId: ad.campaignId as CampaignID,
                 flightId: ad.flightId as FlightID,
                 sessionId,
+                nonce,
             });
 
-            logger.info("Successfully created ad event", createdEvent.id);
+            logger.info("Successfully created ad event", { id: createdEvent.id, ad: adId });
         } catch (err) {
             logger.error("Pubsub error", err);
             return;

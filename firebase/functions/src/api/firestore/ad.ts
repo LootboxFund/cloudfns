@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { AdID, Collection, CampaignID, FlightID, SessionID } from "../../lib/types";
+import { AdID, Collection, CampaignID, FlightID, SessionID, AdEventNonce } from "../../lib/types";
 import { Ad, AdEvent, AdEventAction } from "../graphql/generated/types";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 
@@ -22,6 +22,7 @@ interface CreateAdEventRequest {
     campaignId: CampaignID;
     flightId: FlightID;
     sessionId: SessionID;
+    nonce: AdEventNonce;
 }
 export const createAdEvent = async (request: CreateAdEventRequest): Promise<AdEvent> => {
     const documentWithoutId: Omit<AdEvent, "id"> = {
@@ -31,6 +32,7 @@ export const createAdEvent = async (request: CreateAdEventRequest): Promise<AdEv
         flightId: request.flightId,
         sessionId: request.sessionId,
         timestamp: Timestamp.now().toMillis(),
+        nonce: request.nonce,
         // metadata:
     };
 
@@ -76,4 +78,24 @@ export const updateAdCounts = async (adId: AdID, request: UpdateAdCountsRequest)
     const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
 
     await adRef.update(request);
+};
+
+export const getAdEventsByNonce = async (adId: AdID, nonce: AdEventNonce, limit?: number): Promise<AdEvent[]> => {
+    let collectionRef = db
+        .collection(Collection.Ad)
+        .doc(adId)
+        .collection(Collection.AdEvent)
+        .where("monce", "==", nonce) as Query<AdEvent>;
+
+    if (limit !== undefined) {
+        collectionRef = collectionRef.limit(limit);
+    }
+
+    const snapshot = await collectionRef.get();
+
+    if (snapshot.empty || snapshot.docs.length === 0) {
+        return [];
+    } else {
+        return snapshot.docs.map((doc) => doc.data());
+    }
 };
