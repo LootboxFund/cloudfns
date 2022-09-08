@@ -96,6 +96,12 @@ export const onPartyBasketWrite = functions.firestore
 /**
  * Pubsub listens to log sink with something like the following query
  *
+ * How it works:
+ * 1x1 pixel stored in cloud storage
+ * served via an https load balancer
+ * which emits a log to cloud logging
+ * which then pipes the log to this pubsub function
+ *
  * ```
  * resource.type="http_load_balancer"
  * resource.labels.project_id="lootbox-fund-staging"
@@ -106,7 +112,6 @@ export const onPartyBasketWrite = functions.firestore
  * resource.labels.url_map_name="lb-lootbox-pixel-tracking"
  * httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"
  * ```
- *
  */
 export const pubsubPixelTracking = functions.pubsub
     // TODO: topic from manifest
@@ -173,30 +178,21 @@ export const pubsubPixelTracking = functions.pubsub
         }
 
         // Now update the tallies on the ad (views, impressions, & unique clicks)
-        let isUniqueClick = false;
-        const isClick = eventAction === AdEventAction.Click;
-
-        if (isClick) {
+        const updateRequest: Partial<Ad> = {};
+        if (eventAction === AdEventAction.Click) {
+            // Update clicks
+            updateRequest.clicks = FieldValue.increment(1) as unknown as number;
+            // See if its unique click by the sessionId on the ad-events
             try {
-                // See if its unique click
-                const sessionAdEvents = await getAdEventsBySessionId(ad.id as AdID, sessionId, 1);
-                if (sessionAdEvents?.length > 0) {
-                    isUniqueClick = true;
+                const sessionAdEvents = await getAdEventsBySessionId(ad.id as AdID, sessionId, 2);
+                if (sessionAdEvents.length === 1) {
+                    // Update uniqueClicks
+                    updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
                 }
             } catch (err) {
                 logger.error("Error checking click uniqueness!", err);
             }
-        }
-
-        // Now update the tallies by incrementing
-        const updateRequest: Partial<Ad> = {};
-        if (isClick) {
-            updateRequest.clicks = FieldValue.increment(1) as unknown as number;
-        }
-        if (isClick && isUniqueClick) {
-            updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
-        }
-        if (eventAction === AdEventAction.View) {
+        } else if (eventAction === AdEventAction.View) {
             updateRequest.impressions = FieldValue.increment(1) as unknown as number;
         }
 
