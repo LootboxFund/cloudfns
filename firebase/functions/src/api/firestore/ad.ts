@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { AdID, Collection, CampaignID, FlightID, SessionID, AdEventNonce } from "../../lib/types";
+import { AdID, Collection, CampaignID, FlightID, SessionID, AdEventNonce, ClaimID } from "../../lib/types";
 import { Ad, AdEvent, AdEventAction } from "../graphql/generated/types";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 
@@ -23,6 +23,7 @@ interface CreateAdEventRequest {
     flightId: FlightID;
     sessionId: SessionID;
     nonce: AdEventNonce;
+    claimId?: ClaimID;
 }
 export const createAdEvent = async (request: CreateAdEventRequest): Promise<AdEvent> => {
     const documentWithoutId: Omit<AdEvent, "id"> = {
@@ -33,8 +34,11 @@ export const createAdEvent = async (request: CreateAdEventRequest): Promise<AdEv
         sessionId: request.sessionId,
         timestamp: Timestamp.now().toMillis(),
         nonce: request.nonce,
-        // metadata:
     };
+
+    if (request.claimId) {
+        documentWithoutId.claimId = request.claimId;
+    }
 
     const docRef = db
         .collection(Collection.Ad)

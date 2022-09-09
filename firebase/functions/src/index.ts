@@ -137,7 +137,7 @@ export const pubsubPixelTracking = functions.pubsub
             return;
         }
 
-        const { adId, sessionId, eventAction, nonce } = extractURLStatePixelTracking(url);
+        const { adId, sessionId, eventAction, nonce, claimId } = extractURLStatePixelTracking(url);
 
         let ad: Ad;
         let createdEvent: AdEvent;
@@ -180,6 +180,7 @@ export const pubsubPixelTracking = functions.pubsub
                 campaignId: ad.campaignId as CampaignID,
                 flightId: ad.flightId as FlightID,
                 sessionId,
+                claimId: claimId ? claimId : undefined,
                 nonce,
             });
 

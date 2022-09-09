@@ -1,4 +1,4 @@
-import { AdEventNonce, AdID, SessionID } from "./types";
+import { AdEventNonce, AdID, ClaimID, SessionID } from "./types";
 import { AdEventAction } from "../api/graphql/generated/types";
 
 interface PixelTrackingParams {
@@ -6,6 +6,7 @@ interface PixelTrackingParams {
     sessionId: SessionID | null;
     eventAction: AdEventAction | null;
     nonce: AdEventNonce | null;
+    claimId: ClaimID | null;
 }
 
 export const extractURLStatePixelTracking = (urlString: string) => {
@@ -15,6 +16,7 @@ export const extractURLStatePixelTracking = (urlString: string) => {
         sessionId: url.searchParams.get("s") as SessionID | null,
         eventAction: url.searchParams.get("e") as AdEventAction | null,
         nonce: url.searchParams.get("n") as AdEventNonce | null,
+        claimId: url.searchParams.get("c") as ClaimID | null,
     };
 
     return { ...params };

@@ -60,6 +60,7 @@ const AdTypeDefs = gql`
     sessionId: ID! # unique for this users session
     campaignId: ID!
     action: AdEventAction!
+    claimId: ID
     metadata: EventMetadata
     nonce: ID! # unique - prevents duplicate events
   }
