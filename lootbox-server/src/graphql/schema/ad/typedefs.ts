@@ -9,7 +9,7 @@ const AdTypeDefs = gql`
   }
 
   enum AdType {
-    noob_cup
+    template_1
   }
 
   enum AdEventAction {
