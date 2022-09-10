@@ -44,6 +44,7 @@ const AffilliateResolverComposition = {
   "Query.ViewOrganizer": [isAuthenticated(), isAclPermitted()],
   "Query.ListTournaments": [isAuthenticated(), isAclPermitted()],
   "Query.ViewTournament": [isAuthenticated(), isAclPermitted()],
+  "Query.ViewProposedTournament": [isAuthenticated(), isAclPermitted()],
   "Query.ViewAffiliatePerformanceHistory": [
     isAuthenticated(),
     isAclPermitted(),

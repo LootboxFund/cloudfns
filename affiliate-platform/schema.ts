@@ -84,7 +84,7 @@ enum Currency {
   USD = "USD",
 }
 
-interface Organizer {
+interface Affiliate {
   id: AffiliateID;
   name: string;
   tier: OrganizerTier;
@@ -166,17 +166,6 @@ interface AffiliateRisk {
   description: string;
 }
 
-interface Promoter {
-  id: AffiliateID;
-  name: string;
-  risk: AffiliateRisk;
-  resourceID: AclResourceID;
-  permissions?: {
-    team: AclResourceID;
-    details: AclResourceID;
-  };
-}
-
 enum AffiliateType {
   ORGANIZER = "ORGANIZER",
   PROMOTER = "PROMOTER",
@@ -253,10 +242,10 @@ interface Offer {
   affiliateBaseLink: AffiliateBaseLinkID;
   mmp: MeasurementPartnerType;
   activations: Activation[];
-  tags: AdTargetTag[];
+  targetingTags: AdTargetTag[];
   tiers: OrganizerTierEnum[];
   risks: AffiliateRiskEnum[];
-  placements: PlacementConfig[];
+  adSets: AdSet[];
   resourceID: AclResourceID;
   permissions?: {
     detailsBudgetTagsAndPlacement: AclResourceID;
@@ -371,22 +360,19 @@ interface Tournament {
   organizer: AffiliateID;
   promoters: AffiliateID[];
   advertisers: AdvertiserID[];
-  offerConfigs: OfferTournamentPlacementConfig[];
-  rateCards: AffiliateRateCard[];
+  offers: {
+    [key: OfferID]: {
+      id: OfferID;
+      rateCards: AffiliateRateCard[];
+      adSets: AdSet[];
+    };
+  };
   resourceID: AclResourceID;
   permissions?: {
     details: AclResourceID;
     promoters: AclResourceID;
     offerConfigs: AclResourceID;
   };
-}
-
-type OfferTournamentPlacementConfigID = string & { readonly _: unique symbol };
-interface OfferTournamentPlacementConfig {
-  id: OfferTournamentPlacementConfigID;
-  offerID: OfferID;
-  advertiserID: AdvertiserID;
-  placements: PlacementConfig[];
 }
 
 type ClickAdEventID = string & { readonly _: unique symbol };
@@ -407,28 +393,34 @@ interface ClickAdEvent {
   initiativeID: InitiativeID;
   initiativeType: InitiativeType;
   lootboxTicketID?: LootboxTicketID;
-  placementType: Placement;
+  placementType: PlacementType;
 }
 
-enum Placement {
-  AFTER_TICKET_CLAIM_VIDEO = "AFTER_TICKET_CLAIM_VIDEO",
-  DAILY_SPIN_VIDEO = "DAILY_SPIN_VIDEO",
-  EVERYONES_A_WINNER = "EVERYONES_A_WINNER",
+enum PlacementType {
+  AFTER_TICKET_CLAIM = "AFTER_TICKET_CLAIM",
+  AFTER_PAYOUT = "AFTER_PAYOUT",
+  DAILY_SPIN = "DAILY_SPIN",
+  TICKET_CAROUSEL = "TICKET_CAROUSEL",
 }
 
-type PlacementConfigID = string & { readonly _: unique symbol };
-interface PlacementConfig {
-  id: PlacementConfigID;
+type AdSetsID = string & { readonly _: unique symbol };
+interface AdSet {
+  id: AdSetsID;
   offerID: OfferID;
-  placement: Placement;
-  mediaset: MediaSet;
+  placement: PlacementType;
+  ads: Ad[];
 }
-type MediaSetID = string & { readonly _: unique symbol };
-interface MediaSet {
-  id: MediaSetID;
+type CreativeID = string & { readonly _: unique symbol };
+interface Creative {
+  id: CreativeID;
+  title: string;
+  mediaURL: string;
+}
+interface Ad {
+  id: AdID;
   title: string;
   description: string;
-  mediaURL: string;
+  creative: Creative;
   callToAction: string;
   callToActionURL: string; // should be affiliate link
 }
@@ -786,7 +778,7 @@ const Mock_ClickAdEvent: ClickAdEvent = {
   initiativeID: Mock_TournamentID,
   initiativeType: InitiativeType.TOURNAMENT,
   lootboxTicketID: Mock_LootboxTicketID,
-  placementType: Placement.AFTER_TICKET_CLAIM_VIDEO,
+  placementType: PlacementType.AFTER_TICKET_CLAIM,
 };
 
 const Mock_AppsFlyerPostback: AppsFlyerPostback = {
