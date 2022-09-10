@@ -45,8 +45,9 @@
  * 8.  ✅ Event Tracking & Postbacks
  * 9.  ✅ Assign Offer to Placements in Tournament
  * 10. ✅ Conquest Campaigns
- * 11. ⬜️ Budget Allocation by Event & Offer
- * 12. ⬜️ Reviews
+ * 11. ✅ Budget Allocation by Event & Offer
+ * 12. ✅ Payouts debit & credit
+ * 13. ✅ Reviews
  *
  */
 
@@ -153,6 +154,26 @@ interface Affiliate {
   type: AffiliateType;
 }
 
+/**
+ * --------- How Advertiser Treasury Works ----------
+ *
+ * Advertisers have a treasury from which affiliate revenue is deducted from
+ * The treasury can only be in USDC
+ *
+ * Each Conquest sets its own max spend for the amount of money it can spend
+ * This will not take away from the treasury balance
+ * Thus multiple conquests can share the same treasury balance, and there is a risk that one Conquest takes up the entire budget
+ *
+ * Each Offer sets its own max spend too
+ * Multiple offers can share the same treasury balance, and there is a risk that the funds dry out
+ *
+ * Events cannot set their own max spend because they have multiple offers from multiple advertisers
+ *
+ * It is possible for affiliate activations to bill more than the treasury balance
+ * This is because sometimes the advertiser still wants the activations and will still pay
+ * However they just need time to get the funds in
+ */
+
 interface User {
   id: UserID;
   username: string;
@@ -188,6 +209,7 @@ interface Offer {
   description: string;
   image: string;
   advertiserID: AdvertiserID;
+  spentBudget: number;
   maxBudget: number;
   currency: Currency;
   startDate: Date;
@@ -261,8 +283,6 @@ interface Tournament {
   advertisers: AdvertiserID[];
   offerConfigs: OfferTournamentPlacementConfig[];
   rateCards: AffiliateRateCard[];
-  maxBudget: number;
-  currency: Currency;
 }
 
 type OfferTournamentPlacementConfigID = string & { readonly _: unique symbol };
@@ -307,7 +327,9 @@ interface PlacementConfig {
   placement: Placement;
   mediaset: MediaSet;
 }
+type MediaSetID = string & { readonly _: unique symbol };
 interface MediaSet {
+  id: MediaSetID;
   title: string;
   description: string;
   mediaURL: string;
@@ -348,12 +370,78 @@ interface ActivationPayoutMemo {
   organizerID?: OrganizerID;
   promoterID?: PromoterID;
   adID: AdID;
+  offerID: OfferID;
+  conquestID: ConquestID;
+  advertiserTreasuryID: AdvertiserTreasuryID;
   initiativeID: InitiativeID;
   initiativeType: InitiativeType;
   payoutAmount: number;
   payoutCurrency: Currency;
   activationEventName: ActivationEventName;
   timestamp: Date;
+}
+
+type AdvertiserTreasuryID = string & { readonly _: unique symbol };
+interface AdvertiserTreasury {
+  id: AdvertiserTreasuryID;
+  advertiserID: AdvertiserID;
+  balance: number;
+  currency: Currency;
+  // debits: ActivationPayoutMemoID[];
+  // credits: PayoutLineItemID[];
+}
+
+type PayoutLineItemID = string & { readonly _: unique symbol };
+interface PayoutLineItem {
+  id: PayoutLineItemID;
+  activationID: ActivationID;
+  title: string;
+  quantity: number;
+  rate: number;
+  currency: Currency;
+  description: string;
+  offerID: OfferID;
+  payoutInvoiceID: PayoutInvoiceID;
+  affiliateID: AffiliateID;
+  affiliateType: AffiliateType;
+  advertiserID: AdvertiserID;
+}
+
+enum PayoutInvoiceStatus {
+  PENDING = "PENDING",
+  IN_REVIEW = "IN_REVIEW",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  ON_HOLD = "ON_HOLD",
+  PAID = "PAID",
+  DISPUTED = "DISPUTED",
+}
+type PayoutInvoiceID = string & { readonly _: unique symbol };
+type Address = string;
+interface PayoutInvoice {
+  id: PayoutInvoiceID;
+  title: string;
+  affiliateID: AffiliateID;
+  affiliateType: AffiliateType;
+  total: number;
+  currency: Currency;
+  startdate: Date;
+  enddate: Date;
+  payoutDate: Date;
+  status: PayoutInvoiceStatus;
+  lineItems: PayoutLineItem[];
+  payoutWalletAddress: Address;
+  payoutWalletID: PayoutWalletID;
+}
+
+type PayoutWalletID = string & { readonly _: unique symbol };
+interface PayoutWallet {
+  id: PayoutWalletID;
+  address: Address;
+  title: string;
+  description: string;
+  affiliateID: AffiliateID;
+  affiliateType: AffiliateType;
 }
 
 type ConquestID = string & { readonly _: unique symbol };
@@ -369,11 +457,41 @@ interface Conquest {
   description: string;
   startDate: Date;
   endDate: Date;
-  advertiser: Advertiser;
+  advertiserID: AdvertiserID;
   status: ConquestStatus;
+  spentBudget: number;
   maxBudget: number;
   currency: Currency;
   tournaments: TournamentID[];
+}
+
+type ReviewID = string & { readonly _: unique symbol };
+enum ReviewType {
+  ORGANIZER = "ORGANIZER",
+  PROMOTER = "PROMOTER",
+  ADVERTISER = "ADVERTISER",
+}
+enum ReviewSeverityType {
+  FRAUD = "FRAUD",
+  MISCONDUCT = "MISCONDUCT",
+  NEGLIGENCE = "NEGLIGENCE",
+  COMPLAINT = "COMPLAINT",
+  COMPLIMENT = "COMPLIMENT",
+  NONE = "NONE",
+}
+type ReviewEntityID = AdvertiserID | OrganizerID | PromoterID;
+interface Review {
+  id: ReviewID;
+  type: ReviewType;
+  title: string;
+  description: string;
+  rating: number;
+  timestamp: Date;
+  entityID: ReviewEntityID;
+  severity: ReviewSeverityType;
+  lootboxTicketID?: LootboxTicketID;
+  tournamentID?: TournamentID;
+  offerID?: OfferID;
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -570,6 +688,30 @@ const Mock_AppsFlyerPostback: AppsFlyerPostback = {
   eventName: Mock_ActivationEventName,
 };
 
+const Mock_AdvertiserTreasuryID =
+  "Mock_AdvertiserTreasuryID" as AdvertiserTreasuryID;
+const Mock_AdvertiserTreasury: AdvertiserTreasury = {
+  id: Mock_AdvertiserTreasuryID,
+  advertiserID: Mock_AdvertiserID,
+  balance: 900,
+  currency: Currency.USD,
+};
+
+const Mock_ConquestID = "Mock_ConquestID" as ConquestID;
+const Mock_Conquest: Conquest = {
+  id: Mock_ConquestID,
+  title: "Mock_Conquest title",
+  description: "Mock_Conquest description",
+  startDate: new Date(),
+  endDate: new Date(),
+  advertiserID: Mock_AdvertiserID,
+  status: ConquestStatus.ACTIVE,
+  spentBudget: 100,
+  maxBudget: 500,
+  currency: Currency.USD,
+  tournaments: [Mock_TournamentID],
+};
+
 const Mock_ActivationPayoutMemoID =
   "Mock_ActivationPayoutMemoID" as ActivationPayoutMemoID;
 const Mock_ActivationPayoutMemo: ActivationPayoutMemo = {
@@ -589,6 +731,9 @@ const Mock_ActivationPayoutMemo: ActivationPayoutMemo = {
   payoutCurrency: Currency.USD,
   activationEventName: Mock_ActivationEventName,
   timestamp: new Date(),
+  offerID: Mock_OfferID,
+  conquestID: Mock_ConquestID,
+  advertiserTreasuryID: Mock_AdvertiserTreasuryID,
 };
 
 const Mock_AdTargetTagID = "Mock_AdTargetTagID" as AdTargetTagID;
@@ -601,12 +746,30 @@ const Mock_AdTargetTag_PCGAMER: AdTargetTag = {
   type: AdTargetTagType.INTEREST,
 };
 
+const Mock_PlacementConfigID = "Mock_PlacementConfigID" as PlacementConfigID;
+const Mock_Mock_MediaSetID = "Mock_Mock_MediaSetID" as MediaSetID;
+const Mock_MediaSet: MediaSet = {
+  id: Mock_Mock_MediaSetID,
+  title: "Mock_Mock_MediaSetID title",
+  description: "Mock_Mock_MediaSetID description",
+  mediaURL: "string",
+  callToAction: "string",
+  callToActionURL: "string", // should be affiliate link
+};
+const Mock_PlacementConfig: PlacementConfig = {
+  id: Mock_PlacementConfigID,
+  offerID: Mock_OfferID,
+  placement: Placement.AFTER_TICKET_CLAIM_VIDEO,
+  mediaset: Mock_MediaSet,
+};
+
 const Mock_Offer: Offer = {
   id: Mock_OfferID,
   title: "Mock Offer Title",
   description: "Mock Offer Description",
   image: "https://lootbox.gg/images/lootbox-logo.png",
   advertiserID: Mock_AdvertiserID,
+  spentBudget: 50,
   maxBudget: 1000,
   currency: Currency.USD,
   startDate: new Date(),
@@ -618,6 +781,7 @@ const Mock_Offer: Offer = {
   tags: [Mock_AdTargetTag_PCGAMER],
   tiers: [OrganizerTierEnum.BRONZE],
   risks: [AffiliateRiskEnum.LOW_RISK],
+  placements: [Mock_PlacementConfig],
 };
 
 const Mock_Advertiser: Advertiser = {
@@ -629,16 +793,27 @@ const Mock_Advertiser: Advertiser = {
   tiers: [OrganizerTierEnum.BRONZE],
 };
 
+const Mock_OfferTournamentPlacementConfigID =
+  "Mock_OfferTournamentPlacementConfigID" as OfferTournamentPlacementConfigID;
+const Mock_OfferTournamentPlacementConfig: OfferTournamentPlacementConfig = {
+  id: Mock_OfferTournamentPlacementConfigID,
+  offerID: Mock_OfferID,
+  advertiserID: Mock_AdvertiserID,
+  placements: [Mock_PlacementConfig],
+};
+
 const Mock_Tournament: Tournament = {
   id: Mock_TournamentID,
   name: "Mock_Tournament",
   organizerID: Mock_OrganizerID,
   promoters: [Mock_PromoterID],
   advertisers: [Mock_AdvertiserID],
-  offers: [Mock_Offer],
+  offerConfigs: [Mock_OfferTournamentPlacementConfig],
   description: "Mock_Tournament Description",
   datestart: new Date(),
   dateend: new Date(),
-  maxBudget: 1000,
-  currency: Currency.USD,
+  rateCards: [
+    Mock_AffiliateRateCard_Organizer,
+    Mock_AffiliateRateCard_Promoter,
+  ],
 };
