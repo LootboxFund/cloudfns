@@ -24,10 +24,10 @@ const OfferResolverComposition = {
   "Query.ViewOfferPerformanceHistory": [isAuthenticated(), isAclPermitted()],
 };
 
-// Organizer Tournament
-const OrganizerResolverComposition = {
-  "Mutation.UpgradeToOrganizer": [isAuthenticated(), isAclPermitted()],
-  "Mutation.UpdateOrganizerInfo": [isAuthenticated(), isAclPermitted()],
+// Affilliate Tournament
+const AffilliateResolverComposition = {
+  "Mutation.UpgradeToAffilliate": [isAuthenticated(), isAclPermitted()],
+  "Mutation.UpdateAffilliateInfo": [isAuthenticated(), isAclPermitted()],
   "Mutation.CreateTournament": [isAuthenticated(), isAclPermitted()],
   "Mutation.UpdateTournament": [isAuthenticated(), isAclPermitted()], // filters out actions based on ACL
   "Mutation.AddPromoter": [isAuthenticated(), isAclPermitted()],
@@ -53,8 +53,6 @@ const OrganizerResolverComposition = {
 
 // Promoter
 const PromoterResolverComposition = {
-  "Mutation.UpgradeToPromoter": [isAuthenticated(), isAclPermitted()],
-  "Mutation.UpdatePromoterInfo": [isAuthenticated(), isAclPermitted()],
   "Mutation.LeaveTournament": [isAuthenticated(), isAclPermitted()],
   "Mutation.GenerateInviteGraphic": [isAuthenticated(), isAclPermitted()],
   "Query.ViewPromoter": [isAuthenticated(), isAclPermitted()],

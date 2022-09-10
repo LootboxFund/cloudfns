@@ -49,6 +49,12 @@
  * 12. ✅ Payouts debit & credit
  * 13. ✅ Reviews
  *
+ *
+ * ------------ AREAS NEED CLARIFICATION ------------
+ * 1. ⬜️ Upgrading to Advertiser/Organizer/Promoter (should it actually just be "Affiliate" instead of org & promoter?)
+ * 2. ⬜️ Access Control List structure (ie. resourceID & permissions{})
+ * 3.
+ *
  */
 
 /**
@@ -57,8 +63,7 @@
  * - Offer
  * - Tournament
  * - Advertiser
- * - Organizer
- * - Promoter
+ * - Affiliate
  * - User
  * - ACL
  *
@@ -74,15 +79,13 @@
 
 type AdvertiserID = string & { readonly brand: unique symbol };
 type TournamentID = string & { readonly _: unique symbol };
-type OrganizerID = string & { readonly _: unique symbol };
-type PromoterID = string & { readonly _: unique symbol };
-type AffiliateID = OrganizerID | PromoterID | AffiliateType.LOOTBOX;
+type AffiliateID = string & { readonly _: unique symbol };
 enum Currency {
   USD = "USD",
 }
 
 interface Organizer {
-  id: OrganizerID;
+  id: AffiliateID;
   name: string;
   tier: OrganizerTier;
   risk: AffiliateRisk;
@@ -127,7 +130,7 @@ type OrganizerAdvertiserTierWhitelistID = string & {
 };
 interface OrganizerAdvertiserTierWhitelist {
   id: OrganizerAdvertiserTierWhitelistID;
-  organizerID: OrganizerID;
+  organizerID: AffiliateID;
   advertiserID: AdvertiserID;
 }
 type OrganizerOfferTierWhitelistID = string & {
@@ -135,7 +138,7 @@ type OrganizerOfferTierWhitelistID = string & {
 };
 interface OrganizerOfferTierWhitelist {
   id: OrganizerOfferTierWhitelistID;
-  organizerID: OrganizerID;
+  organizerID: AffiliateID;
   offerID: OfferID;
   advertiserID: AdvertiserID;
 }
@@ -164,7 +167,7 @@ interface AffiliateRisk {
 }
 
 interface Promoter {
-  id: PromoterID;
+  id: AffiliateID;
   name: string;
   risk: AffiliateRisk;
   resourceID: AclResourceID;
@@ -332,6 +335,7 @@ interface Activation {
   id: ActivationID;
   name: ActivationEventName;
   description: string;
+  masterPricing: ActivationPricing;
 }
 
 interface ActivationPricing {
@@ -352,8 +356,8 @@ interface AffiliateRateCard {
   affiliateID: AffiliateID;
   affiliateType: AffiliateType;
   tournamentID?: TournamentID;
-  organizerID?: OrganizerID;
-  promoterID?: PromoterID;
+  organizerID?: AffiliateID;
+  promoterID?: AffiliateID;
   currency: Currency;
   resourceID: AclResourceID;
 }
@@ -364,8 +368,8 @@ interface Tournament {
   description: string;
   datestart: Date;
   dateend: Date;
-  organizerID: OrganizerID;
-  promoters: PromoterID[];
+  organizer: AffiliateID;
+  promoters: AffiliateID[];
   advertisers: AdvertiserID[];
   offerConfigs: OfferTournamentPlacementConfig[];
   rateCards: AffiliateRateCard[];
@@ -439,7 +443,7 @@ type ActivationPostbackID = string & { readonly _: unique symbol };
 interface AppsFlyerPostback {
   id: ActivationPostbackID;
   clickid: ClickAdEventID;
-  af_siteid: OrganizerID;
+  af_siteid: AffiliateID;
   af_sub_siteid: AffiliateID;
   af_adset: AffiliateID;
   af_ad: OfferID;
@@ -459,8 +463,6 @@ interface ActivationPayoutMemo {
   affiliateType?: AffiliateType;
   advertiserID: AdvertiserID;
   tournamentID?: TournamentID;
-  organizerID?: OrganizerID;
-  promoterID?: PromoterID;
   adID: AdID;
   offerID: OfferID;
   conquestID: ConquestID;
@@ -577,7 +579,7 @@ enum ReviewSeverityType {
   COMPLIMENT = "COMPLIMENT",
   NONE = "NONE",
 }
-type ReviewEntityID = AdvertiserID | OrganizerID | PromoterID;
+type ReviewEntityID = AdvertiserID | AffiliateID;
 interface Review {
   id: ReviewID;
   type: ReviewType;
@@ -624,8 +626,8 @@ const createActivationPayoutMemo = (
 
 const Mock_AdvertiserID = "Mock_AdvertiserID" as AdvertiserID;
 const Mock_TournamentID = "Mock_TournamentID" as TournamentID;
-const Mock_OrganizerID = "Mock_OrganizerID" as OrganizerID;
-const Mock_PromoterID = "Mock_PromoterID" as PromoterID;
+const Mock_OrganizerID = "Mock_OrganizerID" as AffiliateID;
+const Mock_PromoterID = "Mock_PromoterID" as AffiliateID;
 
 const Mock_AffiliateID_Lootbox = "Mock_AffiliateID_Lootbox" as AffiliateID;
 const Mock_AffiliateID_Organizer = "Mock_AffiliateID_Organizer" as AffiliateID;
@@ -704,11 +706,6 @@ const Mock_ActivationPricingID_Organizer =
 const Mock_ActivationPricingID_Promoter =
   "Mock_ActivationPricingID_Promoter" as ActivationPricingID;
 
-const Mock_Activation: Activation = {
-  id: Mock_ActivationID,
-  name: Mock_ActivationEventName,
-  description: "Mock_Activation Description",
-};
 const Mock_ActivationPricing_Master: ActivationPricing = {
   id: Mock_ActivationPricingID_Master,
   activationID: Mock_ActivationID,
@@ -717,6 +714,13 @@ const Mock_ActivationPricing_Master: ActivationPricing = {
   percentage: 0,
   affiliateID: Mock_AffiliateID_Lootbox,
   affiliateType: AffiliateType.LOOTBOX,
+};
+
+const Mock_Activation: Activation = {
+  id: Mock_ActivationID,
+  name: Mock_ActivationEventName,
+  description: "Mock_Activation Description",
+  masterPricing: Mock_ActivationPricing_Master,
 };
 
 const Mock_ActivationPricing_Organizer: ActivationPricing = {
@@ -835,8 +839,6 @@ const Mock_ActivationPayoutMemo: ActivationPayoutMemo = {
   affiliateType: AffiliateType.PROMOTER,
   advertiserID: Mock_AdvertiserID,
   tournamentID: Mock_TournamentID,
-  organizerID: Mock_OrganizerID,
-  promoterID: Mock_PromoterID,
   adID: Mock_AdID,
   initiativeID: Mock_TournamentID,
   initiativeType: InitiativeType.TOURNAMENT,
@@ -920,7 +922,7 @@ const Mock_OfferTournamentPlacementConfig: OfferTournamentPlacementConfig = {
 const Mock_Tournament: Tournament = {
   id: Mock_TournamentID,
   name: "Mock_Tournament",
-  organizerID: Mock_OrganizerID,
+  organizer: Mock_OrganizerID,
   promoters: [Mock_PromoterID],
   advertisers: [Mock_AdvertiserID],
   offerConfigs: [Mock_OfferTournamentPlacementConfig],
