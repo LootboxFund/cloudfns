@@ -51,6 +51,27 @@
  *
  */
 
+/**
+ * ---------- PRIMITIVES ----------
+ *
+ * - Offer
+ * - Tournament
+ * - Advertiser
+ * - Organizer
+ * - Promoter
+ * - User
+ * - ACL
+ *
+ * ---------- ABSTRACTIONS ----------
+ *
+ * - Rate Card
+ * - Conquest
+ * - Activation
+ * - Payout Invoice
+ * - Treasury
+ *
+ */
+
 type AdvertiserID = string & { readonly brand: unique symbol };
 type TournamentID = string & { readonly _: unique symbol };
 type OrganizerID = string & { readonly _: unique symbol };
@@ -65,6 +86,11 @@ interface Organizer {
   name: string;
   tier: OrganizerTier;
   risk: AffiliateRisk;
+  resourceID: AclResourceID;
+  permissions?: {
+    team: AclResourceID;
+    details: AclResourceID;
+  };
 }
 
 /**
@@ -141,6 +167,11 @@ interface Promoter {
   id: PromoterID;
   name: string;
   risk: AffiliateRisk;
+  resourceID: AclResourceID;
+  permissions?: {
+    team: AclResourceID;
+    details: AclResourceID;
+  };
 }
 
 enum AffiliateType {
@@ -179,6 +210,7 @@ interface User {
   username: string;
   email: string;
   AdTargetTags: AdTargetTag[];
+  privileges: AclPermissionID[];
 }
 
 enum OfferStatus {
@@ -222,6 +254,12 @@ interface Offer {
   tiers: OrganizerTierEnum[];
   risks: AffiliateRiskEnum[];
   placements: PlacementConfig[];
+  resourceID: AclResourceID;
+  permissions?: {
+    detailsBudgetTagsAndPlacement: AclResourceID;
+    tierAndRisk: AclResourceID;
+    affiliateTracking: AclResourceID;
+  };
 }
 
 interface Advertiser {
@@ -231,6 +269,13 @@ interface Advertiser {
   offers: Offer[];
   tiers: OrganizerTierEnum[];
   risks: AffiliateRiskEnum[];
+  resourceID: AclResourceID;
+  permissions?: {
+    team: AclResourceID;
+    details: AclResourceID;
+    tierAndRisk: AclResourceID;
+    offer: AclResourceID;
+  };
 }
 
 enum MeasurementPartnerType {
@@ -242,6 +287,46 @@ type ActivationID = string & { readonly _: unique symbol };
 type AffiliateBaseLinkID = string & { readonly _: unique symbol };
 type ActivationPricingID = string & { readonly _: unique symbol };
 type ActivationEventName = string;
+
+/**
+ * -------- How Groups & ACL Works (Access Control List) --------
+ *
+ * Anything that has ACL granularity of control are given a resourceID
+ * Anyone who wants to do an ACL action is called an Actor, which can be a user or a role (users can be given a role)
+ * Actors are given an AclPermission[] that references the resourceID along with a CRUD permission
+ * Only actors with the AclPermission can do a given action
+ * ACL happens on graphq validation layer
+ */
+
+type AclRoleID = string & { readonly _: unique symbol };
+interface AclRole {
+  id: AclRoleID;
+  title: string;
+  description: string;
+  members: UserID[];
+  privileges: AclPermissionID[];
+}
+
+type AclResourceID = string & { readonly _: unique symbol };
+enum AclAction {
+  READ = "READ",
+  UPDATE = "UPDATE",
+  CREATE = "CREATE",
+  DELETE = "DELETE",
+}
+type AclPermissionID = string & { readonly _: unique symbol };
+type AclActorID = AclRoleID | UserID;
+interface AclPermission {
+  id: AclPermissionID;
+  resourceID: AclResourceID;
+  actorID: AclActorID;
+  title: string;
+  description: string;
+  action: AclAction;
+  expiry: Date;
+  createdAt: Date;
+  createdBy: UserID;
+}
 
 interface Activation {
   id: ActivationID;
@@ -270,6 +355,7 @@ interface AffiliateRateCard {
   organizerID?: OrganizerID;
   promoterID?: PromoterID;
   currency: Currency;
+  resourceID: AclResourceID;
 }
 
 interface Tournament {
@@ -283,6 +369,12 @@ interface Tournament {
   advertisers: AdvertiserID[];
   offerConfigs: OfferTournamentPlacementConfig[];
   rateCards: AffiliateRateCard[];
+  resourceID: AclResourceID;
+  permissions?: {
+    details: AclResourceID;
+    promoters: AclResourceID;
+    offerConfigs: AclResourceID;
+  };
 }
 
 type OfferTournamentPlacementConfigID = string & { readonly _: unique symbol };
@@ -387,6 +479,10 @@ interface AdvertiserTreasury {
   advertiserID: AdvertiserID;
   balance: number;
   currency: Currency;
+  resourceID: AclResourceID;
+  permissions?: {
+    history: AclResourceID;
+  };
   // debits: ActivationPayoutMemoID[];
   // credits: PayoutLineItemID[];
 }
@@ -442,6 +538,7 @@ interface PayoutWallet {
   description: string;
   affiliateID: AffiliateID;
   affiliateType: AffiliateType;
+  resourceID: AclResourceID;
 }
 
 type ConquestID = string & { readonly _: unique symbol };
@@ -463,6 +560,7 @@ interface Conquest {
   maxBudget: number;
   currency: Currency;
   tournaments: TournamentID[];
+  resourceID: AclResourceID;
 }
 
 type ReviewID = string & { readonly _: unique symbol };
@@ -492,6 +590,15 @@ interface Review {
   lootboxTicketID?: LootboxTicketID;
   tournamentID?: TournamentID;
   offerID?: OfferID;
+}
+
+type CompanyID = string & { readonly _: unique symbol };
+interface Company {
+  id: CompanyID;
+  title: string;
+  description: string;
+  members: UserID[];
+  resourceID: AclResourceID;
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -555,12 +662,14 @@ const Mock_Organizer: Organizer = {
   name: "Mock_Organizer",
   tier: Mock_OrganizerTier,
   risk: Mock_AffiliateRisk_Organizer,
+  resourceID: "Mock_Organizer" as AclResourceID,
 };
 
 const Mock_Promoter: Promoter = {
   id: Mock_PromoterID,
   name: "Mock_Promoter",
   risk: Mock_AffiliateRisk_Promoter,
+  resourceID: "Mock_Promoter" as AclResourceID,
 };
 
 const Mock_Affiliate_Lootbox: Affiliate = {
@@ -638,6 +747,7 @@ const Mock_AffiliateRateCard_Organizer: AffiliateRateCard = {
   affiliateID: Mock_AffiliateID_Organizer,
   affiliateType: AffiliateType.ORGANIZER,
   currency: Currency.USD,
+  resourceID: "Mock_AffiliateRateCard_Organizer" as AclResourceID,
 };
 
 const Mock_AffiliateRateCard_Promoter: AffiliateRateCard = {
@@ -648,6 +758,7 @@ const Mock_AffiliateRateCard_Promoter: AffiliateRateCard = {
   affiliateID: Mock_AffiliateID_Promoter,
   affiliateType: AffiliateType.PROMOTER,
   currency: Currency.USD,
+  resourceID: "Mock_AffiliateRateCard_Promoter" as AclResourceID,
 };
 
 const Mock_ClickAdEventID = "Mock_ClickAdEventID" as ClickAdEventID;
@@ -695,6 +806,7 @@ const Mock_AdvertiserTreasury: AdvertiserTreasury = {
   advertiserID: Mock_AdvertiserID,
   balance: 900,
   currency: Currency.USD,
+  resourceID: "Mock_AdvertiserTreasuryID" as AclResourceID,
 };
 
 const Mock_ConquestID = "Mock_ConquestID" as ConquestID;
@@ -710,6 +822,7 @@ const Mock_Conquest: Conquest = {
   maxBudget: 500,
   currency: Currency.USD,
   tournaments: [Mock_TournamentID],
+  resourceID: "Mock_Conquest" as AclResourceID,
 };
 
 const Mock_ActivationPayoutMemoID =
@@ -782,6 +895,7 @@ const Mock_Offer: Offer = {
   tiers: [OrganizerTierEnum.BRONZE],
   risks: [AffiliateRiskEnum.LOW_RISK],
   placements: [Mock_PlacementConfig],
+  resourceID: "Mock_Offer" as AclResourceID,
 };
 
 const Mock_Advertiser: Advertiser = {
@@ -791,6 +905,7 @@ const Mock_Advertiser: Advertiser = {
   offers: [Mock_Offer],
   risks: [AffiliateRiskEnum.MEDIUM_RISK],
   tiers: [OrganizerTierEnum.BRONZE],
+  resourceID: "Mock_AdvertiserID" as AclResourceID,
 };
 
 const Mock_OfferTournamentPlacementConfigID =
@@ -816,4 +931,5 @@ const Mock_Tournament: Tournament = {
     Mock_AffiliateRateCard_Organizer,
     Mock_AffiliateRateCard_Promoter,
   ],
+  resourceID: "Mock_Tournament" as AclResourceID,
 };
