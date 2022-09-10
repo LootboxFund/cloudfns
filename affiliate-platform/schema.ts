@@ -32,6 +32,24 @@
  * // but not af_sub[n]
  */
 
+/**
+ * ----------- MAIN AREAS OF FOCUS -----------
+ *
+ * 1.  ✅ Creating a Tournament
+ * 2.  ✅ Offers as First Class Citizen
+ * 3.  ✅ Affiliate rates calculated by offer & event & affiliate
+ * 4.  ✅ Ad Targeting Tags
+ * 5.  ✅ Organizer Tiers
+ * 6.  ✅ Affiliate Risk Levels
+ * 7.  ✅ Currency
+ * 8.  ✅ Event Tracking & Postbacks
+ * 9.  ✅ Assign Offer to Placements in Tournament
+ * 10. ✅ Conquest Campaigns
+ * 11. ⬜️ Budget Allocation by Event & Offer
+ * 12. ⬜️ Reviews
+ *
+ */
+
 type AdvertiserID = string & { readonly brand: unique symbol };
 type TournamentID = string & { readonly _: unique symbol };
 type OrganizerID = string & { readonly _: unique symbol };
@@ -44,11 +62,84 @@ enum Currency {
 interface Organizer {
   id: OrganizerID;
   name: string;
+  tier: OrganizerTier;
+  risk: AffiliateRisk;
+}
+
+/**
+ * ---- How Affiliate Tiers Work ----
+ * Organizers start at Tier 1
+ * Tier 1 gets you access to advertisers of tier 1, of their offers of tier 1
+ * Tier N gets you access to advertisers of tier 1 through N
+ *
+ * When you access a new advertiser, you can see all their offers
+ * However that does not mean you will necessarily be able to promote them
+ * Offers are dynamically served on tickets based on the offer's targeting rules
+ *
+ * You may also be selectively whitelisted to higher tier offers if you have a good track record
+ * Especially if you refer an advertiser to us
+ */
+type OrganizerTierID = string & { readonly _: unique symbol };
+enum OrganizerTierEnum {
+  CLAY = "CLAY", // Revenue Split 50/50
+  BRONZE = "BRONZE", // Revenue Split 70/30
+  SILVER = "SILVER", // Revenue Split 75/25
+  GOLD = "GOLD", // Revenue Split 85/15
+  PLATINUM = "PLATINUM", // Revenue Split 90/10
+}
+interface OrganizerTier {
+  id: OrganizerTierID;
+  slug: OrganizerTierEnum;
+  title: string;
+  description: string;
+  percentage: number;
+}
+
+type OrganizerAdvertiserTierWhitelistID = string & {
+  readonly _: unique symbol;
+};
+interface OrganizerAdvertiserTierWhitelist {
+  id: OrganizerAdvertiserTierWhitelistID;
+  organizerID: OrganizerID;
+  advertiserID: AdvertiserID;
+}
+type OrganizerOfferTierWhitelistID = string & {
+  readonly _: unique symbol;
+};
+interface OrganizerOfferTierWhitelist {
+  id: OrganizerOfferTierWhitelistID;
+  organizerID: OrganizerID;
+  offerID: OfferID;
+  advertiserID: AdvertiserID;
+}
+
+/**
+ * ---- How Affiliate Risk Works ----
+ * We have a risk class for each affiliate
+ * Advertisers can determine what risk level they will work with
+ * Offers can also have a risk level
+ */
+type AffiliateRiskID = string & { readonly _: unique symbol };
+enum AffiliateRiskEnum {
+  VERY_HIGH_RISK = "VERY_HIGH_RISK",
+  HIGH_RISK = "HIGH_RISK",
+  MEDIUM_RISK = "MEDIUM_RISK",
+  NEW_AFFILIATE = "NEW_AFFILIATE",
+  NEUTRAL_RISK = "NEUTRAL_RISK",
+  LOW_RISK = "LOW_RISK",
+  VERY_LOW_RISK = "VERY_LOW_RISK",
+}
+interface AffiliateRisk {
+  id: AffiliateRiskID;
+  slug: AffiliateRiskEnum;
+  title: string;
+  description: string;
 }
 
 interface Promoter {
   id: PromoterID;
   name: string;
+  risk: AffiliateRisk;
 }
 
 enum AffiliateType {
@@ -60,6 +151,13 @@ enum AffiliateType {
 interface Affiliate {
   id: AffiliateID;
   type: AffiliateType;
+}
+
+interface User {
+  id: UserID;
+  username: string;
+  email: string;
+  AdTargetTags: AdTargetTag[];
 }
 
 enum OfferStatus {
@@ -99,6 +197,9 @@ interface Offer {
   mmp: MeasurementPartnerType;
   activations: Activation[];
   tags: AdTargetTag[];
+  tiers: OrganizerTierEnum[];
+  risks: AffiliateRiskEnum[];
+  placements: PlacementConfig[];
 }
 
 interface Advertiser {
@@ -106,6 +207,8 @@ interface Advertiser {
   name: string;
   description: string;
   offers: Offer[];
+  tiers: OrganizerTierEnum[];
+  risks: AffiliateRiskEnum[];
 }
 
 enum MeasurementPartnerType {
@@ -156,16 +259,24 @@ interface Tournament {
   organizerID: OrganizerID;
   promoters: PromoterID[];
   advertisers: AdvertiserID[];
-  offers: Offer[];
+  offerConfigs: OfferTournamentPlacementConfig[];
+  rateCards: AffiliateRateCard[];
   maxBudget: number;
   currency: Currency;
+}
+
+type OfferTournamentPlacementConfigID = string & { readonly _: unique symbol };
+interface OfferTournamentPlacementConfig {
+  id: OfferTournamentPlacementConfigID;
+  offerID: OfferID;
+  advertiserID: AdvertiserID;
+  placements: PlacementConfig[];
 }
 
 type ClickAdEventID = string & { readonly _: unique symbol };
 type AdID = string & { readonly _: unique symbol };
 type FlightID = string & { readonly _: unique symbol };
 type UserID = string & { readonly _: unique symbol };
-type LootboxIncentiveCampaignID = string & { readonly _: unique symbol };
 type OfferID = string & { readonly _: unique symbol };
 type LootboxTicketID = string & { readonly _: unique symbol };
 
@@ -189,7 +300,22 @@ enum Placement {
   EVERYONES_A_WINNER = "EVERYONES_A_WINNER",
 }
 
-type InitiativeID = TournamentID | LootboxIncentiveCampaignID;
+type PlacementConfigID = string & { readonly _: unique symbol };
+interface PlacementConfig {
+  id: PlacementConfigID;
+  offerID: OfferID;
+  placement: Placement;
+  mediaset: MediaSet;
+}
+interface MediaSet {
+  title: string;
+  description: string;
+  mediaURL: string;
+  callToAction: string;
+  callToActionURL: string; // should be affiliate link
+}
+
+type InitiativeID = TournamentID | InitiativeType.DAILY_SPIN;
 enum InitiativeType {
   TOURNAMENT = "TOURNAMENT",
   DAILY_SPIN = "DAILY_SPIN",
@@ -247,7 +373,7 @@ interface Conquest {
   status: ConquestStatus;
   maxBudget: number;
   currency: Currency;
-  tournaments: Tournament[];
+  tournaments: TournamentID[];
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -280,14 +406,43 @@ const Mock_AffiliateID_Lootbox = "Mock_AffiliateID_Lootbox" as AffiliateID;
 const Mock_AffiliateID_Organizer = "Mock_AffiliateID_Organizer" as AffiliateID;
 const Mock_AffiliateID_Promoter = "Mock_AffiliateID_Promoter" as AffiliateID;
 
+const Mock_AffiliateRiskID_Organizer =
+  "Mock_AffiliateRiskID_Organizer" as AffiliateRiskID;
+const Mock_AffiliateRiskID_Promoter =
+  "Mock_AffiliateRiskID_Promoter" as AffiliateRiskID;
+const Mock_OrganizerTierID = "Mock_OrganizerTierID" as OrganizerTierID;
+
+const Mock_AffiliateRisk_Organizer = {
+  id: Mock_AffiliateRiskID_Organizer,
+  slug: AffiliateRiskEnum.NEW_AFFILIATE,
+  title: "New Affiliate",
+  description: "New Affiliate Risk Level",
+};
+const Mock_AffiliateRisk_Promoter = {
+  id: Mock_AffiliateRiskID_Promoter,
+  slug: AffiliateRiskEnum.NEW_AFFILIATE,
+  title: "New Affiliate",
+  description: "New Affiliate Risk Level",
+};
+const Mock_OrganizerTier = {
+  id: Mock_OrganizerTierID,
+  slug: OrganizerTierEnum.CLAY,
+  title: "Clay Tier - 50/50 Split",
+  description: "For new organizers",
+  percentage: 0.5,
+};
+
 const Mock_Organizer: Organizer = {
   id: Mock_OrganizerID,
   name: "Mock_Organizer",
+  tier: Mock_OrganizerTier,
+  risk: Mock_AffiliateRisk_Organizer,
 };
 
 const Mock_Promoter: Promoter = {
   id: Mock_PromoterID,
   name: "Mock_Promoter",
+  risk: Mock_AffiliateRisk_Promoter,
 };
 
 const Mock_Affiliate_Lootbox: Affiliate = {
@@ -381,8 +536,6 @@ const Mock_ClickAdEventID = "Mock_ClickAdEventID" as ClickAdEventID;
 const Mock_AdID = "Mock_AdID" as AdID;
 const Mock_FlightID = "Mock_FlightID" as FlightID;
 const Mock_UserID = "Mock_UserID" as UserID;
-const Mock_LootboxIncentiveCampaignID =
-  "Mock_LootboxIncentiveCampaignID" as LootboxIncentiveCampaignID;
 const Mock_OfferID = "Mock_OfferID" as OfferID;
 const Mock_LootboxTicketID = "Mock_LootboxTicketID" as LootboxTicketID;
 
@@ -438,6 +591,16 @@ const Mock_ActivationPayoutMemo: ActivationPayoutMemo = {
   timestamp: new Date(),
 };
 
+const Mock_AdTargetTagID = "Mock_AdTargetTagID" as AdTargetTagID;
+const Mock_AdTargetTag_PCGAMER: AdTargetTag = {
+  id: Mock_AdTargetTagID,
+  slug: "pc_gamer",
+  title: "PC Gamers",
+  description: "PC Gamers",
+  color: "#ffffff",
+  type: AdTargetTagType.INTEREST,
+};
+
 const Mock_Offer: Offer = {
   id: Mock_OfferID,
   title: "Mock Offer Title",
@@ -452,7 +615,9 @@ const Mock_Offer: Offer = {
   affiliateBaseLink: Mock_AffiliateBaseLinkID,
   mmp: MeasurementPartnerType.APPSFLYER,
   activations: [Mock_Activation],
-  tags: [],
+  tags: [Mock_AdTargetTag_PCGAMER],
+  tiers: [OrganizerTierEnum.BRONZE],
+  risks: [AffiliateRiskEnum.LOW_RISK],
 };
 
 const Mock_Advertiser: Advertiser = {
@@ -460,6 +625,8 @@ const Mock_Advertiser: Advertiser = {
   name: "Mock_Advertiser",
   description: "Mock_Advertiser",
   offers: [Mock_Offer],
+  risks: [AffiliateRiskEnum.MEDIUM_RISK],
+  tiers: [OrganizerTierEnum.BRONZE],
 };
 
 const Mock_Tournament: Tournament = {
