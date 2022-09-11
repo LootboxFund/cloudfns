@@ -30,3 +30,14 @@ export interface Conquest_Firestore {
   tournaments: TournamentID[];
   createdBy: UserID;
 }
+
+export interface ConquestWithTournaments_ReplaceMeWithGQLGeneratedTypes {
+  conquest: Conquest_Firestore;
+  tournaments: TournamentPreviewInConquest[];
+}
+
+export interface TournamentPreviewInConquest {
+  id: TournamentID;
+  title: string;
+  coverPhoto: string;
+}

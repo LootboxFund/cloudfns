@@ -1,10 +1,20 @@
-import { DocumentReference } from "firebase-admin/firestore";
-import { User } from "../../graphql/generated/types";
+import { DocumentReference, Query } from "firebase-admin/firestore";
+import { User, Tournament } from "../../graphql/generated/types";
 import { AdvertiserID, UserID } from "../../lib/types";
 import { db } from "../firebase";
-import { Advertiser_Firestore, Conquest_Firestore } from "./advertiser.type";
+import {
+  Advertiser_Firestore,
+  ConquestWithTournaments_ReplaceMeWithGQLGeneratedTypes,
+  Conquest_Firestore,
+  TournamentPreviewInConquest,
+} from "./advertiser.type";
 import { Collection } from "./collection.types";
-import { ConquestID, ConquestStatus, Currency } from "@wormgraph/helpers";
+import {
+  ConquestID,
+  ConquestStatus,
+  Currency,
+  TournamentID,
+} from "@wormgraph/helpers";
 
 export const upgradeToAdvertiser = async (
   userID: UserID
@@ -101,6 +111,128 @@ export const updateConquest = async (
   return (await conquestRef.get()).data() as Conquest_Firestore;
 };
 
+export const advertiserAdminView = async (
+  advertiserID: AdvertiserID
+): Promise<Advertiser_Firestore | undefined> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+
+  if (!advertiserSnapshot.exists) {
+    return undefined;
+  } else {
+    return advertiserSnapshot.data();
+  }
+};
+
+type PublicAdvertiserView = Omit<
+  Advertiser_Firestore,
+  "conquests" | "offers" | "userID"
+>;
+export const advertiserPublicView = async (
+  advertiserID: AdvertiserID
+): Promise<PublicAdvertiserView | undefined> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+  const adv = advertiserSnapshot.data();
+
+  if (!advertiserSnapshot.exists || !adv) {
+    return undefined;
+  } else {
+    return {
+      id: adv.id,
+      name: adv.name,
+      description: adv.description,
+    };
+  }
+};
+
+export const listConquests = async (
+  advertiserID: AdvertiserID
+): Promise<Conquest_Firestore[] | undefined> => {
+  const conquestsRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID)
+    .collection(Collection.Conquest)
+    .where("advertiserID", "==", advertiserID)
+    .orderBy("timestamps.createdAt", "desc") as Query<Conquest_Firestore>;
+
+  const conquests = await conquestsRef.get();
+
+  if (conquests.empty) {
+    return [];
+  } else {
+    return conquests.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        image: data.image,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        advertiserID: data.advertiserID,
+        status: data.status,
+        spentBudget: data.spentBudget,
+        maxBudget: data.maxBudget,
+        currency: data.currency,
+        tournaments: data.tournaments,
+        createdBy: data.createdBy,
+      };
+    });
+  }
+};
+
+export const getConquest = async (
+  advertiserID: AdvertiserID,
+  conquestID: ConquestID
+): Promise<
+  ConquestWithTournaments_ReplaceMeWithGQLGeneratedTypes | undefined
+> => {
+  const placeholderImageTournament =
+    "https://media.istockphoto.com/vectors/thumbnail-image-vector-graphic-vector-id1147544807?k=20&m=1147544807&s=612x612&w=0&h=pBhz1dkwsCMq37Udtp9sfxbjaMl27JUapoyYpQm0anc=";
+  const conquestRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID)
+    .collection(Collection.Conquest)
+    .doc(conquestID) as DocumentReference<Conquest_Firestore>;
+
+  const conquestSnapshot = await conquestRef.get();
+  const conquestData = conquestSnapshot.data();
+  if (!conquestSnapshot.exists || !conquestData) return undefined;
+
+  const tournamentsRef = db
+    .collection(Collection.Tournament)
+    .where("id", "in", conquestData.tournaments) as Query<Tournament>;
+
+  const tournamentSnapshot = await tournamentsRef.get();
+
+  if (tournamentSnapshot.empty) {
+    return {
+      conquest: conquestData,
+      tournaments: [] as TournamentPreviewInConquest[],
+    };
+  }
+  const tournamentsPreviewInConquest = tournamentSnapshot.docs.map((doc) => {
+    const data = doc.data();
+    const preview: TournamentPreviewInConquest = {
+      id: doc.id as TournamentID,
+      title: data.title,
+      coverPhoto: data.coverPhoto || placeholderImageTournament,
+    };
+    return preview;
+  });
+  return {
+    conquest: conquestData,
+    tournaments: tournamentsPreviewInConquest,
+  };
+};
+
 // export const firestoreCreation = async (
 //   userID: UserID
 // ): Promise<"___Schema"> => {
@@ -159,4 +291,36 @@ export const updateConquest = async (
 //   } else {
 //     return ____Snapshot.data();
 //   }
+// };
+
+// export const firestoreList = async(
+//   id: SomeID
+// ): Promise<___Schema | undefined> => {
+//   const ___Ref = db
+//     .collection(Collection.___)
+//     .doc(parentID)
+//     .collection(Collection.___)
+//     .where("creatorId", "==", userId)
+//     .orderBy("timestamps.createdAt", "desc") as Query<___Schema>;
+
+//     const __collectionItems = await ___Ref.get();
+
+//     if (__collectionItems.empty) {
+//       return [];
+//     } else {
+//       return __collectionItems.docs.map((doc) => {
+//         const data = doc.data();
+//         return {
+//           id: doc.id,
+//           somevar: data.somevar,
+//           timestamps: {
+//             createdAt: data.timestamps.createdAt,
+//             updatedAt: data.timestamps.updatedAt,
+//             ...(data.timestamps.deletedAt && {
+//               deletedAt: data.timestamps.deletedAt,
+//             }),
+//           },
+//         };
+//       });
+//     }
 // };

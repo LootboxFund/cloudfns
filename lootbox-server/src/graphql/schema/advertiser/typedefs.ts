@@ -76,7 +76,7 @@ const AdvertiserTypeDefs = gql`
     # For advertiser to see a specific campaign (conquest page)
     getConquest(conquestID: ID!): GetConquestResponse!
     # For an advertiser to get their spendings report of total offers (analytics page)
-    generateAdvertiserSpendingReport(advertiserID: ID!): GetAdvertiserEarningsReportResponse!
+    # generateAdvertiserSpendingReport(advertiserID: ID!): GetAdvertiserEarningsReportResponse!
   }
 
   input UpgradeToAdvertiserPayload {
