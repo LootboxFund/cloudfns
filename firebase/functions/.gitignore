@@ -9,3 +9,4 @@ typings/
 node_modules/
 
 **/*graphql/generated/types.ts
+.npmrc
