@@ -8,10 +8,15 @@ import LootboxTypeDefs from "./lootbox/typedefs";
 import UserTypeDefs from "./user/typedefs";
 import TournamentTypeDefs from "./tournament/typedefs";
 import AdvertiserTypeDefs from "./advertiser/typedefs";
+import AffiliateTypeDefs from "./affiliate/typedefs";
+import OfferTypeDefs from "./offer/typedefs";
 import ReferralTypeDefs from "./referral/typedefs";
 import LootboxResolvers from "./lootbox/resolvers";
 import UserResolvers from "./user/resolvers";
 import TournamentResolvers from "./tournament/resolvers";
+// import AdvertiserResolvers from "./advertiser/resolvers";
+// import AffilaiteResolvers from "./affiliate/resolvers";
+// import OfferResolvers from "./offer/resolvers";
 import PartyBasketTypeDefs from "./partyBasket/typedefs";
 import PartyBasketResolvers from "./partyBasket/resolvers";
 import ReferralResolvers from "./referral/resolvers";
@@ -27,6 +32,8 @@ const typeDefs = [
   UserTypeDefs,
   TournamentTypeDefs,
   AdvertiserTypeDefs,
+  AffiliateTypeDefs,
+  OfferTypeDefs,
   PartyBasketTypeDefs,
   ReferralTypeDefs,
   AdTypeDefs,
@@ -38,6 +45,9 @@ const resolvers = {
   ...LootboxResolvers,
   ...UserResolvers,
   ...TournamentResolvers,
+  // ...AdvertiserResolvers,
+  // ...AffilaiteResolvers,
+  // ...OfferResolvers,
   ...PartyBasketResolvers,
   ...ReferralResolvers,
   ...AdResolvers,

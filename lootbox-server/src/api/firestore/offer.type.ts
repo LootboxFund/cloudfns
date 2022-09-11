@@ -30,6 +30,16 @@ export interface Offer_Firestore {
   createdByUser: UserID;
 }
 
+export type OfferPreview = Omit<
+  Offer_Firestore,
+  "affiliateBaseLink" | "mmp" | "activations" | "createdByUser"
+>;
+
+export type OfferPreviewForOrganizer = Omit<
+  Offer_Firestore,
+  "affiliateBaseLink" | "mmp" | "activations" | "createdByUser"
+>;
+
 export interface Activation_Firestore {
   id: ActivationID;
   name: string;

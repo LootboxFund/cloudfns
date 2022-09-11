@@ -16,8 +16,10 @@ const CommonTypeDefs = gql`
     Unauthorized
   }
 
-  enum Currency {
-    USD
+  enum AffiliateType {
+    ORGANIZER
+    PROMOTER
+    LOOTBOX
   }
 
   type Status {
