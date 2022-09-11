@@ -26,6 +26,7 @@ import {
 import { Collection } from "./collection.types";
 import { db } from "../firebase";
 import {
+  CollectionGroup,
   DocumentReference,
   DocumentSnapshot,
   FieldValue,
@@ -148,6 +149,7 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     status: req.status,
     type: req.type,
     referralType: req.referralType,
+    whitelistId: null,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -674,4 +676,24 @@ const convertClaimToCsvRow = (
       ? referrer?.wallets[10]?.address || ""
       : "",
   };
+};
+
+export const getUnassignedClaims = async (
+  partyBasketId: PartyBasketID
+): Promise<Claim[]> => {
+  const collectionGroupRef = db
+    .collectionGroup(Collection.Claim)
+    .where("chosenPartyBasketId", "==", partyBasketId)
+    .where("status", "==", ClaimStatus.Complete) as CollectionGroup<Claim>;
+  // .where("whitelistId", "==", null);  // TODO, ad this index. For now we will just filter for backwards compat
+
+  const snapshot = await collectionGroupRef.get();
+
+  if (!snapshot || snapshot.empty) {
+    return [];
+  } else {
+    return snapshot.docs
+      .map((doc) => doc.data())
+      .filter((claim) => !claim.whitelistId); // temporary filter
+  }
 };

@@ -15,6 +15,8 @@ import {
   MutationGetWhitelistSignaturesArgs,
   EditPartyBasketResponse,
   MutationEditPartyBasketArgs,
+  MutationWhitelistAllUnassignedClaimsArgs,
+  Claim,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -27,6 +29,7 @@ import {
   getLootboxByAddress,
   getPartyBasketById,
   editPartyBasket,
+  getUnassignedClaims,
 } from "../../../api/firestore";
 import { getSecret } from "../../../api/secrets";
 import { manifest } from "../../../manifest";
@@ -42,6 +45,7 @@ import { PartyBasketID, WhitelistSignatureID } from "../../../lib/types";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { convertLootboxToSnapshot } from "../../../lib/lootbox";
+import { getWhitelisterPrivateKey } from "../../../lib/secrets";
 
 const PartyBasketResolvers: Resolvers = {
   Query: {
@@ -290,28 +294,9 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
-      const secretConfig = manifest.secretManager.secrets.find(
-        (secret) => secret.name === "PARTY_BASKET_WHITELISTER_PRIVATE_KEY"
-      );
-
-      if (!secretConfig) {
-        console.error(
-          'No secret config found for "PARTY_BASKET_WHITELISTER_PRIVATE_KEY"'
-        );
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: `Secret Not Found`,
-          },
-        };
-      }
-
       let whitelisterPrivateKey: string;
       try {
-        whitelisterPrivateKey = await getSecret(
-          secretConfig.name,
-          secretConfig.version
-        );
+        whitelisterPrivateKey = await getWhitelisterPrivateKey()
       } catch (err) {
         console.error(err);
         return {
@@ -377,6 +362,40 @@ const PartyBasketResolvers: Resolvers = {
             message: err instanceof Error ? err.message : "",
           },
         };
+      }
+    },
+    whitelistAllUnassignedClaims: async (
+      _,
+      { payload }: MutationWhitelistAllUnassignedClaimsArgs,
+      context: Context
+    ): Promise<> => {
+      // User has right access
+
+      // Party basket exists & good to go
+
+      // const claimsWithoutWhitelist = await getUnassignedClaims(
+      //   payload.partyBasketId as PartyBasketID
+      // );
+
+      let whitelisterPrivateKey: string 
+      let claimsWithoutWhitelist: Claim[]
+      try {
+        [whitelisterPrivateKey, claimsWithoutWhitelist] = await Promise.all([getWhitelisterPrivateKey(), getUnassignedClaims(payload.partyBasketId as PartyBasketID)])
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+          }
+        }
+      }
+
+      for (const claim of claimsWithoutWhitelist) {
+        // Generate a whitelist
+        // Save whitelist
+        // Add whitelist ID to the claim object
+        const whitelist = await 
+
+
       }
     },
     redeemSignature: async (
