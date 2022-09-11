@@ -1713,10 +1713,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@^0.1.13":
-  version "0.1.13"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.13.tgz#b86fa3fae869c3381a6a26eccbc71cf52aa2e51d"
-  integrity sha512-SISm6MjHOJdnNldFp8+IrNNoYMaLZNrz0TF03hbDdkK6G4LpvfMkIiRYTZqU9i3gfCupxlVmwRGoMzaPgD3xxw==
+"@wormgraph/helpers@0.1.14-afn-alpha3":
+  version "0.1.14-afn-alpha3"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.14-afn-alpha3.tgz#4d5aa7bd1de7071c3af27a4c45f9760d538523c0"
+  integrity sha512-R9LVZCiBml43VaGWLClkqPc6iN9gNE0pI9eHcVmv8SphK9KdVdXwGWDl4EIVojDo7kffaAYoUqGOKlFgV+l46Q==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"

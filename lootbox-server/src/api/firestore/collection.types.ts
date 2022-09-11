@@ -11,4 +11,8 @@ export enum Collection {
   "Ad" = "ad",
   "Creative" = "creative",
   "AdEvent" = "ad-event",
+  "Offer" = "offer",
+  "Advertiser" = "advertiser",
+  "Affiliate" = "affiliate",
+  "Memo" = "memo",
 }
