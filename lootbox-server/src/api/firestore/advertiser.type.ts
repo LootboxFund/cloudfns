@@ -19,12 +19,14 @@ export interface Conquest_Firestore {
   id: ConquestID;
   title: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
+  image: string;
+  startDate: number;
+  endDate: number;
   advertiserID: AdvertiserID;
   status: ConquestStatus;
   spentBudget: number;
   maxBudget: number;
   currency: Currency;
   tournaments: TournamentID[];
+  createdBy: UserID;
 }

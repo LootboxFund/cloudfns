@@ -1,6 +1,18 @@
 // const isAuthenticated = () => {};
 // const isAclPermitted = () => {};
 
+/**
+ * ------ Questions for Newton ------
+ *
+ * 1. How to deal with dates in firestore?
+ * 2. How to generate my damn graphql types? why arent they generating?
+ * 3. How we define types in firestore? surely not just relying on GQL?
+ * 4. How should we deal with currency?
+ * 5. Why you use use omit in the graphql to firestore payload: Omit<UpdateConquestPayload, "id">
+ *
+ *
+ */
+
 // // Advertiser
 // const AdvertiserResolverComposition = {
 //   "Mutation.UpgradeToAdvertiser": [isAuthenticated()], // creates a company

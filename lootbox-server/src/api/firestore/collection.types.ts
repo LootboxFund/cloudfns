@@ -15,4 +15,5 @@ export enum Collection {
   "Advertiser" = "advertiser",
   "Affiliate" = "affiliate",
   "Memo" = "memo",
+  "Conquest" = "conquest",
 }

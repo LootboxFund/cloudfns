@@ -6,6 +6,7 @@ import {
   AffiliateID,
   AffiliateType,
   MeasurementPartnerType,
+  UserID,
 } from "@wormgraph/helpers";
 import { AdvertiserID, Currency, OfferID, OfferStatus } from "../../lib/types";
 
@@ -26,6 +27,7 @@ export interface Offer_Firestore {
   activations: Activation_Firestore[];
   targetingTags: AdTargetTag[];
   // adSets: AdSet[];
+  createdByUser: UserID;
 }
 
 export interface Activation_Firestore {

@@ -7,6 +7,7 @@ import CommonTypeDefs from "./common/typedefs";
 import LootboxTypeDefs from "./lootbox/typedefs";
 import UserTypeDefs from "./user/typedefs";
 import TournamentTypeDefs from "./tournament/typedefs";
+import AdvertiserTypeDefs from "./advertiser/typedefs";
 import ReferralTypeDefs from "./referral/typedefs";
 import LootboxResolvers from "./lootbox/resolvers";
 import UserResolvers from "./user/resolvers";
@@ -25,6 +26,7 @@ const typeDefs = [
   LootboxTypeDefs,
   UserTypeDefs,
   TournamentTypeDefs,
+  AdvertiserTypeDefs,
   PartyBasketTypeDefs,
   ReferralTypeDefs,
   AdTypeDefs,

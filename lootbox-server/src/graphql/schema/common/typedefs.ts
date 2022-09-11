@@ -16,6 +16,10 @@ const CommonTypeDefs = gql`
     Unauthorized
   }
 
+  enum Currency {
+    USD
+  }
+
   type Status {
     code: StatusCode!
     message: String!
