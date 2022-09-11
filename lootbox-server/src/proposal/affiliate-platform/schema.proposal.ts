@@ -87,7 +87,7 @@ enum Currency {
 interface Affiliate {
   id: AffiliateID;
   name: string;
-  tier: OrganizerTier;
+  tier?: OrganizerTier;
   risk: AffiliateRisk;
   resourceID: AclResourceID;
   permissions?: {
@@ -170,11 +170,6 @@ enum AffiliateType {
   ORGANIZER = "ORGANIZER",
   PROMOTER = "PROMOTER",
   LOOTBOX = "LOOTBOX",
-}
-
-interface Affiliate {
-  id: AffiliateID;
-  type: AffiliateType;
 }
 
 /**
@@ -403,11 +398,11 @@ enum PlacementType {
   TICKET_CAROUSEL = "TICKET_CAROUSEL",
 }
 
-type AdSetsID = string & { readonly _: unique symbol };
+type AdSetID = string & { readonly _: unique symbol };
 interface AdSet {
-  id: AdSetsID;
+  id: AdSetID;
   offerID: OfferID;
-  placement: PlacementType;
+  placementType: PlacementType;
   ads: Ad[];
 }
 type CreativeID = string & { readonly _: unique symbol };
@@ -651,7 +646,7 @@ const Mock_OrganizerTier = {
   percentage: 0.5,
 };
 
-const Mock_Organizer: Organizer = {
+const Mock_Affiliate_Organizer: Affiliate = {
   id: Mock_OrganizerID,
   name: "Mock_Organizer",
   tier: Mock_OrganizerTier,
@@ -659,26 +654,11 @@ const Mock_Organizer: Organizer = {
   resourceID: "Mock_Organizer" as AclResourceID,
 };
 
-const Mock_Promoter: Promoter = {
+const Mock_Affiliate_Promoter: Affiliate = {
   id: Mock_PromoterID,
   name: "Mock_Promoter",
   risk: Mock_AffiliateRisk_Promoter,
   resourceID: "Mock_Promoter" as AclResourceID,
-};
-
-const Mock_Affiliate_Lootbox: Affiliate = {
-  id: Mock_AffiliateID_Lootbox,
-  type: AffiliateType.LOOTBOX,
-};
-
-const Mock_Affiliate_Organizer: Affiliate = {
-  id: Mock_AffiliateID_Organizer,
-  type: AffiliateType.ORGANIZER,
-};
-
-const Mock_Affiliate_Promoter: Affiliate = {
-  id: Mock_AffiliateID_Promoter,
-  type: AffiliateType.PROMOTER,
 };
 
 const Mock_ActivationID = "Mock_ActivationID" as ActivationID;
@@ -853,21 +833,26 @@ const Mock_AdTargetTag_PCGAMER: AdTargetTag = {
   type: AdTargetTagType.INTEREST,
 };
 
-const Mock_PlacementConfigID = "Mock_PlacementConfigID" as PlacementConfigID;
-const Mock_Mock_MediaSetID = "Mock_Mock_MediaSetID" as MediaSetID;
-const Mock_MediaSet: MediaSet = {
-  id: Mock_Mock_MediaSetID,
+const Mock_CreativeID = "Mock_CreativeID" as CreativeID;
+const Mock_Creative: Creative = {
+  id: Mock_CreativeID,
+  title: "Mock_Creative_title",
+  mediaURL: "Mock_CreativeID mediaURL",
+};
+const Mock_Ad: Ad = {
+  id: Mock_AdID,
   title: "Mock_Mock_MediaSetID title",
   description: "Mock_Mock_MediaSetID description",
-  mediaURL: "string",
+  creative: Mock_Creative,
   callToAction: "string",
   callToActionURL: "string", // should be affiliate link
 };
-const Mock_PlacementConfig: PlacementConfig = {
-  id: Mock_PlacementConfigID,
+const Mock_AdSetID = "Mock_AdSetID" as AdSetID;
+const Mock_AdSet: AdSet = {
+  id: Mock_AdSetID,
   offerID: Mock_OfferID,
-  placement: Placement.AFTER_TICKET_CLAIM_VIDEO,
-  mediaset: Mock_MediaSet,
+  placementType: PlacementType.AFTER_TICKET_CLAIM,
+  ads: [Mock_Ad],
 };
 
 const Mock_Offer: Offer = {
@@ -885,10 +870,10 @@ const Mock_Offer: Offer = {
   affiliateBaseLink: Mock_AffiliateBaseLinkID,
   mmp: MeasurementPartnerType.APPSFLYER,
   activations: [Mock_Activation],
-  tags: [Mock_AdTargetTag_PCGAMER],
+  targetingTags: [Mock_AdTargetTag_PCGAMER],
   tiers: [OrganizerTierEnum.BRONZE],
   risks: [AffiliateRiskEnum.LOW_RISK],
-  placements: [Mock_PlacementConfig],
+  adSets: [Mock_AdSet],
   resourceID: "Mock_Offer" as AclResourceID,
 };
 
@@ -902,28 +887,24 @@ const Mock_Advertiser: Advertiser = {
   resourceID: "Mock_AdvertiserID" as AclResourceID,
 };
 
-const Mock_OfferTournamentPlacementConfigID =
-  "Mock_OfferTournamentPlacementConfigID" as OfferTournamentPlacementConfigID;
-const Mock_OfferTournamentPlacementConfig: OfferTournamentPlacementConfig = {
-  id: Mock_OfferTournamentPlacementConfigID,
-  offerID: Mock_OfferID,
-  advertiserID: Mock_AdvertiserID,
-  placements: [Mock_PlacementConfig],
-};
-
 const Mock_Tournament: Tournament = {
   id: Mock_TournamentID,
   name: "Mock_Tournament",
   organizer: Mock_OrganizerID,
   promoters: [Mock_PromoterID],
   advertisers: [Mock_AdvertiserID],
-  offerConfigs: [Mock_OfferTournamentPlacementConfig],
+  offers: {
+    [Mock_OfferID]: {
+      id: Mock_OfferID,
+      rateCards: [
+        Mock_AffiliateRateCard_Organizer,
+        Mock_AffiliateRateCard_Promoter,
+      ],
+      adSets: [Mock_AdSet],
+    },
+  },
   description: "Mock_Tournament Description",
   datestart: new Date(),
   dateend: new Date(),
-  rateCards: [
-    Mock_AffiliateRateCard_Organizer,
-    Mock_AffiliateRateCard_Promoter,
-  ],
   resourceID: "Mock_Tournament" as AclResourceID,
 };
