@@ -1441,6 +1441,29 @@
     undici "^5.8.0"
     web-streams-polyfill "^3.2.0"
 
+"@wormgraph/helpers@0.1.10":
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.10.tgz#bffab826dab34f22e1eecdfa1f9a41e829688305"
+  integrity sha512-ZqQjd8495/R6/Jz/CXNb5wVCzCqTFF2lMD3LUvwP0lg62Gr0hh/xWdfoStRWViZLZN7sSU9Dta6XNMYMVaEKww==
+  dependencies:
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@wormgraph/helpers@0.1.13":
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.13.tgz#b86fa3fae869c3381a6a26eccbc71cf52aa2e51d"
+  integrity sha512-SISm6MjHOJdnNldFp8+IrNNoYMaLZNrz0TF03hbDdkK6G4LpvfMkIiRYTZqU9i3gfCupxlVmwRGoMzaPgD3xxw==
+  dependencies:
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@wormgraph/manifest@0.3.127":
+  version "0.3.127"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.127.tgz#baf7a1bbafa660a53dd015cc001b24c61726049e"
+  integrity sha512-M4iqvHrmbx4zzu/49zlkX+00GzykPETC68J9Sidx/yGWWo5i5ITrp7D8wwphd9Q7HpGom6+yWsZwUpgkhB9rvQ==
+  dependencies:
+    "@wormgraph/helpers" "0.1.10"
+
 abort-controller@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/abort-controller/-/abort-controller-3.0.0.tgz#eaf54d53b62bae4138e809ca225c8439a6efb392"
@@ -1611,6 +1634,13 @@ auto-bind@~4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/auto-bind/-/auto-bind-4.0.0.tgz#e3589fc6c2da8f7ca43ba9f84fa52a744fc997fb"
   integrity sha512-Hdw8qdNiqdJ8LqT0iK0sVzkFbzg6fhnQqqfWhBDxcHZvU75+B+ayzTy8x+k5Ix0Y92XOhOUlx74ps+bA6BeYMQ==
+
+axios@0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.25.0.tgz#349cfbb31331a9b4453190791760a8d35b093e0a"
+  integrity sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==
+  dependencies:
+    follow-redirects "^1.14.7"
 
 babel-plugin-dynamic-import-node@^2.3.3:
   version "2.3.3"
@@ -2756,6 +2786,11 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
+follow-redirects@^1.14.7:
+  version "1.15.1"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.1.tgz#0ca6a452306c9b276e4d3127483e29575e207ad5"
+  integrity sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==
+
 form-data-encoder@^1.7.1:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/form-data-encoder/-/form-data-encoder-1.7.2.tgz#1f1ae3dccf58ed4690b86d87e4f57c654fbab040"
@@ -3651,7 +3686,7 @@ lodash.once@^4.0.0:
   resolved "https://registry.yarnpkg.com/lodash.once/-/lodash.once-4.1.1.tgz#0dd3971213c7c56df880977d504c88fb471a97ac"
   integrity sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==
 
-lodash@^4.17.14, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.5, lodash@~4.17.0:
+lodash@4.17.21, lodash@^4.17.14, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.5, lodash@~4.17.0:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==

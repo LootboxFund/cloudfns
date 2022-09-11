@@ -8,4 +8,7 @@ export enum Collection {
   "Stream" = "stream",
   "Referral" = "referral",
   "Claim" = "claim",
+  "Ad" = "ad",
+  "Creative" = "creative",
+  "AdEvent" = "ad-event",
 }

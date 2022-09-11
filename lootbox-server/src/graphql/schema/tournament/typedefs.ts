@@ -56,6 +56,7 @@ const TournamentTypeDefs = gql`
     coverPhoto: String
     communityURL: String
     streams: [Stream!]
+    affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
   }
 
   type Stream {
