@@ -1,5 +1,14 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { Resolvers } from "../../generated/types";
+import { upgradeToAdvertiser } from "../../../api/firestore/advertiser";
+import { UserID } from "../../../lib/types";
+import {
+  Advertiser,
+  MutationUpgradeToAdvertiserArgs,
+  Resolvers,
+  StatusCode,
+  UpgradeToAdvertiserResponse,
+} from "../../generated/types";
+import { Context } from "../../server";
 
 const AdvertiserResolvers: Resolvers = {
   Query: {
@@ -68,7 +77,56 @@ const AdvertiserResolvers: Resolvers = {
     //   }
     // },
   },
-  Mutation: {},
+  Mutation: {
+    upgradeToAdvertiser: async (
+      _,
+      { payload }: MutationUpgradeToAdvertiserArgs,
+      context: Context
+    ): Promise<UpgradeToAdvertiserResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      try {
+        const advertiser = await upgradeToAdvertiser(payload.userID as UserID);
+        if (!advertiser) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No advertiser created`,
+            },
+          };
+        }
+        const advertiserGQL = advertiser as unknown as Advertiser;
+        return { advertiser: advertiserGQL };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+  },
+
+  UpgradeToAdvertiserResponse: {
+    __resolveType: (obj: UpgradeToAdvertiserResponse) => {
+      if ("id" in obj) {
+        return "UpgradeToAdvertiserResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 
   // AdvertiserAdminViewResponse: {
   //   __resolveType: (obj: AdvertiserAdminViewResponse) => {
@@ -120,7 +178,9 @@ const AdvertiserResolvers: Resolvers = {
   // },
 };
 
-const advertiserComposition = {};
+const advertiserComposition = {
+  "Mutation.upgradeToAdvertiser": [],
+};
 
 const resolvers = composeResolvers(AdvertiserResolvers, advertiserComposition);
 

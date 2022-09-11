@@ -1,43 +1,43 @@
-// import { DocumentReference, Query } from "firebase-admin/firestore";
-// import { User, Tournament } from "../../graphql/generated/types";
-// import { AdvertiserID, UserID } from "../../lib/types";
-// import { db } from "../firebase";
-// import {
-//   Advertiser_Firestore,
-//   ConquestWithTournaments_ReplaceMeWithGQLGeneratedTypes,
-//   Conquest_Firestore,
-//   TournamentPreviewInConquest,
-// } from "./advertiser.type";
-// import { Collection } from "./collection.types";
-// import {
-//   ConquestID,
-//   ConquestStatus,
-//   Currency,
-//   TournamentID,
-// } from "@wormgraph/helpers";
+import { DocumentReference, Query } from "firebase-admin/firestore";
+import { User, Tournament } from "../../graphql/generated/types";
+import { AdvertiserID, UserID } from "../../lib/types";
+import { db } from "../firebase";
+import {
+  Advertiser_Firestore,
+  ConquestWithTournaments_ReplaceMeWithGQLGeneratedTypes,
+  Conquest_Firestore,
+  TournamentPreviewInConquest,
+} from "./advertiser.type";
+import { Collection } from "./collection.types";
+import {
+  ConquestID,
+  ConquestStatus,
+  Currency,
+  TournamentID,
+} from "@wormgraph/helpers";
 
-// export const upgradeToAdvertiser = async (
-//   userID: UserID
-// ): Promise<Advertiser_Firestore | undefined> => {
-//   const userRef = db
-//     .collection(Collection.User)
-//     .doc(userID) as DocumentReference<User>;
-//   const userSnapshot = await userRef.get();
-//   const user = userSnapshot.data() as User;
-//   const advertiserRef = db
-//     .collection(Collection.Advertiser)
-//     .doc() as DocumentReference<Advertiser_Firestore>;
-//   const advertiser: Advertiser_Firestore = {
-//     id: advertiserRef.id as AdvertiserID,
-//     userID: userID,
-//     name: user.username || `New Advertiser ${advertiserRef.id}`,
-//     description: ``,
-//     offers: [],
-//     conquests: [],
-//   };
-//   await advertiserRef.set(advertiser);
-//   return advertiser;
-// };
+export const upgradeToAdvertiser = async (
+  userID: UserID
+): Promise<Advertiser_Firestore | undefined> => {
+  const userRef = db
+    .collection(Collection.User)
+    .doc(userID) as DocumentReference<User>;
+  const userSnapshot = await userRef.get();
+  const user = userSnapshot.data() as User;
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc() as DocumentReference<Advertiser_Firestore>;
+  const advertiser: Advertiser_Firestore = {
+    id: advertiserRef.id as AdvertiserID,
+    userID: userID,
+    name: user.username || `New Advertiser ${advertiserRef.id}`,
+    description: ``,
+    offers: [],
+    conquests: [],
+  };
+  await advertiserRef.set(advertiser);
+  return advertiser;
+};
 
 // export const createConquest = async (
 //   title: string,
@@ -233,94 +233,94 @@
 //   };
 // };
 
-// // export const firestoreCreation = async (
-// //   userID: UserID
-// // ): Promise<"___Schema"> => {
-// //   const userRef = db
-// //     .collection(Collection.User)
-// //     .doc(userID) as DocumentReference<User>;
-// //   const userSnapshot = await userRef.get();
-// //   const user = userSnapshot.data() as User;
-// //   const ____Ref = db
-// //     .collection(Collection._____)
-// //     .doc()
-// //     .collection(Collection._____)
-// //     .doc() as DocumentReference<___Schema>;
-// // const ___createdObjectOfSchema: ___Schema = {
-// //     id:____Ref.id as ____ID,
-// //   };
-// //   await ____Ref.set(___createdObjectOfSchema);
-// //   return ___createdObjectOfSchema;
-// // };
+// export const firestoreCreation = async (
+//   userID: UserID
+// ): Promise<"___Schema"> => {
+//   const userRef = db
+//     .collection(Collection.User)
+//     .doc(userID) as DocumentReference<User>;
+//   const userSnapshot = await userRef.get();
+//   const user = userSnapshot.data() as User;
+//   const ____Ref = db
+//     .collection(Collection._____)
+//     .doc()
+//     .collection(Collection._____)
+//     .doc() as DocumentReference<___Schema>;
+// const ___createdObjectOfSchema: ___Schema = {
+//     id:____Ref.id as ____ID,
+//   };
+//   await ____Ref.set(___createdObjectOfSchema);
+//   return ___createdObjectOfSchema;
+// };
 
-// // export const firestoreUpdate = async (
-// //   id: SomeID,
-// //   payload: Omit<SomeGraphQLPayload, "___someVar">
-// // ): Promise<"___Schema"> => {
-// //   if (Object.keys(payload).length === 0) {
-// //     throw new Error("No data provided");
-// //   }
-// //   const ____Ref = db
-// //     .collection(Collection._____)
-// //     .doc(parentID)
-// //     .collection(Collection._____)
-// //     .doc(someID) as DocumentReference<___Schema>;
-// //   const updatePayload: Partial<___Schema> = {};
-// //   // repeat
-// //   if (payload.__somevar != undefined) {
-// //     updatePayload.__somevar = payload.__somevar;
-// //   }
-// //   // until done
-// //   await ____Ref.update(updatePayload);
-// //   return (await ____Ref.get()).data() as ___Schema;
-// // };
+// export const firestoreUpdate = async (
+//   id: SomeID,
+//   payload: Omit<SomeGraphQLPayload, "___someVar">
+// ): Promise<"___Schema"> => {
+//   if (Object.keys(payload).length === 0) {
+//     throw new Error("No data provided");
+//   }
+//   const ____Ref = db
+//     .collection(Collection._____)
+//     .doc(parentID)
+//     .collection(Collection._____)
+//     .doc(someID) as DocumentReference<___Schema>;
+//   const updatePayload: Partial<___Schema> = {};
+//   // repeat
+//   if (payload.__somevar != undefined) {
+//     updatePayload.__somevar = payload.__somevar;
+//   }
+//   // until done
+//   await ____Ref.update(updatePayload);
+//   return (await ____Ref.get()).data() as ___Schema;
+// };
 
-// // export const firestoreGet = async(
-// //   id: SomeID
-// // ): Promise<___Schema | undefined> => {
-// //   const ___Ref = db
-// //     .collection(Collection.___)
-// //     .doc(parentID)
-// //     .collection(Collection.___)
-// //     .doc(id) as DocumentReference<___Schema>;
+// export const firestoreGet = async(
+//   id: SomeID
+// ): Promise<___Schema | undefined> => {
+//   const ___Ref = db
+//     .collection(Collection.___)
+//     .doc(parentID)
+//     .collection(Collection.___)
+//     .doc(id) as DocumentReference<___Schema>;
 
-// //   const ____Snapshot = await ___Ref.get();
+//   const ____Snapshot = await ___Ref.get();
 
-// //   if (!____Snapshot.exists) {
-// //     return undefined;
-// //   } else {
-// //     return ____Snapshot.data();
-// //   }
-// // };
+//   if (!____Snapshot.exists) {
+//     return undefined;
+//   } else {
+//     return ____Snapshot.data();
+//   }
+// };
 
-// // export const firestoreList = async(
-// //   id: SomeID
-// // ): Promise<___Schema | undefined> => {
-// //   const ___Ref = db
-// //     .collection(Collection.___)
-// //     .doc(parentID)
-// //     .collection(Collection.___)
-// //     .where("creatorId", "==", userId)
-// //     .orderBy("timestamps.createdAt", "desc") as Query<___Schema>;
+// export const firestoreList = async(
+//   id: SomeID
+// ): Promise<___Schema | undefined> => {
+//   const ___Ref = db
+//     .collection(Collection.___)
+//     .doc(parentID)
+//     .collection(Collection.___)
+//     .where("creatorId", "==", userId)
+//     .orderBy("timestamps.createdAt", "desc") as Query<___Schema>;
 
-// //     const __collectionItems = await ___Ref.get();
+//     const __collectionItems = await ___Ref.get();
 
-// //     if (__collectionItems.empty) {
-// //       return [];
-// //     } else {
-// //       return __collectionItems.docs.map((doc) => {
-// //         const data = doc.data();
-// //         return {
-// //           id: doc.id,
-// //           somevar: data.somevar,
-// //           timestamps: {
-// //             createdAt: data.timestamps.createdAt,
-// //             updatedAt: data.timestamps.updatedAt,
-// //             ...(data.timestamps.deletedAt && {
-// //               deletedAt: data.timestamps.deletedAt,
-// //             }),
-// //           },
-// //         };
-// //       });
-// //     }
-// // };
+//     if (__collectionItems.empty) {
+//       return [];
+//     } else {
+//       return __collectionItems.docs.map((doc) => {
+//         const data = doc.data();
+//         return {
+//           id: doc.id,
+//           somevar: data.somevar,
+//           timestamps: {
+//             createdAt: data.timestamps.createdAt,
+//             updatedAt: data.timestamps.updatedAt,
+//             ...(data.timestamps.deletedAt && {
+//               deletedAt: data.timestamps.deletedAt,
+//             }),
+//           },
+//         };
+//       });
+//     }
+// };

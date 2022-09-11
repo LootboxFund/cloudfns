@@ -15,18 +15,29 @@ const AdvertiserTypeDefs = gql`
     ARCHIVED
   }
 
+  type Advertiser {
+    id: ID!
+    userID: ID!
+    name: String
+    description: String
+    offers: [ID!]!
+    conquests: [Conquest!]!
+  }
+
   type Conquest {
     id: ID!
     title: String!
     description: String
+    image: String
     startDate: Timestamp
     endDate: Timestamp
     advertiserID: ID!
-    status: ConquestStatus
+    status: ConquestStatus!
     spentBudget: Float
     maxBudget: Float
 
     tournaments: [ID!]!
+    createdBy: ID
   }
 
   type AdvertiserPublicViewResponseSuccess {
@@ -65,7 +76,7 @@ const AdvertiserTypeDefs = gql`
 
   #extend type Query {
   # For advertiser to see their own private profile
-  #advertiserAdminView(advertiserId: ID!): AdvertiserAdminViewResponse!
+  # advertiserAdminView(advertiserId: ID!): AdvertiserAdminViewResponse!
   # For affiliate to see public profile of an advertiser
   #advertiserPublicView(advertiserId: ID!): AdvertiserPublicViewResponse!
   # For advertiser to see their tournament campaigns (conquests list page)
@@ -73,11 +84,7 @@ const AdvertiserTypeDefs = gql`
   # For advertiser to see a specific campaign (conquest page)
   #getConquest(conquestID: ID!): GetConquestResponse!
   # For an advertiser to get their spendings report of total offers (analytics page)
-  # generateAdvertiserSpendingReport(advertiserID: ID!): GetAdvertiserEarningsReportResponse!
-  #}
-
-  #input UpgradeToAdvertiserPayload {
-  #  userID: ID!
+  #generateAdvertiserSpendingReport(advertiserID: ID!): GetAdvertiserEarningsReportResponse!
   #}
 
   #input CreateConquestPayload {
@@ -95,16 +102,26 @@ const AdvertiserTypeDefs = gql`
   #  maxBudget: Float
   #}
 
-  #extend type Mutation {
-  # Upgrade a regular user and give them an advertiser account
-  #upgradeToAdvertiser(
-  #  payload: UpgradeToAdvertiserPayload!
-  #): UpgradeToAdvertiserResponse!
-  # Create a new tournament campaign (conquest)
-  #createConquest(payload: CreateConquestPayload!): CreateConquestResponse!
-  # Update a tournament campaign (conquest)
-  #updateConquest(payload: UpdateConquestPayload!): UpdateConquestResponse!
-  #}
+  input UpgradeToAdvertiserPayload {
+    userID: ID!
+  }
+  type UpgradeToAdvertiserResponseSuccess {
+    advertiser: Advertiser
+  }
+  union UpgradeToAdvertiserResponse =
+      UpgradeToAdvertiserResponseSuccess
+    | ResponseError
+
+  extend type Mutation {
+    # Upgrade a regular user and give them an advertiser account
+    upgradeToAdvertiser(
+      payload: UpgradeToAdvertiserPayload!
+    ): UpgradeToAdvertiserResponse!
+    # Create a new tournament campaign (conquest)
+    #createConquest(payload: CreateConquestPayload!): CreateConquestResponse!
+    # Update a tournament campaign (conquest)
+    #updateConquest(payload: UpdateConquestPayload!): UpdateConquestResponse!
+  }
 `;
 
 export default AdvertiserTypeDefs;
