@@ -19,17 +19,7 @@ import {
   EditStreamPayload,
   StreamType,
 } from "../../graphql/generated/types";
-import {
-  UserID,
-  UserIdpID,
-  TournamentID,
-  StreamID,
-  AffiliateID,
-  AdvertiserID,
-  OfferID,
-} from "../../lib/types";
-import { ActivationPricing_Firestore } from "./offer.type";
-import { AffiliateType, Currency, RateCardID } from "@wormgraph/helpers";
+import { UserID, UserIdpID, TournamentID, StreamID } from "../../lib/types";
 
 export const getTournamentById = async (
   id: TournamentID
@@ -444,38 +434,3 @@ export const paginateBattleFeedQuery = async (
     };
   }
 };
-
-export interface Tournament_Firestore {
-  id: TournamentID;
-  title: string;
-  description: string;
-  magicLink: string;
-  datestart: Date;
-  dateend: Date;
-  prize: string;
-  tournamentLink: string;
-  tournamentDate: Date;
-  organizer: AffiliateID;
-  promoters: AffiliateID[];
-  advertisers: AdvertiserID[];
-  offers: {
-    [key: OfferID]: {
-      id: OfferID;
-      rateCards: AffiliateRateCard_Firestore[];
-      // adSets: AdSet[];
-    };
-  };
-}
-
-export interface AffiliateRateCard_Firestore {
-  id: RateCardID;
-  name: string;
-  advertiserID: AdvertiserID;
-  activations: ActivationPricing_Firestore[];
-  affiliateID: AffiliateID;
-  affiliateType: AffiliateType;
-  tournamentID?: TournamentID;
-  organizerID?: AffiliateID;
-  promoterID?: AffiliateID;
-  // currency: Currency;
-}
