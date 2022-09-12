@@ -684,17 +684,15 @@ export const getUnassignedClaims = async (
   const collectionGroupRef = db
     .collectionGroup(Collection.Claim)
     .where("chosenPartyBasketId", "==", partyBasketId)
-    .where("status", "==", ClaimStatus.Complete) as CollectionGroup<Claim>;
-  // .where("whitelistId", "==", null);  // TODO, ad this index. For now we will just filter for backwards compat
+    .where("status", "==", ClaimStatus.Complete)
+    .where("whitelistId", "==", null) as CollectionGroup<Claim>;
 
   const snapshot = await collectionGroupRef.get();
 
   if (!snapshot || snapshot.empty) {
     return [];
   } else {
-    return snapshot.docs
-      .map((doc) => doc.data())
-      .filter((claim) => !claim.whitelistId); // temporary filter
+    return snapshot.docs.map((doc) => doc.data());
   }
 };
 
