@@ -1,5 +1,9 @@
 import { DocumentReference, Query } from "firebase-admin/firestore";
-import { User, Tournament } from "../../graphql/generated/types";
+import {
+  User,
+  Tournament,
+  UpdateAdvertiserDetailsPayload,
+} from "../../graphql/generated/types";
 import { AdvertiserID, UserID } from "../../lib/types";
 import { db } from "../firebase";
 import {
@@ -19,6 +23,15 @@ import {
 export const upgradeToAdvertiser = async (
   userID: UserID
 ): Promise<Advertiser_Firestore | undefined> => {
+  const existingAdvertiserRef = db
+    .collection(Collection.Advertiser)
+    .where("userID", "==", userID);
+  const existingAdvertisers = await existingAdvertiserRef.get();
+  if (!existingAdvertisers.empty) {
+    const exad = existingAdvertisers.docs.map((doc) => doc.data())[0];
+    throw Error(`User is already an advertiser ${exad.id}`);
+  }
+
   const userRef = db
     .collection(Collection.User)
     .doc(userID) as DocumentReference<User>;
@@ -37,6 +50,29 @@ export const upgradeToAdvertiser = async (
   };
   await advertiserRef.set(advertiser);
   return advertiser;
+};
+
+export const updateAdvertiserDetails = async (
+  advertiserID: AdvertiserID,
+  payload: Omit<UpdateAdvertiserDetailsPayload, "___someVar">
+): Promise<Advertiser_Firestore> => {
+  if (Object.keys(payload).length === 0) {
+    throw new Error("No data provided");
+  }
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+  const updatePayload: Partial<Advertiser_Firestore> = {};
+  // repeat
+  if (payload.name != undefined) {
+    updatePayload.name = payload.name;
+  }
+  if (payload.description != undefined) {
+    updatePayload.description = payload.description;
+  }
+  // until done
+  await advertiserRef.update(updatePayload);
+  return (await advertiserRef.get()).data() as Advertiser_Firestore;
 };
 
 // export const createConquest = async (
@@ -111,46 +147,46 @@ export const upgradeToAdvertiser = async (
 //   return (await conquestRef.get()).data() as Conquest_Firestore;
 // };
 
-// export const advertiserAdminView = async (
-//   advertiserID: AdvertiserID
-// ): Promise<Advertiser_Firestore | undefined> => {
-//   const advertiserRef = db
-//     .collection(Collection.Advertiser)
-//     .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+export const advertiserAdminView = async (
+  advertiserID: AdvertiserID
+): Promise<Advertiser_Firestore | undefined> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
 
-//   const advertiserSnapshot = await advertiserRef.get();
+  const advertiserSnapshot = await advertiserRef.get();
 
-//   if (!advertiserSnapshot.exists) {
-//     return undefined;
-//   } else {
-//     return advertiserSnapshot.data();
-//   }
-// };
+  if (!advertiserSnapshot.exists) {
+    return undefined;
+  } else {
+    return advertiserSnapshot.data();
+  }
+};
 
-// type PublicAdvertiserView = Omit<
-//   Advertiser_Firestore,
-//   "conquests" | "offers" | "userID"
-// >;
-// export const advertiserPublicView = async (
-//   advertiserID: AdvertiserID
-// ): Promise<PublicAdvertiserView | undefined> => {
-//   const advertiserRef = db
-//     .collection(Collection.Advertiser)
-//     .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+type PublicAdvertiserView = Omit<
+  Advertiser_Firestore,
+  "conquests" | "offers" | "userID"
+>;
+export const advertiserPublicView = async (
+  advertiserID: AdvertiserID
+): Promise<PublicAdvertiserView | undefined> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
 
-//   const advertiserSnapshot = await advertiserRef.get();
-//   const adv = advertiserSnapshot.data();
+  const advertiserSnapshot = await advertiserRef.get();
+  const adv = advertiserSnapshot.data();
 
-//   if (!advertiserSnapshot.exists || !adv) {
-//     return undefined;
-//   } else {
-//     return {
-//       id: adv.id,
-//       name: adv.name,
-//       description: adv.description,
-//     };
-//   }
-// };
+  if (!advertiserSnapshot.exists || !adv) {
+    return undefined;
+  } else {
+    return {
+      id: adv.id,
+      name: adv.name,
+      description: adv.description,
+    };
+  }
+};
 
 // export const listConquests = async (
 //   advertiserID: AdvertiserID
@@ -231,96 +267,4 @@ export const upgradeToAdvertiser = async (
 //     conquest: conquestData,
 //     tournaments: tournamentsPreviewInConquest,
 //   };
-// };
-
-// export const firestoreCreation = async (
-//   userID: UserID
-// ): Promise<"___Schema"> => {
-//   const userRef = db
-//     .collection(Collection.User)
-//     .doc(userID) as DocumentReference<User>;
-//   const userSnapshot = await userRef.get();
-//   const user = userSnapshot.data() as User;
-//   const ____Ref = db
-//     .collection(Collection._____)
-//     .doc()
-//     .collection(Collection._____)
-//     .doc() as DocumentReference<___Schema>;
-// const ___createdObjectOfSchema: ___Schema = {
-//     id:____Ref.id as ____ID,
-//   };
-//   await ____Ref.set(___createdObjectOfSchema);
-//   return ___createdObjectOfSchema;
-// };
-
-// export const firestoreUpdate = async (
-//   id: SomeID,
-//   payload: Omit<SomeGraphQLPayload, "___someVar">
-// ): Promise<"___Schema"> => {
-//   if (Object.keys(payload).length === 0) {
-//     throw new Error("No data provided");
-//   }
-//   const ____Ref = db
-//     .collection(Collection._____)
-//     .doc(parentID)
-//     .collection(Collection._____)
-//     .doc(someID) as DocumentReference<___Schema>;
-//   const updatePayload: Partial<___Schema> = {};
-//   // repeat
-//   if (payload.__somevar != undefined) {
-//     updatePayload.__somevar = payload.__somevar;
-//   }
-//   // until done
-//   await ____Ref.update(updatePayload);
-//   return (await ____Ref.get()).data() as ___Schema;
-// };
-
-// export const firestoreGet = async(
-//   id: SomeID
-// ): Promise<___Schema | undefined> => {
-//   const ___Ref = db
-//     .collection(Collection.___)
-//     .doc(parentID)
-//     .collection(Collection.___)
-//     .doc(id) as DocumentReference<___Schema>;
-
-//   const ____Snapshot = await ___Ref.get();
-
-//   if (!____Snapshot.exists) {
-//     return undefined;
-//   } else {
-//     return ____Snapshot.data();
-//   }
-// };
-
-// export const firestoreList = async(
-//   id: SomeID
-// ): Promise<___Schema | undefined> => {
-//   const ___Ref = db
-//     .collection(Collection.___)
-//     .doc(parentID)
-//     .collection(Collection.___)
-//     .where("creatorId", "==", userId)
-//     .orderBy("timestamps.createdAt", "desc") as Query<___Schema>;
-
-//     const __collectionItems = await ___Ref.get();
-
-//     if (__collectionItems.empty) {
-//       return [];
-//     } else {
-//       return __collectionItems.docs.map((doc) => {
-//         const data = doc.data();
-//         return {
-//           id: doc.id,
-//           somevar: data.somevar,
-//           timestamps: {
-//             createdAt: data.timestamps.createdAt,
-//             updatedAt: data.timestamps.updatedAt,
-//             ...(data.timestamps.deletedAt && {
-//               deletedAt: data.timestamps.deletedAt,
-//             }),
-//           },
-//         };
-//       });
-//     }
 // };
