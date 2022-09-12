@@ -1,8 +1,13 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
+import { ConquestID } from "@wormgraph/helpers";
 import {
   advertiserAdminView,
   advertiserPublicView,
+  createConquest,
+  getConquest,
+  listConquestPreviews,
   updateAdvertiserDetails,
+  updateConquest,
   upgradeToAdvertiser,
 } from "../../../api/firestore/advertiser";
 import { AdvertiserID, UserID } from "../../../lib/types";
@@ -10,16 +15,26 @@ import {
   Advertiser,
   AdvertiserAdminViewResponse,
   AdvertiserPublicViewResponse,
+  Conquest,
+  CreateConquestResponse,
+  GetConquestResponse,
+  ListConquestPreviewsResponse,
+  MutationCreateConquestArgs,
   MutationUpdateAdvertiserDetailsArgs,
+  MutationUpdateConquestArgs,
   MutationUpgradeToAdvertiserArgs,
   QueryAdvertiserAdminViewArgs,
   QueryAdvertiserPublicViewArgs,
+  QueryGetConquestArgs,
+  QueryListConquestPreviewsArgs,
   Resolvers,
   StatusCode,
   UpdateAdvertiserDetailsResponse,
+  UpdateConquestResponse,
   UpgradeToAdvertiserResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
+import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
 
 const AdvertiserResolvers: Resolvers = {
   Query: {
@@ -81,38 +96,63 @@ const AdvertiserResolvers: Resolvers = {
         };
       }
     },
-    // listConquests: async (
-    //   _,
-    //   args: ListConquestPreviewsArgs
-    // ): Promise<ListConquestPreviewsResponse> => {
-    //   try {
-    //     return {};
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
-    // getConquest: async (
-    //   _,
-    //   args: GetConquestArgs
-    // ): Promise<GetConquestResponse> => {
-    //   try {
-    //     return {};
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
+    listConquestPreviews: async (
+      _,
+      args: QueryListConquestPreviewsArgs
+    ): Promise<ListConquestPreviewsResponse> => {
+      try {
+        const conquest_previews = await listConquestPreviews(
+          args.advertiserID as AdvertiserID
+        );
+        if (!conquest_previews) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not retrieve conquest previews for AdvertiserID ${args.advertiserID}`,
+            },
+          };
+        }
+        return {
+          conquests: conquest_previews,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    getConquest: async (
+      _,
+      args: QueryGetConquestArgs
+    ): Promise<GetConquestResponse> => {
+      try {
+        const conquestWithTournaments = await getConquest(
+          args.advertiserID as AdvertiserID,
+          args.conquestID as ConquestID
+        );
+        if (!conquestWithTournaments) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No conquest ${args.conquestID} found for advertiser ${args.advertiserID}`,
+            },
+          };
+        }
+        return conquestWithTournaments;
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
   Mutation: {
     upgradeToAdvertiser: async (
@@ -186,6 +226,81 @@ const AdvertiserResolvers: Resolvers = {
         };
       }
     },
+    createConquest: async (
+      _,
+      { payload }: MutationCreateConquestArgs,
+      context: Context
+    ): Promise<CreateConquestResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        const conquest = await createConquest(
+          payload.title || "",
+          payload.advertiserID as AdvertiserID
+        );
+        if (!conquest) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No conquest for advertiser ${payload.advertiserID} created`,
+            },
+          };
+        }
+        const conquestGQL = conquest as unknown as Conquest;
+        return { conquest: conquestGQL };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    updateConquest: async (
+      _,
+      { advertiserID, payload }: MutationUpdateConquestArgs,
+      context: Context
+    ): Promise<UpdateConquestResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        const conquest = await updateConquest(
+          payload.id as ConquestID,
+          advertiserID as AdvertiserID,
+          payload
+        );
+        if (!conquest) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No conquest with ${payload.id} updated`,
+            },
+          };
+        }
+        const conquestGQL = conquest as unknown as Conquest;
+        return { conquest: conquestGQL };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   UpgradeToAdvertiserResponse: {
@@ -205,6 +320,32 @@ const AdvertiserResolvers: Resolvers = {
     __resolveType: (obj: UpdateAdvertiserDetailsResponse) => {
       if ("advertiser" in obj) {
         return "UpdateAdvertiserDetailsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  CreateConquestResponse: {
+    __resolveType: (obj: CreateConquestResponse) => {
+      if ("conquest" in obj) {
+        return "CreateConquestResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  UpdateConquestResponse: {
+    __resolveType: (obj: UpdateConquestResponse) => {
+      if ("conquest" in obj) {
+        return "UpdateConquestResponseSuccess";
       }
 
       if ("error" in obj) {
@@ -238,30 +379,30 @@ const AdvertiserResolvers: Resolvers = {
       return null;
     },
   },
-  // ListConquestPreviewsResponse: {
-  //   __resolveType: (obj: ListConquestPreviewsResponse) => {
-  //     if ("conquests" in obj) {
-  //       return "ListConquestPreviewsResponseSuccess";
-  //     }
-  //     if ("error" in obj) {
-  //       return "ResponseError";
-  //     }
+  ListConquestPreviewsResponse: {
+    __resolveType: (obj: ListConquestPreviewsResponse) => {
+      if ("conquests" in obj) {
+        return "ListConquestPreviewsResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
 
-  //     return null;
-  //   },
-  // },
-  // GetConquestResponse: {
-  //   __resolveType: (obj: GetConquestResponse) => {
-  //     if ("conquest" in obj) {
-  //       return "GetConquestResponseSuccess";
-  //     }
-  //     if ("error" in obj) {
-  //       return "ResponseError";
-  //     }
+      return null;
+    },
+  },
+  GetConquestResponse: {
+    __resolveType: (obj: GetConquestResponse) => {
+      if ("conquest" in obj) {
+        return "GetConquestResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
 
-  //     return null;
-  //   },
-  // },
+      return null;
+    },
+  },
 };
 
 const advertiserComposition = {

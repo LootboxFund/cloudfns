@@ -30,7 +30,6 @@ const AdvertiserTypeDefs = gql`
     maxBudget: Float
 
     tournaments: [ID!]!
-    createdBy: ID
   }
 
   type ConquestPreview {
@@ -60,20 +59,20 @@ const AdvertiserTypeDefs = gql`
       AdvertiserPublicViewResponseSuccess
     | ResponseError
 
-  #type ListConquestPreviewsResponseSuccess {
-  #  conquests: [ConquestPreview!]!
-  #}
+  # ------ ListConquestPreviews ------
+  type ListConquestPreviewsResponseSuccess {
+    conquests: [ConquestPreview!]!
+  }
+  union ListConquestPreviewsResponse =
+      ListConquestPreviewsResponseSuccess
+    | ResponseError
 
-  #type GetConquestResponseSuccess {
-  #  conquest: Conquest!
-  #  tournaments: [TournamentPreview!]!
-  #}
-
-  #union ListConquestPreviewsResponse =
-  #    ListConquestPreviewsResponseSuccess
-  #  | ResponseError
-
-  #union GetConquestResponse = GetConquestResponseSuccess | ResponseError
+  # ------ GetConquest ------
+  type GetConquestResponseSuccess {
+    conquest: Conquest!
+    tournaments: [TournamentPreview!]!
+  }
+  union GetConquestResponse = GetConquestResponseSuccess | ResponseError
 
   extend type Query {
     # For advertiser to see their own private profile
@@ -81,27 +80,12 @@ const AdvertiserTypeDefs = gql`
     # For affiliate to see public profile of an advertiser
     advertiserPublicView(advertiserId: ID!): AdvertiserPublicViewResponse!
     # For advertiser to see their tournament campaigns (conquests list page)
-    #listConquests(advertiserID: ID!): ListConquestPreviewsResponse!
+    listConquestPreviews(advertiserID: ID!): ListConquestPreviewsResponse!
     # For advertiser to see a specific campaign (conquest page)
-    #getConquest(conquestID: ID!): GetConquestResponse!
+    getConquest(advertiserID: ID!, conquestID: ID!): GetConquestResponse!
     # For an advertiser to get their spendings report of total offers (analytics page)
     #generateAdvertiserSpendingReport(advertiserID: ID!): GetAdvertiserEarningsReportResponse!
   }
-
-  #input CreateConquestPayload {
-  #  title: String
-  #}
-
-  #input UpdateConquestPayload {
-  #  id: ID!
-  #  title: String
-  #  description: String
-  #  image: String
-  #  startDate: Int
-  #  endDate: Int
-  #  status: ConquestStatus
-  #  maxBudget: Float
-  #}
 
   # ------ UpgradeToAdvertiser ------
   input UpgradeToAdvertiserPayload {
@@ -126,20 +110,50 @@ const AdvertiserTypeDefs = gql`
       UpdateAdvertiserDetailsResponseSuccess
     | ResponseError
 
+  # ------ createConquest ------
+  input CreateConquestPayload {
+    title: String!
+    advertiserID: ID!
+  }
+  type CreateConquestResponseSuccess {
+    conquest: Conquest
+  }
+  union CreateConquestResponse = CreateConquestResponseSuccess | ResponseError
+
+  # ------ updateConquest ------
+  input UpdateConquestPayload {
+    id: ID!
+    title: String
+    description: String
+    image: String
+    startDate: Int
+    endDate: Int
+    status: ConquestStatus
+    maxBudget: Float
+    tournaments: [ID!]
+  }
+  type UpdateConquestResponseSuccess {
+    conquest: Conquest
+  }
+  union UpdateConquestResponse = UpdateConquestResponseSuccess | ResponseError
+
   extend type Mutation {
     # Upgrade a regular user and give them an advertiser account
     upgradeToAdvertiser(
       payload: UpgradeToAdvertiserPayload!
     ): UpgradeToAdvertiserResponse!
-    #
+    # Update advertiser details
     updateAdvertiserDetails(
       advertiserID: ID!
       payload: UpdateAdvertiserDetailsPayload!
     ): UpdateAdvertiserDetailsResponse!
     # Create a new tournament campaign (conquest)
-    #createConquest(payload: CreateConquestPayload!): CreateConquestResponse!
+    createConquest(payload: CreateConquestPayload!): CreateConquestResponse!
     # Update a tournament campaign (conquest)
-    #updateConquest(payload: UpdateConquestPayload!): UpdateConquestResponse!
+    updateConquest(
+      advertiserID: ID!
+      payload: UpdateConquestPayload!
+    ): UpdateConquestResponse!
   }
 `;
 

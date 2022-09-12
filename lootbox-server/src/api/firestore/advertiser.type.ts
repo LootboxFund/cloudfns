@@ -28,10 +28,9 @@ export interface Conquest_Firestore {
   maxBudget: number;
   currency: Currency;
   tournaments: TournamentID[];
-  createdBy: UserID;
 }
 
-export interface ConquestWithTournaments_ReplaceMeWithGQLGeneratedTypes {
+export interface ConquestWithTournaments {
   conquest: Conquest_Firestore;
   tournaments: TournamentPreviewInConquest[];
 }
