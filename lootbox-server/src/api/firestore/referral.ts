@@ -33,7 +33,7 @@ import {
   Query,
   Timestamp,
 } from "firebase-admin/firestore";
-import { Address } from "@wormgraph/helpers";
+import { Address, WhitelistSignatureID } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 import { getUser } from "./user";
 import { getUserWallets } from "./wallet";
@@ -696,4 +696,24 @@ export const getUnassignedClaims = async (
       .map((doc) => doc.data())
       .filter((claim) => !claim.whitelistId); // temporary filter
   }
+};
+
+export const attachWhitelistIdToClaim = async (
+  referralId: ReferralID,
+  claimId: ClaimID,
+  whitelistId: WhitelistSignatureID
+) => {
+  const ref = db
+    .collection(Collection.Referral)
+    .doc(referralId)
+    .collection(Collection.Claim)
+    .doc(claimId);
+
+  const updateRequest: Partial<Claim> = {
+    whitelistId: whitelistId,
+    // @ts-ignore
+    "timestamps.updatedAt": Timestamp.now().toMillis(),
+  };
+
+  await ref.update(updateRequest);
 };

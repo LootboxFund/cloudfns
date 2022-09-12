@@ -17,6 +17,8 @@ import {
   MutationEditPartyBasketArgs,
   MutationWhitelistAllUnassignedClaimsArgs,
   Claim,
+  PartyBasketStatus,
+  WhitelistAllUnassignedClaimsResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -30,17 +32,18 @@ import {
   getPartyBasketById,
   editPartyBasket,
   getUnassignedClaims,
+  getUser,
+  getUserWallets,
+  attachWhitelistIdToClaim,
 } from "../../../api/firestore";
-import { getSecret } from "../../../api/secrets";
-import { manifest } from "../../../manifest";
 import {
   validatePartyBasketSignature,
   validateSignature,
   whitelistPartyBasketSignature,
 } from "../../../api/ethers";
-import { Address } from "@wormgraph/helpers";
+import { Address, ClaimID, ReferralID, UserID } from "@wormgraph/helpers";
 import { generateNonce } from "../../../lib/whitelist";
-import { ethers } from "ethers";
+import { errors, ethers } from "ethers";
 import { PartyBasketID, WhitelistSignatureID } from "../../../lib/types";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -285,6 +288,15 @@ const PartyBasketResolvers: Resolvers = {
         };
       }
 
+      if (partyBasket.status === PartyBasketStatus.Disabled) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Party Basket is disabled",
+          },
+        };
+      }
+
       if (partyBasket.creatorId !== context.userId) {
         return {
           error: {
@@ -296,7 +308,7 @@ const PartyBasketResolvers: Resolvers = {
 
       let whitelisterPrivateKey: string;
       try {
-        whitelisterPrivateKey = await getWhitelisterPrivateKey()
+        whitelisterPrivateKey = await getWhitelisterPrivateKey();
       } catch (err) {
         console.error(err);
         return {
@@ -368,35 +380,137 @@ const PartyBasketResolvers: Resolvers = {
       _,
       { payload }: MutationWhitelistAllUnassignedClaimsArgs,
       context: Context
-    ): Promise<> => {
-      // User has right access
+    ): Promise<WhitelistAllUnassignedClaimsResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
 
-      // Party basket exists & good to go
-
-      // const claimsWithoutWhitelist = await getUnassignedClaims(
-      //   payload.partyBasketId as PartyBasketID
-      // );
-
-      let whitelisterPrivateKey: string 
-      let claimsWithoutWhitelist: Claim[]
+      let partyBasket: PartyBasket;
       try {
-        [whitelisterPrivateKey, claimsWithoutWhitelist] = await Promise.all([getWhitelisterPrivateKey(), getUnassignedClaims(payload.partyBasketId as PartyBasketID)])
+        const _partyBasket = await getPartyBasketById(
+          payload.partyBasketId as PartyBasketID
+        );
+        if (!_partyBasket) {
+          throw new Error("Not found");
+        }
+        partyBasket = _partyBasket;
       } catch (err) {
         return {
           error: {
             code: StatusCode.ServerError,
+            message: "Error fetching Party Basket",
+          },
+        };
+      }
+
+      if (partyBasket.status === PartyBasketStatus.Disabled) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Party Basket is disabled",
+          },
+        };
+      }
+
+      if (partyBasket.creatorId !== context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `You do not own this Party Basket`,
+          },
+        };
+      }
+
+      let whitelisterPrivateKey: string;
+      let claimsWithoutWhitelist: Claim[];
+      try {
+        [whitelisterPrivateKey, claimsWithoutWhitelist] = await Promise.all([
+          getWhitelisterPrivateKey(),
+          getUnassignedClaims(payload.partyBasketId as PartyBasketID),
+        ]);
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "Server error",
+          },
+        };
+      }
+
+      const signer = new ethers.Wallet(whitelisterPrivateKey);
+      const userWalletAddressMap: { [key: UserID]: Address } = {};
+      const signatures: (string | null)[] = [];
+      const partialErrors: (string | null)[] = [];
+      for (const claim of claimsWithoutWhitelist) {
+        if (!claim.claimerUserId) {
+          continue;
+        }
+        try {
+          if (!userWalletAddressMap[claim.claimerUserId]) {
+            const user = await getUser(claim.claimerUserId);
+            if (!user) {
+              continue;
+            }
+            const wallets = await getUserWallets(user.id as UserID, 1);
+            const wallet = wallets[0];
+            if (!wallet) {
+              continue;
+            }
+            userWalletAddressMap[claim.claimerUserId] = wallet.address;
           }
+
+          const walletAddress = userWalletAddressMap[claim.claimerUserId];
+
+          if (!walletAddress) {
+            continue;
+          }
+
+          // Generate a whitelist
+          const nonce = generateNonce();
+
+          const signature = await whitelistPartyBasketSignature(
+            partyBasket.chainIdHex,
+            partyBasket.address,
+            walletAddress,
+            whitelisterPrivateKey,
+            nonce
+          );
+
+          const signatureDocument = await createWhitelistSignature({
+            signature,
+            signer: signer.address as Address,
+            whitelistedAddress: walletAddress,
+            partyBasketId: partyBasket.id as PartyBasketID,
+            partyBasketAddress: partyBasket.address as Address,
+            nonce,
+          });
+
+          // Update the claim document
+          await attachWhitelistIdToClaim(
+            claim.referralId as ReferralID,
+            claim.id as ClaimID,
+            signatureDocument.id as WhitelistSignatureID
+          );
+          signatures.push(
+            `${claim.claimerUserId} - ${walletAddress} - ${signature}`
+          );
+        } catch (err) {
+          partialErrors.push(
+            (err as unknown as any)?.message || "Error occured"
+          );
+          console.error(err);
         }
       }
 
-      for (const claim of claimsWithoutWhitelist) {
-        // Generate a whitelist
-        // Save whitelist
-        // Add whitelist ID to the claim object
-        const whitelist = await 
-
-
-      }
+      return {
+        signatures,
+        errors: partialErrors,
+      };
     },
     redeemSignature: async (
       _,
@@ -630,12 +744,26 @@ const PartyBasketResolvers: Resolvers = {
       return null;
     },
   },
+
+  WhitelistAllUnassignedClaimsResponse: {
+    __resolveType: (obj: WhitelistAllUnassignedClaimsResponse) => {
+      if ("signatures" in obj) {
+        return "WhitelistAllUnassignedClaimsResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const partyBasketResolverComposition = {
   "Mutation.createPartyBasket": [isAuthenticated()],
   "Mutation.bulkWhitelist": [isAuthenticated()],
   "Mutation.editPartyBasket": [isAuthenticated()],
+  "Mutation.whitelistAllUnassignedClaims": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(
