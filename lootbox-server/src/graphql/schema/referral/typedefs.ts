@@ -42,6 +42,7 @@ const ReferralTypeDefs = gql`
     referralType: ReferralType
     tournamentId: ID!
     tournamentName: String
+    whitelistId: ID
     originPartyBasketId: ID
     chosenPartyBasketId: ID
     chosenPartyBasketAddress: ID

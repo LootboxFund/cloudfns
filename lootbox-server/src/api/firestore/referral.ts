@@ -26,13 +26,14 @@ import {
 import { Collection } from "./collection.types";
 import { db } from "../firebase";
 import {
+  CollectionGroup,
   DocumentReference,
   DocumentSnapshot,
   FieldValue,
   Query,
   Timestamp,
 } from "firebase-admin/firestore";
-import { Address } from "@wormgraph/helpers";
+import { Address, WhitelistSignatureID } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 import { getUser } from "./user";
 import { getUserWallets } from "./wallet";
@@ -148,6 +149,7 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     status: req.status,
     type: req.type,
     referralType: req.referralType,
+    whitelistId: null,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -674,4 +676,42 @@ const convertClaimToCsvRow = (
       ? referrer?.wallets[10]?.address || ""
       : "",
   };
+};
+
+export const getUnassignedClaims = async (
+  partyBasketId: PartyBasketID
+): Promise<Claim[]> => {
+  const collectionGroupRef = db
+    .collectionGroup(Collection.Claim)
+    .where("chosenPartyBasketId", "==", partyBasketId)
+    .where("status", "==", ClaimStatus.Complete)
+    .where("whitelistId", "==", null) as CollectionGroup<Claim>;
+
+  const snapshot = await collectionGroupRef.get();
+
+  if (!snapshot || snapshot.empty) {
+    return [];
+  } else {
+    return snapshot.docs.map((doc) => doc.data());
+  }
+};
+
+export const attachWhitelistIdToClaim = async (
+  referralId: ReferralID,
+  claimId: ClaimID,
+  whitelistId: WhitelistSignatureID
+) => {
+  const ref = db
+    .collection(Collection.Referral)
+    .doc(referralId)
+    .collection(Collection.Claim)
+    .doc(claimId);
+
+  const updateRequest: Partial<Claim> = {
+    whitelistId: whitelistId,
+    // @ts-ignore
+    "timestamps.updatedAt": Timestamp.now().toMillis(),
+  };
+
+  await ref.update(updateRequest);
 };
