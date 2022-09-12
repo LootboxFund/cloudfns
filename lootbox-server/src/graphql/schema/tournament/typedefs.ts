@@ -254,19 +254,6 @@ const TournamentTypeDefs = gql`
     #viewEarningsReportForTournamentAsOrganizer(
     #  eventID: ID!
     #): ViewEarningsReportForTournamentAsOrganizerResponse!
-    # Propose a tournament with no host
-    #proposeTournament(
-    #  payload: ProposeTournamentPayload!
-    #): ProposeTournamentResponse!
-    # View a proposed tournament
-    #viewProposedTournament(tournamentID: ID!): ViewProposedTournamentResponse!
-    # Assign a tournament to a host
-    #assignHostToTournament(
-    #  tournamentID: ID!
-    #  hostEmail: String!
-    #): AssignHostToTournamentResponse!
-    # Accept to host a tournament
-    #acceptHostTournament(tournamentID: ID!): AcceptHostTournamentResponse!
   }
 `;
 

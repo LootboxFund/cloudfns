@@ -24,3 +24,35 @@ export const upgradeToAffiliate = async (
   await affiliateRef.set(affiliate);
   return affiliate;
 };
+
+export const affiliateAdminView = async (
+  affiliateID: AffiliateID
+): Promise<Affiliate_Firestore | undefined> => {
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+
+  const affiliateSnapshot = await affiliateRef.get();
+
+  if (!affiliateSnapshot.exists) {
+    return undefined;
+  } else {
+    return affiliateSnapshot.data();
+  }
+};
+
+export const affiliatePublicView = async (
+  affiliateID: AffiliateID
+): Promise<Affiliate_Firestore | undefined> => {
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+
+  const affiliateSnapshot = await affiliateRef.get();
+
+  if (!affiliateSnapshot.exists) {
+    return undefined;
+  } else {
+    return affiliateSnapshot.data();
+  }
+};

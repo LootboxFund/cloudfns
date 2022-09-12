@@ -174,7 +174,7 @@ const AdvertiserResolvers: Resolvers = {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No advertiser created`,
+              message: `No advertiser created for user ${payload.userID}`,
             },
           };
         }
