@@ -2,11 +2,12 @@ import {
   ActivationID,
   ActivationPricingID,
   AdTargetTag,
-  AffiliateBaseLinkID,
+  AffiliateBaseLink,
   AffiliateID,
   AffiliateType,
   MeasurementPartnerType,
   UserID,
+  ActivationStatus,
 } from "@wormgraph/helpers";
 import { AdvertiserID, Currency, OfferID, OfferStatus } from "../../lib/types";
 
@@ -18,21 +19,20 @@ export interface Offer_Firestore {
   advertiserID: AdvertiserID;
   spentBudget: number;
   maxBudget: number;
-  currency: Currency;
-  startDate: Date;
-  endDate: Date;
+  // currency: Currency;
+  startDate: number;
+  endDate: number;
   status: OfferStatus;
-  affiliateBaseLink: AffiliateBaseLinkID;
+  affiliateBaseLink: AffiliateBaseLink;
   mmp: MeasurementPartnerType;
   activations: Activation_Firestore[];
-  targetingTags: AdTargetTag[];
+  // targetingTags: AdTargetTag[];
   // adSets: AdSet[];
-  createdByUser: UserID;
 }
 
 export type OfferPreview = Omit<
   Offer_Firestore,
-  "affiliateBaseLink" | "mmp" | "activations" | "createdByUser"
+  "affiliateBaseLink" | "mmp" | "activations"
 >;
 
 export type OfferPreviewForOrganizer = Omit<
@@ -45,13 +45,14 @@ export interface Activation_Firestore {
   name: string;
   description: string;
   masterPricing: ActivationPricing_Firestore;
+  status: ActivationStatus;
 }
 
 export interface ActivationPricing_Firestore {
   id: ActivationPricingID;
   activationID: ActivationID;
   pricing: number;
-  currency: Currency;
+  // currency: Currency;
   percentage: number;
   affiliateID: AffiliateID;
   affiliateType: AffiliateType;

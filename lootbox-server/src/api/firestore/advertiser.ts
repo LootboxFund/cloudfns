@@ -14,12 +14,7 @@ import {
   TournamentPreviewInConquest,
 } from "./advertiser.type";
 import { Collection } from "./collection.types";
-import {
-  ConquestID,
-  ConquestStatus,
-  Currency,
-  TournamentID,
-} from "@wormgraph/helpers";
+import { ConquestID, ConquestStatus, TournamentID } from "@wormgraph/helpers";
 
 export const upgradeToAdvertiser = async (
   userID: UserID
@@ -96,9 +91,6 @@ export const createConquest = async (
     endDate: Number(new Date().getTime() + 60 * 60 * 24 * 90),
     advertiserID: advertiserID,
     status: ConquestStatus.Planned,
-    spentBudget: 0,
-    maxBudget: 1000,
-    currency: Currency.USD,
     tournaments: [],
   };
   await conquestRef.set(conquest);
@@ -138,9 +130,6 @@ export const updateConquest = async (
   if (payload.status != undefined) {
     updatePayload.status = payload.status as ConquestStatus;
   }
-  if (payload.maxBudget != undefined) {
-    updatePayload.maxBudget = payload.maxBudget;
-  }
   if (payload.tournaments != undefined) {
     updatePayload.tournaments = payload.tournaments as TournamentID[];
   }
@@ -171,9 +160,6 @@ export const listConquestPreviews = async (
         endDate: data.endDate,
         advertiserID: data.advertiserID,
         status: data.status,
-        spentBudget: data.spentBudget,
-        maxBudget: data.maxBudget,
-        currency: data.currency,
         tournaments: data.tournaments,
       };
     });

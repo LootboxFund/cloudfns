@@ -17,9 +17,9 @@ const CommonTypeDefs = gql`
   }
 
   enum AffiliateType {
-    ORGANIZER
-    PROMOTER
-    LOOTBOX
+    Organizer
+    Promoter
+    Lootbox
   }
 
   type Status {

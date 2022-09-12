@@ -126,10 +126,9 @@ const AdvertiserTypeDefs = gql`
     title: String
     description: String
     image: String
-    startDate: Int
-    endDate: Int
+    startDate: Timestamp
+    endDate: Timestamp
     status: ConquestStatus
-    maxBudget: Float
     tournaments: [ID!]
   }
   type UpdateConquestResponseSuccess {

@@ -408,8 +408,12 @@ const AdvertiserResolvers: Resolvers = {
 const advertiserComposition = {
   "Mutation.upgradeToAdvertiser": [],
   "Mutation.updateAdvertiserDetails": [],
+  "Mutation.createConquest": [],
+  "Mutation.updateConquest": [],
   "Query.getAdvertiserAdminView": [],
   "Query.getAdvertiserPublicView": [],
+  "Query.listConquestPreviews": [],
+  "Query.getConquest": [],
 };
 
 const resolvers = composeResolvers(AdvertiserResolvers, advertiserComposition);

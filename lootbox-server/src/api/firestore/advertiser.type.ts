@@ -1,9 +1,4 @@
-import {
-  ConquestID,
-  ConquestStatus,
-  Currency,
-  UserID,
-} from "@wormgraph/helpers";
+import { ConquestID, ConquestStatus, UserID } from "@wormgraph/helpers";
 import { AdvertiserID, OfferID, TournamentID } from "../../lib/types";
 
 export interface Advertiser_Firestore {
@@ -24,9 +19,6 @@ export interface Conquest_Firestore {
   endDate: number;
   advertiserID: AdvertiserID;
   status: ConquestStatus;
-  spentBudget: number;
-  maxBudget: number;
-  currency: Currency;
   tournaments: TournamentID[];
 }
 

@@ -16,7 +16,7 @@ import UserResolvers from "./user/resolvers";
 import TournamentResolvers from "./tournament/resolvers";
 import AdvertiserResolvers from "./advertiser/resolvers";
 // import AffilaiteResolvers from "./affiliate/resolvers";
-// import OfferResolvers from "./offer/resolvers";
+import OfferResolvers from "./offer/resolvers";
 import PartyBasketTypeDefs from "./partyBasket/typedefs";
 import PartyBasketResolvers from "./partyBasket/resolvers";
 import ReferralResolvers from "./referral/resolvers";
@@ -46,8 +46,7 @@ const resolvers = {
   ...UserResolvers,
   ...TournamentResolvers,
   ...AdvertiserResolvers,
-  // ...AffilaiteResolvers,
-  // ...OfferResolvers,
+  ...OfferResolvers,
   ...PartyBasketResolvers,
   ...ReferralResolvers,
   ...AdResolvers,
@@ -58,6 +57,7 @@ const resolvers = {
     ...UserResolvers.Query,
     ...TournamentResolvers.Query,
     ...AdvertiserResolvers.Query,
+    ...OfferResolvers.Query,
     ...PartyBasketResolvers.Query,
     ...ReferralResolvers.Query,
     ...AdResolvers.Query,
@@ -69,6 +69,7 @@ const resolvers = {
     ...UserResolvers.Mutation,
     ...TournamentResolvers.Mutation,
     ...AdvertiserResolvers.Mutation,
+    ...OfferResolvers.Mutation,
     ...PartyBasketResolvers.Mutation,
     ...ReferralResolvers.Mutation,
     ...AdResolvers.Mutation,

@@ -477,5 +477,5 @@ export interface AffiliateRateCard_Firestore {
   tournamentID?: TournamentID;
   organizerID?: AffiliateID;
   promoterID?: AffiliateID;
-  currency: Currency;
+  // currency: Currency;
 }

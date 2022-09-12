@@ -1766,6 +1766,15 @@
     axios "0.25.0"
     lodash "4.17.21"
 
+"@wormgraph/helpers@0.1.14-afn-alpha7":
+  version "0.1.14-afn-alpha7"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.14-afn-alpha7.tgz#e0a5c8f0d7fd767a9a2cdede7080ae0e32a7fbb8"
+  integrity sha512-vvDx6cwIDsG+BxK7otSL6hPCGNxmWTA4YuEPkXxxfAd5gjZnAEm6mziQ8KZALoMiSK02F/c0YdoFfE7Ax96xtg==
+  dependencies:
+    "@wormgraph/helpers" "0.1.14-afn-alpha4"
+    axios "0.25.0"
+    lodash "4.17.21"
+
 "@wormgraph/manifest@0.3.123":
   version "0.3.123"
   resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.123.tgz#304db6bb866f541290ac8e2e54402637db34b6ae"
@@ -5370,6 +5379,11 @@ uuid@^8.0.0, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
+
+uuid@^9.0.0:
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.0.tgz#592f550650024a38ceb0c562f2f6aa435761efb5"
+  integrity sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==
 
 v8-compile-cache-lib@^3.0.1:
   version "3.0.1"

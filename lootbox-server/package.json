@@ -15,7 +15,7 @@
     "@google-cloud/secret-manager": "^4.0.0",
     "@graphql-tools/resolvers-composition": "^6.4.12",
     "@graphql-tools/schema": "^8.3.13",
-    "@wormgraph/helpers": "0.1.14-afn-alpha4",
+    "@wormgraph/helpers": "0.1.14-afn-alpha7",
     "@wormgraph/manifest": "0.3.123",
     "apollo-server": "^3.8.1",
     "crypto": "^1.0.1",
@@ -24,7 +24,8 @@
     "firebase-admin": "^10.2.0",
     "graphql": "^16.5.0",
     "graphql-scalars": "^1.17.0",
-    "nanoid": "3.3.4"
+    "nanoid": "3.3.4",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^2.6.2",
