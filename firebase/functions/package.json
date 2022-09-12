@@ -20,7 +20,7 @@
         "firebase-admin": "^10.0.2",
         "firebase-functions": "^3.18.0",
         "@wormgraph/helpers": "0.1.13",
-        "@wormgraph/manifest": "0.3.127"
+        "@wormgraph/manifest": "0.3.128"
     },
     "devDependencies": {
         "@graphql-codegen/cli": "^2.6.2",
