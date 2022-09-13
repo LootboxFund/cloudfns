@@ -22,8 +22,8 @@ import PartyBasketResolvers from "./partyBasket/resolvers";
 import ReferralResolvers from "./referral/resolvers";
 import AdTypeDefs from "./ad/typedefs";
 import AdResolvers from "./ad/resolvers";
-import CreativeResolvers from "./creative/resolvers";
-import CreativeTypeDefs from "./creative/typedefs";
+// import CreativeResolvers from "./creative/resolvers";
+// import CreativeTypeDefs from "./creative/typedefs";
 
 const typeDefs = [
   ...ScalarTypeDefs,
@@ -37,7 +37,7 @@ const typeDefs = [
   PartyBasketTypeDefs,
   ReferralTypeDefs,
   AdTypeDefs,
-  CreativeTypeDefs,
+  // CreativeTypeDefs,
 ];
 
 const resolvers = {
@@ -51,7 +51,7 @@ const resolvers = {
   ...PartyBasketResolvers,
   ...ReferralResolvers,
   ...AdResolvers,
-  ...CreativeResolvers,
+  // ...CreativeResolvers,
   Query: {
     ...ScalarResolvers.Query,
     ...LootboxResolvers.Query,
@@ -63,7 +63,7 @@ const resolvers = {
     ...PartyBasketResolvers.Query,
     ...ReferralResolvers.Query,
     ...AdResolvers.Query,
-    ...CreativeResolvers.Query,
+    // ...CreativeResolvers.Query,
   },
   Mutation: {
     ...ScalarResolvers.Mutation,
@@ -72,11 +72,11 @@ const resolvers = {
     ...TournamentResolvers.Mutation,
     // ...AdvertiserResolvers.Mutation,
     // ...OfferResolvers.Mutation,
-    ...AffiliateResolvers.Mutation,
+    // ...AffiliateResolvers.Mutation,
     ...PartyBasketResolvers.Mutation,
     ...ReferralResolvers.Mutation,
     ...AdResolvers.Mutation,
-    ...CreativeResolvers.Mutation,
+    // ...CreativeResolvers.Mutation,
   },
 };
 

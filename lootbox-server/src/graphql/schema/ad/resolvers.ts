@@ -1,48 +1,160 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import {
-  getAdById,
+  // getAdById,
   getClaimById,
-  getCreativeById,
+  // getCreativeById,
   getTournamentById,
 } from "../../../api/firestore";
+import {
+  createAd,
+  createAdSet,
+  editAd,
+  editAdSet,
+} from "../../../api/firestore/ad";
 import { AdID, ClaimID, CreativeID, TournamentID } from "../../../lib/types";
 import {
   Resolvers,
-  QueryDecisionAdApiBetaArgs,
-  DecisionAdApiBetaResponse,
   StatusCode,
+  CreateAdResponse,
+  MutationCreateAdArgs,
   Ad,
-  Creative,
+  MutationEditAdArgs,
+  MutationCreateAdSetArgs,
+  MutationEditAdSetArgs,
+} from "../../generated/types";
+import { Context } from "../../server";
+import {
+  EditAdResponse,
+  CreateAdSetResponse,
+  EditAdSetResponse,
 } from "../../generated/types";
 
 const AdResolvers: Resolvers = {
-  Query: {
-    decisionAdApiBeta: async (
+  Mutation: {
+    createAd: async (
       _,
-      args: QueryDecisionAdApiBetaArgs
-    ): Promise<DecisionAdApiBetaResponse> => {
+      { payload }: MutationCreateAdArgs,
+      context: Context
+    ): Promise<CreateAdResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
       try {
-        const tournament = await getTournamentById(
-          args.tournamentId as TournamentID
-        );
-
-        if (!tournament) {
+        const ad = await createAd(payload);
+        if (!ad) {
           return {
             error: {
-              code: StatusCode.NotFound,
-              message: "Tournament not found",
+              code: StatusCode.ServerError,
+              message: `No ad created for advertiser ${payload.advertiserID}`,
             },
           };
         }
-
-        if (tournament.affiliateAdIds && tournament.affiliateAdIds.length > 0) {
-          // get the first ad
-          const ad = await getAdById(tournament.affiliateAdIds[0] as AdID);
-          return { ad: !!ad ? ad : null };
-        }
-        return { ad: null };
+        return { ad: ad as Ad };
       } catch (err) {
-        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    editAd: async (
+      _,
+      { payload }: MutationEditAdArgs,
+      context: Context
+    ): Promise<EditAdResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        const ad = await editAd(payload);
+        if (!ad) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not edit ad ${payload.id}`,
+            },
+          };
+        }
+        return { ad: ad as Ad };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    createAdSet: async (
+      _,
+      { payload }: MutationCreateAdSetArgs,
+      context: Context
+    ): Promise<CreateAdSetResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        const adSet = await createAdSet(payload);
+        if (!adSet) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not create adset advertiser ${payload.advertiserID}`,
+            },
+          };
+        }
+        return { adSet };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    editAdSet: async (
+      _,
+      { payload }: MutationEditAdSetArgs,
+      context: Context
+    ): Promise<EditAdSetResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        const adSet = await editAdSet(payload);
+        if (!adSet) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not edit adset ${payload.id}`,
+            },
+          };
+        }
+        return { adSet };
+      } catch (err) {
         return {
           error: {
             code: StatusCode.ServerError,
@@ -52,22 +164,45 @@ const AdResolvers: Resolvers = {
       }
     },
   },
-
-  Ad: {
-    creative: async (ad: Ad): Promise<Creative | null> => {
-      const creative = await getCreativeById(ad.creativeId as CreativeID);
-      if (!creative) {
-        return null;
-      } else {
-        return creative;
-      }
-    },
+  Query: {
+    // decisionAdApiBeta: async (
+    //   _,
+    //   args: QueryDecisionAdApiBetaArgs
+    // ): Promise<DecisionAdApiBetaResponse> => {
+    //   try {
+    //     const tournament = await getTournamentById(
+    //       args.tournamentId as TournamentID
+    //     );
+    //     if (!tournament) {
+    //       return {
+    //         error: {
+    //           code: StatusCode.NotFound,
+    //           message: "Tournament not found",
+    //         },
+    //       };
+    //     }
+    //     if (tournament.affiliateAdIds && tournament.affiliateAdIds.length > 0) {
+    //       // get the first ad
+    //       const ad = await getAdById(tournament.affiliateAdIds[0] as AdID);
+    //       return { ad: !!ad ? ad : null };
+    //     }
+    //     return { ad: null };
+    //   } catch (err) {
+    //     console.error(err);
+    //     return {
+    //       error: {
+    //         code: StatusCode.ServerError,
+    //         message: err instanceof Error ? err.message : "",
+    //       },
+    //     };
+    //   }
+    // },
   },
 
-  DecisionAdApiBetaResponse: {
-    __resolveType: (obj: DecisionAdApiBetaResponse) => {
+  CreateAdResponse: {
+    __resolveType: (obj: CreateAdResponse) => {
       if ("ad" in obj) {
-        return "DecisionAdApiBetaResponseSuccess";
+        return "CreateAdResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
@@ -76,6 +211,66 @@ const AdResolvers: Resolvers = {
       return null;
     },
   },
+  EditAdResponse: {
+    __resolveType: (obj: EditAdResponse) => {
+      if ("ad" in obj) {
+        return "EditAdResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  CreateAdSetResponse: {
+    __resolveType: (obj: CreateAdSetResponse) => {
+      if ("adSet" in obj) {
+        return "CreateAdSetResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  EditAdSetResponse: {
+    __resolveType: (obj: EditAdSetResponse) => {
+      if ("adSet" in obj) {
+        return "EditAdSetResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  // Ad: {
+  //   creative: async (ad: Ad): Promise<Creative | null> => {
+  //     const creative = await getCreativeById(ad.creativeId as CreativeID);
+  //     if (!creative) {
+  //       return null;
+  //     } else {
+  //       return creative;
+  //     }
+  //   },
+  // },
+
+  // DecisionAdApiBetaResponse: {
+  //   __resolveType: (obj: DecisionAdApiBetaResponse) => {
+  //     if ("ad" in obj) {
+  //       return "DecisionAdApiBetaResponseSuccess";
+  //     }
+  //     if ("error" in obj) {
+  //       return "ResponseError";
+  //     }
+
+  //     return null;
+  //   },
+  // },
 };
 
 const adComposition = {};

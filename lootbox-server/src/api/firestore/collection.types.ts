@@ -9,6 +9,7 @@ export enum Collection {
   "Referral" = "referral",
   "Claim" = "claim",
   "Ad" = "ad",
+  "AdSet" = "ad-set",
   "AdEvent" = "ad-event",
   "Offer" = "offer",
   "Advertiser" = "advertiser",

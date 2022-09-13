@@ -30,6 +30,12 @@
 //     .doc(parentID)
 //     .collection(Collection._____)
 //     .doc(someID) as DocumentReference<___Schema>;
+//   const ____Snapshot = await ___Ref.get();
+//   if (!____Snapshot.exists) {
+//     return undefined;
+//   }
+//   const existingObj = ____Snapshot.data();
+//
 //   const updatePayload: Partial<___Schema> = {};
 //   // repeat
 //   if (payload.__somevar != undefined) {

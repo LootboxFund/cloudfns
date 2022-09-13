@@ -3,6 +3,7 @@ import {
   AdEventNonce,
   AdID,
   AdSetID,
+  AdvertiserID,
   CampaignID,
   ClaimID,
   CreativeID,
@@ -13,17 +14,17 @@ import {
 } from "@wormgraph/helpers";
 
 export enum AdStatus {
-  active = "active",
-  inactive = "inactive",
-  pending_review = "pending_review",
-  rejected = "rejected",
+  Active = "Active",
+  Inactive = "Inactive",
+  PendingReview = "PendingReview",
+  Rejected = "Rejected",
 }
 
 export enum AdEventAction {
-  view = "view",
-  click = "click",
-  timerElapsed = "timerElapsed",
-  videoTimestamp = "videoTimestamp",
+  View = "View",
+  Click = "Click",
+  TimerElapsed = "TimerElapsed",
+  VideoTimestamp = "VideoTimestamp",
 }
 
 export type AdTimestamps = {
@@ -33,22 +34,23 @@ export type AdTimestamps = {
 };
 
 export enum AdSetStatus {
-  active = "active",
-  inactive = "inactive",
-  pending_review = "pending_review",
-  rejected = "rejected",
+  Active = "Active",
+  Inactive = "Inactive",
+  PendingReview = "PendingReview",
+  Rejected = "Rejected",
 }
 export enum Placement {
-  AFTER_TICKET_CLAIM = "AFTER_TICKET_CLAIM",
-  BEFORE_PAYOUT = "BEFORE_PAYOUT",
-  AFTER_PAYOUT = "AFTER_PAYOUT",
-  DAILY_SPIN = "DAILY_SPIN",
-  TICKET_CAROUSEL = "TICKET_CAROUSEL",
+  AfterTicketClaim = "AfterTicketClaim",
+  BeforePayout = "BeforePayout",
+  AfterPayout = "AfterPayout",
+  DailySpin = "DailySpin",
+  TicketCarousel = "TicketCarousel",
 }
 export interface AdSet_Firestore {
   id: AdSetID;
   name: string;
-  description: string;
+  description?: string;
+  advertiserID: AdvertiserID;
   status: AdSetStatus;
   placement: Placement;
   adIDs: AdID[];
@@ -57,21 +59,17 @@ export interface AdSet_Firestore {
 
 export interface Ad_Firestore {
   id: AdID;
-  creativeId: CreativeID;
-  creatorId: UserID;
+  advertiserID: AdvertiserID;
   status: AdStatus;
-  name?: string;
-  type: Placement;
-
-  timestamps: AdTimestamps;
-
+  name: string;
+  description?: string;
+  placement: Placement;
   impressions: number;
   clicks: number;
   uniqueClicks: number;
-
   creative: Creative;
-
-  events: [AdEvent];
+  events: AdEvent[];
+  timestamps?: AdTimestamps;
 }
 
 export type EventMetadata = {
@@ -94,17 +92,17 @@ export interface AdEvent {
 }
 
 export enum CreativeType {
-  image = "image",
-  video = "video",
+  Image = "Image",
+  Video = "Video",
 }
 export interface Creative {
   creativeType: CreativeType;
   creativeLinks: string[];
   callToActionText?: string;
-  url: string;
-  clickUrl?: string;
   thumbnail?: string;
   infographicLink?: string;
   creativeAspectRatio: string;
   themeColor?: string;
+  advertiserID: AdvertiserID;
+  adID: AdID;
 }
