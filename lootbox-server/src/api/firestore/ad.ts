@@ -1,4 +1,4 @@
-import { DocumentReference } from "firebase-admin/firestore";
+import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
   CreateAdPayload,
   CreateAdSetPayload,
@@ -167,4 +167,43 @@ export const editAdSet = async (
   // until done
   await adSetRef.update(updatePayload);
   return (await adSetRef.get()).data() as AdSet_Firestore;
+};
+
+export const listAdsOfAdvertiser = async (
+  advertiserID: AdvertiserID
+): Promise<Ad_Firestore[] | undefined> => {
+  const AdRef = db
+    .collection(Collection.Ad)
+    .where("advertiserID", "==", advertiserID)
+    .orderBy("timestamps.createdAt", "desc") as Query<Ad_Firestore>;
+
+  const adCollectionItems = await AdRef.get();
+
+  if (adCollectionItems.empty) {
+    return [];
+  } else {
+    return adCollectionItems.docs.map((doc) => {
+      const data = doc.data();
+      return data;
+    });
+  }
+};
+
+export const listAdSetsOfAdvertiser = async (
+  advertiserID: AdvertiserID
+): Promise<AdSet_Firestore[] | undefined> => {
+  const AdSetRef = db
+    .collection(Collection.AdSet)
+    .where("advertiserID", "==", advertiserID) as Query<AdSet_Firestore>;
+
+  const adSetCollectionItems = await AdSetRef.get();
+
+  if (adSetCollectionItems.empty) {
+    return [];
+  } else {
+    return adSetCollectionItems.docs.map((doc) => {
+      const data = doc.data();
+      return data;
+    });
+  }
 };

@@ -69,7 +69,7 @@ export interface Ad_Firestore {
   uniqueClicks: number;
   creative: Creative;
   events: AdEvent[];
-  timestamps?: AdTimestamps;
+  timestamps: AdTimestamps;
 }
 
 export type EventMetadata = {

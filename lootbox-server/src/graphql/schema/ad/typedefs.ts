@@ -41,6 +41,7 @@ const AdTypeDefs = gql`
     name: String!
     description: String
     status: AdSetStatus!
+    advertiserID: ID!
     placement: Placement!
     adIDs: [ID!]!
     offerIDs: [ID!]!
@@ -114,13 +115,39 @@ const AdTypeDefs = gql`
   #    DecisionAdApiBetaResponseSuccess
   #  | ResponseError
 
-  #extend type Query {
-  # decisionAdApiBeta(tournamentId: ID!): DecisionAdApiBetaResponse!
-  # listAdSets(advertiserID: ID!): ListAdSetsResponse!
-  # listAds(advertiserID: ID!): ListAdsResponse!
-  # viewAdSet(adSetID: ID!): ViewAdSetResponse!
-  # viewAd(adID: ID!): ViewAdResponse!
-  #}
+  # -------- List Ads of Advertiser --------
+  input ListAdsOfAdvertiserPayload {
+    advertiserID: ID
+  }
+  type ListAdsOfAdvertiserResponseSuccess {
+    ads: [Ad!]!
+  }
+  union ListAdsOfAdvertiserResponse =
+      ListAdsOfAdvertiserResponseSuccess
+    | ResponseError
+
+  # -------- List AdSets of Advertiser --------
+  input ListAdSetsOfAdvertiserPayload {
+    advertiserID: ID
+  }
+  type ListAdSetsOfAdvertiserResponseSuccess {
+    adSets: [AdSet!]!
+  }
+  union ListAdSetsOfAdvertiserResponse =
+      ListAdSetsOfAdvertiserResponseSuccess
+    | ResponseError
+
+  extend type Query {
+    # decisionAdApiBeta(tournamentId: ID!): DecisionAdApiBetaResponse!
+    listAdsOfAdvertiser(
+      payload: ListAdsOfAdvertiserPayload!
+    ): ListAdsOfAdvertiserResponse!
+    listAdSetsOfAdvertiser(
+      payload: ListAdSetsOfAdvertiserPayload!
+    ): ListAdSetsOfAdvertiserResponse!
+    # viewAdSet(adSetID: ID!): ViewAdSetResponse!
+    # viewAd(adID: ID!): ViewAdResponse!
+  }
 
   # -------- Create Ad --------
   input CreateAdPayload {
@@ -149,7 +176,7 @@ const AdTypeDefs = gql`
   }
   union EditAdResponse = EditAdResponseSuccess | ResponseError
 
-  # -------- Create Ad Set --------
+  # -------- Create AdSet --------
   input CreateAdSetPayload {
     name: String!
     description: String
@@ -164,7 +191,7 @@ const AdTypeDefs = gql`
   }
   union CreateAdSetResponse = CreateAdSetResponseSuccess | ResponseError
 
-  # -------- Edit Ad Set --------
+  # -------- Edit AdSet --------
   input EditAdSetPayload {
     id: ID!
     name: String
@@ -183,8 +210,6 @@ const AdTypeDefs = gql`
     editAd(payload: EditAdPayload!): EditAdResponse!
     createAdSet(payload: CreateAdSetPayload!): CreateAdSetResponse!
     editAdSet(payload: EditAdSetPayload!): EditAdSetResponse!
-    # updateAdSetAds(payload: UpdateAdSetAdsPayload!): UpdateAdSetAdsResponse!
-    # updateAdSetOffers(payload: UpdateAdSetOffersPayload!): UpdateAdSetOffersResponse!
   }
 `;
 

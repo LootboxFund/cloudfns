@@ -10,8 +10,16 @@ import {
   createAdSet,
   editAd,
   editAdSet,
+  listAdSetsOfAdvertiser,
+  listAdsOfAdvertiser,
 } from "../../../api/firestore/ad";
-import { AdID, ClaimID, CreativeID, TournamentID } from "../../../lib/types";
+import {
+  AdID,
+  AdvertiserID,
+  ClaimID,
+  CreativeID,
+  TournamentID,
+} from "../../../lib/types";
 import {
   Resolvers,
   StatusCode,
@@ -21,8 +29,13 @@ import {
   MutationEditAdArgs,
   MutationCreateAdSetArgs,
   MutationEditAdSetArgs,
+  ListAdSetsOfAdvertiserResponse,
+  QueryListAdSetsOfAdvertiserArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
+import { QueryListAdsOfAdvertiserArgs } from "../../generated/types";
+import { ListAdsOfAdvertiserResponse } from "../../generated/types";
+import { AdSet_Firestore } from "../../../api/firestore/ad.types";
 import {
   EditAdResponse,
   CreateAdSetResponse,
@@ -165,6 +178,64 @@ const AdResolvers: Resolvers = {
     },
   },
   Query: {
+    listAdsOfAdvertiser: async (
+      _,
+      { payload }: QueryListAdsOfAdvertiserArgs
+    ): Promise<ListAdsOfAdvertiserResponse> => {
+      try {
+        const ads = await listAdsOfAdvertiser(
+          payload.advertiserID as AdvertiserID
+        );
+        if (!ads) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not return ads for advertiser ID ${payload.advertiserID}`,
+            },
+          };
+        }
+        return {
+          ads,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    listAdSetsOfAdvertiser: async (
+      _,
+      { payload }: QueryListAdSetsOfAdvertiserArgs
+    ): Promise<ListAdSetsOfAdvertiserResponse> => {
+      try {
+        const adSets = await listAdSetsOfAdvertiser(
+          payload.advertiserID as AdvertiserID
+        );
+        if (!adSets) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not return ads for advertiser ID ${payload.advertiserID}`,
+            },
+          };
+        }
+        return {
+          adSets,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     // decisionAdApiBeta: async (
     //   _,
     //   args: QueryDecisionAdApiBetaArgs
@@ -239,6 +310,30 @@ const AdResolvers: Resolvers = {
     __resolveType: (obj: EditAdSetResponse) => {
       if ("adSet" in obj) {
         return "EditAdSetResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ListAdsOfAdvertiserResponse: {
+    __resolveType: (obj: ListAdsOfAdvertiserResponse) => {
+      if ("ads" in obj) {
+        return "ListAdsOfAdvertiserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ListAdSetsOfAdvertiserResponse: {
+    __resolveType: (obj: ListAdSetsOfAdvertiserResponse) => {
+      if ("adSets" in obj) {
+        return "ListAdSetsOfAdvertiserResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
