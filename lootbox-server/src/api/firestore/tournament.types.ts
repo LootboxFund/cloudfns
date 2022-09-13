@@ -51,6 +51,10 @@ export interface LootboxTournamentSnapshot {
   partyBaskets?: PartyBasketID[];
 }
 
+export enum OfferInTournamentStatus {
+  Active = "Active",
+  Inactive = "Inactive",
+}
 export interface Tournament_Firestore {
   id: TournamentID;
   title: string;
@@ -72,8 +76,11 @@ export interface Tournament_Firestore {
   offers?: {
     [key: OfferID]: {
       id: OfferID;
-      rateCards: AffiliateRateCard_Firestore[];
-      adSets: AdSetID[]; // since we want to allow specifying exactly which adset goes where
+      rateCards: { [key: AffiliateID]: AffiliateRateCard_Firestore };
+      status: OfferInTournamentStatus;
+      adSets: {
+        [key: AdSetID]: OfferInTournamentStatus;
+      };
     };
   };
 }

@@ -14,6 +14,7 @@ import {
   updateStream,
   getPartyBasketsForLootbox,
 } from "../../../api/firestore";
+import { addOfferAdSetToTournament } from "../../../api/firestore/affiliate";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { StreamID, TournamentID } from "../../../lib/types";
 import {
@@ -41,6 +42,8 @@ import {
   DeleteStreamResponse,
   PartyBasket,
   PartyBasketStatus,
+  MutationAddOfferAdSetToTournamentArgs,
+  AddOfferAdSetToTournamentResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 
@@ -461,6 +464,40 @@ const TournamentResolvers = {
           error: {
             code: StatusCode.ServerError,
             message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    addOfferAdSetToTournament: async (
+      _,
+      { payload }: MutationAddOfferAdSetToTournamentArgs,
+      context: Context
+    ): Promise<AddOfferAdSetToTournamentResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        // Make sure the user owns the tournament
+        const tournament = await addOfferAdSetToTournament(payload);
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament not found`,
+            },
+          };
+        }
+        return { tournament: tournament as Tournament };
+      } catch (e) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: e instanceof Error ? e.message : "",
           },
         };
       }

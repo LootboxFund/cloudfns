@@ -191,9 +191,9 @@ const TournamentTypeDefs = gql`
     # get the public view of recent tournaments
     battleFeed(first: Int!, after: ID): BattleFeedResponse!
     # get the private organizer affiliate view of a tournament with earnings report
-    #myMonetizedOrganizerTournament(
-    #  id: ID!
-    #): myMonetizedOrganizerTournamentResponse!
+    #viewTournamentAsOrganizer(
+    #  tournamentID: ID!
+    #): ViewTournamentAsOrganizerResponse!
     # get the private promoter affiliate view of a tournament with earnings report
     #myMonetizedPromoterTournament(
     #  id: ID!
@@ -203,6 +203,19 @@ const TournamentTypeDefs = gql`
     #  affiliateID: ID!
     #): ListMonetizedTournamentsResponse!
   }
+
+  # ------------------- Add Offer AdSet To Tournament -------------------
+  input AddOfferAdSetToTournamentPayload {
+    tournamentID: ID!
+    offerID: ID!
+    adSetID: ID!
+  }
+  type AddOfferAdSetToTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+  union AddOfferAdSetToTournamentResponse =
+      AddOfferAdSetToTournamentResponseSuccess
+    | ResponseError
 
   extend type Mutation {
     # create a new tournament
@@ -220,7 +233,9 @@ const TournamentTypeDefs = gql`
     # delete a stream in a tournament
     editStream(payload: EditStreamPayload!): EditStreamResponse!
     # organizer adds an offer to a tournament
-    #addOffer(tournamentID: ID!, offerID: ID!, adSetID: ID!): AddOfferResponse!
+    addOfferAdSetToTournament(
+      payload: AddOfferAdSetToTournamentPayload!
+    ): AddOfferAdSetToTournamentResponse!
     # organizer removes an offer to a tournament
     #removeOffer(
     #  tournamentID: ID!
