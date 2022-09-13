@@ -63,6 +63,7 @@ export const createOffer = async (
     affiliateBaseLink: payload.affiliateBaseLink || "",
     mmp: (payload.mmp || "Manual") as MeasurementPartnerType,
     activations: [],
+    adSets: [],
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
   await offerRef.set(offer);

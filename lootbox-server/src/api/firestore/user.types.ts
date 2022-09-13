@@ -14,7 +14,7 @@ export interface Wallet {
   lootboxSnapshots: LootboxSnapshot[];
 }
 
-export interface User {
+export interface User_Firestore {
   id: UserID;
   username?: string;
   avatar?: string;

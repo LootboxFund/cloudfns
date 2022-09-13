@@ -1,5 +1,6 @@
 import {
   Address,
+  AdSetID,
   AdvertiserID,
   AffiliateID,
   AffiliateType,
@@ -65,6 +66,16 @@ export interface Tournament_Firestore {
   communityURL?: string;
   streams?: Stream[];
   affiliateAdIds?: string[];
+  organizer?: AffiliateID;
+  promoters?: AffiliateID[];
+  advertisers?: AdvertiserID[];
+  offers?: {
+    [key: OfferID]: {
+      id: OfferID;
+      rateCards: AffiliateRateCard_Firestore[];
+      adSets: AdSetID[]; // since we want to allow specifying exactly which adset goes where
+    };
+  };
 }
 
 enum StreamType {
@@ -85,28 +96,6 @@ export interface Stream {
     createdAt: number;
     updatedAt: number;
     deletedAt?: number;
-  };
-}
-
-export interface Tournament_Firestore_ {
-  id: TournamentID;
-  title: string;
-  description: string;
-  magicLink: string;
-  datestart: Date;
-  dateend: Date;
-  prize: string;
-  tournamentLink: string;
-  tournamentDate: Date;
-  organizer: AffiliateID;
-  promoters: AffiliateID[];
-  advertisers: AdvertiserID[];
-  offers: {
-    [key: OfferID]: {
-      id: OfferID;
-      rateCards: AffiliateRateCard_Firestore[];
-      // adSets: AdSet[];
-    };
   };
 }
 

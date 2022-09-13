@@ -9,13 +9,13 @@ const OfferTypeDefs = gql`
     advertiserID: ID!
     spentBudget: Float
     maxBudget: Float
-    # currency: Currency
     startDate: Timestamp
     endDate: Timestamp
     status: OfferStatus!
     affiliateBaseLink: String
     mmp: MeasurementPartnerType!
     activations: [Activation!]!
+    adSets: [ID!]!
     #targetingTags: [AdTargetTag!]!
   }
 

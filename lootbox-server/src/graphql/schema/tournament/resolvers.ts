@@ -594,6 +594,8 @@ const tournamentResolverComposition = {
   "Mutation.addStream": [isAuthenticated()],
   "Mutation.deleteStream": [isAuthenticated()],
   "Mutation.editStream": [isAuthenticated()],
+  // "Mutation.addOfferAdSetToTournament": [isAuthenticated()],
+  // "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
 };
 

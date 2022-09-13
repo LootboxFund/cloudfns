@@ -7,6 +7,7 @@ import {
   AffiliateType,
   MeasurementPartnerType,
   UserID,
+  AdSetID,
   ActivationStatus,
 } from "@wormgraph/helpers";
 import { AdvertiserID, Currency, OfferID, OfferStatus } from "../../lib/types";
@@ -27,12 +28,12 @@ export interface Offer_Firestore {
   mmp: MeasurementPartnerType;
   activations: Activation_Firestore[];
   // targetingTags: AdTargetTag[];
-  // adSets: AdSet[];
+  adSets: AdSetID[];
 }
 
 export type OfferPreview = Omit<
   Offer_Firestore,
-  "affiliateBaseLink" | "mmp" | "activations"
+  "affiliateBaseLink" | "mmp" | "activations" | "adSets"
 >;
 
 export type OfferPreviewForOrganizer = Omit<
