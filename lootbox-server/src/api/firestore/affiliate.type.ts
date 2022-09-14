@@ -42,5 +42,5 @@ export interface OrganizerOfferWhitelist_Firestore {
   organizerID: AffiliateID;
   offerID: OfferID;
   advertiserID: AdvertiserID;
-  active: Boolean;
+  timestamp: number;
 }

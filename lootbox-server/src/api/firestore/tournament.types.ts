@@ -13,7 +13,6 @@ import {
   UserID,
 } from "@wormgraph/helpers";
 import { TournamentTimestamps } from "../../graphql/generated/types";
-import { ActivationPricing_Firestore } from "./offer.type";
 
 export enum LootboxTournamentStatus {
   pending = "pending",

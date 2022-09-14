@@ -225,6 +225,7 @@ const TournamentTypeDefs = gql`
     tournamentID: ID!
     offerID: ID!
     adSetID: ID!
+    organizerID: ID!
   }
   type AddOfferAdSetToTournamentResponseSuccess {
     tournament: Tournament!

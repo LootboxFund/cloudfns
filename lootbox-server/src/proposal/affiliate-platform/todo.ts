@@ -5,15 +5,12 @@
  * ✅ GQL+Firestore for creating Ads
  * ✅ GQL+Firestore for listing AdSets
  * ✅ GQL+Firestore for listing Ads
- * ⬛️ GQL+Firestore for viewing AdSet
- * ⬛️ GQL+Firestore for viewing Ad
  * ✅ GQL+Firestore for adding & removing Ads to AdSets
  * ✅ GQL+Firestore for adding & removing AdSets to Offers
  *
  * ✅ GQL+Firestore for adding & removing Offers to Tournament
  * ✅ GQL+Firestore for adding & removing Affiliate+RateCard to Tournament
  * ✅ GQL+Firestore for editing Affiliate RateCard in tournament
- * ⬜️ GQL+Firestore for listing Affiliate RateCards in tournament
  * ✅ GQL+Firestore for affiliate to leave a tournament themselves
  * ⬜️ Dynamic creation of RateCards when adding & removing OfferAdsets to Tournaments
  *

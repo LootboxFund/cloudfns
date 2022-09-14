@@ -59,33 +59,16 @@ const OfferTypeDefs = gql`
     id: ID!
     name: String!
     description: String
-    masterPricing: ActivationPricingInput!
+    pricing: Float!
     status: ActivationStatus!
-  }
-  input ActivationPricingInput {
-    id: ID!
-    activationID: ID!
-    pricing: Float
-    percentage: Float
-    affiliateID: ID!
-    affiliateType: AffiliateType
   }
 
   type Activation {
     id: ID!
     name: String!
     description: String
-    masterPricing: ActivationPricing!
+    pricing: Float!
     status: ActivationStatus!
-  }
-
-  type ActivationPricing {
-    id: ID!
-    activationID: ID!
-    pricing: Float
-    percentage: Float
-    affiliateID: ID!
-    affiliateType: AffiliateType
   }
 
   enum AdTargetTagType {

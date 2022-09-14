@@ -2,6 +2,7 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { AffiliateID, UserID } from "../../../lib/types";
 import {
   Affiliate,
+  MutationRemoveWhitelistAffiliateToOfferArgs,
   MutationUpgradeToAffiliateArgs,
   MutationWhitelistAffiliateToOfferArgs,
   QueryAffiliatePublicViewArgs,
@@ -10,10 +11,14 @@ import {
   UpgradeToAffiliateResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
-import { WhitelistAffiliateToOfferResponse } from "../../generated/types";
+import {
+  WhitelistAffiliateToOfferResponse,
+  RemoveWhitelistAffiliateToOfferResponse,
+} from "../../generated/types";
 import {
   affiliateAdminView,
   affiliatePublicView,
+  removeWhitelistAffiliateToOffer,
   upgradeToAffiliate,
   whitelistAffiliateToOffer,
 } from "../../../api/firestore/affiliate";
@@ -22,6 +27,7 @@ import {
   AffiliatePublicViewResponse,
   QueryAffiliateAdminViewArgs,
 } from "../../generated/types";
+import { OrganizerOfferWhitelistID } from "@wormgraph/helpers";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
@@ -129,9 +135,38 @@ const AffiliateResolvers: Resolvers = {
       //   };
       // }
       try {
-        await whitelistAffiliateToOffer(payload);
+        const whitelist = await whitelistAffiliateToOffer(payload);
         return {
-          message: `Successfully whitelisted affiliate=${payload.affiliateID} to offer=${payload.offerID} from advertiser=${payload.advertiserID}`,
+          whitelist,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    removeWhitelistAffiliateToOffer: async (
+      _,
+      { id }: MutationRemoveWhitelistAffiliateToOfferArgs,
+      context: Context
+    ): Promise<RemoveWhitelistAffiliateToOfferResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        const idOfDeletedWhitelist = await removeWhitelistAffiliateToOffer(
+          id as OrganizerOfferWhitelistID
+        );
+        return {
+          message: `Successfully removed whitelist-affiliate-offer=${idOfDeletedWhitelist}`,
         };
       } catch (err) {
         return {
@@ -182,8 +217,20 @@ const AffiliateResolvers: Resolvers = {
   },
   WhitelistAffiliateToOfferResponse: {
     __resolveType: (obj: WhitelistAffiliateToOfferResponse) => {
-      if ("message" in obj) {
+      if ("whitelist" in obj) {
         return "WhitelistAffiliateToOfferResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  RemoveWhitelistAffiliateToOfferResponse: {
+    __resolveType: (obj: RemoveWhitelistAffiliateToOfferResponse) => {
+      if ("message" in obj) {
+        return "RemoveWhitelistAffiliateToOfferResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

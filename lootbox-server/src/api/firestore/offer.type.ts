@@ -45,17 +45,7 @@ export interface Activation_Firestore {
   id: ActivationID;
   name: string;
   description: string;
-  masterPricing: ActivationPricing_Firestore;
+  pricing: number;
   status: ActivationStatus;
   count?: number;
-}
-
-export interface ActivationPricing_Firestore {
-  id: ActivationPricingID;
-  activationID: ActivationID;
-  pricing: number;
-  // currency: Currency;
-  percentage: number;
-  affiliateID: AffiliateID;
-  affiliateType: AffiliateType;
 }

@@ -22,10 +22,7 @@ import {
 import { db } from "../firebase";
 import { Collection } from "./collection.types";
 import { EditActivationsInOfferPayload } from "../../graphql/generated/types";
-import {
-  AddActivationsToOfferPayload,
-  ActivationPricing,
-} from "../../graphql/generated/types";
+import { AddActivationsToOfferPayload } from "../../graphql/generated/types";
 import {
   Activation_Firestore,
   OfferPreview,
@@ -140,15 +137,16 @@ export const addActivationsToOffer = async (
           ...activation,
           id: activationID,
           description: activation.description || "",
-          masterPricing: {
-            ...activation.masterPricing,
-            id: uuidv4() as ActivationPricingID,
-            activationID: activationID,
-            pricing: activation.masterPricing.pricing || 0,
-            percentage: activation.masterPricing.percentage || 0,
-            affiliateID: "Lootbox" as AffiliateID,
-            affiliateType: AffiliateType.Lootbox,
-          },
+          pricing: activation.pricing,
+          // masterPricing: {
+          //   ...activation.masterPricing,
+          //   id: uuidv4() as ActivationPricingID,
+          //   activationID: activationID,
+          //   pricing: activation.masterPricing.pricing || 0,
+          //   percentage: activation.masterPricing.percentage || 0,
+          //   affiliateID: "Lootbox" as AffiliateID,
+          //   affiliateType: AffiliateType.Lootbox,
+          // },
         };
       }
     );
@@ -195,11 +193,12 @@ export const editActivationsInOffer = async (
             name: matchingNewActivation.name,
             description: matchingNewActivation.description || "",
             status: matchingNewActivation.status,
-            masterPricing: {
-              ...act.masterPricing,
-              pricing: matchingNewActivation.masterPricing.pricing || 0,
-              percentage: matchingNewActivation.masterPricing.percentage || 0,
-            },
+            pricing: matchingNewActivation.pricing,
+            // masterPricing: {
+            //   ...act.masterPricing,
+            //   pricing: matchingNewActivation.masterPricing.pricing || 0,
+            //   percentage: matchingNewActivation.masterPricing.percentage || 0,
+            // },
           };
         }
         return false;

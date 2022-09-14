@@ -10,6 +10,7 @@ import {
   OrganizerRank,
   OrganizerOfferWhitelistID,
   AdvertiserID,
+  rankInfoTable,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -38,6 +39,7 @@ import {
 import { Offer_Firestore } from "./offer.type";
 import { AdSetStatus, AdSet_Firestore } from "./ad.types";
 import { TournamentOffers } from "../../graphql/generated/types";
+import { Advertiser_Firestore } from "./advertiser.type";
 
 export const upgradeToAffiliate = async (
   userID: UserID
@@ -71,10 +73,20 @@ export const whitelistAffiliateToOffer = async (
     organizerID: payload.affiliateID as AffiliateID,
     offerID: payload.offerID as OfferID,
     advertiserID: payload.advertiserID as AdvertiserID,
-    active: true,
+    timestamp: new Date().getTime() / 1000,
   };
   await whitelistAffiliateToOfferRef.set(organizerOfferWhitelist);
   return organizerOfferWhitelist;
+};
+
+export const removeWhitelistAffiliateToOffer = async (
+  id: OrganizerOfferWhitelistID
+): Promise<String> => {
+  const whitelistAffiliateToOfferRef = db
+    .collection(Collection.WhitelistOfferAffiliate)
+    .doc(id) as DocumentReference<OrganizerOfferWhitelist_Firestore>;
+  await whitelistAffiliateToOfferRef.delete();
+  return id;
 };
 
 export const affiliateAdminView = async (
@@ -124,21 +136,42 @@ export const addOfferAdSetToTournament = async (
   const adSetRef = db
     .collection(Collection.AdSet)
     .doc(payload.adSetID) as DocumentReference<AdSet_Firestore>;
-  const [tournamentSnapshot, offerSnapshot, adSetSnapshot] = await Promise.all([
+  const affiliateSetRef = db
+    .collection(Collection.Affiliate)
+    .doc(payload.organizerID) as DocumentReference<Affiliate_Firestore>;
+  const rateQuoteRef = db
+    .collection(Collection.RateQuote)
+    .where(
+      "tournamentID",
+      "==",
+      payload.tournamentID
+    ) as Query<RateQuote_Firestore>;
+
+  const [
+    tournamentSnapshot,
+    offerSnapshot,
+    adSetSnapshot,
+    affiliateSnapshot,
+    rateQuoteSnapshots,
+  ] = await Promise.all([
     await tournamentRef.get(),
     await offerRef.get(),
     await adSetRef.get(),
+    await affiliateSetRef.get(),
+    await rateQuoteRef.get(),
   ]);
   if (
     !tournamentSnapshot.exists ||
     !offerSnapshot.exists ||
-    !adSetSnapshot.exists
+    !adSetSnapshot.exists ||
+    !affiliateSnapshot.exists
   ) {
     return undefined;
   }
   const existingTournament = tournamentSnapshot.data() as Tournament_Firestore;
   const existingOffer = offerSnapshot.data() as Offer_Firestore;
   const existingAdSet = adSetSnapshot.data() as AdSet_Firestore;
+  const existingAffiliate = affiliateSnapshot.data() as Affiliate_Firestore;
 
   if (existingOffer.status !== OfferStatus.Active) {
     throw new Error("Offer is not active, cannot add to tournament");
@@ -146,17 +179,93 @@ export const addOfferAdSetToTournament = async (
   if (existingAdSet.status !== AdSetStatus.Active) {
     throw new Error("Ad Set is not active, cannot add to tournament");
   }
+  // check tournament for existing historical rate quotes
+  let historicalRateQuotes: RateQuote_Firestore[] = [];
+  if (!rateQuoteSnapshots.empty) {
+    historicalRateQuotes = rateQuoteSnapshots.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        tournamentID: data.tournamentID,
+        affiliateID: data.affiliateID,
+        affiliateType: data.affiliateType,
+        offerID: data.offerID,
+        activationID: data.activationID,
+        pricing: data.pricing,
+        timestamp: data.timestamp,
+        status: data.status,
+      };
+    });
+  }
+  // const historicalRateQuotesToKeep: RateQuoteID[] = [];
+  // create the organizer rate quotes
+  const rateQuoteRank =
+    rankInfoTable[existingAffiliate.organizerRank || OrganizerRank.ClayRank1];
+  const rateQuotes: RateQuoteInput[] = [];
+  for (let i = 0; i < existingOffer.activations.length; i++) {
+    const activation = existingOffer.activations[i];
+    const rateQuote: RateQuoteInput = {
+      tournamentID: payload.tournamentID as TournamentID,
+      affiliateID: payload.organizerID as AffiliateID,
+      affiliateType: AffiliateType.Organizer,
+      offerID: payload.offerID as OfferID,
+      activationID: activation.id as ActivationID,
+      pricing: activation.pricing * rateQuoteRank.revenueShare,
+    };
+    // add this rate quote for activation if it doesn't exist aleady
+    const existingRateQuote = historicalRateQuotes.find((rq) => {
+      return (
+        rq.tournamentID === rateQuote.tournamentID &&
+        rq.activationID === rateQuote.activationID &&
+        rq.offerID === rateQuote.offerID &&
+        rq.status === RateQuoteStatus.Active
+      );
+    });
+    if (!existingRateQuote) {
+      rateQuotes.push(rateQuote);
+    }
+  }
+  // historicalRateQuotes.forEach((rq) => {
+  //   if (
+  //     rq.offerID === payload.offerID &&
+  //     rq.tournamentID === payload.tournamentID
+  //   ) {
+  //     historicalRateQuotesToRemove.push(rq.id);
+  //   }
+  // });
+  // add the new rate quotes to the database
+  const addedRateQuotes = await Promise.all([
+    ...rateQuotes.map((rq) => {
+      return createRateQuote(rq);
+    }),
+  ]);
+
+  // deactivate the old rate quotes from the database
+  // await Promise.all([
+  //   ...historicalRateQuotesToRemove.map((rqID) => {
+  //     return deactivateRateQuote(rqID);
+  //   }),
+  // ]);
 
   const updatePayload: Partial<Tournament_Firestore> = {};
+  let updatedRateQuotes: RateQuoteID[] = [];
+  // remove the old rate quotes from the tournament
+  // add the new rate quotes to the tournament
+  if (existingTournament.offers && existingTournament.offers[payload.offerID]) {
+    updatedRateQuotes = existingTournament.offers[
+      payload.offerID
+    ].rateQuotes.concat(addedRateQuotes.map((rq) => rq.id));
+    // .filter((rq) => !historicalRateQuotesToRemove.includes(rq))
+  } else {
+    updatedRateQuotes = addedRateQuotes.map((rq) => rq.id);
+  }
   // repeat
   if (!existingTournament.offers) {
     updatePayload.offers = {
       [payload.offerID]: {
         id: payload.offerID as OfferID,
         status: OfferInTournamentStatus.Active,
-        rateQuotes: [
-          // todo: add rate cards dynamically
-        ],
+        rateQuotes: updatedRateQuotes,
         adSets: {
           [payload.adSetID]: OfferInTournamentStatus.Active,
         },
@@ -169,9 +278,7 @@ export const addOfferAdSetToTournament = async (
         [payload.offerID]: {
           ...existingTournament.offers[payload.offerID],
           status: OfferInTournamentStatus.Active,
-          rateQuotes: [
-            // todo: add rate cards dynamically
-          ],
+          rateQuotes: updatedRateQuotes,
           adSets: {
             ...existingTournament.offers[payload.offerID].adSets,
             [payload.adSetID]: OfferInTournamentStatus.Active,
@@ -184,9 +291,7 @@ export const addOfferAdSetToTournament = async (
         [payload.offerID]: {
           id: payload.offerID,
           status: OfferInTournamentStatus.Active,
-          rateQuotes: [
-            // this should be dynamically rendered
-          ],
+          rateQuotes: updatedRateQuotes,
           adSets: {
             [payload.adSetID]: OfferInTournamentStatus.Active,
           },
@@ -217,38 +322,94 @@ export const removeOfferAdSetFromTournament = async (
   const tournamentRef = db
     .collection(Collection.Tournament)
     .doc(payload.tournamentID) as DocumentReference<Tournament_Firestore>;
-  const tournamentSnapshot = await tournamentRef.get();
+  const rateQuoteRef = db
+    .collection(Collection.RateQuote)
+    .where(
+      "tournamentID",
+      "==",
+      payload.tournamentID
+    ) as Query<RateQuote_Firestore>;
+  const [tournamentSnapshot, rateQuoteSnapshots] = await Promise.all([
+    tournamentRef.get(),
+    rateQuoteRef.get(),
+  ]);
   if (!tournamentSnapshot.exists) {
     return undefined;
   }
   const existingTournament = tournamentSnapshot.data() as Tournament_Firestore;
+  // check tournament for existing historical rate quotes
+  let historicalRateQuotes: RateQuote_Firestore[] = [];
+  if (!rateQuoteSnapshots.empty) {
+    historicalRateQuotes = rateQuoteSnapshots.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        tournamentID: data.tournamentID,
+        affiliateID: data.affiliateID,
+        affiliateType: data.affiliateType,
+        offerID: data.offerID,
+        activationID: data.activationID,
+        pricing: data.pricing,
+        timestamp: data.timestamp,
+        status: data.status,
+      };
+    });
+  }
+  // identify the old rate quotes to deactivate
+  let historicalRateQuotesToRemove: RateQuoteID[] = [];
+  // update the tournament
   const updatePayload: Partial<Tournament_Firestore> = {};
-  // repeat
   if (
     payload.adSetID &&
     payload.offerID &&
     payload.tournamentID &&
     existingTournament.offers
   ) {
+    // update all the adSets status
     const updatedAdSets = {
       ...existingTournament.offers[payload.offerID].adSets,
       [payload.adSetID]: OfferInTournamentStatus.Inactive,
     };
-    let isActive = OfferInTournamentStatus.Inactive;
+    // check if at least 1 adSet is active still
+    let offerActiveStatus = OfferInTournamentStatus.Inactive;
     for (const adSetID in updatedAdSets) {
       if (updatedAdSets[adSetID] === OfferInTournamentStatus.Active) {
-        isActive = OfferInTournamentStatus.Active;
+        offerActiveStatus = OfferInTournamentStatus.Active;
       }
     }
+    // if no adSets are active anymore, we should remove old rate quotes for all affiliates
+    if (offerActiveStatus === OfferInTournamentStatus.Inactive) {
+      historicalRateQuotes.forEach((rq) => {
+        if (
+          rq.offerID === payload.offerID &&
+          rq.tournamentID === payload.tournamentID
+        ) {
+          historicalRateQuotesToRemove.push(rq.id);
+        }
+      });
+    }
+    // and calculate the final set of rate quotes to keep
+    const updatedRateQuotesForOffer: RateQuoteID[] = existingTournament.offers[
+      payload.offerID
+    ].rateQuotes.filter((rq) => !historicalRateQuotesToRemove.includes(rq));
+
+    // form the final offers object to save
     updatePayload.offers = {
       ...existingTournament.offers,
       [payload.offerID]: {
         ...existingTournament.offers[payload.offerID],
         adSets: updatedAdSets,
-        status: isActive,
+        status: offerActiveStatus, // set active or not based on if theres still old active cards
+        rateQuotes: updatedRateQuotesForOffer,
       },
     };
   }
+  // deactivate the old rate quotes from the database
+  await Promise.all([
+    ...historicalRateQuotesToRemove.map((rqID) => {
+      return deactivateRateQuote(rqID);
+    }),
+  ]);
   // until done
   await tournamentRef.update(updatePayload);
   return (await tournamentRef.get()).data() as Tournament_Firestore;

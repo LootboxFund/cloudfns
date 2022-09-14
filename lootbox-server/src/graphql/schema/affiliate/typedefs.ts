@@ -11,6 +11,14 @@ const AffiliateTypeDefs = gql`
     id: ID!
   }
 
+  type OrganizerOfferWhitelist {
+    id: ID!
+    organizerID: ID!
+    offerID: ID!
+    advertiserID: ID!
+    timestamp: Timestamp!
+  }
+
   # ------ Affiliate Admin View ------
   type AffiliateAdminViewResponseSuccess {
     affiliate: Affiliate!
@@ -62,17 +70,25 @@ const AffiliateTypeDefs = gql`
       UpgradeToAffiliateResponseSuccess
     | ResponseError
 
-  # ------ Upgrade to Affiliate ------
+  # ------ Whitelist an Affiliate to an Offer ------
   input WhitelistAffiliateToOfferPayload {
     affiliateID: ID!
     offerID: ID!
     advertiserID: ID!
   }
   type WhitelistAffiliateToOfferResponseSuccess {
-    message: String!
+    whitelist: OrganizerOfferWhitelist!
   }
   union WhitelistAffiliateToOfferResponse =
       WhitelistAffiliateToOfferResponseSuccess
+    | ResponseError
+
+  # ------ Remove an Affiliate from an Offer ------
+  type RemoveWhitelistAffiliateToOfferResponseSuccess {
+    message: String!
+  }
+  union RemoveWhitelistAffiliateToOfferResponse =
+      RemoveWhitelistAffiliateToOfferResponseSuccess
     | ResponseError
 
   extend type Mutation {
@@ -82,6 +98,10 @@ const AffiliateTypeDefs = gql`
     whitelistAffiliateToOffer(
       payload: WhitelistAffiliateToOfferPayload!
     ): WhitelistAffiliateToOfferResponse!
+    # Remove whitelist of an offer to an affiliate
+    removeWhitelistAffiliateToOffer(
+      id: ID!
+    ): RemoveWhitelistAffiliateToOfferResponse!
   }
 `;
 
