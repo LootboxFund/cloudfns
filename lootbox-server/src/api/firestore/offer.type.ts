@@ -47,6 +47,7 @@ export interface Activation_Firestore {
   description: string;
   masterPricing: ActivationPricing_Firestore;
   status: ActivationStatus;
+  count?: number;
 }
 
 export interface ActivationPricing_Firestore {

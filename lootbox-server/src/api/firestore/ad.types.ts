@@ -1,9 +1,11 @@
+import { Affiliate } from "../../graphql/generated/types";
 import {
   AdEventID,
   AdEventNonce,
   AdID,
   AdSetID,
   AdvertiserID,
+  AffiliateID,
   CampaignID,
   ClaimID,
   CreativeID,
@@ -78,6 +80,11 @@ export type EventMetadata = {
   timeElapsed?: number;
 };
 
+export type AdEventAffiliateAttribution = {
+  organizerID?: AffiliateID;
+  promoterID?: AffiliateID;
+};
+
 export interface AdEvent {
   id: AdEventID;
   timestamp: number;
@@ -87,7 +94,8 @@ export interface AdEvent {
   campaignId: CampaignID;
   action: AdEventAction;
   claimId?: ClaimID;
-  metadata: EventMetadata;
+  metadata?: EventMetadata;
+  affiliateAttribution?: AdEventAffiliateAttribution;
   nonce: AdEventNonce;
 }
 

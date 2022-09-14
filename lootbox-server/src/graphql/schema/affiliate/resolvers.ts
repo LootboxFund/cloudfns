@@ -3,16 +3,19 @@ import { AffiliateID, UserID } from "../../../lib/types";
 import {
   Affiliate,
   MutationUpgradeToAffiliateArgs,
+  MutationWhitelistAffiliateToOfferArgs,
   QueryAffiliatePublicViewArgs,
   Resolvers,
   StatusCode,
   UpgradeToAffiliateResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
+import { WhitelistAffiliateToOfferResponse } from "../../generated/types";
 import {
   affiliateAdminView,
   affiliatePublicView,
   upgradeToAffiliate,
+  whitelistAffiliateToOffer,
 } from "../../../api/firestore/affiliate";
 import {
   AffiliateAdminViewResponse,
@@ -112,6 +115,33 @@ const AffiliateResolvers: Resolvers = {
         };
       }
     },
+    whitelistAffiliateToOffer: async (
+      _,
+      { payload }: MutationWhitelistAffiliateToOfferArgs,
+      context: Context
+    ): Promise<WhitelistAffiliateToOfferResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        await whitelistAffiliateToOffer(payload);
+        return {
+          message: `Successfully whitelisted affiliate=${payload.affiliateID} to offer=${payload.offerID} from advertiser=${payload.advertiserID}`,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   UpgradeToAffiliateResponse: {
@@ -142,6 +172,18 @@ const AffiliateResolvers: Resolvers = {
     __resolveType: (obj: AffiliatePublicViewResponse) => {
       if ("affiliate" in obj) {
         return "AffiliatePublicViewResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  WhitelistAffiliateToOfferResponse: {
+    __resolveType: (obj: WhitelistAffiliateToOfferResponse) => {
+      if ("message" in obj) {
+        return "WhitelistAffiliateToOfferResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

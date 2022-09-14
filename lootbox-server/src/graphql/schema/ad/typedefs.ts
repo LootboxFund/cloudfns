@@ -70,6 +70,11 @@ const AdTypeDefs = gql`
     timeElapsed: Int
   }
 
+  type AdEventAffiliateAttribution {
+    organizerID: ID
+    promoterID: ID
+  }
+
   type AdEvent {
     id: ID!
     timestamp: Timestamp!
@@ -80,6 +85,7 @@ const AdTypeDefs = gql`
     action: AdEventAction!
     claimId: ID
     metadata: EventMetadata
+    affiliateAttribution: AdEventAffiliateAttribution
     nonce: ID! # unique - prevents duplicate events
   }
 

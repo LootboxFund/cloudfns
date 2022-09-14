@@ -7,6 +7,9 @@ import {
   RateQuoteID,
   AffiliateType,
   ActivationID,
+  OrganizerRank,
+  OrganizerOfferWhitelistID,
+  AdvertiserID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -18,10 +21,12 @@ import {
   UpdatePromoterRateQuoteToTournamentPayload,
   RateQuoteInput,
   RemovePromoterFromTournamentPayload,
+  WhitelistAffiliateToOfferPayload,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
   Affiliate_Firestore,
+  OrganizerOfferWhitelist_Firestore,
   RateQuoteStatus,
   RateQuote_Firestore,
 } from "./affiliate.type";
@@ -49,9 +54,27 @@ export const upgradeToAffiliate = async (
     id: affiliateRef.id as AffiliateID,
     userID: userID,
     name: user.username || `New Affiliate ${affiliateRef.id}`,
+    organizerRank: OrganizerRank.ClayRank1,
   };
   await affiliateRef.set(affiliate);
   return affiliate;
+};
+
+export const whitelistAffiliateToOffer = async (
+  payload: WhitelistAffiliateToOfferPayload
+): Promise<OrganizerOfferWhitelist_Firestore> => {
+  const whitelistAffiliateToOfferRef = db
+    .collection(Collection.WhitelistOfferAffiliate)
+    .doc() as DocumentReference<OrganizerOfferWhitelist_Firestore>;
+  const organizerOfferWhitelist: OrganizerOfferWhitelist_Firestore = {
+    id: whitelistAffiliateToOfferRef.id as OrganizerOfferWhitelistID,
+    organizerID: payload.affiliateID as AffiliateID,
+    offerID: payload.offerID as OfferID,
+    advertiserID: payload.advertiserID as AdvertiserID,
+    active: true,
+  };
+  await whitelistAffiliateToOfferRef.set(organizerOfferWhitelist);
+  return organizerOfferWhitelist;
 };
 
 export const affiliateAdminView = async (
@@ -342,9 +365,6 @@ export const updatePromoterRateQuoteInTournament = async (
   // add rate quotes to tournament
   // or replace existing rate quotes
   if (payload.rateQuotes && existingTournament.offers) {
-    console.log(`---- HISTORICAL ----`);
-    console.log(JSON.stringify(historicalRateQuotes, null, 2));
-    console.log(`-------------------`);
     const historicalRateQuoteIDs = historicalRateQuotes.map((rq) => rq.id);
     const currentRateQuoteIDs: RateQuoteID[] =
       existingTournament.offers[payload.offerID].rateQuotes || [];
@@ -366,31 +386,6 @@ export const updatePromoterRateQuoteInTournament = async (
     const currentRateQuotesToRemoveIDs = currentRateQuoteIDs.filter((rqID) =>
       historicalRateQuotesToExclude.includes(rqID)
     );
-    console.log(`
-      ------------------
-      Historical Rate Quotes:
-      ${JSON.stringify(historicalRateQuoteIDs, null, 2)}
-    `);
-    console.log(`
-      ------------------
-      Current Rate Quotes:
-      ${JSON.stringify(currentRateQuoteIDs, null, 2)}
-    `);
-    console.log(`
-      ------------------
-      Rate Quotes to Add:
-      ${JSON.stringify(rateQuotesToAdd, null, 2)}
-    `);
-    console.log(`
-      ------------------
-      Historical Rate Quotes to Exclude:
-      ${JSON.stringify(historicalRateQuotesToExclude, null, 2)}
-    `);
-    console.log(`
-      ------------------
-      Current Rate Quotes to Remove:
-      ${JSON.stringify(currentRateQuotesToRemoveIDs, null, 2)}
-    `);
     const addedRateQuotes = await Promise.all([
       ...rateQuotesToAdd.map((rq) => {
         return createRateQuote(rq);
@@ -405,11 +400,7 @@ export const updatePromoterRateQuoteInTournament = async (
     const updatedListOfRateQuotes = currentRateQuoteIDs
       .filter((x) => !historicalRateQuotesToExclude.includes(x))
       .concat(addedRateQuotes.map((rq) => rq.id));
-    console.log(`
-        ------------------
-        Updated List of Rate Quotes:
-        ${JSON.stringify(updatedListOfRateQuotes, null, 2)}
-      `);
+
     const offer = {
       ...existingTournament.offers[payload.offerID],
       rateQuotes: updatedListOfRateQuotes,
