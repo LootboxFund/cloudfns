@@ -18,6 +18,9 @@
  * ⬜️ GQL+Firestore for adding & removing OfferAdsets to Tournaments
  *          - Will need to handle dynamic creation of RateCards
  *
+ * ⬜️ Add counts to firestore
+ * ⬜️ Add recursive querying to graphql types
+ *
  * ⬛️ GQL+Firestore for an advertiser to see its relationship stats with an organizer & vice versa
  * ⬛️ GQL+Firestore for an affiliate to see its relationship stats with another affiliate & vice versa
  * ⬛️ GQL+Firestore for an organizer to list their promoters

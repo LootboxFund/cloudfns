@@ -43,8 +43,9 @@ const AdTypeDefs = gql`
     status: AdSetStatus!
     advertiserID: ID!
     placement: Placement!
-    adIDs: [ID!]!
     offerIDs: [ID!]!
+    adIDs: [ID!]!
+    # ads: [Ad!]
   }
 
   type Ad {

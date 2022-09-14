@@ -124,7 +124,6 @@ export const addOfferAdSetToTournament = async (
       ...existingTournament.offers,
       [payload.offerID]: {
         ...existingTournament.offers[payload.offerID],
-        id: payload.offerID as OfferID,
         status: OfferInTournamentStatus.Active,
         rateCards: {
           // todo: add rate cards dynamically

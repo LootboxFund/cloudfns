@@ -270,6 +270,18 @@ const AdResolvers: Resolvers = {
     // },
   },
 
+  // AdSet: {
+  // ads: async (adSet: AdSet): Promise<Ad[] | null> => {
+  //   try {
+  //     const ads = await listAdsOfAdSet(adSet.id);
+  //     return ads;
+  //   } catch (err) {
+  //     console.error(err);
+  //     return null;
+  //   }
+  // }
+  // }
+
   CreateAdResponse: {
     __resolveType: (obj: CreateAdResponse) => {
       if ("ad" in obj) {
@@ -342,6 +354,16 @@ const AdResolvers: Resolvers = {
       return null;
     },
   },
+
+  /**
+   *
+   * getAd() {
+   *  const ad = getAdFirestore()
+   *  const creative = getAdCreative()
+   *  return { ad, creative }
+   * }
+   *
+   */
 
   // Ad: {
   //   creative: async (ad: Ad): Promise<Creative | null> => {

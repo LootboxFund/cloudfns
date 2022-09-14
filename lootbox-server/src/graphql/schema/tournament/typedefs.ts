@@ -56,7 +56,44 @@ const TournamentTypeDefs = gql`
     coverPhoto: String
     communityURL: String
     streams: [Stream!]
-    affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
+    # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
+    # organizer: Organizer
+    # promoters: [Promoter!]
+    offers: [TournamentOffers!]
+  }
+
+  type TournamentOffers {
+    id: ID!
+    status: OfferInTournamentStatus!
+    rateCards: [AffiliateRateCard!]
+    activeAdSets: [ID!]
+    inactiveAdSets: [ID!]
+  }
+
+  type AffiliateRateCard {
+    id: ID!
+    name: String
+    advertiserID: ID!
+    activations: [ActivationPricing!]
+    affiliateID: ID!
+    affiliateType: AffiliateType!
+    tournamentID: ID
+    organizerID: ID
+    promoterID: ID
+  }
+
+  type ActivationPricing {
+    id: ID!
+    activationID: ID!
+    pricing: Int
+    percentage: Float
+    affiliateID: ID!
+    affiliateType: AffiliateType!
+  }
+
+  enum OfferInTournamentStatus {
+    Active
+    Inactive
   }
 
   type TournamentPreview {

@@ -32,25 +32,6 @@ type LootboxSocialsWithoutEmail = {
   web?: string;
 };
 
-export interface LootboxTournamentSnapshot {
-  address: Address;
-  issuer: UserID;
-  description: string;
-  name: string;
-  stampImage: string;
-  image: string;
-  backgroundColor: string;
-  backgroundImage: string;
-  metadataDownloadUrl?: string;
-  timestamps: {
-    createdAt: number;
-    updatedAt: number;
-  };
-  status: LootboxTournamentStatus;
-  socials: LootboxSocialsWithoutEmail;
-  partyBaskets?: PartyBasketID[];
-}
-
 export enum OfferInTournamentStatus {
   Active = "Active",
   Inactive = "Inactive",
@@ -61,7 +42,6 @@ export interface Tournament_Firestore {
   description: string;
   tournamentLink?: string;
   timestamps: TournamentTimestamps;
-  lootboxSnapshots?: LootboxTournamentSnapshot[];
   creatorId: UserID;
   magicLink?: string;
   tournamentDate?: number;
@@ -76,8 +56,8 @@ export interface Tournament_Firestore {
   offers?: {
     [key: OfferID]: {
       id: OfferID;
-      rateCards: { [key: AffiliateID]: AffiliateRateCard_Firestore };
       status: OfferInTournamentStatus;
+      rateCards: { [key: AffiliateID]: AffiliateRateCard_Firestore };
       adSets: {
         [key: AdSetID]: OfferInTournamentStatus;
       };

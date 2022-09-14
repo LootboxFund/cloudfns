@@ -622,6 +622,30 @@ const TournamentResolvers = {
       return null;
     },
   },
+  AddOfferAdSetToTournamentResponse: {
+    __resolveType: (obj: AddOfferAdSetToTournamentResponse) => {
+      if ("tournament" in obj) {
+        return "AddOfferAdSetToTournamentResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  /**
+   *
+   * Tournament: {
+   *    organizer: async (tournament: Tournament): Promise<Organizer | null> => {}
+   *    promoters: async (tournament: Tournament): Promise<Promoter[] | null> => {
+   *         tournament.promoters = null // would show null
+   *         tournament.organizer = null // also be null
+   *    }
+   * }
+   *
+   */
 };
 
 const tournamentResolverComposition = {
@@ -631,7 +655,7 @@ const tournamentResolverComposition = {
   "Mutation.addStream": [isAuthenticated()],
   "Mutation.deleteStream": [isAuthenticated()],
   "Mutation.editStream": [isAuthenticated()],
-  // "Mutation.addOfferAdSetToTournament": [isAuthenticated()],
+  "Mutation.addOfferAdSetToTournament": [],
   // "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
 };

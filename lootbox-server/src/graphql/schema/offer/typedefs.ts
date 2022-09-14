@@ -37,10 +37,10 @@ const OfferTypeDefs = gql`
   #}
 
   enum OfferStatus {
-    ACTIVE
-    INACTIVE
-    PLANNED
-    ARCHIVED
+    Active
+    Inactive
+    Planned
+    Archived
   }
   enum ActivationStatus {
     ACTIVE
