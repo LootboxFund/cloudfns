@@ -14,7 +14,13 @@ import {
   updateStream,
   getPartyBasketsForLootbox,
 } from "../../../api/firestore";
-import { addOfferAdSetToTournament } from "../../../api/firestore/affiliate";
+import {
+  addOfferAdSetToTournament,
+  updatePromoterRateQuoteInTournament,
+  removeOfferAdSetFromTournament,
+  transformOffersToArray,
+  removePromoterFromTournament,
+} from "../../../api/firestore/affiliate";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { StreamID, TournamentID } from "../../../lib/types";
 import {
@@ -44,8 +50,19 @@ import {
   PartyBasketStatus,
   MutationAddOfferAdSetToTournamentArgs,
   AddOfferAdSetToTournamentResponse,
+  RemovePromoterFromTournamentResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
+import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
+import {
+  UpdatePromoterRateQuoteInTournamentResponse,
+  MutationUpdatePromoterRateQuoteInTournamentArgs,
+} from "../../generated/types";
+import {
+  TournamentOffers,
+  MutationRemoveOfferAdSetFromTournamentArgs,
+  RemoveOfferAdSetFromTournamentResponse,
+} from "../../generated/types";
 
 const TournamentResolvers = {
   Query: {
@@ -134,6 +151,9 @@ const TournamentResolvers = {
     },
     streams: async (tournament: Tournament): Promise<Stream[]> => {
       return getTournamentStreams(tournament.id as TournamentID);
+    },
+    offers: async (tournament: Tournament): Promise<TournamentOffers[]> => {
+      return transformOffersToArray(tournament.id as TournamentID);
     },
   },
 
@@ -502,6 +522,108 @@ const TournamentResolvers = {
         };
       }
     },
+    removeOfferAdSetFromTournament: async (
+      _,
+      { payload }: MutationRemoveOfferAdSetFromTournamentArgs,
+      context: Context
+    ): Promise<RemoveOfferAdSetFromTournamentResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        // Make sure the user owns the tournament
+        const tournament = await removeOfferAdSetFromTournament(payload);
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament not found`,
+            },
+          };
+        }
+        return { tournament: tournament as Tournament };
+      } catch (e) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: e instanceof Error ? e.message : "",
+          },
+        };
+      }
+    },
+    updatePromoterRateQuoteInTournament: async (
+      _,
+      { payload }: MutationUpdatePromoterRateQuoteInTournamentArgs,
+      context: Context
+    ): Promise<UpdatePromoterRateQuoteInTournamentResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        // Make sure the user owns the tournament
+        const tournament = await updatePromoterRateQuoteInTournament(payload);
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament not found`,
+            },
+          };
+        }
+        return { tournament: tournament as Tournament };
+      } catch (e) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: e instanceof Error ? e.message : "",
+          },
+        };
+      }
+    },
+    removePromoterFromTournament: async (
+      _,
+      { payload }: MutationRemovePromoterFromTournamentArgs,
+      context: Context
+    ): Promise<RemovePromoterFromTournamentResponse> => {
+      // if (!context.userId) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.Unauthorized,
+      //       message: `Unauthorized`,
+      //     },
+      //   };
+      // }
+      try {
+        // Make sure the user owns the tournament
+        const tournament = await removePromoterFromTournament(payload);
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament not found`,
+            },
+          };
+        }
+        return { tournament: tournament as Tournament };
+      } catch (e) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: e instanceof Error ? e.message : "",
+          },
+        };
+      }
+    },
   },
 
   TournamentResponse: {
@@ -635,17 +757,53 @@ const TournamentResolvers = {
       return null;
     },
   },
-  /**
-   *
-   * Tournament: {
-   *    organizer: async (tournament: Tournament): Promise<Organizer | null> => {}
-   *    promoters: async (tournament: Tournament): Promise<Promoter[] | null> => {
-   *         tournament.promoters = null // would show null
-   *         tournament.organizer = null // also be null
-   *    }
-   * }
-   *
-   */
+  RemoveOfferAdSetFromTournamentResponse: {
+    __resolveType: (obj: RemoveOfferAdSetFromTournamentResponse) => {
+      if ("tournament" in obj) {
+        return "RemoveOfferAdSetFromTournamentResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  UpdatePromoterRateQuoteInTournamentResponse: {
+    __resolveType: (obj: UpdatePromoterRateQuoteInTournamentResponse) => {
+      if ("tournament" in obj) {
+        return "UpdatePromoterRateQuoteInTournamentResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  RemovePromoterFromTournamentResponse: {
+    __resolveType: (obj: RemovePromoterFromTournamentResponse) => {
+      if ("tournament" in obj) {
+        return "RemovePromoterFromTournamentResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  // Tournament: {
+  // organizer: async (tournament: Tournament): Promise<Organizer | null> => {}
+  // promoters: async (tournament: Tournament): Promise<Promoter[] | null> => {
+  //      tournament.promoters = null // would show null
+  //      tournament.organizer = null // also be null
+  // }
+  // },
 };
 
 const tournamentResolverComposition = {

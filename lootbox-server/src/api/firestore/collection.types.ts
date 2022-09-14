@@ -16,4 +16,5 @@ export enum Collection {
   "Affiliate" = "affiliate",
   "Memo" = "memo",
   "Conquest" = "conquest",
+  "RateQuote" = "rate-quote",
 }

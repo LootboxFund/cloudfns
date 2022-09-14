@@ -7,6 +7,7 @@ import {
   OfferID,
   PartyBasketID,
   RateCardID,
+  RateQuoteID,
   StreamID,
   TournamentID,
   UserID,
@@ -57,7 +58,7 @@ export interface Tournament_Firestore {
     [key: OfferID]: {
       id: OfferID;
       status: OfferInTournamentStatus;
-      rateCards: { [key: AffiliateID]: AffiliateRateCard_Firestore };
+      rateQuotes: RateQuoteID[];
       adSets: {
         [key: AdSetID]: OfferInTournamentStatus;
       };
@@ -84,17 +85,4 @@ export interface Stream {
     updatedAt: number;
     deletedAt?: number;
   };
-}
-
-export interface AffiliateRateCard_Firestore {
-  id: RateCardID;
-  name: string;
-  advertiserID: AdvertiserID;
-  activations: ActivationPricing_Firestore[];
-  affiliateID: AffiliateID;
-  affiliateType: AffiliateType;
-  tournamentID?: TournamentID;
-  organizerID?: AffiliateID;
-  promoterID?: AffiliateID;
-  // currency: Currency;
 }

@@ -58,37 +58,16 @@ const TournamentTypeDefs = gql`
     streams: [Stream!]
     # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
     # organizer: Organizer
-    # promoters: [Promoter!]
+    promoters: [ID!]
     offers: [TournamentOffers!]
   }
 
   type TournamentOffers {
     id: ID!
     status: OfferInTournamentStatus!
-    rateCards: [AffiliateRateCard!]
+    rateQuotes: [ID!]
     activeAdSets: [ID!]
     inactiveAdSets: [ID!]
-  }
-
-  type AffiliateRateCard {
-    id: ID!
-    name: String
-    advertiserID: ID!
-    activations: [ActivationPricing!]
-    affiliateID: ID!
-    affiliateType: AffiliateType!
-    tournamentID: ID
-    organizerID: ID
-    promoterID: ID
-  }
-
-  type ActivationPricing {
-    id: ID!
-    activationID: ID!
-    pricing: Int
-    percentage: Float
-    affiliateID: ID!
-    affiliateType: AffiliateType!
   }
 
   enum OfferInTournamentStatus {
@@ -254,6 +233,54 @@ const TournamentTypeDefs = gql`
       AddOfferAdSetToTournamentResponseSuccess
     | ResponseError
 
+  # ------------------- Remove Offer AdSet To Tournament -------------------
+  input RemoveOfferAdSetFromTournamentPayload {
+    tournamentID: ID!
+    offerID: ID!
+    adSetID: ID!
+  }
+  type RemoveOfferAdSetFromTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+  union RemoveOfferAdSetFromTournamentResponse =
+      RemoveOfferAdSetFromTournamentResponseSuccess
+    | ResponseError
+
+  # ------------------- Add Promoter To Tournament -------------------
+  input RateQuoteInput {
+    id: ID
+    offerID: ID!
+    activationID: ID!
+    pricing: Float!
+    tournamentID: ID!
+    affiliateID: ID!
+    affiliateType: AffiliateType!
+  }
+  input UpdatePromoterRateQuoteToTournamentPayload {
+    tournamentID: ID!
+    promoterID: ID!
+    offerID: ID!
+    rateQuotes: [RateQuoteInput!]!
+  }
+  type UpdatePromoterRateQuoteInTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+  union UpdatePromoterRateQuoteInTournamentResponse =
+      UpdatePromoterRateQuoteInTournamentResponseSuccess
+    | ResponseError
+
+  # ------------------- Remove Promoter From Tournament -------------------
+  input RemovePromoterFromTournamentPayload {
+    tournamentID: ID!
+    promoterID: ID!
+  }
+  type RemovePromoterFromTournamentResponseSuccess {
+    tournament: Tournament!
+  }
+  union RemovePromoterFromTournamentResponse =
+      RemovePromoterFromTournamentResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     # create a new tournament
     createTournament(
@@ -274,15 +301,17 @@ const TournamentTypeDefs = gql`
       payload: AddOfferAdSetToTournamentPayload!
     ): AddOfferAdSetToTournamentResponse!
     # organizer removes an offer to a tournament
-    #removeOffer(
-    #  tournamentID: ID!
-    #  offerID: ID!
-    #  adSetID: ID!
-    #): RemoveOfferResponse!
-    # organizer adds and offer to a tournament
-    #addPromoter(affiliateID: ID!, tournamentID: ID!): AddPromoterResponse!
+    removeOfferAdSetFromTournament(
+      payload: RemoveOfferAdSetFromTournamentPayload!
+    ): RemoveOfferAdSetFromTournamentResponse!
+    # organizer updates a promoters rate quote in a tournament
+    updatePromoterRateQuoteInTournament(
+      payload: UpdatePromoterRateQuoteToTournamentPayload!
+    ): UpdatePromoterRateQuoteInTournamentResponse!
     # organizer removes a promoter from a tournament
-    #removePromoter(affiliateID: ID!, tournamentID: ID!): RemovePromoterResponse!
+    removePromoterFromTournament(
+      payload: RemovePromoterFromTournamentPayload!
+    ): RemovePromoterFromTournamentResponse!
     # promoter leaves a tournament on their own accord
     #leaveAsPromoterInTournament(
     #  tournamentID: ID!
