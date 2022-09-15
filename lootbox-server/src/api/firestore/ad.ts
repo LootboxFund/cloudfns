@@ -19,6 +19,7 @@ import {
 } from "./ad.types";
 import { v4 as uuidv4 } from "uuid";
 import { AdSetID, OfferID } from "@wormgraph/helpers";
+import { Offer_Firestore } from "./offer.type";
 
 // export const getAdById = async (adId: AdID): Promise<Ad | undefined> => {
 //   const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
@@ -131,6 +132,26 @@ export const createAdSet = async (
     offerIDs: [],
   };
   await adSetRef.set(newAdSet);
+
+  // update the offers
+  const offerRefs = payload.offerIDs.map((oid) => {
+    return db
+      .collection(Collection.Offer)
+      .doc(oid) as DocumentReference<Offer_Firestore>;
+  });
+  const offerSnapshots = await Promise.all(offerRefs.map((ref) => ref.get()));
+  const offers = offerSnapshots
+    .filter((snap) => snap.exists)
+    .map((snapshot) => snapshot.data()) as Offer_Firestore[];
+  //
+  await Promise.all(
+    offers.map((offer, i) => {
+      const updatePayload: Partial<Offer_Firestore> = {
+        adSets: [...offer.adSets, adSetRef.id as AdSetID],
+      };
+      return offerRefs[i].update(updatePayload);
+    })
+  );
   return newAdSet;
 };
 
@@ -146,6 +167,9 @@ export const editAdSet = async (
   }
   const existingAdSet = adSetSnapshot.data();
   if (!existingAdSet) return undefined;
+
+  // mark the existing offerIDs
+  const existingOfferIDs = existingAdSet.offerIDs || [];
 
   const updatePayload: Partial<AdSet_Firestore> = {};
   // repeat
@@ -164,8 +188,76 @@ export const editAdSet = async (
   if (payload.offerIDs != undefined) {
     updatePayload.offerIDs = payload.offerIDs as OfferID[];
   }
-  // until done
+  // update the ad set
   await adSetRef.update(updatePayload);
+
+  // update the offers
+  if (payload.offerIDs != undefined) {
+    const offerRefs = payload.offerIDs.map((oid) => {
+      return db
+        .collection(Collection.Offer)
+        .doc(oid) as DocumentReference<Offer_Firestore>;
+    });
+    const offerSnapshots = await Promise.all(offerRefs.map((ref) => ref.get()));
+    const offers = offerSnapshots
+      .filter((snap) => snap.exists)
+      .map((snapshot) => snapshot.data()) as Offer_Firestore[];
+
+    //
+    const offersRemoved: OfferID[] = existingOfferIDs.filter((oid) => {
+      return !(payload.offerIDs || []).includes(oid);
+    });
+    const offerRefsOfRemoved = offersRemoved.map((o) => {
+      return db
+        .collection(Collection.Offer)
+        .doc(o) as DocumentReference<Offer_Firestore>;
+    });
+    const offersOfRemoved = (
+      await Promise.all(
+        offerRefsOfRemoved.map((o) => {
+          return o.get();
+        })
+      )
+    ).map((o) => o.data()) as Offer_Firestore[];
+    await Promise.all(
+      offersOfRemoved.map((o, i) => {
+        if (o !== undefined) {
+          const updatePayload: Partial<Offer_Firestore> = {
+            adSets: (o.adSets || []).filter((asi) => asi !== adSetRef.id),
+          };
+          offerRefsOfRemoved[i].update(updatePayload);
+        }
+      })
+    );
+
+    const newOffersAdded: OfferID[] = (
+      (payload.offerIDs || []) as OfferID[]
+    ).filter((oid) => {
+      return !existingOfferIDs.includes(oid);
+    });
+    await Promise.all(
+      newOffersAdded
+        .map((oid) => {
+          const offerRef = offerRefs.find((o) => o.id === oid);
+          const offer = offers.find((o) => o.id === oid);
+          return {
+            offerRef,
+            offer,
+          };
+        })
+        .filter((o) => o.offerRef && o.offer)
+        .map(({ offerRef, offer }) => {
+          const updatePayload: Partial<Offer_Firestore> = {
+            adSets: ((offer as Offer_Firestore).adSets || []).concat([
+              adSetRef.id as AdSetID,
+            ]),
+          };
+          (offerRef as DocumentReference<Offer_Firestore>).update(
+            updatePayload
+          );
+        })
+    );
+  }
   return (await adSetRef.get()).data() as AdSet_Firestore;
 };
 

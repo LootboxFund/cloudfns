@@ -12,9 +12,9 @@
  * ✅ GQL+Firestore for adding & removing Affiliate+RateCard to Tournament
  * ✅ GQL+Firestore for editing Affiliate RateCard in tournament
  * ✅ GQL+Firestore for affiliate to leave a tournament themselves
- * ⬜️ Dynamic creation of RateCards when adding & removing OfferAdsets to Tournaments
+ * ✅ Dynamic creation of Rate Quotes when adding & removing OfferAdsets to Tournaments
  *
- * ⬜️ Two way offer+adset (editOffer will update offer.adSets and adSet.offers, and vice versa)
+ * ✅ Two way offer+adset (editOffer will update offer.adSets and adSet.offers, and vice versa)
  * ⬜️ Add counts to firestore
  * ⬜️ Add recursive querying to graphql types
  *
