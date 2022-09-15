@@ -16,6 +16,7 @@ import {
   ClaimID,
   Collection,
   FlightID,
+  MeasurementPartnerType,
   OfferID,
   Placement,
   SessionID,
@@ -25,6 +26,7 @@ import {
 import { Offer_Firestore } from "./offer.type";
 import { AdSet_Firestore, Ad_Firestore } from "./ad.types";
 import { Advertiser_Firestore } from "./advertiser.type";
+import { craftAffiliateAttributionUrl } from "../mmp/mmp";
 
 const env = process.env.NODE_ENV || "development";
 
@@ -167,7 +169,7 @@ export const createFlight = async (
   }
 
   // create the flight
-  const flightSchema: AdFlight_Firestore = {
+  let flightSchema: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl"> = {
     id: flightRef.id as FlightID,
     userID: payload.userID,
     adID: payload.adID,
@@ -180,16 +182,18 @@ export const createFlight = async (
     claimID: payload.claimID,
     organizerID: payload.organizerID,
     promoterID: payload.promoterID,
+    mmp: offer.mmp,
     timestamp: new Date().getTime() / 1000,
     pixelUrl: generatePixelUrl(flightRef.id as FlightID),
-    clickUrl: generateClickUrl({
-      flightID: flightRef.id as FlightID,
-      affiliateBaseLink: offer.affiliateBaseLink,
-    }),
-    destinationUrl: offer.affiliateBaseLink,
   };
-  await flightRef.set(flightSchema);
-  return flightSchema;
+  const { clickUrl, destinationUrl } = generateClickUrl(flightSchema, offer);
+  const flightObj: AdFlight_Firestore = {
+    ...flightSchema,
+    clickUrl,
+    destinationUrl,
+  };
+  await flightRef.set(flightObj);
+  return flightObj;
 };
 
 export const generatePixelUrl = (flightID: FlightID): string => {
@@ -197,16 +201,21 @@ export const generatePixelUrl = (flightID: FlightID): string => {
   return clickUrl;
 };
 
-export const generateClickUrl = ({
-  flightID,
-  affiliateBaseLink,
-}: {
-  flightID: FlightID;
-  affiliateBaseLink: string;
-}): string => {
-  return `https://${env}.redirect.lootbox.fund/redirect.html?flightID=${flightID}&destination=${encodeURIComponent(
-    affiliateBaseLink
-  )}`;
+export const generateClickUrl = (
+  flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">,
+  offer: Offer_Firestore
+): {
+  clickUrl: string;
+  destinationUrl: string;
+} => {
+  const destinationUrl = craftAffiliateAttributionUrl(flight, offer);
+  const clickUrl = `https://${env}.redirect.lootbox.fund/redirect.html?flightID=${
+    flight.id
+  }&destination=${encodeURIComponent(destinationUrl)}`;
+  return {
+    clickUrl,
+    destinationUrl,
+  };
 };
 
 /**

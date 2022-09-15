@@ -3,6 +3,7 @@
 //  *
 //  * We assume that the affiliate tracking software is the industry standard "Appsflyer"
 //  * Thus we use their params. Read the below docs:
+//  * - https://support.appsflyer.com/hc/en-us/articles/115001178263-Working-with-affiliate-marketers
 //  * - https://support.appsflyer.com/hc/en-us/articles/360017132597-OneLink-long-URLs
 //  * - https://support.appsflyer.com/hc/en-us/articles/207447163
 //  * - https://support.appsflyer.com/hc/en-us/articles/207273946-Available-Macros-on-AppsFlyer-sPostbacks
