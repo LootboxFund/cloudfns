@@ -1,4 +1,3 @@
-import { Collection } from "./collection.types";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
 import {
@@ -6,7 +5,7 @@ import {
   PartyBasket,
   PartyBasketStatus,
 } from "../../graphql/generated/types";
-import { Address } from "@wormgraph/helpers";
+import { Address, Collection } from "@wormgraph/helpers";
 import {
   UserID,
   UserIdpID,

@@ -1,4 +1,3 @@
-import { Collection } from "./collection.types";
 import {
   CollectionGroup,
   CollectionReference,
@@ -12,7 +11,7 @@ import {
   LootboxSnapshot,
   Wallet,
 } from "../../graphql/generated/types";
-import { Address } from "@wormgraph/helpers";
+import { Address, Collection } from "@wormgraph/helpers";
 import { UserID, UserIdpID, WalletID } from "../../lib/types";
 import { convertLootboxToSnapshot } from "../../lib/lootbox";
 

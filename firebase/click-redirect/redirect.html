@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <!-- <meta charset="utf-8" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lootbox</title>
+    
+    <style media="screen">
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        background-color: #1c1c1c;
+      }
+      .mobile-container {
+        width: 100%;
+        height: 100%;
+      }
+      #viral-onboarding {
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      const queryString = window.location.search
+      const params = new URLSearchParams(queryString)
+      const redirectUrl = params.get("destination")
+      const flightID = params.get("flightID")
+      const destination = `${redirectUrl}?flightID=${flightID}`
+      console.log(`Redirecting to ${destination}`)
+      window.location = destination
+    </script>
+  </body>
+</html>

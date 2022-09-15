@@ -14,6 +14,7 @@ import {
   OfferID,
   SessionID,
   UserID,
+  Placement,
 } from "@wormgraph/helpers";
 
 export enum AdStatus {
@@ -34,13 +35,6 @@ export enum AdSetStatus {
   Inactive = "Inactive",
   PendingReview = "PendingReview",
   Rejected = "Rejected",
-}
-export enum Placement {
-  AfterTicketClaim = "AfterTicketClaim",
-  BeforePayout = "BeforePayout",
-  AfterPayout = "AfterPayout",
-  DailySpin = "DailySpin",
-  TicketCarousel = "TicketCarousel",
 }
 export interface AdSet_Firestore {
   id: AdSetID;

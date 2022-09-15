@@ -1,4 +1,3 @@
-import { Collection } from "./collection.types";
 import {
   CollectionReference,
   DocumentReference,
@@ -27,6 +26,7 @@ import {
   AffiliateID,
 } from "../../lib/types";
 import { Affiliate } from "../../graphql/generated/types";
+import { Collection } from "@wormgraph/helpers";
 
 export const getTournamentById = async (
   id: TournamentID

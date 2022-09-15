@@ -11,6 +11,7 @@ import {
   OrganizerOfferWhitelistID,
   AdvertiserID,
   rankInfoTable,
+  Collection,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -31,7 +32,6 @@ import {
   RateQuoteStatus,
   RateQuote_Firestore,
 } from "./affiliate.type";
-import { Collection } from "./collection.types";
 import {
   OfferInTournamentStatus,
   Tournament_Firestore,

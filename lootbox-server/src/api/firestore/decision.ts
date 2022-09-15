@@ -5,7 +5,6 @@ import {
   OfferInTournamentStatus,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
-import { Collection } from "./collection.types";
 import { Tournament_Firestore } from "./tournament.types";
 import {
   AdFlight_Firestore,
@@ -14,14 +13,17 @@ import {
   AdvertiserID,
   AffiliateID,
   CampaignID,
+  ClaimID,
+  Collection,
   FlightID,
   OfferID,
+  Placement,
   SessionID,
   TournamentID,
   UserID,
 } from "@wormgraph/helpers";
 import { Offer_Firestore } from "./offer.type";
-import { AdSet_Firestore, Placement, Ad_Firestore } from "./ad.types";
+import { AdSet_Firestore, Ad_Firestore } from "./ad.types";
 import { Advertiser_Firestore } from "./advertiser.type";
 
 const env = process.env.NODE_ENV || "development";
@@ -32,6 +34,7 @@ export const decideAdToServe = async ({
   userID,
   sessionID,
   promoterID,
+  claimID,
 }: DecisionAdApiBetaV2Payload): Promise<AdServed> => {
   // decide which ad to serve base on factors
   // get the tournament info so we can see the offers & ads
@@ -97,9 +100,11 @@ export const decideAdToServe = async ({
     adID: ad.id,
     adSetID: matchingAdSet.id,
     offerID: matchingOfferID,
+    placement: matchingAdSet.placement,
     tournamentID: tournament.id,
     organizerID: tournament.organizer,
     promoterID: promoterID as AffiliateID,
+    claimID: claimID as ClaimID,
     sessionId: sessionID as SessionID,
   });
 
@@ -133,6 +138,8 @@ export interface CreateFlightArgs {
   adID: AdID;
   adSetID: AdSetID;
   offerID: OfferID;
+  placement: Placement;
+  claimID?: ClaimID;
   campaignID?: CampaignID;
   tournamentID?: TournamentID;
   organizerID?: AffiliateID;
@@ -166,9 +173,11 @@ export const createFlight = async (
     adID: payload.adID,
     adSetID: payload.adSetID,
     offerID: payload.offerID,
+    placement: payload.placement,
     campaignID: payload.campaignID,
     tournamentID: payload.tournamentID,
-    sessionId: payload.sessionId,
+    sessionID: payload.sessionId,
+    claimID: payload.claimID,
     organizerID: payload.organizerID,
     promoterID: payload.promoterID,
     timestamp: new Date().getTime() / 1000,
@@ -195,7 +204,7 @@ export const generateClickUrl = ({
   flightID: FlightID;
   affiliateBaseLink: string;
 }): string => {
-  return `https://${env}.track.lootbox.fund?flightID=${flightID}&redirect=same_tab&url=${encodeURIComponent(
+  return `https://${env}.redirect.lootbox.fund/redirect.html?flightID=${flightID}&destination=${encodeURIComponent(
     affiliateBaseLink
   )}`;
 };

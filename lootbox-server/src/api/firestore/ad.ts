@@ -8,17 +8,15 @@ import {
 } from "../../graphql/generated/types";
 import { AdID, AdvertiserID } from "../../lib/types";
 import { db } from "../firebase";
-import { Collection } from "./collection.types";
 import {
   AdSetStatus,
   AdSet_Firestore,
   AdStatus,
   Ad_Firestore,
   CreativeType,
-  Placement,
 } from "./ad.types";
 import { v4 as uuidv4 } from "uuid";
-import { AdSetID, OfferID } from "@wormgraph/helpers";
+import { AdSetID, Collection, OfferID, Placement } from "@wormgraph/helpers";
 import { Offer_Firestore } from "./offer.type";
 
 // export const getAdById = async (adId: AdID): Promise<Ad | undefined> => {

@@ -5,6 +5,7 @@ import {
   AdvertiserID,
   AffiliateID,
   AffiliateType,
+  Collection,
   Currency,
   MeasurementPartnerType,
   OfferID,
@@ -20,7 +21,6 @@ import {
   User,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
-import { Collection } from "./collection.types";
 import { EditActivationsInOfferPayload } from "../../graphql/generated/types";
 import { AddActivationsToOfferPayload } from "../../graphql/generated/types";
 import {

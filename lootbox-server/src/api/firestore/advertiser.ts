@@ -13,8 +13,12 @@ import {
   Conquest_Firestore,
   TournamentPreviewInConquest,
 } from "./advertiser.type";
-import { Collection } from "./collection.types";
-import { ConquestID, ConquestStatus, TournamentID } from "@wormgraph/helpers";
+import {
+  Collection,
+  ConquestID,
+  ConquestStatus,
+  TournamentID,
+} from "@wormgraph/helpers";
 
 export const upgradeToAdvertiser = async (
   userID: UserID

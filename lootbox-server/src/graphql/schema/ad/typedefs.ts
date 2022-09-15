@@ -134,6 +134,7 @@ const AdTypeDefs = gql`
     placement: Placement!
     sessionID: ID!
     promoterID: ID
+    claimID: ID
   }
 
   type DecisionAdApiBetaV2ResponseSuccess {

@@ -1,8 +1,8 @@
 import { db } from "../firebase";
-import { AdID, Collection, CampaignID, SessionID, AdEventNonce, ClaimID } from "../../lib/types";
+import { AdID, Collection, SessionID, AdEventNonce } from "../../lib/types";
 import { Ad, AdEventAction } from "../graphql/generated/types";
-import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
-import { AdEventID, AdEvent_Firestore, AdSetID } from "@wormgraph/helpers";
+import { DocumentReference, Query } from "firebase-admin/firestore";
+import { AdEventID, AdEvent_Firestore, AdFlight_Firestore, FlightID } from "@wormgraph/helpers";
 
 export const getAdById = async (id: AdID): Promise<Ad | undefined> => {
     const docRef = db.collection(Collection.Ad).doc(id) as DocumentReference<Ad>;
@@ -17,39 +17,63 @@ export const getAdById = async (id: AdID): Promise<Ad | undefined> => {
     }
 };
 
+export const getFlightById = async (id: FlightID): Promise<AdFlight_Firestore> => {
+    const docRef = db.collection(Collection.Flight).doc(id) as DocumentReference<AdFlight_Firestore>;
+
+    const doc = await docRef.get();
+
+    if (!doc.exists || !doc) {
+        throw Error(`Flight ${id} does not exist`);
+    }
+    const flight = doc.data();
+    if (!flight) {
+        throw Error(`Flight ${id} was undefined`);
+    }
+    return flight;
+};
+
 interface CreateAdEventRequest {
     action: AdEventAction;
-    adId: AdID;
-    campaignId: CampaignID;
-    adSetId: AdSetID;
-    sessionId: SessionID;
     nonce: AdEventNonce;
-    claimId?: ClaimID;
+    flight: AdFlight_Firestore;
+    timeElapsed?: number | null;
 }
-export const createAdEvent = async (request: CreateAdEventRequest): Promise<AdEvent_Firestore> => {
+export const createAdEvent = async ({
+    action,
+    flight,
+    nonce,
+    timeElapsed,
+}: CreateAdEventRequest): Promise<AdEvent_Firestore> => {
     const documentWithoutId: Omit<AdEvent_Firestore, "id"> = {
-        action: request.action,
-        adId: request.adId,
-        campaignId: request.campaignId,
-        adSetId: request.adSetId,
-        sessionId: request.sessionId,
-        timestamp: Timestamp.now().toMillis(),
-        nonce: request.nonce,
+        timestamp: new Date().getTime() / 1000,
+        adId: flight.adID,
+        adSetId: flight.adSetID,
+        sessionId: flight.sessionID,
+        campaignId: flight.campaignID,
+        flightId: flight.id,
+        action: action,
+        claimId: flight.claimID,
+        nonce,
+        metadata: {
+            clickRedirectUrl: flight.clickUrl,
+            pixelUrl: flight.pixelUrl,
+            timeElapsed: timeElapsed || undefined,
+        },
+        affiliateAttribution: {
+            organizerID: flight.organizerID,
+            promoterID: flight.promoterID,
+        },
     };
 
-    if (request.claimId) {
-        documentWithoutId.claimId = request.claimId;
-    }
-
-    const docRef = db
+    const adEventRef = db
         .collection(Collection.Ad)
-        .doc(request.adId)
+        .doc(flight.adID)
         .collection(Collection.AdEvent)
         .doc() as DocumentReference<AdEvent_Firestore>;
 
-    const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: docRef.id as AdEventID };
+    const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: adEventRef.id as AdEventID };
 
-    await docRef.set(documentWithId);
+    await adEventRef.set(documentWithId);
 
     return documentWithId;
 };
@@ -106,7 +130,7 @@ export const getAdEventsByNonce = async (
         .collection(Collection.Ad)
         .doc(adId)
         .collection(Collection.AdEvent)
-        .where("monce", "==", nonce) as Query<AdEvent_Firestore>;
+        .where("nonce", "==", nonce) as Query<AdEvent_Firestore>;
 
     if (limit !== undefined) {
         collectionRef = collectionRef.limit(limit);
