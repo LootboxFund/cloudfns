@@ -57,7 +57,7 @@ const TournamentTypeDefs = gql`
     communityURL: String
     streams: [Stream!]
     # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
-    # organizer: Organizer
+    organizer: ID
     promoters: [ID!]
     offers: [TournamentOffers!]
   }
@@ -173,6 +173,7 @@ const TournamentTypeDefs = gql`
     tournamentDate: Timestamp!
     communityURL: String
     streams: [StreamInput!]
+    organizer: ID
   }
 
   input EditTournamentPayload {
