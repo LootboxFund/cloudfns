@@ -19,4 +19,5 @@ export enum Collection {
   "Memo" = "memo",
   "Conquest" = "conquest",
   "RateQuote" = "rate-quote",
+  "Flight" = "flight",
 }

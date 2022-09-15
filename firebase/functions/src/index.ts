@@ -137,7 +137,20 @@ export const pubsubPixelTracking = functions.pubsub
             return;
         }
 
-        const { adId, sessionId, eventAction, nonce, claimId } = extractURLStatePixelTracking(url);
+        const {
+            userId,
+            adId,
+            adSetId,
+            offerId,
+            claimId,
+            tournamentId,
+            organizerID,
+            promoterID,
+            flightId,
+            sessionId,
+            eventAction,
+            nonce,
+        } = extractURLStatePixelTracking(url);
 
         let ad: Ad;
         let createdEvent: AdEvent;
@@ -177,7 +190,6 @@ export const pubsubPixelTracking = functions.pubsub
             createdEvent = await createAdEvent({
                 action: eventAction,
                 adId: ad.id as AdID,
-                campaignId: ad.campaignId as CampaignID,
                 flightId: ad.flightId as FlightID,
                 sessionId,
                 claimId: claimId ? claimId : undefined,

@@ -114,13 +114,35 @@ const AdTypeDefs = gql`
     themeColor: String
   }
 
-  #type DecisionAdApiBetaResponseSuccess {
-  #  ad: Ad
-  #}
+  type AdServed {
+    adID: ID!
+    adSetID: ID!
+    advertiserID: ID!
+    advertiserName: String!
+    offerID: ID!
+    creative: Creative!
+    flightID: ID!
+    placement: Placement!
+    pixelUrl: String!
+    clickDestination: String!
+  }
 
-  #union DecisionAdApiBetaResponse =
-  #    DecisionAdApiBetaResponseSuccess
-  #  | ResponseError
+  # -------- Decision Ad API Beta V2 --------
+  input DecisionAdApiBetaV2Payload {
+    userID: ID!
+    tournamentID: ID!
+    placement: Placement!
+    sessionID: ID!
+    promoterID: ID
+  }
+
+  type DecisionAdApiBetaV2ResponseSuccess {
+    ad: AdServed
+  }
+
+  union DecisionAdApiBetaV2Response =
+      DecisionAdApiBetaV2ResponseSuccess
+    | ResponseError
 
   # -------- List Ads of Advertiser --------
   input ListAdsOfAdvertiserPayload {
@@ -145,7 +167,9 @@ const AdTypeDefs = gql`
     | ResponseError
 
   extend type Query {
-    # decisionAdApiBeta(tournamentId: ID!): DecisionAdApiBetaResponse!
+    decisionAdApiBetaV2(
+      payload: DecisionAdApiBetaV2Payload!
+    ): DecisionAdApiBetaV2Response!
     listAdsOfAdvertiser(
       payload: ListAdsOfAdvertiserPayload!
     ): ListAdsOfAdvertiserResponse!

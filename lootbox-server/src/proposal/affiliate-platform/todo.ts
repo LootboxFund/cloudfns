@@ -1,5 +1,5 @@
 /**
- * TODO LIST:
+ * BASE TODO LIST:
  *
  * ✅ GQL+Firestore for creating AdSets
  * ✅ GQL+Firestore for creating Ads

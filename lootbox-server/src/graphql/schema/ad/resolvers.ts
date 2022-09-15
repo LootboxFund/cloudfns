@@ -33,14 +33,21 @@ import {
   QueryListAdSetsOfAdvertiserArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
-import { QueryListAdsOfAdvertiserArgs } from "../../generated/types";
-import { ListAdsOfAdvertiserResponse } from "../../generated/types";
+import {
+  QueryListAdsOfAdvertiserArgs,
+  QueryDecisionAdApiBetaV2Args,
+} from "../../generated/types";
+import {
+  ListAdsOfAdvertiserResponse,
+  DecisionAdApiBetaV2Response,
+} from "../../generated/types";
 import { AdSet_Firestore } from "../../../api/firestore/ad.types";
 import {
   EditAdResponse,
   CreateAdSetResponse,
   EditAdSetResponse,
 } from "../../generated/types";
+import { decideAdToServe } from "../../../api/firestore/decision";
 
 const AdResolvers: Resolvers = {
   Mutation: {
@@ -236,38 +243,31 @@ const AdResolvers: Resolvers = {
         };
       }
     },
-    // decisionAdApiBeta: async (
-    //   _,
-    //   args: QueryDecisionAdApiBetaArgs
-    // ): Promise<DecisionAdApiBetaResponse> => {
-    //   try {
-    //     const tournament = await getTournamentById(
-    //       args.tournamentId as TournamentID
-    //     );
-    //     if (!tournament) {
-    //       return {
-    //         error: {
-    //           code: StatusCode.NotFound,
-    //           message: "Tournament not found",
-    //         },
-    //       };
-    //     }
-    //     if (tournament.affiliateAdIds && tournament.affiliateAdIds.length > 0) {
-    //       // get the first ad
-    //       const ad = await getAdById(tournament.affiliateAdIds[0] as AdID);
-    //       return { ad: !!ad ? ad : null };
-    //     }
-    //     return { ad: null };
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
+    decisionAdApiBetaV2: async (
+      _,
+      { payload }: QueryDecisionAdApiBetaV2Args
+    ): Promise<DecisionAdApiBetaV2Response> => {
+      try {
+        const ad = await decideAdToServe(payload);
+        if (!ad) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "No Ad could be served",
+            },
+          };
+        }
+        return { ad };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   // AdSet: {
@@ -376,18 +376,18 @@ const AdResolvers: Resolvers = {
   //   },
   // },
 
-  // DecisionAdApiBetaResponse: {
-  //   __resolveType: (obj: DecisionAdApiBetaResponse) => {
-  //     if ("ad" in obj) {
-  //       return "DecisionAdApiBetaResponseSuccess";
-  //     }
-  //     if ("error" in obj) {
-  //       return "ResponseError";
-  //     }
+  DecisionAdApiBetaV2Response: {
+    __resolveType: (obj: DecisionAdApiBetaV2Response) => {
+      if ("ad" in obj) {
+        return "DecisionAdApiBetaV2ResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
 
-  //     return null;
-  //   },
-  // },
+      return null;
+    },
+  },
 };
 
 const adComposition = {};

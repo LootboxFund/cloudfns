@@ -1,5 +1,6 @@
 import { Affiliate } from "../../graphql/generated/types";
 import {
+  AdEvent_Firestore,
   AdEventID,
   AdEventNonce,
   AdID,
@@ -20,13 +21,6 @@ export enum AdStatus {
   Inactive = "Inactive",
   PendingReview = "PendingReview",
   Rejected = "Rejected",
-}
-
-export enum AdEventAction {
-  View = "View",
-  Click = "Click",
-  TimerElapsed = "TimerElapsed",
-  VideoTimestamp = "VideoTimestamp",
 }
 
 export type AdTimestamps = {
@@ -70,33 +64,8 @@ export interface Ad_Firestore {
   clicks: number;
   uniqueClicks: number;
   creative: Creative;
-  events: AdEvent[];
+  events: AdEvent_Firestore[];
   timestamps: AdTimestamps;
-}
-
-export type EventMetadata = {
-  clickUrl?: string;
-  verificationUrl?: string;
-  timeElapsed?: number;
-};
-
-export type AdEventAffiliateAttribution = {
-  organizerID?: AffiliateID;
-  promoterID?: AffiliateID;
-};
-
-export interface AdEvent {
-  id: AdEventID;
-  timestamp: number;
-  adId: AdID;
-  adSetId: AdSetID;
-  sessionId: SessionID;
-  campaignId: CampaignID;
-  action: AdEventAction;
-  claimId?: ClaimID;
-  metadata?: EventMetadata;
-  affiliateAttribution?: AdEventAffiliateAttribution;
-  nonce: AdEventNonce;
 }
 
 export enum CreativeType {
