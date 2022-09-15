@@ -82,6 +82,10 @@ const PartyBasketTypeDefs = gql`
     maxClaimsAllowed: Int
   }
 
+  input WhitelistAllUnassignedClaimsPayload {
+    partyBasketId: ID!
+  }
+
   type CreatePartyBasketResponseSuccess {
     partyBasket: PartyBasket!
   }
@@ -103,6 +107,15 @@ const PartyBasketTypeDefs = gql`
   type EditPartyBasketResponseSuccess {
     partyBasket: PartyBasket!
   }
+
+  type WhitelistAllUnassignedClaimsResponseSuccess {
+    signatures: [String]!
+    errors: [String]
+  }
+
+  union WhitelistAllUnassignedClaimsResponse =
+      WhitelistAllUnassignedClaimsResponseSuccess
+    | ResponseError
 
   input RedeemSignaturePayload {
     signatureId: ID!
@@ -136,6 +149,9 @@ const PartyBasketTypeDefs = gql`
       payload: GetWhitelistSignaturesPayload!
     ): GetWhitelistSignaturesResponse!
     editPartyBasket(payload: EditPartyBasketPayload!): EditPartyBasketResponse!
+    whitelistAllUnassignedClaims(
+      payload: WhitelistAllUnassignedClaimsPayload!
+    ): WhitelistAllUnassignedClaimsResponse!
   }
 `;
 

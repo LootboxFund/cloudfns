@@ -3,6 +3,7 @@ import {
   CollectionGroup,
   CollectionReference,
   DocumentReference,
+  Query,
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -18,14 +19,18 @@ import { convertLootboxToSnapshot } from "../../lib/lootbox";
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
 
 export const getUserWallets = async (
-  id: UserID
+  id: UserID,
+  limit?: number
 ): Promise<WalletWithoutLootboxSnapshot[]> => {
-  const wallets = db
+  let wallets = db
     .collection(Collection.User)
     .doc(id)
-    .collection(
-      Collection.Wallet
-    ) as CollectionReference<WalletWithoutLootboxSnapshot>;
+    .collection(Collection.Wallet)
+    .orderBy("createdAt", "asc") as Query<WalletWithoutLootboxSnapshot>;
+
+  if (limit) {
+    wallets = wallets.limit(limit);
+  }
 
   const walletSnapshot = await wallets.get();
   if (walletSnapshot.empty) {
