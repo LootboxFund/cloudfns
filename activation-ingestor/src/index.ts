@@ -21,9 +21,17 @@ app.get("/appsflyer", async (req, res) => {
 });
 
 app.get("/manual", async (req, res) => {
+  // interface manualActivationPostbackPayload {
+  //   userID?: UserID;
+  //   userEmail?: string;
+  //   userPhone?: string;
+  //   offerID?: OfferID;
+  //   activationID?: ActivationID;
+  //   activationEventMmpAlias?: MMPAlias;
+  // }
   const trackedEvent = await trackManualActivation(req);
   res.json({
-    message: `Successfully received activation event from manual entry with flightID=${trackedEvent.flightId} and AdEventID=${trackedEvent.id}`,
+    message: `Successfully received activation event from manual entry with AdEventID=${trackedEvent.id}`,
   });
 });
 

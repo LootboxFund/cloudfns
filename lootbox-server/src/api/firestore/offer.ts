@@ -12,6 +12,7 @@ import {
   OfferStatus,
   UserID,
   ActivationStatus,
+  Activation_Firestore,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -25,7 +26,6 @@ import { db } from "../firebase";
 import { EditActivationsInOfferPayload } from "../../graphql/generated/types";
 import { AddActivationsToOfferPayload } from "../../graphql/generated/types";
 import {
-  Activation_Firestore,
   OfferPreview,
   OfferPreviewForOrganizer,
   Offer_Firestore,

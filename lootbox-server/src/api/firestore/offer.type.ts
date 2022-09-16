@@ -39,14 +39,3 @@ export type OfferPreviewForOrganizer = Omit<
   Offer_Firestore,
   "affiliateBaseLink" | "mmp" | "activations" | "createdByUser"
 >;
-
-export interface Activation_Firestore {
-  id: ActivationID;
-  name: string;
-  description: string;
-  pricing: number;
-  status: ActivationStatus;
-  mmpAlias: string;
-  offerID: OfferID;
-  count?: number;
-}

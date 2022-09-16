@@ -5,9 +5,11 @@ import {
   AdFlight_Firestore,
   AdEventID,
   AdEventAction,
+  OfferID,
 } from "@wormgraph/helpers";
 import { db } from "../../api/firebase";
 import { DocumentReference } from "firebase-admin/firestore";
+import { getActivationsByMmpAliasAndOfferID } from "../../api/firestore/activation";
 
 //  * ------ DATA WE RECEIVE FROM APPSFLYER ------
 //  *
@@ -77,6 +79,11 @@ export const trackAppsFlyerActivation = async (
       const f = flightSnapshot.data();
       if (f) {
         const flight = f;
+        const mmpAlias = (extraData.appsflyer_event_name as string) || "";
+        const matchingActivations = await getActivationsByMmpAliasAndOfferID(
+          flight.offerID,
+          mmpAlias
+        );
         const adEventSchema: AdEvent_Firestore = {
           id: adEventRef.id as AdEventID,
           timestamp: new Date().getTime() / 1000,
@@ -87,8 +94,8 @@ export const trackAppsFlyerActivation = async (
           flightId: flight.id,
           action: AdEventAction.Activation,
           claimId: flight.claimID,
-          activationEventMmpAlias:
-            (extraData.appsflyer_event_name as string) || "",
+          activationEventMmpAlias: mmpAlias,
+          activationID: matchingActivations[0].id,
           metadata: {
             clickRedirectUrl: flight.clickUrl,
             pixelUrl: flight.pixelUrl,
@@ -97,12 +104,30 @@ export const trackAppsFlyerActivation = async (
           affiliateAttribution: {
             organizerID: flight.organizerID,
             promoterID: flight.promoterID,
+            userID: flight.userID,
           },
         };
         await adEventRef.set(adEventSchema);
         return adEventSchema;
       }
     }
+  }
+  const offerID = extraData.appsflyer_c as OfferID;
+  const mmpAlias = (extraData.appsflyer_event_name as string) || "";
+  if (offerID && mmpAlias) {
+    const matchingActivations = await getActivationsByMmpAliasAndOfferID(
+      offerID,
+      mmpAlias
+    );
+    const adEventSchema: AdEvent_Firestore = {
+      id: adEventRef.id as AdEventID,
+      timestamp: new Date().getTime() / 1000,
+      action: AdEventAction.Activation,
+      activationEventMmpAlias: mmpAlias,
+      activationID: matchingActivations[0].id,
+      extraData: extraData,
+    };
+    await adEventRef.set(adEventSchema);
   }
   const adEventSchema: AdEvent_Firestore = {
     id: adEventRef.id as AdEventID,

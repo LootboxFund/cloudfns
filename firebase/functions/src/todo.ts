@@ -13,5 +13,6 @@
  * ⬜️ Code our own Google Tag Manager script for frontend activation tracking
  * ⬜️ Report views, video watch & engagement to Appsflyer on pixel pubsub
  * ⬜️ Fire pixel events with nonce on frontend
+ * ⬜️ Implement searching users by email or phone
  *
  */
