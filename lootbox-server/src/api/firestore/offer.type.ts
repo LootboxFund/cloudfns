@@ -26,7 +26,6 @@ export interface Offer_Firestore {
   status: OfferStatus;
   affiliateBaseLink: AffiliateBaseLink;
   mmp: MeasurementPartnerType;
-  activations: Activation_Firestore[];
   // targetingTags: AdTargetTag[];
   adSets: AdSetID[];
 }
@@ -47,5 +46,7 @@ export interface Activation_Firestore {
   description: string;
   pricing: number;
   status: ActivationStatus;
+  mmpAlias: string;
+  offerID: OfferID;
   count?: number;
 }

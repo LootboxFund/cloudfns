@@ -65,11 +65,7 @@ export const createAdEvent = async ({
         },
     };
 
-    const adEventRef = db
-        .collection(Collection.Ad)
-        .doc(flight.adID)
-        .collection(Collection.AdEvent)
-        .doc() as DocumentReference<AdEvent_Firestore>;
+    const adEventRef = db.collection(Collection.AdEvent).doc() as DocumentReference<AdEvent_Firestore>;
 
     const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: adEventRef.id as AdEventID };
 
@@ -88,8 +84,6 @@ export const getAdEventsBySessionId = async (
     options: GetAdEventsBySessionIdOptions
 ): Promise<AdEvent_Firestore[]> => {
     let collectionRef = db
-        .collection(Collection.Ad)
-        .doc(adId)
         .collection(Collection.AdEvent)
         .where("sessionId", "==", sessionId) as Query<AdEvent_Firestore>;
 
@@ -126,11 +120,7 @@ export const getAdEventsByNonce = async (
     nonce: AdEventNonce,
     limit?: number
 ): Promise<AdEvent_Firestore[]> => {
-    let collectionRef = db
-        .collection(Collection.Ad)
-        .doc(adId)
-        .collection(Collection.AdEvent)
-        .where("nonce", "==", nonce) as Query<AdEvent_Firestore>;
+    let collectionRef = db.collection(Collection.AdEvent).where("nonce", "==", nonce) as Query<AdEvent_Firestore>;
 
     if (limit !== undefined) {
         collectionRef = collectionRef.limit(limit);

@@ -61,7 +61,6 @@ const AdTypeDefs = gql`
     uniqueClicks: Int!
 
     creative: Creative!
-    events: [AdEvent!]!
   }
 
   type EventMetadata {

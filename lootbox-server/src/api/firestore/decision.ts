@@ -183,10 +183,11 @@ export const createFlight = async (
     organizerID: payload.organizerID,
     promoterID: payload.promoterID,
     mmp: offer.mmp,
+    affiliateBaseLink: offer.affiliateBaseLink,
     timestamp: new Date().getTime() / 1000,
     pixelUrl: generatePixelUrl(flightRef.id as FlightID),
   };
-  const { clickUrl, destinationUrl } = generateClickUrl(flightSchema, offer);
+  const { clickUrl, destinationUrl } = generateClickUrl(flightSchema);
   const flightObj: AdFlight_Firestore = {
     ...flightSchema,
     clickUrl,
@@ -202,13 +203,12 @@ export const generatePixelUrl = (flightID: FlightID): string => {
 };
 
 export const generateClickUrl = (
-  flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">,
-  offer: Offer_Firestore
+  flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">
 ): {
   clickUrl: string;
   destinationUrl: string;
 } => {
-  const destinationUrl = craftAffiliateAttributionUrl(flight, offer);
+  const destinationUrl = craftAffiliateAttributionUrl(flight);
   const clickUrl = `https://${env}.redirect.lootbox.fund/redirect.html?flightID=${
     flight.id
   }&destination=${encodeURIComponent(destinationUrl)}`;

@@ -14,7 +14,6 @@ const OfferTypeDefs = gql`
     status: OfferStatus!
     affiliateBaseLink: String
     mmp: MeasurementPartnerType!
-    activations: [Activation!]!
     adSets: [ID!]!
     #targetingTags: [AdTargetTag!]!
   }
@@ -55,12 +54,21 @@ const OfferTypeDefs = gql`
     Manual
   }
 
-  input ActivationInput {
-    id: ID!
+  input CreateActivationInput {
     name: String!
     description: String
     pricing: Float!
     status: ActivationStatus!
+    mmpAlias: String!
+    offerID: ID!
+  }
+  input EditActivationInput {
+    id: ID!
+    name: String
+    description: String
+    pricing: Float
+    status: ActivationStatus
+    mmpAlias: String
   }
 
   type Activation {
@@ -69,6 +77,8 @@ const OfferTypeDefs = gql`
     description: String
     pricing: Float!
     status: ActivationStatus!
+    mmpAlias: String!
+    offerID: ID!
   }
 
   enum AdTargetTagType {
@@ -171,10 +181,10 @@ const OfferTypeDefs = gql`
   # --------- Add Activations To Offer ---------
   input AddActivationsToOfferPayload {
     offerID: ID!
-    activations: [ActivationInput!]!
+    activations: [CreateActivationInput!]!
   }
   type AddActivationsToOfferResponseSuccess {
-    offer: Offer!
+    activations: [Activation!]!
   }
   union AddActivationsToOfferResponse =
       AddActivationsToOfferResponseSuccess
@@ -183,10 +193,10 @@ const OfferTypeDefs = gql`
   # --------- Edit Activations To Offer ---------
   input EditActivationsInOfferPayload {
     offerID: ID!
-    activations: [ActivationInput!]!
+    activations: [EditActivationInput!]!
   }
   type EditActivationsInOfferResponseSuccess {
-    offer: Offer!
+    activations: [Activation!]!
   }
   union EditActivationsInOfferResponse =
       EditActivationsInOfferResponseSuccess

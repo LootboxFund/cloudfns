@@ -200,11 +200,11 @@ const OfferResolvers: Resolvers = {
       //   };
       // }
       try {
-        const offer = await addActivationsToOffer(
+        const activations = await addActivationsToOffer(
           payload.offerID as OfferID,
           payload
         );
-        if (!offer) {
+        if (!activations) {
           return {
             error: {
               code: StatusCode.ServerError,
@@ -212,7 +212,7 @@ const OfferResolvers: Resolvers = {
             },
           };
         }
-        return { offer: offer as unknown as Offer };
+        return { activations };
       } catch (err) {
         return {
           error: {
@@ -236,11 +236,11 @@ const OfferResolvers: Resolvers = {
       //   };
       // }
       try {
-        const offer = await editActivationsInOffer(
+        const activations = await editActivationsInOffer(
           payload.offerID as OfferID,
           payload
         );
-        if (!offer) {
+        if (!activations) {
           return {
             error: {
               code: StatusCode.ServerError,
@@ -248,7 +248,7 @@ const OfferResolvers: Resolvers = {
             },
           };
         }
-        return { offer: offer as unknown as Offer };
+        return { activations };
       } catch (err) {
         return {
           error: {
@@ -288,7 +288,7 @@ const OfferResolvers: Resolvers = {
   },
   AddActivationsToOfferResponse: {
     __resolveType: (obj: AddActivationsToOfferResponse) => {
-      if ("offer" in obj) {
+      if ("activations" in obj) {
         return "AddActivationsToOfferResponseSuccess";
       }
 
@@ -301,7 +301,7 @@ const OfferResolvers: Resolvers = {
   },
   EditActivationsInOfferResponse: {
     __resolveType: (obj: EditActivationsInOfferResponse) => {
-      if ("offer" in obj) {
+      if ("activations" in obj) {
         return "EditActivationsInOfferResponseSuccess";
       }
 

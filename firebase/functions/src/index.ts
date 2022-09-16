@@ -15,6 +15,7 @@ import {
 } from "./api/firestore";
 import { manifest } from "./manifest";
 import { AdEvent_Firestore, AdFlight_Firestore } from "@wormgraph/helpers";
+import { reportViewToMMP } from "./api/mmp/mmp";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
@@ -194,6 +195,8 @@ export const pubsubPixelTracking = functions.pubsub
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {
             updateRequest.impressions = FieldValue.increment(1) as unknown as number;
+            // Report to the MMP
+            await reportViewToMMP(flight, createdEvent);
         }
 
         if (eventAction === AdEventAction.Click) {

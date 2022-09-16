@@ -3,13 +3,12 @@ import { MeasurementPartnerType } from "../../graphql/generated/types";
 import { Offer_Firestore } from "../firestore/offer.type";
 
 export const craftAffiliateAttributionUrl = (
-  flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">,
-  offer: Offer_Firestore
+  flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">
 ) => {
   if (flight.mmp === MeasurementPartnerType.Appsflyer) {
-    return craftAppsflyerUrl(flight, offer);
+    return craftAppsflyerUrl(flight);
   }
-  return offer.affiliateBaseLink;
+  return flight.affiliateBaseLink;
 };
 
 //  * ------ DATA WE SEND TO APPSFLYER ------
@@ -35,10 +34,9 @@ export const craftAffiliateAttributionUrl = (
 //  * is_incentivized= true or false
 //  *
 const craftAppsflyerUrl = (
-  flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">,
-  offer: Offer_Firestore
+  flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">
 ) => {
-  const affiliateBaseLink = offer.affiliateBaseLink;
+  const affiliateBaseLink = flight.affiliateBaseLink;
   const offerID = flight.offerID;
   const adSetID = flight.adSetID;
   const adID = flight.adID;

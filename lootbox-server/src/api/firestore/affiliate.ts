@@ -40,6 +40,7 @@ import { Offer_Firestore } from "./offer.type";
 import { AdSetStatus, AdSet_Firestore } from "./ad.types";
 import { TournamentOffers } from "../../graphql/generated/types";
 import { Advertiser_Firestore } from "./advertiser.type";
+import { listActiveActivationsForOffer } from "./offer";
 
 export const upgradeToAffiliate = async (
   userID: UserID
@@ -153,12 +154,14 @@ export const addOfferAdSetToTournament = async (
     adSetSnapshot,
     affiliateSnapshot,
     rateQuoteSnapshots,
+    activeActivationsForOffer,
   ] = await Promise.all([
     await tournamentRef.get(),
     await offerRef.get(),
     await adSetRef.get(),
     await affiliateSetRef.get(),
     await rateQuoteRef.get(),
+    await listActiveActivationsForOffer(payload.offerID as OfferID),
   ]);
   if (
     !tournamentSnapshot.exists ||
@@ -202,8 +205,8 @@ export const addOfferAdSetToTournament = async (
   const rateQuoteRank =
     rankInfoTable[existingAffiliate.organizerRank || OrganizerRank.ClayRank1];
   const rateQuotes: RateQuoteInput[] = [];
-  for (let i = 0; i < existingOffer.activations.length; i++) {
-    const activation = existingOffer.activations[i];
+  for (let i = 0; i < activeActivationsForOffer.length; i++) {
+    const activation = activeActivationsForOffer[i];
     const rateQuote: RateQuoteInput = {
       tournamentID: payload.tournamentID as TournamentID,
       affiliateID: payload.organizerID as AffiliateID,

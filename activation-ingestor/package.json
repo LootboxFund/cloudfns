@@ -1,15 +1,14 @@
 {
-  "name": "lootbox-server",
+  "name": "activation-ingestor",
   "version": "1.0.0",
   "main": "dist/server.js",
   "license": "MIT",
   "scripts": {
-    "codegen": "graphql-codegen --config codegen.yml",
-    "build": "yarn codegen && tsc",
+    "build": "tsc",
     "start": "NODE_ENV=production npx ts-node ./src",
     "start:dev": "NODE_ENV=dev npx ts-node ./src",
-    "deploy:staging": "yarn install && yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging --update-env-vars NODE_ENV=staging",
-    "deploy:prod": "yarn install && yarn build && gcloud run deploy lootbox-server --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod --update-env-vars NODE_ENV=prod"
+    "deploy:staging": "yarn install && yarn build && gcloud run deploy activation-ingestor --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging --update-env-vars NODE_ENV=staging",
+    "deploy:prod": "yarn install && yarn build && gcloud run deploy activation-ingestor --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod --update-env-vars NODE_ENV=prod"
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^4.0.0",
@@ -21,6 +20,7 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.8",
+    "express": "^4.18.1",
     "firebase-admin": "^10.2.0",
     "graphql": "^16.5.0",
     "graphql-scalars": "^1.17.0",
