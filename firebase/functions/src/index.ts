@@ -16,6 +16,7 @@ import {
 import { manifest } from "./manifest";
 import { AdEvent_Firestore, AdFlight_Firestore } from "@wormgraph/helpers";
 import { reportViewToMMP } from "./api/mmp/mmp";
+import { generateMemoBills } from "./api/firestore/memo";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
@@ -234,96 +235,26 @@ export const pubsubPixelTracking = functions.pubsub
         return;
     });
 
-export const pubsubClickRedirectTracking = functions.pubsub
-    .topic(manifest.cloudFunctions.pubsubClickRedirectTracking.topic)
+export const pubsubBillableActivationEvent = functions.pubsub
+    .topic(manifest.cloudFunctions.pubsubBillableActivationEvent.topic)
     .onPublish(async (message: Message) => {
-        logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubClickRedirectTracking.topic, message });
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let jsonData: any;
-        try {
-            jsonData = message.json;
-            logger.log("parsed data", jsonData?.httpRequest);
-        } catch (e) {
-            logger.error("PubSub message was not JSON", e);
-            return;
+        logger.log("PUB SUB TRIGGERED", {
+            topic: manifest.cloudFunctions.pubsubBillableActivationEvent.topic,
+            message,
+        });
+        // Get the AdEvent from firestore
+        const AdEventID = message.data;
+        const adEventRef = db.collection(Collection.AdEvent).doc(AdEventID) as DocumentReference<AdEvent_Firestore>;
+        const adEventSnapshot = await adEventRef.get();
+        if (!adEventSnapshot.exists) {
+            throw Error(`No AdEvent with id ${AdEventID} found`);
         }
-
-        const url = jsonData?.httpRequest?.requestUrl;
-
-        if (!url) {
-            logger.error("URL not in payload");
-            return;
+        const adEvent = adEventSnapshot.data();
+        if (!adEvent) {
+            throw Error(`AdEvent with id ${AdEventID} was undefined`);
         }
-
-        const { flightId, nonce } = extractURLStatePixelTracking(url);
-        const eventAction = AdEventAction.Click;
-
-        // get for existing flight
-        let flight: AdFlight_Firestore;
-        let createdEvent: AdEvent_Firestore;
-
-        try {
-            if (!flightId || !eventAction || !nonce) {
-                logger.error("Malformed URL", url);
-                return;
-            }
-
-            flight = await getFlightById(flightId);
-
-            // check if nonce already used (deduplication of events)
-            const eventsByNonce = await getAdEventsByNonce(flight.adID as AdID, nonce, 1);
-            if (eventsByNonce.length > 0) {
-                logger.error("Nonce already used", { adId: flight.adID, nonce });
-                return;
-            }
-
-            // Now write the AdEvent subcollection document
-            createdEvent = await createAdEvent({
-                action: eventAction,
-                flight,
-                nonce,
-            });
-
-            logger.info("Successfully created ad event", { id: createdEvent.id, ad: flight.adID });
-        } catch (err) {
-            logger.error("Pubsub error", err);
-            return;
-        }
-
-        const updateRequest: Partial<Ad> = {};
-
-        if (eventAction === AdEventAction.Click) {
-            // Update clicks
-            updateRequest.clicks = FieldValue.increment(1) as unknown as number;
-
-            // Check if unique click by session id
-            // A unique click is counted when only one click adEvent exists for a given sessionId
-            try {
-                const sessionAdEvents = await getAdEventsBySessionId(flight.adID, flight.sessionID, {
-                    actionType: AdEventAction.Click,
-                    limit: 2,
-                });
-                if (sessionAdEvents.length === 1) {
-                    // Recall, we previously just made an ad event so there should be one
-                    updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
-                }
-            } catch (err) {
-                logger.error(err);
-                // Just fail silently
-            }
-        }
-
-        if (Object.keys(updateRequest).length === 0) {
-            // Nothing to update
-            return;
-        }
-
-        try {
-            await updateAdCounts(flight.adID, updateRequest);
-        } catch (err) {
-            logger.error("Error updating ad counts...", err);
-        }
-
+        // Generate the Memos
+        const memos = await generateMemoBills(adEvent);
+        // end
         return;
     });

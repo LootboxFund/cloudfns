@@ -1,4 +1,6 @@
 import type { Request } from "express";
+import { PubSub, Topic } from "@google-cloud/pubsub";
+import { manifest } from "../../manifest";
 import {
   AdEvent_Firestore,
   Collection,
@@ -10,6 +12,9 @@ import {
 import { db } from "../../api/firebase";
 import { DocumentReference } from "firebase-admin/firestore";
 import { getActivationsByMmpAliasAndOfferID } from "../../api/firestore/activation";
+
+import { notifyPubSubOfBillableActivation } from "../../api/pubsub/notify";
+import { TournamentID } from "@wormgraph/helpers";
 
 //  * ------ DATA WE RECEIVE FROM APPSFLYER ------
 //  *
@@ -80,6 +85,7 @@ export const trackAppsFlyerActivation = async (
       if (f) {
         const flight = f;
         const mmpAlias = (extraData.appsflyer_event_name as string) || "";
+        const tournamentID = (extraData.appsflyer_af_adset as string) || "";
         const matchingActivations = await getActivationsByMmpAliasAndOfferID(
           flight.offerID,
           mmpAlias
@@ -105,9 +111,11 @@ export const trackAppsFlyerActivation = async (
             organizerID: flight.organizerID,
             promoterID: flight.promoterID,
             userID: flight.userID,
+            tournamentID: tournamentID as TournamentID,
           },
         };
         await adEventRef.set(adEventSchema);
+        await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);
         return adEventSchema;
       }
     }
@@ -128,6 +136,8 @@ export const trackAppsFlyerActivation = async (
       extraData: extraData,
     };
     await adEventRef.set(adEventSchema);
+    await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);
+    return adEventSchema;
   }
   const adEventSchema: AdEvent_Firestore = {
     id: adEventRef.id as AdEventID,
@@ -136,5 +146,6 @@ export const trackAppsFlyerActivation = async (
     extraData: extraData,
   };
   await adEventRef.set(adEventSchema);
+  await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);
   return adEventSchema;
 };
