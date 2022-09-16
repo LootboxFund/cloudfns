@@ -12,6 +12,12 @@ import {
   AdvertiserID,
   rankInfoTable,
   Collection,
+  RateQuote_Firestore,
+  Offer_Firestore,
+  RateQuoteStatus,
+  Tournament_Firestore,
+  OfferInTournamentStatus,
+  AdSetID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -29,14 +35,7 @@ import { db } from "../firebase";
 import {
   Affiliate_Firestore,
   OrganizerOfferWhitelist_Firestore,
-  RateQuoteStatus,
-  RateQuote_Firestore,
 } from "./affiliate.type";
-import {
-  OfferInTournamentStatus,
-  Tournament_Firestore,
-} from "./tournament.types";
-import { Offer_Firestore } from "./offer.type";
 import { AdSetStatus, AdSet_Firestore } from "./ad.types";
 import { TournamentOffers } from "../../graphql/generated/types";
 import { Advertiser_Firestore } from "./advertiser.type";
@@ -292,7 +291,7 @@ export const addOfferAdSetToTournament = async (
       updatePayload.offers = {
         ...existingTournament.offers,
         [payload.offerID]: {
-          id: payload.offerID,
+          id: payload.offerID as OfferID,
           status: OfferInTournamentStatus.Active,
           rateQuotes: updatedRateQuotes,
           adSets: {

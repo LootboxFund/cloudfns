@@ -17,7 +17,7 @@
     },
     "main": "lib/index.js",
     "dependencies": {
-        "@wormgraph/helpers": "0.2.0-afn-alpha14",
+        "@wormgraph/helpers": "0.2.0-afn-alpha19",
         "@wormgraph/manifest": "0.4.0-afm-alpha3",
         "firebase-admin": "^10.0.2",
         "firebase-functions": "^3.18.0"

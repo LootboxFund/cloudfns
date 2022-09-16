@@ -15,7 +15,7 @@
  * ✅ Dynamic creation of Rate Quotes when adding & removing OfferAdsets to Tournaments
  *
  * ✅ Decision API for returning an Ad
- * ⬜️ Code the memo billing function
+ * ✅ Code the memo billing function
  *
  * ✅ Two way offer+adset (editOffer will update offer.adSets and adSet.offers, and vice versa)
  * ⬜️ Add counts to firestore

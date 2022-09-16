@@ -9,26 +9,9 @@ import {
   UserID,
   AdSetID,
   ActivationStatus,
+  Offer_Firestore,
 } from "@wormgraph/helpers";
 import { AdvertiserID, Currency, OfferID, OfferStatus } from "../../lib/types";
-
-export interface Offer_Firestore {
-  id: OfferID;
-  title: string;
-  description: string;
-  image: string;
-  advertiserID: AdvertiserID;
-  spentBudget: number;
-  maxBudget: number;
-  // currency: Currency;
-  startDate: number;
-  endDate: number;
-  status: OfferStatus;
-  affiliateBaseLink: AffiliateBaseLink;
-  mmp: MeasurementPartnerType;
-  // targetingTags: AdTargetTag[];
-  adSets: AdSetID[];
-}
 
 export type OfferPreview = Omit<
   Offer_Firestore,

@@ -5,7 +5,6 @@ import {
   OfferInTournamentStatus,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
-import { Tournament_Firestore } from "./tournament.types";
 import {
   AdFlight_Firestore,
   AdID,
@@ -18,12 +17,13 @@ import {
   FlightID,
   MeasurementPartnerType,
   OfferID,
+  Offer_Firestore,
   Placement,
   SessionID,
   TournamentID,
+  Tournament_Firestore,
   UserID,
 } from "@wormgraph/helpers";
-import { Offer_Firestore } from "./offer.type";
 import { AdSet_Firestore, Ad_Firestore } from "./ad.types";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { craftAffiliateAttributionUrl } from "../mmp/mmp";
