@@ -13,6 +13,7 @@ import {
   UserID,
   ActivationStatus,
   Activation_Firestore,
+  Offer_Firestore,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -25,11 +26,7 @@ import {
 import { db } from "../firebase";
 import { EditActivationsInOfferPayload } from "../../graphql/generated/types";
 import { AddActivationsToOfferPayload } from "../../graphql/generated/types";
-import {
-  OfferPreview,
-  OfferPreviewForOrganizer,
-  Offer_Firestore,
-} from "./offer.type";
+import { OfferPreview, OfferPreviewForOrganizer } from "./offer.type";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,

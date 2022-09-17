@@ -1,6 +1,5 @@
 import { AdFlight_Firestore } from "@wormgraph/helpers";
 import { MeasurementPartnerType } from "../../graphql/generated/types";
-import { Offer_Firestore } from "../firestore/offer.type";
 
 export const craftAffiliateAttributionUrl = (
   flight: Omit<AdFlight_Firestore, "clickUrl" | "destinationUrl">

@@ -16,8 +16,13 @@ import {
   CreativeType,
 } from "./ad.types";
 import { v4 as uuidv4 } from "uuid";
-import { AdSetID, Collection, OfferID, Placement } from "@wormgraph/helpers";
-import { Offer_Firestore } from "./offer.type";
+import {
+  AdSetID,
+  Collection,
+  OfferID,
+  Offer_Firestore,
+  Placement,
+} from "@wormgraph/helpers";
 
 // export const getAdById = async (adId: AdID): Promise<Ad | undefined> => {
 //   const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
