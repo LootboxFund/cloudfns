@@ -228,7 +228,7 @@ const AdvertiserResolvers: Resolvers = {
     },
     createConquest: async (
       _,
-      { payload }: MutationCreateConquestArgs,
+      { advertiserID, payload }: MutationCreateConquestArgs,
       context: Context
     ): Promise<CreateConquestResponse> => {
       // if (!context.userId) {
@@ -242,13 +242,13 @@ const AdvertiserResolvers: Resolvers = {
       try {
         const conquest = await createConquest(
           payload.title || "",
-          payload.advertiserID as AdvertiserID
+          advertiserID as AdvertiserID
         );
         if (!conquest) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No conquest for advertiser ${payload.advertiserID} created`,
+              message: `No conquest for advertiser ${advertiserID} created`,
             },
           };
         }

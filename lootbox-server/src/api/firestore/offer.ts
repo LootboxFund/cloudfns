@@ -20,13 +20,15 @@ import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
   CreateOfferPayload,
   CreateOfferResponse,
+  EditActivationInput,
   EditOfferPayload,
   User,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
-import { EditActivationsInOfferPayload } from "../../graphql/generated/types";
-import { AddActivationsToOfferPayload } from "../../graphql/generated/types";
+import { CreateActivationInput } from "../../graphql/generated/types";
+import { CreateActivationPayload } from "../../graphql/generated/types";
 import { OfferPreview, OfferPreviewForOrganizer } from "./offer.type";
+import * as moment from "moment";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -51,8 +53,10 @@ export const createOffer = async (
     spentBudget: 0,
     maxBudget: payload.maxBudget || 1000,
     // currency: Currency.Usd, // payload.currency || Currency.Usd,
-    startDate: payload.startDate || new Date().getTime(),
-    endDate: payload.endDate || new Date().getTime() + 60 * 60 * 24 * 365,
+    startDate: moment(payload.startDate).unix() || new Date().getTime(),
+    endDate:
+      moment(payload.startDate).unix() ||
+      new Date().getTime() + 60 * 60 * 24 * 365,
     status: (payload.status || "Planned") as OfferStatus,
     affiliateBaseLink: payload.affiliateBaseLink || "",
     mmp: (payload.mmp || "Manual") as MeasurementPartnerType,
@@ -88,10 +92,10 @@ export const editOffer = async (
     updatePayload.maxBudget = payload.maxBudget;
   }
   if (payload.startDate != undefined) {
-    updatePayload.startDate = payload.startDate;
+    updatePayload.startDate = moment(payload.startDate).unix();
   }
   if (payload.endDate != undefined) {
-    updatePayload.endDate = payload.endDate;
+    updatePayload.endDate = moment(payload.endDate).unix();
   }
   if (payload.status != undefined) {
     updatePayload.status = (payload.status || "Planned") as OfferStatus;
@@ -105,103 +109,87 @@ export const editOffer = async (
 };
 
 // add activations to offer
-export const addActivationsToOffer = async (
+export const createActivation = async (
   id: OfferID,
-  payload: Omit<AddActivationsToOfferPayload, "id">
-): Promise<Activation_Firestore[]> => {
+  payload: CreateActivationInput
+): Promise<Activation_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
   }
-  const activationsQueue: {
-    ref: DocumentReference<Activation_Firestore>;
-    obj: Activation_Firestore;
-  }[] = [];
-  for (let i = 0; i < payload.activations.length; i++) {
-    const activationRef = db
-      .collection(Collection.Activation)
-      .doc() as DocumentReference<Activation_Firestore>;
-    const obj: Activation_Firestore = {
-      id: activationRef.id as ActivationID,
-      name: payload.activations[i].name,
-      description: payload.activations[i].description || "",
-      pricing: payload.activations[i].pricing,
-      status: payload.activations[i].status,
-      mmpAlias: payload.activations[i].mmpAlias,
-      offerID: payload.activations[i].offerID as OfferID,
-    };
-    activationsQueue.push({ ref: activationRef, obj });
+  console.log(`Creating activation for offer ${id}`);
+  const activationRef = db
+    .collection(Collection.Activation)
+    .doc() as DocumentReference<Activation_Firestore>;
+  const obj: Activation_Firestore = {
+    id: activationRef.id as ActivationID,
+    name: payload.name,
+    description: payload.description || "",
+    pricing: payload.pricing,
+    status: payload.status,
+    mmpAlias: payload.mmpAlias,
+    offerID: payload.offerID as OfferID,
+    order: payload.order || 9,
+  };
+
+  try {
+    await activationRef.set(obj);
+    console.log("Activation created");
+    return obj;
+  } catch (e) {
+    console.log(e);
+    throw new Error("Error creating activation");
   }
-  await Promise.all(
-    activationsQueue.map(({ ref, obj }) => {
-      return ref.set(obj);
-    })
-  );
-  return activationsQueue.map(({ obj }) => obj);
 };
 
 // warning! updates entire activations array, which means that it will overwrite existing activations
-export const editActivationsInOffer = async (
-  id: OfferID,
-  payload: Omit<EditActivationsInOfferPayload, "id">
-): Promise<Activation_Firestore[]> => {
+export const editActivation = async (
+  id: ActivationID,
+  payload: EditActivationInput
+): Promise<Activation_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
   }
-  const existingActivationsSnapshots = await Promise.all(
-    payload.activations.map((act) => {
-      const activationRef = db
-        .collection(Collection.Activation)
-        .doc(act.id) as DocumentReference<Activation_Firestore>;
-      return activationRef.get();
-    })
-  );
-  const existingActivations = existingActivationsSnapshots
-    .map((snap) => {
-      if (!snap.exists) {
-        return undefined;
-      }
-      const existingObj = snap.data();
-      return existingObj;
-    })
-    .filter((o) => o)
-    .map((o) => o as Activation_Firestore);
+  console.log(payload);
+  const activationRef = db
+    .collection(Collection.Activation)
+    .doc(id) as DocumentReference<Activation_Firestore>;
+  const activationSnap = await activationRef.get();
 
-  await Promise.all(
-    existingActivations.map((act) => {
-      const actInput = payload.activations.find((a) => a.id === act.id);
-      const updatePayload: Partial<Activation_Firestore> = {};
-      if (actInput && actInput.name) {
-        updatePayload.name = actInput.name;
-      }
-      if (actInput && actInput.description) {
-        updatePayload.description = actInput.description;
-      }
-      if (actInput && actInput.pricing) {
-        updatePayload.pricing = actInput.pricing;
-      }
-      if (actInput && actInput.status) {
-        updatePayload.status = actInput.status as ActivationStatus;
-      }
-      if (actInput && actInput.mmpAlias) {
-        updatePayload.mmpAlias = actInput.mmpAlias;
-      }
-      const activationRef = db
-        .collection(Collection.Activation)
-        .doc(act.id) as DocumentReference<Activation_Firestore>;
-      return activationRef.update(updatePayload);
-    })
-  );
-  const updatedActivations = (
-    await Promise.all(
-      payload.activations.map((act) => {
-        const activationRef = db
-          .collection(Collection.Activation)
-          .doc(act.id) as DocumentReference<Activation_Firestore>;
-        return activationRef.get();
-      })
-    )
-  ).map((snap) => snap.data() as Activation_Firestore);
-  return updatedActivations;
+  if (!activationSnap.exists) {
+    return undefined;
+  }
+
+  const existingObj = activationSnap.data();
+  if (existingObj === undefined) {
+    return undefined;
+  }
+
+  const actInput = payload;
+  const updatePayload: Partial<Activation_Firestore> = {};
+  if (actInput && actInput.name) {
+    updatePayload.name = actInput.name;
+  }
+  if (actInput && actInput.description) {
+    updatePayload.description = actInput.description;
+  }
+  if (actInput && actInput.pricing) {
+    updatePayload.pricing = actInput.pricing;
+  }
+  if (actInput && actInput.status) {
+    updatePayload.status = actInput.status as ActivationStatus;
+  }
+  if (actInput && actInput.mmpAlias) {
+    updatePayload.mmpAlias = actInput.mmpAlias;
+  }
+  if (actInput && actInput.order) {
+    updatePayload.order = actInput.order;
+  }
+  console.log(updatePayload);
+  await activationRef.update(updatePayload);
+
+  const updatedActivationSnap = await activationRef.get();
+
+  return updatedActivationSnap.data() as Activation_Firestore;
 };
 
 //
@@ -294,8 +282,7 @@ export const listActiveActivationsForOffer = async (
 ): Promise<Activation_Firestore[]> => {
   const activationsRef = db
     .collection(Collection.Activation)
-    .where("offerID", "==", offerID)
-    .orderBy("timestamps.createdAt", "desc") as Query<Activation_Firestore>;
+    .where("offerID", "==", offerID) as Query<Activation_Firestore>;
 
   const activationItems = await activationsRef.get();
 
@@ -308,5 +295,25 @@ export const listActiveActivationsForOffer = async (
       return data;
     })
     .filter((act) => act.status === ActivationStatus.Active);
+  return activeActivations;
+};
+
+export const listActivationsForOffer = async (
+  offerID: OfferID
+): Promise<Activation_Firestore[]> => {
+  const activationsRef = db
+    .collection(Collection.Activation)
+    .where("offerID", "==", offerID) as Query<Activation_Firestore>;
+
+  const activationItems = await activationsRef.get();
+
+  if (activationItems.empty) {
+    return [];
+  }
+
+  const activeActivations = activationItems.docs.map((doc) => {
+    const data = doc.data();
+    return data;
+  });
   return activeActivations;
 };

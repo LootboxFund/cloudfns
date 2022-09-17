@@ -1,4 +1,9 @@
-import { Activation_Firestore, Collection, OfferID } from "@wormgraph/helpers";
+import {
+  ActivationStatus,
+  Activation_Firestore,
+  Collection,
+  OfferID,
+} from "@wormgraph/helpers";
 import { Query } from "firebase-admin/firestore";
 import { db } from "../firebase";
 
@@ -21,7 +26,10 @@ export const getActivationsByMmpAliasAndOfferID = async (
       return data;
     })
     .filter((act) => {
-      return act.mmpAlias.toLowerCase() === mmpAlias.toLowerCase();
+      return (
+        act.mmpAlias.toLowerCase() === mmpAlias.toLowerCase() &&
+        act.status === ActivationStatus.Active
+      );
     });
   return matchingActivations;
 };

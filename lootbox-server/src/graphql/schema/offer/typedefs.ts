@@ -15,6 +15,7 @@ const OfferTypeDefs = gql`
     affiliateBaseLink: String
     mmp: MeasurementPartnerType!
     adSets: [ID!]!
+    activations: [Activation!]
     #targetingTags: [AdTargetTag!]!
   }
 
@@ -42,10 +43,10 @@ const OfferTypeDefs = gql`
     Archived
   }
   enum ActivationStatus {
-    ACTIVE
-    INACTIVE
-    PLANNED
-    ARCHIVED
+    Active
+    Inactive
+    Planned
+    Archived
   }
 
   enum MeasurementPartnerType {
@@ -61,6 +62,7 @@ const OfferTypeDefs = gql`
     status: ActivationStatus!
     mmpAlias: String!
     offerID: ID!
+    order: Int
   }
   input EditActivationInput {
     id: ID!
@@ -69,6 +71,7 @@ const OfferTypeDefs = gql`
     pricing: Float
     status: ActivationStatus
     mmpAlias: String
+    order: Int
   }
 
   type Activation {
@@ -79,14 +82,15 @@ const OfferTypeDefs = gql`
     status: ActivationStatus!
     mmpAlias: String!
     offerID: ID!
+    order: Int!
   }
 
   enum AdTargetTagType {
-    GEOGRAPHY
-    INTEREST
-    DEVICE
-    OS
-    INCOME
+    Geography
+    Interest
+    Device
+    Os
+    Income
   }
 
   type AdTargetTag {
@@ -179,28 +183,26 @@ const OfferTypeDefs = gql`
   union EditOfferResponse = EditOfferResponseSuccess | ResponseError
 
   # --------- Add Activations To Offer ---------
-  input AddActivationsToOfferPayload {
+  input CreateActivationPayload {
     offerID: ID!
-    activations: [CreateActivationInput!]!
+    activation: CreateActivationInput!
   }
-  type AddActivationsToOfferResponseSuccess {
-    activations: [Activation!]!
+  type CreateActivationResponseSuccess {
+    activation: Activation!
   }
-  union AddActivationsToOfferResponse =
-      AddActivationsToOfferResponseSuccess
+  union CreateActivationResponse =
+      CreateActivationResponseSuccess
     | ResponseError
 
   # --------- Edit Activations To Offer ---------
-  input EditActivationsInOfferPayload {
-    offerID: ID!
-    activations: [EditActivationInput!]!
+  input EditActivationPayload {
+    activationID: ID!
+    activation: EditActivationInput!
   }
-  type EditActivationsInOfferResponseSuccess {
-    activations: [Activation!]!
+  type EditActivationResponseSuccess {
+    activation: Activation!
   }
-  union EditActivationsInOfferResponse =
-      EditActivationsInOfferResponseSuccess
-    | ResponseError
+  union EditActivationResponse = EditActivationResponseSuccess | ResponseError
 
   extend type Mutation {
     # Advertiser creates an offer
@@ -211,13 +213,11 @@ const OfferTypeDefs = gql`
     # Advertiser edits an offer
     editOffer(payload: EditOfferPayload!): EditOfferResponse!
     # Advertiser adds activations to an offer
-    addActivationsToOffer(
-      payload: AddActivationsToOfferPayload!
-    ): AddActivationsToOfferResponse!
+    createActivation(
+      payload: CreateActivationPayload!
+    ): CreateActivationResponse!
     # Advertiser edits the activations in an offer including potential deletions
-    editActivationsInOffer(
-      payload: EditActivationsInOfferPayload!
-    ): EditActivationsInOfferResponse!
+    editActivation(payload: EditActivationPayload!): EditActivationResponse!
   }
 `;
 

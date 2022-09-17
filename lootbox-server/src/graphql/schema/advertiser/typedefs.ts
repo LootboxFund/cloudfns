@@ -113,7 +113,6 @@ const AdvertiserTypeDefs = gql`
   # ------ createConquest ------
   input CreateConquestPayload {
     title: String!
-    advertiserID: ID!
   }
   type CreateConquestResponseSuccess {
     conquest: Conquest
@@ -147,7 +146,10 @@ const AdvertiserTypeDefs = gql`
       payload: UpdateAdvertiserDetailsPayload!
     ): UpdateAdvertiserDetailsResponse!
     # Create a new tournament campaign (conquest)
-    createConquest(payload: CreateConquestPayload!): CreateConquestResponse!
+    createConquest(
+      advertiserID: ID!
+      payload: CreateConquestPayload!
+    ): CreateConquestResponse!
     # Update a tournament campaign (conquest)
     updateConquest(
       advertiserID: ID!

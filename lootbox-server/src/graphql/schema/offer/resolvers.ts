@@ -1,5 +1,5 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { ConquestID, OfferID } from "@wormgraph/helpers";
+import { ActivationID, ConquestID, OfferID } from "@wormgraph/helpers";
 import {
   advertiserAdminView,
   advertiserPublicView,
@@ -37,27 +37,27 @@ import {
   UpdateAdvertiserDetailsResponse,
   UpdateConquestResponse,
   UpgradeToAdvertiserResponse,
-  EditActivationsInOfferResponse,
-  MutationEditActivationsInOfferArgs,
+  EditActivationResponse,
+  MutationEditActivationArgs,
   ListCreatedOffersResponse,
   ViewCreatedOfferResponse,
   QueryViewCreatedOfferArgs,
+  Activation,
+  MutationCreateActivationArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
 import { QueryListCreatedOffersArgs } from "../../generated/types";
 import {
-  addActivationsToOffer,
+  createActivation,
   createOffer,
-  editActivationsInOffer,
+  editActivation,
   editOffer,
+  listActivationsForOffer,
   listCreatedOffers,
   viewCreatedOffer,
 } from "../../../api/firestore/offer";
-import {
-  MutationAddActivationsToOfferArgs,
-  AddActivationsToOfferResponse,
-} from "../../generated/types";
+import { CreateActivationResponse } from "../../generated/types";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -186,11 +186,11 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
-    addActivationsToOffer: async (
+    createActivation: async (
       _,
-      { payload }: MutationAddActivationsToOfferArgs,
+      { payload }: MutationCreateActivationArgs,
       context: Context
-    ): Promise<AddActivationsToOfferResponse> => {
+    ): Promise<CreateActivationResponse> => {
       // if (!context.userId) {
       //   return {
       //     error: {
@@ -200,19 +200,21 @@ const OfferResolvers: Resolvers = {
       //   };
       // }
       try {
-        const activations = await addActivationsToOffer(
+        const activation = await createActivation(
           payload.offerID as OfferID,
-          payload
+          payload.activation
         );
-        if (!activations) {
+        console.log(`After createActivation...`);
+        console.log(activation);
+        if (!activation) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No activations added to offer ${payload.offerID}`,
+              message: `No activation created for ${payload.offerID}`,
             },
           };
         }
-        return { activations };
+        return { activation };
       } catch (err) {
         return {
           error: {
@@ -222,11 +224,11 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
-    editActivationsInOffer: async (
+    editActivation: async (
       _,
-      { payload }: MutationEditActivationsInOfferArgs,
+      { payload }: MutationEditActivationArgs,
       context: Context
-    ): Promise<EditActivationsInOfferResponse> => {
+    ): Promise<EditActivationResponse> => {
       // if (!context.userId) {
       //   return {
       //     error: {
@@ -236,19 +238,20 @@ const OfferResolvers: Resolvers = {
       //   };
       // }
       try {
-        const activations = await editActivationsInOffer(
-          payload.offerID as OfferID,
-          payload
+        const activation = await editActivation(
+          payload.activationID as ActivationID,
+          payload.activation
         );
-        if (!activations) {
+        console.log(`activation= `, activation);
+        if (!activation) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No activations added to offer ${payload.offerID}`,
+              message: `Could not edit activation ${payload.activationID}`,
             },
           };
         }
-        return { activations };
+        return { activation };
       } catch (err) {
         return {
           error: {
@@ -257,6 +260,12 @@ const OfferResolvers: Resolvers = {
           },
         };
       }
+    },
+  },
+
+  Offer: {
+    activations: async (offer: Offer): Promise<Activation[]> => {
+      return listActivationsForOffer(offer.id as OfferID);
     },
   },
 
@@ -286,10 +295,10 @@ const OfferResolvers: Resolvers = {
       return null;
     },
   },
-  AddActivationsToOfferResponse: {
-    __resolveType: (obj: AddActivationsToOfferResponse) => {
-      if ("activations" in obj) {
-        return "AddActivationsToOfferResponseSuccess";
+  CreateActivationResponse: {
+    __resolveType: (obj: CreateActivationResponse) => {
+      if ("activation" in obj) {
+        return "CreateActivationResponseSuccess";
       }
 
       if ("error" in obj) {
@@ -299,10 +308,10 @@ const OfferResolvers: Resolvers = {
       return null;
     },
   },
-  EditActivationsInOfferResponse: {
-    __resolveType: (obj: EditActivationsInOfferResponse) => {
-      if ("activations" in obj) {
-        return "EditActivationsInOfferResponseSuccess";
+  EditActivationResponse: {
+    __resolveType: (obj: EditActivationResponse) => {
+      if ("activation" in obj) {
+        return "EditActivationResponseSuccess";
       }
 
       if ("error" in obj) {
@@ -343,7 +352,7 @@ const OfferResolvers: Resolvers = {
 const offerComposition = {
   "Mutation.createOffer": [],
   "Mutation.editOffer": [],
-  "Mutation.addActivationsToOffer": [],
+  "Mutation.createActivation": [],
   "Mutation.editActivationsInOffer": [],
 };
 
