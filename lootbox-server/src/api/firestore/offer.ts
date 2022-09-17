@@ -51,9 +51,8 @@ export const createOffer = async (
     spentBudget: 0,
     maxBudget: payload.maxBudget || 1000,
     // currency: Currency.Usd, // payload.currency || Currency.Usd,
-    startDate: payload.startDate || new Date().getTime() / 1000,
-    endDate:
-      payload.endDate || new Date().getTime() / 1000 + 60 * 60 * 24 * 365,
+    startDate: payload.startDate || new Date().getTime(),
+    endDate: payload.endDate || new Date().getTime() + 60 * 60 * 24 * 365,
     status: (payload.status || "Planned") as OfferStatus,
     affiliateBaseLink: payload.affiliateBaseLink || "",
     mmp: (payload.mmp || "Manual") as MeasurementPartnerType,

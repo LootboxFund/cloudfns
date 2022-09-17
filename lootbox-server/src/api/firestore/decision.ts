@@ -184,7 +184,7 @@ export const createFlight = async (
     promoterID: payload.promoterID,
     mmp: offer.mmp,
     affiliateBaseLink: offer.affiliateBaseLink,
-    timestamp: new Date().getTime() / 1000,
+    timestamp: new Date().getTime(),
     pixelUrl: generatePixelUrl(flightRef.id as FlightID),
   };
   const { clickUrl, destinationUrl } = generateClickUrl(flightSchema);

@@ -2,10 +2,10 @@ import { gql } from "apollo-server";
 
 const AdvertiserTypeDefs = gql`
   enum ConquestStatus {
-    ACTIVE
-    INACTIVE
-    PLANNED
-    ARCHIVED
+    Active
+    Inactive
+    Planned
+    Archived
   }
 
   type Advertiser {

@@ -19,6 +19,7 @@ import {
   ConquestStatus,
   TournamentID,
 } from "@wormgraph/helpers";
+import * as moment from "moment";
 
 export const upgradeToAdvertiser = async (
   userID: UserID
@@ -126,10 +127,10 @@ export const updateConquest = async (
     updatePayload.image = payload.image;
   }
   if (payload.startDate != undefined) {
-    updatePayload.startDate = payload.startDate;
+    updatePayload.startDate = moment(payload.startDate).unix();
   }
   if (payload.endDate != undefined) {
-    updatePayload.endDate = payload.endDate;
+    updatePayload.endDate = moment(payload.endDate).unix();
   }
   if (payload.status != undefined) {
     updatePayload.status = payload.status as ConquestStatus;
@@ -186,30 +187,35 @@ export const getConquest = async (
   const conquestData = conquestSnapshot.data();
   if (!conquestSnapshot.exists || !conquestData) return undefined;
 
-  const tournamentsRef = db
-    .collection(Collection.Tournament)
-    .where("id", "in", conquestData.tournaments) as Query<Tournament>;
+  if (conquestData.tournaments && conquestData.tournaments.length > 0) {
+    const tournamentsRef = db
+      .collection(Collection.Tournament)
+      .where("id", "in", conquestData.tournaments) as Query<Tournament>;
 
-  const tournamentSnapshot = await tournamentsRef.get();
-
-  if (tournamentSnapshot.empty) {
+    const tournamentSnapshot = await tournamentsRef.get();
+    if (tournamentSnapshot.empty) {
+      return {
+        conquest: conquestData,
+        tournaments: [] as TournamentPreviewInConquest[],
+      };
+    }
+    const tournamentsPreviewInConquest = tournamentSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      const preview: TournamentPreviewInConquest = {
+        id: doc.id as TournamentID,
+        title: data.title,
+        coverPhoto: data.coverPhoto || placeholderImageTournament,
+      };
+      return preview;
+    });
     return {
       conquest: conquestData,
-      tournaments: [] as TournamentPreviewInConquest[],
+      tournaments: tournamentsPreviewInConquest,
     };
   }
-  const tournamentsPreviewInConquest = tournamentSnapshot.docs.map((doc) => {
-    const data = doc.data();
-    const preview: TournamentPreviewInConquest = {
-      id: doc.id as TournamentID,
-      title: data.title,
-      coverPhoto: data.coverPhoto || placeholderImageTournament,
-    };
-    return preview;
-  });
   return {
     conquest: conquestData,
-    tournaments: tournamentsPreviewInConquest,
+    tournaments: [] as TournamentPreviewInConquest[],
   };
 };
 

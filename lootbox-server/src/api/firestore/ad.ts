@@ -63,8 +63,8 @@ export const createAd = async (
     },
     events: [],
     timestamps: {
-      createdAt: new Date().getTime() / 1000,
-      updatedAt: new Date().getTime() / 1000,
+      createdAt: new Date().getTime(),
+      updatedAt: new Date().getTime(),
     },
   };
   await adRef.set(adSchema);

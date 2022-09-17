@@ -25,6 +25,7 @@
     "graphql": "^16.5.0",
     "graphql-scalars": "^1.17.0",
     "lodash": "^4.17.21",
+    "moment": "^2.29.4",
     "nanoid": "3.3.4",
     "uuid": "^9.0.0"
   },
