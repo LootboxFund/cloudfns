@@ -28,7 +28,6 @@ const AdvertiserTypeDefs = gql`
     status: ConquestStatus!
     spentBudget: Float
     maxBudget: Float
-
     tournaments: [ID!]!
   }
 

@@ -6,6 +6,8 @@ const AdTypeDefs = gql`
     Inactive
     PendingReview
     Rejected
+    Archived
+    Planned
   }
 
   enum AdSetStatus {
@@ -13,6 +15,8 @@ const AdTypeDefs = gql`
     Inactive
     PendingReview
     Rejected
+    Archived
+    Planned
   }
 
   enum Placement {
@@ -45,17 +49,18 @@ const AdTypeDefs = gql`
     placement: Placement!
     offerIDs: [ID!]!
     adIDs: [ID!]!
-    # ads: [Ad!]
+    ads: [Ad!]
   }
 
   type Ad {
     id: ID!
     advertiserID: ID!
     status: AdStatus!
-    name: String
+    name: String!
     placement: Placement!
     timestamps: AdTimestamps!
-
+    publicInfo: String!
+    description: String
     impressions: Int!
     clicks: Int!
     uniqueClicks: Int!
@@ -88,17 +93,34 @@ const AdTypeDefs = gql`
     nonce: ID! # unique - prevents duplicate events
   }
 
+  enum AspectRatio {
+    Square1x1
+    Portrait9x16
+    Portrait2x3
+    Landscape16x9
+    Tablet4x5
+  }
+
   enum CreativeType {
     image
     video
   }
-  input CreativeInput {
+  input CreativeInputCreate {
     creativeType: CreativeType!
     creativeLinks: [String!]!
-    callToActionText: String!
+    callToAction: String!
     thumbnail: String!
     infographicLink: String
-    creativeAspectRatio: String
+    aspectRatio: AspectRatio!
+    themeColor: String
+  }
+  input CreativeInputEdit {
+    creativeType: CreativeType
+    creativeLinks: [String!]
+    callToAction: String
+    thumbnail: String
+    infographicLink: String
+    aspectRatio: AspectRatio
     themeColor: String
   }
   type Creative {
@@ -106,11 +128,11 @@ const AdTypeDefs = gql`
     advertiserID: ID!
     creativeType: CreativeType!
     creativeLinks: [String!]!
-    callToActionText: String
-    thumbnail: String
+    callToAction: String!
+    thumbnail: String!
     infographicLink: String
-    creativeAspectRatio: String!
-    themeColor: String
+    aspectRatio: AspectRatio!
+    themeColor: String!
   }
 
   type AdServed {
@@ -145,9 +167,6 @@ const AdTypeDefs = gql`
     | ResponseError
 
   # -------- List Ads of Advertiser --------
-  input ListAdsOfAdvertiserPayload {
-    advertiserID: ID
-  }
   type ListAdsOfAdvertiserResponseSuccess {
     ads: [Ad!]!
   }
@@ -156,9 +175,6 @@ const AdTypeDefs = gql`
     | ResponseError
 
   # -------- List AdSets of Advertiser --------
-  input ListAdSetsOfAdvertiserPayload {
-    advertiserID: ID
-  }
   type ListAdSetsOfAdvertiserResponseSuccess {
     adSets: [AdSet!]!
   }
@@ -166,27 +182,36 @@ const AdTypeDefs = gql`
       ListAdSetsOfAdvertiserResponseSuccess
     | ResponseError
 
+  # -------- View AdSet --------
+  type ViewAdSetResponseSuccess {
+    adSet: AdSet!
+  }
+  union ViewAdSetResponse = ViewAdSetResponseSuccess | ResponseError
+  type ViewAdResponseSuccess {
+    ad: Ad!
+  }
+  union ViewAdResponse = ViewAdResponseSuccess | ResponseError
+
+  # -------- View Ad --------
+
   extend type Query {
     decisionAdApiBetaV2(
       payload: DecisionAdApiBetaV2Payload!
     ): DecisionAdApiBetaV2Response!
-    listAdsOfAdvertiser(
-      payload: ListAdsOfAdvertiserPayload!
-    ): ListAdsOfAdvertiserResponse!
-    listAdSetsOfAdvertiser(
-      payload: ListAdSetsOfAdvertiserPayload!
-    ): ListAdSetsOfAdvertiserResponse!
-    # viewAdSet(adSetID: ID!): ViewAdSetResponse!
-    # viewAd(adID: ID!): ViewAdResponse!
+    listAdsOfAdvertiser(advertiserID: ID!): ListAdsOfAdvertiserResponse!
+    listAdSetsOfAdvertiser(advertiserID: ID!): ListAdSetsOfAdvertiserResponse!
+    viewAdSet(adSetID: ID!): ViewAdSetResponse!
+    viewAd(adID: ID!): ViewAdResponse!
   }
 
   # -------- Create Ad --------
   input CreateAdPayload {
     name: String!
     description: String
+    publicInfo: String!
     status: AdStatus!
     placement: Placement!
-    creative: CreativeInput!
+    creative: CreativeInputCreate!
     advertiserID: ID!
   }
   type CreateAdResponseSuccess {
@@ -199,8 +224,10 @@ const AdTypeDefs = gql`
     id: ID!
     name: String
     description: String
+    publicInfo: String
     status: AdStatus
-    creative: CreativeInput!
+    creative: CreativeInputEdit
+    placement: Placement
   }
   type EditAdResponseSuccess {
     ad: Ad!

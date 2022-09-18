@@ -10,6 +10,9 @@ import {
   createAdSet,
   editAd,
   editAdSet,
+  getAd,
+  getAdSet,
+  getAdsOfAdSet,
   listAdSetsOfAdvertiser,
   listAdsOfAdvertiser,
 } from "../../../api/firestore/ad";
@@ -31,6 +34,11 @@ import {
   MutationEditAdSetArgs,
   ListAdSetsOfAdvertiserResponse,
   QueryListAdSetsOfAdvertiserArgs,
+  AdSet,
+  QueryViewAdSetArgs,
+  ViewAdSetResponse,
+  QueryViewAdArgs,
+  ViewAdResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -48,6 +56,7 @@ import {
   EditAdSetResponse,
 } from "../../generated/types";
 import { decideAdToServe } from "../../../api/firestore/decision";
+import { AdSetID } from "@wormgraph/helpers";
 
 const AdResolvers: Resolvers = {
   Mutation: {
@@ -187,17 +196,15 @@ const AdResolvers: Resolvers = {
   Query: {
     listAdsOfAdvertiser: async (
       _,
-      { payload }: QueryListAdsOfAdvertiserArgs
+      { advertiserID }: QueryListAdsOfAdvertiserArgs
     ): Promise<ListAdsOfAdvertiserResponse> => {
       try {
-        const ads = await listAdsOfAdvertiser(
-          payload.advertiserID as AdvertiserID
-        );
+        const ads = await listAdsOfAdvertiser(advertiserID as AdvertiserID);
         if (!ads) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `Could not return ads for advertiser ID ${payload.advertiserID}`,
+              message: `Could not return ads for advertiser ID ${advertiserID}`,
             },
           };
         }
@@ -216,17 +223,17 @@ const AdResolvers: Resolvers = {
     },
     listAdSetsOfAdvertiser: async (
       _,
-      { payload }: QueryListAdSetsOfAdvertiserArgs
+      { advertiserID }: QueryListAdSetsOfAdvertiserArgs
     ): Promise<ListAdSetsOfAdvertiserResponse> => {
       try {
         const adSets = await listAdSetsOfAdvertiser(
-          payload.advertiserID as AdvertiserID
+          advertiserID as AdvertiserID
         );
         if (!adSets) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `Could not return ads for advertiser ID ${payload.advertiserID}`,
+              message: `Could not return ads for advertiser ID ${advertiserID}`,
             },
           };
         }
@@ -268,19 +275,70 @@ const AdResolvers: Resolvers = {
         };
       }
     },
+    viewAdSet: async (
+      _,
+      { adSetID }: QueryViewAdSetArgs
+    ): Promise<ViewAdSetResponse> => {
+      try {
+        const adSet = await getAdSet(adSetID as AdSetID);
+        if (!adSet) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not return get adSet=${adSetID}`,
+            },
+          };
+        }
+        return {
+          adSet,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    viewAd: async (_, { adID }: QueryViewAdArgs): Promise<ViewAdResponse> => {
+      try {
+        const ad = await getAd(adID as AdID);
+        if (!ad) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not return get ad=${adID}`,
+            },
+          };
+        }
+        return {
+          ad,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
-  // AdSet: {
-  // ads: async (adSet: AdSet): Promise<Ad[] | null> => {
-  //   try {
-  //     const ads = await listAdsOfAdSet(adSet.id);
-  //     return ads;
-  //   } catch (err) {
-  //     console.error(err);
-  //     return null;
-  //   }
-  // }
-  // }
+  AdSet: {
+    ads: async (adSet: AdSet): Promise<Ad[] | null> => {
+      try {
+        const ads = await getAdsOfAdSet(adSet.adIDs as AdID[]);
+        return ads;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    },
+  },
 
   CreateAdResponse: {
     __resolveType: (obj: CreateAdResponse) => {
@@ -346,6 +404,30 @@ const AdResolvers: Resolvers = {
     __resolveType: (obj: ListAdSetsOfAdvertiserResponse) => {
       if ("adSets" in obj) {
         return "ListAdSetsOfAdvertiserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ViewAdSetResponse: {
+    __resolveType: (obj: ViewAdSetResponse) => {
+      if ("adSet" in obj) {
+        return "ViewAdSetResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ViewAdResponse: {
+    __resolveType: (obj: ViewAdResponse) => {
+      if ("ad" in obj) {
+        return "ViewAdResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

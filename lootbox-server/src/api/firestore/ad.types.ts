@@ -15,6 +15,7 @@ import {
   SessionID,
   UserID,
   Placement,
+  AspectRatio,
 } from "@wormgraph/helpers";
 
 export enum AdStatus {
@@ -22,6 +23,8 @@ export enum AdStatus {
   Inactive = "Inactive",
   PendingReview = "PendingReview",
   Rejected = "Rejected",
+  Archived = "Archived",
+  Planned = "Planned",
 }
 
 export type AdTimestamps = {
@@ -35,6 +38,8 @@ export enum AdSetStatus {
   Inactive = "Inactive",
   PendingReview = "PendingReview",
   Rejected = "Rejected",
+  Archived = "Archived",
+  Planned = "Planned",
 }
 export interface AdSet_Firestore {
   id: AdSetID;
@@ -53,6 +58,7 @@ export interface Ad_Firestore {
   status: AdStatus;
   name: string;
   description?: string;
+  publicInfo: string;
   placement: Placement;
   impressions: number;
   clicks: number;
@@ -69,11 +75,11 @@ export enum CreativeType {
 export interface Creative {
   creativeType: CreativeType;
   creativeLinks: string[];
-  callToActionText?: string;
-  thumbnail?: string;
+  callToAction: string;
+  thumbnail: string;
   infographicLink?: string;
-  creativeAspectRatio: string;
-  themeColor?: string;
+  aspectRatio: AspectRatio;
+  themeColor: string;
   advertiserID: AdvertiserID;
   adID: AdID;
 }

@@ -126,10 +126,10 @@ export const decideAdToServe = async ({
       advertiserID: ad.creative.advertiserID,
       creativeType: ad.creative.creativeType,
       creativeLinks: ad.creative.creativeLinks,
-      callToActionText: ad.creative.callToActionText,
+      callToAction: ad.creative.callToAction,
       thumbnail: ad.creative.thumbnail,
       infographicLink: ad.creative.infographicLink,
-      creativeAspectRatio: ad.creative.creativeAspectRatio,
+      aspectRatio: ad.creative.aspectRatio,
       themeColor: ad.creative.themeColor,
     },
   };

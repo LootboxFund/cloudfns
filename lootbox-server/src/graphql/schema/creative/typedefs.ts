@@ -10,10 +10,10 @@
 //     advertiserID: ID! # [usually == creatorId, but can be a separate abstraction]
 //     creativeType: CreativeType!
 //     creativeLinks: [String!]! # For video, we need webm (ios) + mp4 (other) support for best coverage. thats why this is an array
-//     callToActionText: String
+//     callToAction: String
 //     thumbnail: String
 //     infographicLink: String
-//     creativeAspectRatio: String! # Temp hardcoded for mobile fullscreen video
+//     aspectRatio: String! # Temp hardcoded for mobile fullscreen video
 //     themeColor: String
 //   }
 // `;

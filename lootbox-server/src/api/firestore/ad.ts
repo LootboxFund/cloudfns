@@ -47,6 +47,7 @@ export const createAd = async (
     name: payload.name,
     description: payload.description || "",
     placement: payload.placement,
+    publicInfo: payload.publicInfo || "",
     impressions: 0,
     clicks: 0,
     uniqueClicks: 0,
@@ -55,10 +56,10 @@ export const createAd = async (
       advertiserID: payload.advertiserID as AdvertiserID,
       creativeType: payload.creative.creativeType as CreativeType,
       creativeLinks: payload.creative.creativeLinks,
-      callToActionText: payload.creative.callToActionText,
+      callToAction: payload.creative.callToAction,
       thumbnail: payload.creative.thumbnail,
       infographicLink: payload.creative.infographicLink || "",
-      creativeAspectRatio: payload.creative.creativeAspectRatio || "",
+      aspectRatio: payload.creative.aspectRatio,
       themeColor: payload.creative.themeColor || "",
     },
     events: [],
@@ -104,14 +105,38 @@ export const editAd = async (
   if (payload.status != undefined) {
     updatePayload.status = payload.status;
   }
+  if (payload.publicInfo != undefined) {
+    updatePayload.publicInfo = payload.publicInfo;
+  }
+  if (payload.placement != undefined) {
+    updatePayload.placement = payload.placement;
+  }
   if (payload.creative != undefined) {
     updatePayload.creative = {
       ...existingAd.creative,
-      ...payload.creative,
-      infographicLink: payload.creative.infographicLink || "",
-      creativeAspectRatio: payload.creative.creativeAspectRatio || "",
-      themeColor: payload.creative.themeColor || "",
     };
+    if (payload.creative.creativeType != undefined) {
+      updatePayload.creative.creativeType = payload.creative
+        .creativeType as CreativeType;
+    }
+    if (payload.creative.creativeLinks != undefined) {
+      updatePayload.creative.creativeLinks = payload.creative.creativeLinks;
+    }
+    if (payload.creative.callToAction != undefined) {
+      updatePayload.creative.callToAction = payload.creative.callToAction;
+    }
+    if (payload.creative.thumbnail != undefined) {
+      updatePayload.creative.thumbnail = payload.creative.thumbnail;
+    }
+    if (payload.creative.infographicLink != undefined) {
+      updatePayload.creative.infographicLink = payload.creative.infographicLink;
+    }
+    if (payload.creative.aspectRatio != undefined) {
+      updatePayload.creative.aspectRatio = payload.creative.aspectRatio;
+    }
+    if (payload.creative.themeColor != undefined) {
+      updatePayload.creative.themeColor = payload.creative.themeColor;
+    }
   }
   // until done
   await adRef.update(updatePayload);
@@ -182,6 +207,7 @@ export const editAdSet = async (
   if (payload.description != undefined) {
     updatePayload.description = payload.description;
   }
+
   if (payload.status != undefined) {
     updatePayload.status = payload.status;
   }
@@ -269,15 +295,16 @@ export const listAdsOfAdvertiser = async (
 ): Promise<Ad_Firestore[] | undefined> => {
   const AdRef = db
     .collection(Collection.Ad)
-    .where("advertiserID", "==", advertiserID)
-    .orderBy("timestamps.createdAt", "desc") as Query<Ad_Firestore>;
+    .where("advertiserID", "==", advertiserID) as Query<Ad_Firestore>;
 
   const adCollectionItems = await AdRef.get();
-
+  console.log(`adCollectionItems`);
+  console.log(adCollectionItems.empty);
   if (adCollectionItems.empty) {
     return [];
   } else {
     return adCollectionItems.docs.map((doc) => {
+      console.log(doc.data());
       const data = doc.data();
       return data;
     });
@@ -301,4 +328,50 @@ export const listAdSetsOfAdvertiser = async (
       return data;
     });
   }
+};
+
+export const getAdsOfAdSet = async (
+  adSetIDs: AdID[]
+): Promise<Ad_Firestore[]> => {
+  if (adSetIDs.length === 0) return [];
+  const AdRef = db
+    .collection(Collection.Ad)
+    .where("id", "in", adSetIDs) as Query<Ad_Firestore>;
+
+  const adCollectionItems = await AdRef.get();
+
+  if (adCollectionItems.empty) {
+    return [];
+  }
+  return adCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return data;
+  });
+};
+
+export const getAdSet = async (
+  adSetID: AdSetID
+): Promise<AdSet_Firestore | undefined> => {
+  const adSetRef = db
+    .collection(Collection.AdSet)
+    .doc(adSetID) as DocumentReference<AdSet_Firestore>;
+  const adSetSnapshot = await adSetRef.get();
+
+  if (!adSetSnapshot.exists) {
+    return undefined;
+  } else {
+    return adSetSnapshot.data();
+  }
+};
+
+export const getAd = async (adID: AdID): Promise<Ad_Firestore | undefined> => {
+  const adRef = db
+    .collection(Collection.Ad)
+    .doc(adID) as DocumentReference<Ad_Firestore>;
+  const adSnapshot = await adRef.get();
+
+  if (!adSnapshot.exists) {
+    return undefined;
+  }
+  return adSnapshot.data();
 };
