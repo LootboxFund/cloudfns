@@ -24,4 +24,5 @@
  * ⬛️ GQL+Firestore for an advertiser to see its relationship stats with an organizer & vice versa
  * ⬛️ GQL+Firestore for an affiliate to see its relationship stats with another affiliate & vice versa
  * ⬛️ GQL+Firestore for an organizer to list their promoters
+ * ⬛️ Meet history. For advertisers & affiliates to know how they met each other (incentives them to keep using lootbox for networking)
  */

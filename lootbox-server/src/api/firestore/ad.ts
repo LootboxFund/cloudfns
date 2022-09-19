@@ -156,8 +156,8 @@ export const createAdSet = async (
     advertiserID: payload.advertiserID as AdvertiserID,
     status: payload.status as AdSetStatus,
     placement: payload.placement as Placement,
-    adIDs: [],
-    offerIDs: [],
+    adIDs: payload.adIDs as AdID[],
+    offerIDs: payload.offerIDs as OfferID[],
   };
   await adSetRef.set(newAdSet);
 

@@ -1,4 +1,5 @@
 import { DocumentReference, Query } from "firebase-admin/firestore";
+import * as _ from "lodash";
 import {
   User,
   Tournament,
@@ -14,12 +15,15 @@ import {
   TournamentPreviewInConquest,
 } from "./advertiser.type";
 import {
+  AffiliateID,
   Collection,
   ConquestID,
   ConquestStatus,
   TournamentID,
+  Tournament_Firestore,
 } from "@wormgraph/helpers";
 import * as moment from "moment";
+import { Affiliate_Firestore } from "./affiliate.type";
 
 export const upgradeToAdvertiser = async (
   userID: UserID
@@ -48,6 +52,8 @@ export const upgradeToAdvertiser = async (
     description: ``,
     offers: [],
     conquests: [],
+    affiliatePartners: [],
+    relatedTournaments: [],
   };
   await advertiserRef.set(advertiser);
   return advertiser;
@@ -139,7 +145,39 @@ export const updateConquest = async (
     updatePayload.tournaments = payload.tournaments as TournamentID[];
   }
   // done
-  await conquestRef.update(updatePayload);
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+
+  if (!advertiserSnapshot.exists) {
+    throw Error(`Advertiser ${advertiserID} does not exist`);
+  }
+  const advertiser = advertiserSnapshot.data();
+  if (!advertiser) {
+    throw Error(`Advertiser ${advertiserID} is undefined`);
+  }
+  // update
+  const toUpdate: Promise<any>[] = [conquestRef.update(updatePayload)];
+  if (payload.tournaments != undefined) {
+    toUpdate.push(
+      updateAdvertiserListOfAssociatedTournaments({
+        relatedTournaments: advertiser.relatedTournaments,
+        recentConquestTournaments: payload.tournaments as TournamentID[],
+        advertiserRef,
+      })
+    );
+    toUpdate.push(
+      updateAdvertiserListOfAssociatedAffiliates({
+        relatedAffiliates: advertiser.affiliatePartners,
+        recentConquestTournaments: payload.tournaments as TournamentID[],
+        advertiserRef,
+      })
+    );
+  }
+  await Promise.all(toUpdate);
+
   return (await conquestRef.get()).data() as Conquest_Firestore;
 };
 
@@ -237,7 +275,7 @@ export const advertiserAdminView = async (
 
 type PublicAdvertiserView = Omit<
   Advertiser_Firestore,
-  "conquests" | "offers" | "userID"
+  "conquests" | "offers" | "userID" | "relatedTournaments" | "affiliatePartners"
 >;
 export const advertiserPublicView = async (
   advertiserID: AdvertiserID
@@ -258,4 +296,64 @@ export const advertiserPublicView = async (
       description: adv.description,
     };
   }
+};
+
+const updateAdvertiserListOfAssociatedTournaments = async ({
+  relatedTournaments,
+  recentConquestTournaments,
+  advertiserRef,
+}: {
+  relatedTournaments: TournamentID[];
+  recentConquestTournaments: TournamentID[];
+  advertiserRef: DocumentReference<Advertiser_Firestore>;
+}) => {
+  const existingKnownTournaments = relatedTournaments || [];
+  const updatedUniqueSetOfKnownTournaments = _.union(
+    existingKnownTournaments,
+    recentConquestTournaments
+  );
+
+  const updatePayload: Partial<Advertiser_Firestore> = {};
+  updatePayload.relatedTournaments = updatedUniqueSetOfKnownTournaments;
+  await advertiserRef.update(updatePayload);
+  return;
+};
+
+const updateAdvertiserListOfAssociatedAffiliates = async ({
+  relatedAffiliates,
+  recentConquestTournaments,
+  advertiserRef,
+}: {
+  relatedAffiliates: AffiliateID[];
+  recentConquestTournaments: TournamentID[];
+  advertiserRef: DocumentReference<Advertiser_Firestore>;
+}) => {
+  const tournamentRefs = recentConquestTournaments.map((tid) => {
+    const tournamentRef = db
+      .collection(Collection.Tournament)
+      .doc(tid) as DocumentReference<Tournament_Firestore>;
+    return tournamentRef;
+  });
+
+  const tournamentSnapshots = await Promise.all(
+    tournamentRefs.map((tref) => {
+      return tref.get();
+    })
+  );
+  const thisConquestsListOfOrganizerIDs = tournamentSnapshots
+    .map((t) => {
+      return t.data()?.organizer;
+    })
+    .filter((o) => o) as AffiliateID[];
+
+  const allExistingKnownAffiliates = relatedAffiliates || [];
+  const updatedUniqueSetOfKnownTournaments = _.union(
+    allExistingKnownAffiliates,
+    thisConquestsListOfOrganizerIDs
+  );
+
+  const updatePayload: Partial<Advertiser_Firestore> = {};
+  updatePayload.affiliatePartners = updatedUniqueSetOfKnownTournaments;
+  await advertiserRef.update(updatePayload);
+  return;
 };
