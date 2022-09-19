@@ -23,6 +23,7 @@ import {
   UserClaimsResponse,
   PublicUser,
   MutationUpdateUserAuthArgs,
+  MutationCreateUserRecordArgs,
 } from "../../generated/types";
 import {
   getUser,
@@ -165,7 +166,7 @@ const UserResolvers = {
      */
     createUserRecord: async (
       _,
-      __,
+      { payload }: MutationCreateUserRecordArgs,
       context: Context
     ): Promise<CreateUserResponse> => {
       if (!context.userId) {
@@ -220,8 +221,18 @@ const UserResolvers = {
           idpUser = { ...updatedUserIdp };
         }
 
+        let createUserRequest = { ...idpUser };
+
+        if (!createUserRequest.email && !!payload?.email) {
+          // We add the email to our DB if the user provided the email address. However, we don't want to
+          // update the underlying AUTH user object because firebase will force a token refresh, invalidating
+          // the users current token. This will kinda fuck with the viral onboarding flow. So just update
+          // the database object and then later the user can confirm it in their profile.
+          createUserRequest.email = payload.email;
+        }
+
         // User does not exist in database, create it
-        const user = await createUser(idpUser);
+        const user = await createUser(createUserRequest);
 
         return { user };
       } catch (err) {

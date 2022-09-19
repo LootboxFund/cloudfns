@@ -129,6 +129,10 @@ const UserTypeDefs = gql`
 
   union UpdateUserResponse = UpdateUserResponseSuccess | ResponseError
 
+  input CreateUserRecordPayload {
+    email: String
+  }
+
   input ConnectWalletPayload {
     message: String!
     signedMessage: String!
@@ -163,7 +167,7 @@ const UserTypeDefs = gql`
       payload: AuthenticateWalletPayload!
     ): AuthenticateWalletResponse!
     removeWallet(payload: RemoveWalletPayload!): RemoveWalletResponse!
-    createUserRecord: CreateUserResponse!
+    createUserRecord(payload: CreateUserRecordPayload): CreateUserResponse!
     updateUser(payload: UpdateUserPayload!): UpdateUserResponse!
     updateUserAuth(payload: UpdateUserAuthPayload!): UpdateUserResponse!
   }
