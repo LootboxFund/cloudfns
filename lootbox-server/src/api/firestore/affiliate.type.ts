@@ -16,6 +16,7 @@ export interface Affiliate_Firestore {
   userIdpID: UserIdpID;
   name: string;
   organizerRank: OrganizerRank;
+  avatar: string;
 }
 
 export enum OfferInTournamentStatus {

@@ -58,6 +58,7 @@ export const upgradeToAdvertiser = async (
     conquests: [],
     affiliatePartners: [],
     relatedTournaments: [],
+    avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
   };
   await advertiserRef.set(advertiser);
   return advertiser;
@@ -81,6 +82,10 @@ export const updateAdvertiserDetails = async (
   if (payload.description != undefined) {
     updatePayload.description = payload.description;
   }
+  if (payload.avatar != undefined) {
+    updatePayload.avatar = payload.avatar;
+  }
+
   // until done
   await advertiserRef.update(updatePayload);
   return (await advertiserRef.get()).data() as Advertiser_Firestore;
@@ -341,6 +346,7 @@ export const advertiserPublicView = async (
       id: adv.id,
       name: adv.name,
       description: adv.description,
+      avatar: adv.avatar,
     };
   }
 };

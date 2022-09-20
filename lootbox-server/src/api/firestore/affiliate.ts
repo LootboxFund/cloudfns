@@ -60,6 +60,7 @@ export const upgradeToAffiliate = async (
     userIdpID: userIdpID,
     name: user.username || `New Affiliate ${affiliateRef.id}`,
     organizerRank: OrganizerRank.ClayRank1,
+    avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
   };
   await affiliateRef.set(affiliate);
   return affiliate;

@@ -1,5 +1,10 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { ActivationID, ConquestID, OfferID } from "@wormgraph/helpers";
+import {
+  ActivationID,
+  ConquestID,
+  OfferID,
+  UserIdpID,
+} from "@wormgraph/helpers";
 import {
   advertiserAdminView,
   advertiserPublicView,
@@ -28,10 +33,6 @@ import {
   MutationUpdateConquestArgs,
   MutationUpgradeToAdvertiserArgs,
   Offer,
-  QueryAdvertiserAdminViewArgs,
-  QueryAdvertiserPublicViewArgs,
-  QueryGetConquestArgs,
-  QueryListConquestPreviewsArgs,
   Resolvers,
   StatusCode,
   UpdateAdvertiserDetailsResponse,
@@ -59,6 +60,7 @@ import {
 } from "../../../api/firestore/offer";
 import { CreateActivationResponse } from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
+import { isAuthenticated } from "../../../lib/permissionGuard";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -67,17 +69,9 @@ const OfferResolvers: Resolvers = {
       args: QueryListCreatedOffersArgs,
       context: Context
     ): Promise<ListCreatedOffersResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         args.advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -118,18 +112,10 @@ const OfferResolvers: Resolvers = {
       args: QueryViewCreatedOfferArgs,
       context: Context
     ): Promise<ViewCreatedOfferResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const offer = await viewCreatedOffer(
           args.offerID as OfferID,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         if (!offer) {
           return {
@@ -159,17 +145,9 @@ const OfferResolvers: Resolvers = {
       { advertiserID, payload }: MutationCreateOfferArgs,
       context: Context
     ): Promise<CreateOfferResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         payload.advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -206,19 +184,11 @@ const OfferResolvers: Resolvers = {
       { payload }: MutationEditOfferArgs,
       context: Context
     ): Promise<EditOfferResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const offer = await editOffer(
           payload.id as OfferID,
           payload,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         if (!offer) {
           return {
@@ -243,20 +213,11 @@ const OfferResolvers: Resolvers = {
       { payload }: MutationCreateActivationArgs,
       context: Context
     ): Promise<CreateActivationResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
-
       try {
         const activation = await createActivation(
           payload.offerID as OfferID,
           payload.activation,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         console.log(`After createActivation...`);
         console.log(activation);
@@ -283,19 +244,11 @@ const OfferResolvers: Resolvers = {
       { payload }: MutationEditActivationArgs,
       context: Context
     ): Promise<EditActivationResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const activation = await editActivation(
           payload.activationID as ActivationID,
           payload.activation,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         console.log(`activation= `, activation);
         if (!activation) {
@@ -405,10 +358,12 @@ const OfferResolvers: Resolvers = {
 };
 
 const offerComposition = {
-  "Mutation.createOffer": [],
-  "Mutation.editOffer": [],
-  "Mutation.createActivation": [],
-  "Mutation.editActivationsInOffer": [],
+  "Query.listCreatedOffers": [isAuthenticated()],
+  "Query.viewCreatedOffer": [isAuthenticated()],
+  "Mutation.createOffer": [isAuthenticated()],
+  "Mutation.editOffer": [isAuthenticated()],
+  "Mutation.createActivation": [isAuthenticated()],
+  "Mutation.editActivationsInOffer": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(OfferResolvers, offerComposition);

@@ -56,8 +56,9 @@ import {
   EditAdSetResponse,
 } from "../../generated/types";
 import { decideAdToServe } from "../../../api/firestore/decision";
-import { AdSetID } from "@wormgraph/helpers";
+import { AdSetID, UserIdpID } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
+import { isAuthenticated } from "../../../lib/permissionGuard";
 
 const AdResolvers: Resolvers = {
   Mutation: {
@@ -66,17 +67,9 @@ const AdResolvers: Resolvers = {
       { payload }: MutationCreateAdArgs,
       context: Context
     ): Promise<CreateAdResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         payload.advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -112,16 +105,8 @@ const AdResolvers: Resolvers = {
       { payload }: MutationEditAdArgs,
       context: Context
     ): Promise<EditAdResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
-        const ad = await editAd(payload, context.userId);
+        const ad = await editAd(payload, context.userId || ("" as UserIdpID));
         if (!ad) {
           return {
             error: {
@@ -145,17 +130,9 @@ const AdResolvers: Resolvers = {
       { payload }: MutationCreateAdSetArgs,
       context: Context
     ): Promise<CreateAdSetResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         payload.advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -191,16 +168,11 @@ const AdResolvers: Resolvers = {
       { payload }: MutationEditAdSetArgs,
       context: Context
     ): Promise<EditAdSetResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
-        const adSet = await editAdSet(payload, context.userId);
+        const adSet = await editAdSet(
+          payload,
+          context.userId || ("" as UserIdpID)
+        );
         if (!adSet) {
           return {
             error: {
@@ -226,17 +198,9 @@ const AdResolvers: Resolvers = {
       { advertiserID }: QueryListAdsOfAdvertiserArgs,
       context: Context
     ): Promise<ListAdsOfAdvertiserResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -275,17 +239,9 @@ const AdResolvers: Resolvers = {
       { advertiserID }: QueryListAdSetsOfAdvertiserArgs,
       context: Context
     ): Promise<ListAdSetsOfAdvertiserResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -326,14 +282,6 @@ const AdResolvers: Resolvers = {
       { payload }: QueryDecisionAdApiBetaV2Args,
       context: Context
     ): Promise<DecisionAdApiBetaV2Response> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const ad = await decideAdToServe(payload);
         if (!ad) {
@@ -360,14 +308,6 @@ const AdResolvers: Resolvers = {
       { adSetID }: QueryViewAdSetArgs,
       context: Context
     ): Promise<ViewAdSetResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const adSet = await getAdSet(adSetID as AdSetID);
         if (!adSet) {
@@ -396,14 +336,6 @@ const AdResolvers: Resolvers = {
       { adID }: QueryViewAdArgs,
       context: Context
     ): Promise<ViewAdResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const ad = await getAd(adID as AdID);
         if (!ad) {
@@ -573,7 +505,17 @@ const AdResolvers: Resolvers = {
   },
 };
 
-const adComposition = {};
+const adComposition = {
+  "Mutation.createAd": [isAuthenticated()],
+  "Mutation.editAd": [isAuthenticated()],
+  "Mutation.createAdSet": [isAuthenticated()],
+  "Mutation.editAdSet": [isAuthenticated()],
+  "Query.listAdsOfAdvertiser": [isAuthenticated()],
+  "Query.listAdSetsOfAdvertiser": [isAuthenticated()],
+  "Query.decisionAdApiBetaV2": [isAuthenticated()],
+  "Query.viewAdSet": [isAuthenticated()],
+  "Query.viewAd": [isAuthenticated()],
+};
 
 const resolvers = composeResolvers(AdResolvers, adComposition);
 

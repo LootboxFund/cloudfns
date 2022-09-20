@@ -27,8 +27,9 @@ import {
   AffiliatePublicViewResponse,
   QueryAffiliateAdminViewArgs,
 } from "../../generated/types";
-import { OrganizerOfferWhitelistID } from "@wormgraph/helpers";
+import { OrganizerOfferWhitelistID, UserIdpID } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAffiliate } from "../../../api/identityProvider/firebase";
+import { isAuthenticated } from "../../../lib/permissionGuard";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
@@ -37,18 +38,9 @@ const AffiliateResolvers: Resolvers = {
       { affiliateID }: QueryAffiliateAdminViewArgs,
       context: Context
     ): Promise<AffiliateAdminViewResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
-
       // check if user making request is the actual advertiser
       const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         affiliateID as AffiliateID
       );
       if (!isValidUserAffiliate) {
@@ -87,14 +79,6 @@ const AffiliateResolvers: Resolvers = {
       { affiliateID }: QueryAffiliatePublicViewArgs,
       context: Context
     ): Promise<AffiliatePublicViewResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const affiliate = await affiliatePublicView(affiliateID as AffiliateID);
         if (!affiliate) {
@@ -125,18 +109,10 @@ const AffiliateResolvers: Resolvers = {
       { userID }: MutationUpgradeToAffiliateArgs,
       context: Context
     ): Promise<UpgradeToAffiliateResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const affiliate = await upgradeToAffiliate(
           userID as UserID,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         if (!affiliate) {
           return {
@@ -278,7 +254,9 @@ const AffiliateResolvers: Resolvers = {
 };
 
 const AffiliateComposition = {
-  "Mutation.upgradeToAffililate": [],
+  "Query.affiliateAdminView": [isAuthenticated()],
+  "Query.affiliatePublicView": [isAuthenticated()],
+  "Mutation.upgradeToAffiliate": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AffiliateResolvers, AffiliateComposition);

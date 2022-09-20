@@ -1,5 +1,5 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { ConquestID } from "@wormgraph/helpers";
+import { ConquestID, UserIdpID } from "@wormgraph/helpers";
 import {
   advertiserAdminView,
   advertiserPublicView,
@@ -23,7 +23,6 @@ import {
   MutationUpdateAdvertiserDetailsArgs,
   MutationUpdateConquestArgs,
   MutationUpgradeToAdvertiserArgs,
-  QueryAdvertiserAdminViewArgs,
   QueryAdvertiserPublicViewArgs,
   QueryGetConquestArgs,
   QueryListConquestPreviewsArgs,
@@ -36,12 +35,13 @@ import {
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
+import { isAuthenticated } from "../../../lib/permissionGuard";
 
 const AdvertiserResolvers: Resolvers = {
   Query: {
     advertiserAdminView: async (
       _,
-      args: QueryAdvertiserAdminViewArgs,
+      args,
       context: Context
     ): Promise<AdvertiserAdminViewResponse> => {
       if (!context.userId) {
@@ -118,17 +118,9 @@ const AdvertiserResolvers: Resolvers = {
       args: QueryListConquestPreviewsArgs,
       context: Context
     ): Promise<ListConquestPreviewsResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         args.advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -169,19 +161,11 @@ const AdvertiserResolvers: Resolvers = {
       args: QueryGetConquestArgs,
       context: Context
     ): Promise<GetConquestResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const conquestWithTournaments = await getConquest(
           args.advertiserID as AdvertiserID,
           args.conquestID as ConquestID,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         if (!conquestWithTournaments) {
           return {
@@ -209,18 +193,10 @@ const AdvertiserResolvers: Resolvers = {
       { payload }: MutationUpgradeToAdvertiserArgs,
       context: Context
     ): Promise<UpgradeToAdvertiserResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const advertiser = await upgradeToAdvertiser(
           payload.userID as UserID,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         if (!advertiser) {
           return {
@@ -246,17 +222,9 @@ const AdvertiserResolvers: Resolvers = {
       { advertiserID, payload }: MutationUpdateAdvertiserDetailsArgs,
       context: Context
     ): Promise<UpdateAdvertiserDetailsResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -296,17 +264,9 @@ const AdvertiserResolvers: Resolvers = {
       { advertiserID, payload }: MutationCreateConquestArgs,
       context: Context
     ): Promise<CreateConquestResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
-        context.userId,
+        context.userId || ("" as UserIdpID),
         advertiserID as AdvertiserID
       );
       if (!isValidUserAdvertiser) {
@@ -346,20 +306,12 @@ const AdvertiserResolvers: Resolvers = {
       { advertiserID, payload }: MutationUpdateConquestArgs,
       context: Context
     ): Promise<UpdateConquestResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         const conquest = await updateConquest(
           payload.id as ConquestID,
           advertiserID as AdvertiserID,
           payload,
-          context.userId
+          context.userId || ("" as UserIdpID)
         );
         if (!conquest) {
           return {
@@ -485,14 +437,14 @@ const AdvertiserResolvers: Resolvers = {
 };
 
 const advertiserComposition = {
-  "Mutation.upgradeToAdvertiser": [],
-  "Mutation.updateAdvertiserDetails": [],
-  "Mutation.createConquest": [],
-  "Mutation.updateConquest": [],
-  "Query.getAdvertiserAdminView": [],
-  "Query.getAdvertiserPublicView": [],
-  "Query.listConquestPreviews": [],
-  "Query.getConquest": [],
+  "Mutation.upgradeToAdvertiser": [isAuthenticated()],
+  "Mutation.updateAdvertiserDetails": [isAuthenticated()],
+  "Mutation.createConquest": [isAuthenticated()],
+  "Mutation.updateConquest": [isAuthenticated()],
+  "Query.getAdvertiserAdminView": [isAuthenticated()],
+  "Query.getAdvertiserPublicView": [isAuthenticated()],
+  "Query.listConquestPreviews": [isAuthenticated()],
+  "Query.getConquest": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AdvertiserResolvers, advertiserComposition);

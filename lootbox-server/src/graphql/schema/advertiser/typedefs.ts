@@ -43,6 +43,7 @@ const AdvertiserTypeDefs = gql`
     userID: ID!
     name: String!
     description: String
+    avatar: String!
   }
   union AdvertiserAdminViewResponse =
       AdvertiserAdminViewResponseSuccess
@@ -75,7 +76,7 @@ const AdvertiserTypeDefs = gql`
 
   extend type Query {
     # For advertiser to see their own private profile
-    advertiserAdminView(): AdvertiserAdminViewResponse!
+    advertiserAdminView: AdvertiserAdminViewResponse!
     # For affiliate to see public profile of an advertiser
     advertiserPublicView(advertiserId: ID!): AdvertiserPublicViewResponse!
     # For advertiser to see their tournament campaigns (conquests list page)
@@ -101,6 +102,7 @@ const AdvertiserTypeDefs = gql`
   input UpdateAdvertiserDetailsPayload {
     name: String
     description: String
+    avatar: String
   }
   type UpdateAdvertiserDetailsResponseSuccess {
     advertiser: Advertiser

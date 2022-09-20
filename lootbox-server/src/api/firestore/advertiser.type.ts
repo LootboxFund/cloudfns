@@ -13,6 +13,7 @@ export interface Advertiser_Firestore {
   userIdpID: UserIdpID;
   name: string;
   description: string;
+  avatar: string;
   offers: OfferID[];
   conquests: Conquest_Firestore[];
   affiliatePartners: AffiliateID[];
