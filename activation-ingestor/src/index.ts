@@ -9,6 +9,26 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 const port = 8080;
 
+/**
+ * INJESTOR MINIMUM REQUIREMENTS
+ *
+ * Injestors should be able to handle a diverse range of data inavailability
+ * At a minimum they need this data:
+ *
+ * 1. Activation Event Name (mmpAlias) or Activation Event ID (activationID)
+ * 2. User Identifying Data (flightID from browser cookie, userEmail from manual activation form, or user browser fingerprint, etc)
+ *
+ * The activation event name is easy to get because it does NOT require client-side memroy. It gets logged via hardcoding at the place where the event happens without needing a specific user identifier
+ * The user identifying data is hard to get because it requires client-side memory. Modern browsers periodically erase cookies, cache & other places where it can be stored.
+ *    - The are a variety of ways around this, with their pros & cons. See the list of options here: https://blog.logrocket.com/beyond-cookies-todays-options-for-client-side-data-storage/
+ *    - For these alternatives, their dimensions of comparison are:
+ *          - Reliability/Accuracy
+ *          - Ease of implementation
+ *          - Consent/Legal Permission
+ *          - Cost to use (such as data aggregator services)
+ *
+ */
+
 app.get("/", (req, res) => {
   res.send("LOOTBOX Activation Event Ingestor");
 });

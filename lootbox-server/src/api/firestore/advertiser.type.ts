@@ -3,12 +3,14 @@ import {
   ConquestID,
   ConquestStatus,
   UserID,
+  UserIdpID,
 } from "@wormgraph/helpers";
 import { AdvertiserID, OfferID, TournamentID } from "../../lib/types";
 
 export interface Advertiser_Firestore {
   id: AdvertiserID;
   userID: UserID;
+  userIdpID: UserIdpID;
   name: string;
   description: string;
   offers: OfferID[];

@@ -75,7 +75,7 @@ const AdvertiserTypeDefs = gql`
 
   extend type Query {
     # For advertiser to see their own private profile
-    advertiserAdminView(advertiserId: ID!): AdvertiserAdminViewResponse!
+    advertiserAdminView(): AdvertiserAdminViewResponse!
     # For affiliate to see public profile of an advertiser
     advertiserPublicView(advertiserId: ID!): AdvertiserPublicViewResponse!
     # For advertiser to see their tournament campaigns (conquests list page)

@@ -2,9 +2,9 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { AffiliateID, UserID } from "../../../lib/types";
 import {
   Affiliate,
-  MutationRemoveWhitelistAffiliateToOfferArgs,
+  // MutationRemoveWhitelistAffiliateToOfferArgs,
   MutationUpgradeToAffiliateArgs,
-  MutationWhitelistAffiliateToOfferArgs,
+  // MutationWhitelistAffiliateToOfferArgs,
   QueryAffiliatePublicViewArgs,
   Resolvers,
   StatusCode,
@@ -28,13 +28,37 @@ import {
   QueryAffiliateAdminViewArgs,
 } from "../../generated/types";
 import { OrganizerOfferWhitelistID } from "@wormgraph/helpers";
+import { checkIfUserIdpMatchesAffiliate } from "../../../api/identityProvider/firebase";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
     affiliateAdminView: async (
       _,
-      { affiliateID }: QueryAffiliateAdminViewArgs
+      { affiliateID }: QueryAffiliateAdminViewArgs,
+      context: Context
     ): Promise<AffiliateAdminViewResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+
+      // check if user making request is the actual advertiser
+      const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+        context.userId,
+        affiliateID as AffiliateID
+      );
+      if (!isValidUserAffiliate) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this affiliate`,
+          },
+        };
+      }
       try {
         const affiliate = await affiliateAdminView(affiliateID as AffiliateID);
         if (!affiliate) {
@@ -60,8 +84,17 @@ const AffiliateResolvers: Resolvers = {
     },
     affiliatePublicView: async (
       _,
-      { affiliateID }: QueryAffiliatePublicViewArgs
+      { affiliateID }: QueryAffiliatePublicViewArgs,
+      context: Context
     ): Promise<AffiliatePublicViewResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
         const affiliate = await affiliatePublicView(affiliateID as AffiliateID);
         if (!affiliate) {
@@ -92,16 +125,19 @@ const AffiliateResolvers: Resolvers = {
       { userID }: MutationUpgradeToAffiliateArgs,
       context: Context
     ): Promise<UpgradeToAffiliateResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
-        const affiliate = await upgradeToAffiliate(userID as UserID);
+        const affiliate = await upgradeToAffiliate(
+          userID as UserID,
+          context.userId
+        );
         if (!affiliate) {
           return {
             error: {
@@ -121,62 +157,62 @@ const AffiliateResolvers: Resolvers = {
         };
       }
     },
-    whitelistAffiliateToOffer: async (
-      _,
-      { payload }: MutationWhitelistAffiliateToOfferArgs,
-      context: Context
-    ): Promise<WhitelistAffiliateToOfferResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
-      try {
-        const whitelist = await whitelistAffiliateToOffer(payload);
-        return {
-          whitelist,
-        };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-    },
-    removeWhitelistAffiliateToOffer: async (
-      _,
-      { id }: MutationRemoveWhitelistAffiliateToOfferArgs,
-      context: Context
-    ): Promise<RemoveWhitelistAffiliateToOfferResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
-      try {
-        const idOfDeletedWhitelist = await removeWhitelistAffiliateToOffer(
-          id as OrganizerOfferWhitelistID
-        );
-        return {
-          message: `Successfully removed whitelist-affiliate-offer=${idOfDeletedWhitelist}`,
-        };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-    },
+    // whitelistAffiliateToOffer: async (
+    //   _,
+    //   { payload }: MutationWhitelistAffiliateToOfferArgs,
+    //   context: Context
+    // ): Promise<WhitelistAffiliateToOfferResponse> => {
+    //   if (!context.userId) {
+    //     return {
+    //       error: {
+    //         code: StatusCode.Unauthorized,
+    //         message: `Unauthorized`,
+    //       },
+    //     };
+    //   }
+    //   try {
+    //     const whitelist = await whitelistAffiliateToOffer(payload);
+    //     return {
+    //       whitelist,
+    //     };
+    //   } catch (err) {
+    //     return {
+    //       error: {
+    //         code: StatusCode.ServerError,
+    //         message: err instanceof Error ? err.message : "",
+    //       },
+    //     };
+    //   }
+    // },
+    // removeWhitelistAffiliateToOffer: async (
+    //   _,
+    //   { id }: MutationRemoveWhitelistAffiliateToOfferArgs,
+    //   context: Context
+    // ): Promise<RemoveWhitelistAffiliateToOfferResponse> => {
+    //   if (!context.userId) {
+    //     return {
+    //       error: {
+    //         code: StatusCode.Unauthorized,
+    //         message: `Unauthorized`,
+    //       },
+    //     };
+    //   }
+    //   try {
+    //     const idOfDeletedWhitelist = await removeWhitelistAffiliateToOffer(
+    //       id as OrganizerOfferWhitelistID
+    //     );
+    //     return {
+    //       message: `Successfully removed whitelist-affiliate-offer=${idOfDeletedWhitelist}`,
+    //     };
+    //   } catch (err) {
+    //     return {
+    //       error: {
+    //         code: StatusCode.ServerError,
+    //         message: err instanceof Error ? err.message : "",
+    //       },
+    //     };
+    //   }
+    // },
   },
 
   UpgradeToAffiliateResponse: {

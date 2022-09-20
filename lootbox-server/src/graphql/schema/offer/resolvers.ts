@@ -58,13 +58,36 @@ import {
   viewCreatedOffer,
 } from "../../../api/firestore/offer";
 import { CreateActivationResponse } from "../../generated/types";
+import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 
 const OfferResolvers: Resolvers = {
   Query: {
     listCreatedOffers: async (
       _,
-      args: QueryListCreatedOffersArgs
+      args: QueryListCreatedOffersArgs,
+      context: Context
     ): Promise<ListCreatedOffersResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      // check if user making request is the actual advertiser
+      const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+        context.userId,
+        args.advertiserID as AdvertiserID
+      );
+      if (!isValidUserAdvertiser) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this advertiser`,
+          },
+        };
+      }
       try {
         const offers = await listCreatedOffers(
           args.advertiserID as AdvertiserID
@@ -92,10 +115,22 @@ const OfferResolvers: Resolvers = {
     },
     viewCreatedOffer: async (
       _,
-      args: QueryViewCreatedOfferArgs
+      args: QueryViewCreatedOfferArgs,
+      context: Context
     ): Promise<ViewCreatedOfferResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
-        const offer = await viewCreatedOffer(args.offerID as OfferID);
+        const offer = await viewCreatedOffer(
+          args.offerID as OfferID,
+          context.userId
+        );
         if (!offer) {
           return {
             error: {
@@ -124,14 +159,27 @@ const OfferResolvers: Resolvers = {
       { advertiserID, payload }: MutationCreateOfferArgs,
       context: Context
     ): Promise<CreateOfferResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      // check if user making request is the actual advertiser
+      const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+        context.userId,
+        payload.advertiserID as AdvertiserID
+      );
+      if (!isValidUserAdvertiser) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this advertiser`,
+          },
+        };
+      }
       try {
         const offer = await createOffer(advertiserID as AdvertiserID, payload);
         if (!offer) {
@@ -158,16 +206,20 @@ const OfferResolvers: Resolvers = {
       { payload }: MutationEditOfferArgs,
       context: Context
     ): Promise<EditOfferResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
-        const offer = await editOffer(payload.id as OfferID, payload);
+        const offer = await editOffer(
+          payload.id as OfferID,
+          payload,
+          context.userId
+        );
         if (!offer) {
           return {
             error: {
@@ -191,18 +243,20 @@ const OfferResolvers: Resolvers = {
       { payload }: MutationCreateActivationArgs,
       context: Context
     ): Promise<CreateActivationResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+
       try {
         const activation = await createActivation(
           payload.offerID as OfferID,
-          payload.activation
+          payload.activation,
+          context.userId
         );
         console.log(`After createActivation...`);
         console.log(activation);
@@ -229,18 +283,19 @@ const OfferResolvers: Resolvers = {
       { payload }: MutationEditActivationArgs,
       context: Context
     ): Promise<EditActivationResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
         const activation = await editActivation(
           payload.activationID as ActivationID,
-          payload.activation
+          payload.activation,
+          context.userId
         );
         console.log(`activation= `, activation);
         if (!activation) {

@@ -14,6 +14,7 @@ import {
   ActivationStatus,
   Activation_Firestore,
   Offer_Firestore,
+  UserIdpID,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -29,6 +30,7 @@ import { CreateActivationInput } from "../../graphql/generated/types";
 import { CreateActivationPayload } from "../../graphql/generated/types";
 import { OfferPreview, OfferPreviewForOrganizer } from "./offer.type";
 import * as moment from "moment";
+import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -69,7 +71,8 @@ export const createOffer = async (
 
 export const editOffer = async (
   id: OfferID,
-  payload: Omit<EditOfferPayload, "id">
+  payload: Omit<EditOfferPayload, "id">,
+  userIdpID: UserIdpID
 ): Promise<Offer_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -77,6 +80,26 @@ export const editOffer = async (
   const offerRef = db
     .collection(Collection.Offer)
     .doc(id) as DocumentReference<Offer_Firestore>;
+
+  const offerSnapshot = await offerRef.get();
+  if (!offerSnapshot.exists) {
+    throw new Error(`No offer found with ID ${id}`);
+  }
+  const existingOffer = offerSnapshot.data();
+  if (!existingOffer) {
+    throw new Error(`Offer ID ${id} is undefined`);
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    existingOffer.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
+  //
   const updatePayload: Partial<Offer_Firestore> = {};
   // repeat
   if (payload.title != undefined) {
@@ -111,10 +134,33 @@ export const editOffer = async (
 // add activations to offer
 export const createActivation = async (
   id: OfferID,
-  payload: CreateActivationInput
+  payload: CreateActivationInput,
+  userIdpID: UserIdpID
 ): Promise<Activation_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
+  }
+  const offerRef = db
+    .collection(Collection.Offer)
+    .doc(payload.offerID) as DocumentReference<Offer_Firestore>;
+
+  const offerSnapshot = await offerRef.get();
+  if (!offerSnapshot.exists) {
+    throw new Error(`No offer found with ID ${payload.offerID}`);
+  }
+  const existingOffer = offerSnapshot.data();
+  if (!existingOffer) {
+    throw new Error(`Offer ID ${payload.offerID} is undefined`);
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    existingOffer.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
   }
   console.log(`Creating activation for offer ${id}`);
   const activationRef = db
@@ -129,6 +175,7 @@ export const createActivation = async (
     mmpAlias: payload.mmpAlias,
     offerID: payload.offerID as OfferID,
     order: payload.order || 9,
+    advertiserID: existingOffer.advertiserID,
   };
 
   try {
@@ -144,7 +191,8 @@ export const createActivation = async (
 // warning! updates entire activations array, which means that it will overwrite existing activations
 export const editActivation = async (
   id: ActivationID,
-  payload: EditActivationInput
+  payload: EditActivationInput,
+  userIdpID: UserIdpID
 ): Promise<Activation_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -162,6 +210,17 @@ export const editActivation = async (
   const existingObj = activationSnap.data();
   if (existingObj === undefined) {
     return undefined;
+  }
+
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    existingObj.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
   }
 
   const actInput = payload;
@@ -227,7 +286,8 @@ export const listCreatedOffers = async (
 
 //
 export const viewCreatedOffer = async (
-  offerID: OfferID
+  offerID: OfferID,
+  userIdpID: UserIdpID
 ): Promise<Offer_Firestore | undefined> => {
   const offerRef = db
     .collection(Collection.Offer)
@@ -237,9 +297,22 @@ export const viewCreatedOffer = async (
 
   if (!offerSnapshot.exists) {
     return undefined;
-  } else {
-    return offerSnapshot.data();
   }
+  const offer = offerSnapshot.data();
+  if (!offer) {
+    return undefined;
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    offer.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
+  return offer;
 };
 
 // //

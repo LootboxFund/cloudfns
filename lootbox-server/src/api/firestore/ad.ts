@@ -22,7 +22,9 @@ import {
   OfferID,
   Offer_Firestore,
   Placement,
+  UserIdpID,
 } from "@wormgraph/helpers";
+import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 
 // export const getAdById = async (adId: AdID): Promise<Ad | undefined> => {
 //   const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
@@ -80,7 +82,8 @@ export const createAd = async (
 };
 
 export const editAd = async (
-  payload: EditAdPayload
+  payload: EditAdPayload,
+  userIdpID: UserIdpID
 ): Promise<Ad_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -94,6 +97,16 @@ export const editAd = async (
   }
   const existingAd = adSnapshot.data();
   if (!existingAd) return undefined;
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    existingAd.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
   const updatePayload: Partial<Ad_Firestore> = {};
   // repeat
   if (payload.name != undefined) {
@@ -184,7 +197,8 @@ export const createAdSet = async (
 };
 
 export const editAdSet = async (
-  payload: EditAdSetPayload
+  payload: EditAdSetPayload,
+  userIdpID: UserIdpID
 ): Promise<AdSet_Firestore | undefined> => {
   const adSetRef = db
     .collection(Collection.AdSet)
@@ -195,6 +209,16 @@ export const editAdSet = async (
   }
   const existingAdSet = adSetSnapshot.data();
   if (!existingAdSet) return undefined;
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    existingAdSet.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
 
   // mark the existing offerIDs
   const existingOfferIDs = existingAdSet.offerIDs || [];

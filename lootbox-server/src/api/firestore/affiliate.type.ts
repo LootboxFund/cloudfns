@@ -7,11 +7,13 @@ import {
   OrganizerOfferWhitelistID,
   OrganizerRank,
   RateQuoteID,
+  UserIdpID,
 } from "@wormgraph/helpers";
 
 export interface Affiliate_Firestore {
   id: AffiliateID;
   userID: UserID;
+  userIdpID: UserIdpID;
   name: string;
   organizerRank: OrganizerRank;
 }

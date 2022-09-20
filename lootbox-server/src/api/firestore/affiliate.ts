@@ -18,6 +18,7 @@ import {
   Tournament_Firestore,
   OfferInTournamentStatus,
   AdSetID,
+  UserIdpID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -42,7 +43,8 @@ import { Advertiser_Firestore } from "./advertiser.type";
 import { listActiveActivationsForOffer } from "./offer";
 
 export const upgradeToAffiliate = async (
-  userID: UserID
+  userID: UserID,
+  userIdpID: UserIdpID
 ): Promise<Affiliate_Firestore> => {
   const userRef = db
     .collection(Collection.User)
@@ -55,6 +57,7 @@ export const upgradeToAffiliate = async (
   const affiliate: Affiliate_Firestore = {
     id: affiliateRef.id as AffiliateID,
     userID: userID,
+    userIdpID: userIdpID,
     name: user.username || `New Affiliate ${affiliateRef.id}`,
     organizerRank: OrganizerRank.ClayRank1,
   };

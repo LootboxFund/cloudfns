@@ -21,12 +21,15 @@ import {
   ConquestStatus,
   TournamentID,
   Tournament_Firestore,
+  UserIdpID,
 } from "@wormgraph/helpers";
 import * as moment from "moment";
 import { Affiliate_Firestore } from "./affiliate.type";
+import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 
 export const upgradeToAdvertiser = async (
-  userID: UserID
+  userID: UserID,
+  userIdpID: UserIdpID
 ): Promise<Advertiser_Firestore | undefined> => {
   const existingAdvertiserRef = db
     .collection(Collection.Advertiser)
@@ -48,6 +51,7 @@ export const upgradeToAdvertiser = async (
   const advertiser: Advertiser_Firestore = {
     id: advertiserRef.id as AdvertiserID,
     userID: userID,
+    userIdpID: userIdpID,
     name: user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
     offers: [],
@@ -61,7 +65,7 @@ export const upgradeToAdvertiser = async (
 
 export const updateAdvertiserDetails = async (
   advertiserID: AdvertiserID,
-  payload: Omit<UpdateAdvertiserDetailsPayload, "___someVar">
+  payload: UpdateAdvertiserDetailsPayload
 ): Promise<Advertiser_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -111,7 +115,8 @@ export const createConquest = async (
 export const updateConquest = async (
   conquestID: ConquestID,
   advertiserID: AdvertiserID,
-  payload: Omit<UpdateConquestPayload, "id">
+  payload: Omit<UpdateConquestPayload, "id">,
+  userIdpID: UserIdpID
 ): Promise<Conquest_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -121,6 +126,26 @@ export const updateConquest = async (
     .doc(advertiserID)
     .collection(Collection.Conquest)
     .doc(conquestID) as DocumentReference<Conquest_Firestore>;
+
+  const conquestSnapshot = await conquestRef.get();
+  if (!conquestSnapshot.exists) {
+    throw Error(`Conquest ${conquestID} does not exist`);
+  }
+  const existingConquest = conquestSnapshot.data();
+  if (!existingConquest) {
+    throw Error(`Conquest ${conquestID} is undefined`);
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    existingConquest.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
+
   const updatePayload: Partial<Conquest_Firestore> = {};
   // update
   if (payload.title != undefined) {
@@ -211,7 +236,8 @@ export const listConquestPreviews = async (
 
 export const getConquest = async (
   advertiserID: AdvertiserID,
-  conquestID: ConquestID
+  conquestID: ConquestID,
+  userIdpID: UserIdpID
 ): Promise<ConquestWithTournaments | undefined> => {
   const placeholderImageTournament =
     "https://media.istockphoto.com/vectors/thumbnail-image-vector-graphic-vector-id1147544807?k=20&m=1147544807&s=612x612&w=0&h=pBhz1dkwsCMq37Udtp9sfxbjaMl27JUapoyYpQm0anc=";
@@ -224,6 +250,17 @@ export const getConquest = async (
   const conquestSnapshot = await conquestRef.get();
   const conquestData = conquestSnapshot.data();
   if (!conquestSnapshot.exists || !conquestData) return undefined;
+
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    conquestData.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
 
   if (conquestData.tournaments && conquestData.tournaments.length > 0) {
     const tournamentsRef = db
@@ -258,24 +295,34 @@ export const getConquest = async (
 };
 
 export const advertiserAdminView = async (
-  advertiserID: AdvertiserID
+  userIdpID: UserIdpID
 ): Promise<Advertiser_Firestore | undefined> => {
   const advertiserRef = db
     .collection(Collection.Advertiser)
-    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+    .where("userIdpID", "==", userIdpID) as Query<Advertiser_Firestore>;
 
-  const advertiserSnapshot = await advertiserRef.get();
+  const advertiserCollectionItems = await advertiserRef.get();
 
-  if (!advertiserSnapshot.exists) {
-    return undefined;
-  } else {
-    return advertiserSnapshot.data();
+  if (advertiserCollectionItems.empty) {
+    throw Error(`Advertiser with userIdpID ${userIdpID} does not exist`);
+  }
+  const advertisers = advertiserCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return data;
+  });
+  if (advertisers && advertisers[0]) {
+    return advertisers[0];
   }
 };
 
 type PublicAdvertiserView = Omit<
   Advertiser_Firestore,
-  "conquests" | "offers" | "userID" | "relatedTournaments" | "affiliatePartners"
+  | "conquests"
+  | "offers"
+  | "userID"
+  | "relatedTournaments"
+  | "affiliatePartners"
+  | "userIdpID"
 >;
 export const advertiserPublicView = async (
   advertiserID: AdvertiserID

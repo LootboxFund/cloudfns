@@ -75,6 +75,7 @@ export const trackAppsFlyerActivation = async (
   const adEventRef = db
     .collection(Collection.AdEvent)
     .doc() as DocumentReference<AdEvent_Firestore>;
+  // best case scenario, we have a flight
   if (typeof flightID === "string") {
     const flightRef = db
       .collection(Collection.Flight)
@@ -120,6 +121,7 @@ export const trackAppsFlyerActivation = async (
       }
     }
   }
+  // decent case, we have an offerID and mmpAlias (event name)
   const offerID = extraData.appsflyer_c as OfferID;
   const mmpAlias = (extraData.appsflyer_event_name as string) || "";
   if (offerID && mmpAlias) {

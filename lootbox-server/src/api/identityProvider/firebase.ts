@@ -1,4 +1,4 @@
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import {
   default as adminAuth,
   UpdateRequest as FirebaseUserUpdateRequest,
@@ -10,7 +10,15 @@ import {
   IIdpUser,
   UpdateUserRequest,
 } from "./interface";
-import { UserIdpID } from "../../lib/types";
+import {
+  AdvertiserID,
+  AffiliateID,
+  Collection,
+  UserIdpID,
+} from "../../lib/types";
+import { DocumentReference } from "firebase-admin/firestore";
+import { Advertiser_Firestore } from "../firestore/advertiser.type";
+import { Affiliate_Firestore } from "../firestore/affiliate.type";
 
 const ERROR_CODE_USER_NOT_FOUND = "auth/user-not-found";
 
@@ -23,6 +31,52 @@ const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
     username: userRecord.displayName ?? "",
     avatar: userRecord.photoURL ?? "",
   };
+};
+
+export const checkIfUserIdpMatchesAdvertiser = async (
+  userIdpID: UserIdpID,
+  advertiserID: AdvertiserID
+): Promise<boolean> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+
+  if (!advertiserSnapshot.exists) {
+    throw Error(`Advertiser ${advertiserID} does not exist`);
+  }
+  const advertiser = advertiserSnapshot.data();
+  if (advertiser === undefined) {
+    throw Error(`Advertiser ${advertiserID} is undefined`);
+  }
+  if (advertiser.userIdpID === userIdpID) {
+    return true;
+  }
+  return false;
+};
+
+export const checkIfUserIdpMatchesAffiliate = async (
+  userIdpID: UserIdpID,
+  affiliateID: AffiliateID
+): Promise<boolean> => {
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+
+  const affiliateSnapshot = await affiliateRef.get();
+
+  if (!affiliateSnapshot.exists) {
+    throw Error(`Affiliate ${affiliateID} does not exist`);
+  }
+  const affiliate = affiliateSnapshot.data();
+  if (affiliate === undefined) {
+    throw Error(`Affiliate ${affiliateID} is undefined`);
+  }
+  if (affiliate.userIdpID === userIdpID) {
+    return true;
+  }
+  return false;
 };
 
 class FirebaseIdentityProvider implements IIdentityProvider {

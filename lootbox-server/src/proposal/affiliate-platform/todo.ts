@@ -19,7 +19,10 @@
  *
  * ✅ Two way offer+adset (editOffer will update offer.adSets and adSet.offers, and vice versa)
  * ⬜️ Add counts to firestore
- * ⬜️ Add recursive querying to graphql types
+ * ✅ Add recursive querying to graphql types
+ *
+ * ⬜️ Add basic idp auth to graphql
+ * ⬜️ Add custom isAdvertiser auth check
  *
  * ⬛️ GQL+Firestore for an advertiser to see its relationship stats with an organizer & vice versa
  * ⬛️ GQL+Firestore for an affiliate to see its relationship stats with another affiliate & vice versa

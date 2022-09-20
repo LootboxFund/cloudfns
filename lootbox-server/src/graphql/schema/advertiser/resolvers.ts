@@ -35,22 +35,30 @@ import {
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
+import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 
 const AdvertiserResolvers: Resolvers = {
   Query: {
     advertiserAdminView: async (
       _,
-      args: QueryAdvertiserAdminViewArgs
+      args: QueryAdvertiserAdminViewArgs,
+      context: Context
     ): Promise<AdvertiserAdminViewResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
-        const advertiser = await advertiserAdminView(
-          args.advertiserId as AdvertiserID
-        );
+        const advertiser = await advertiserAdminView(context.userId);
         if (!advertiser) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No advertiser found with ID ${args.advertiserId}`,
+              message: `No advertiser found for user IDP ${context.userId}`,
             },
           };
         }
@@ -69,8 +77,17 @@ const AdvertiserResolvers: Resolvers = {
     },
     advertiserPublicView: async (
       _,
-      args: QueryAdvertiserPublicViewArgs
+      args: QueryAdvertiserPublicViewArgs,
+      context: Context
     ): Promise<AdvertiserPublicViewResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
         const advertiser = await advertiserPublicView(
           args.advertiserId as AdvertiserID
@@ -98,8 +115,30 @@ const AdvertiserResolvers: Resolvers = {
     },
     listConquestPreviews: async (
       _,
-      args: QueryListConquestPreviewsArgs
+      args: QueryListConquestPreviewsArgs,
+      context: Context
     ): Promise<ListConquestPreviewsResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      // check if user making request is the actual advertiser
+      const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+        context.userId,
+        args.advertiserID as AdvertiserID
+      );
+      if (!isValidUserAdvertiser) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this advertiser`,
+          },
+        };
+      }
       try {
         const conquest_previews = await listConquestPreviews(
           args.advertiserID as AdvertiserID
@@ -127,12 +166,22 @@ const AdvertiserResolvers: Resolvers = {
     },
     getConquest: async (
       _,
-      args: QueryGetConquestArgs
+      args: QueryGetConquestArgs,
+      context: Context
     ): Promise<GetConquestResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
         const conquestWithTournaments = await getConquest(
           args.advertiserID as AdvertiserID,
-          args.conquestID as ConquestID
+          args.conquestID as ConquestID,
+          context.userId
         );
         if (!conquestWithTournaments) {
           return {
@@ -160,16 +209,19 @@ const AdvertiserResolvers: Resolvers = {
       { payload }: MutationUpgradeToAdvertiserArgs,
       context: Context
     ): Promise<UpgradeToAdvertiserResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
-        const advertiser = await upgradeToAdvertiser(payload.userID as UserID);
+        const advertiser = await upgradeToAdvertiser(
+          payload.userID as UserID,
+          context.userId
+        );
         if (!advertiser) {
           return {
             error: {
@@ -194,14 +246,27 @@ const AdvertiserResolvers: Resolvers = {
       { advertiserID, payload }: MutationUpdateAdvertiserDetailsArgs,
       context: Context
     ): Promise<UpdateAdvertiserDetailsResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      // check if user making request is the actual advertiser
+      const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+        context.userId,
+        advertiserID as AdvertiserID
+      );
+      if (!isValidUserAdvertiser) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this advertiser`,
+          },
+        };
+      }
       try {
         const advertiser = await updateAdvertiserDetails(
           advertiserID as AdvertiserID,
@@ -231,14 +296,27 @@ const AdvertiserResolvers: Resolvers = {
       { advertiserID, payload }: MutationCreateConquestArgs,
       context: Context
     ): Promise<CreateConquestResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      // check if user making request is the actual advertiser
+      const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+        context.userId,
+        advertiserID as AdvertiserID
+      );
+      if (!isValidUserAdvertiser) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this advertiser`,
+          },
+        };
+      }
       try {
         const conquest = await createConquest(
           payload.title || "",
@@ -268,19 +346,20 @@ const AdvertiserResolvers: Resolvers = {
       { advertiserID, payload }: MutationUpdateConquestArgs,
       context: Context
     ): Promise<UpdateConquestResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: `Unauthorized`,
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       try {
         const conquest = await updateConquest(
           payload.id as ConquestID,
           advertiserID as AdvertiserID,
-          payload
+          payload,
+          context.userId
         );
         if (!conquest) {
           return {

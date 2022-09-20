@@ -94,14 +94,14 @@ const AffiliateTypeDefs = gql`
   extend type Mutation {
     # Upgrade a regular user and give them an affiliate account
     upgradeToAffiliate(userID: ID!): UpgradeToAffiliateResponse!
-    # Whitelist an offer to an affiliate
-    whitelistAffiliateToOffer(
-      payload: WhitelistAffiliateToOfferPayload!
-    ): WhitelistAffiliateToOfferResponse!
-    # Remove whitelist of an offer to an affiliate
-    removeWhitelistAffiliateToOffer(
-      id: ID!
-    ): RemoveWhitelistAffiliateToOfferResponse!
+    # Whitelist an offer to an affiliate (be careful about auth here)
+    # whitelistAffiliateToOffer(
+    #   payload: WhitelistAffiliateToOfferPayload!
+    # ): WhitelistAffiliateToOfferResponse!
+    # Remove whitelist of an offer to an affiliate (be careful about auth here)
+    # removeWhitelistAffiliateToOffer(
+    #   id: ID!
+    # ): RemoveWhitelistAffiliateToOfferResponse!
   }
 `;
 
