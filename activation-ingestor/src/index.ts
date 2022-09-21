@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
 app.get("/appsflyer", async (req, res) => {
   const trackedEvent = await trackAppsFlyerActivation(req);
   res.json({
-    message: `Successfully received activation event from Appsflyer with flightID=${trackedEvent.flightId} and AdEventID=${trackedEvent.id}`,
+    message: `Successfully received activation event from Appsflyer with flightID=${trackedEvent.flightID} and AdEventID=${trackedEvent.id}`,
   });
 });
 

@@ -4,20 +4,22 @@ import { manifest } from "../../manifest";
 import {
   AdEvent_Firestore,
   Collection,
-  AdFlight_Firestore,
   AdEventID,
   AdEventAction,
   ActivationID,
   MMPActivationAlias,
   UserID,
   TournamentID,
+  OfferID,
+  AdvertiserID,
 } from "@wormgraph/helpers";
 import { db } from "../../api/firebase";
-import { DocumentReference } from "firebase-admin/firestore";
+import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 import { getUserByEmail } from "../../api/firestore/users";
 import { Activation_Firestore } from "@wormgraph/helpers";
 
 import { notifyPubSubOfBillableActivation } from "../../api/pubsub/notify";
+import { getOfferByID } from "../../api/firestore/activation";
 
 //  * ------ DATA WE RECEIVE FROM MANUAL ENTRY ------
 //  *
@@ -34,6 +36,7 @@ export const trackManualActivation = async (
   const tournamentID = req.query.tournamentID;
   const activationID = req.query.activationID;
   let activationEventMmpAlias = req.query.mmpActivationAlias;
+  let advertiserID;
 
   if (userEmail) {
     const users = await getUserByEmail(userEmail as string);
@@ -50,6 +53,7 @@ export const trackManualActivation = async (
       const activation = activationSnapshot.data();
       if (activation) {
         activationEventMmpAlias = activation.mmpAlias;
+        advertiserID = activation.advertiserID;
       }
     }
   }
@@ -68,6 +72,14 @@ export const trackManualActivation = async (
       tournamentID: tournamentID as TournamentID,
     },
   };
+  if (offerID) {
+    const offer = await getOfferByID(offerID as OfferID);
+    adEventSchema.offerID = offerID as OfferID;
+    if (offer) {
+      advertiserID = offer.advertiserID;
+      adEventSchema.advertiserID = advertiserID as AdvertiserID;
+    }
+  }
   await adEventRef.set(adEventSchema);
   // notify pubsub of billable event to handle creation of memos
   await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);

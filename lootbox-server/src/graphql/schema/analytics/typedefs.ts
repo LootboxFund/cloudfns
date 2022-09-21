@@ -1,22 +1,142 @@
-// import { gql } from "apollo-server";
+import { gql } from "apollo-server";
 
-// const AnalyticsTypeDefs = gql`
+const AnalyticsTypeDefs = gql`
+  type AnalyticsAdEvent {
+    id: ID!
+    timestamp: Int!
+    adID: ID
+    adSetID: ID
+    action: AdEventAction!
+    activationEventMmpAlias: String
+    activationID: ID
+    organizerID: ID
+    promoterID: ID
+    tournamentID: ID
+    advertiserID: ID
+  }
 
-//   type AnalyticsAdEvent {
-//     id: ID!
-//     advertiserID: ID! # [usually == creatorId, but can be a separate abstraction]
-//     creativeType: CreativeType!
-//     creativeLinks: [String!]! # For video, we need webm (ios) + mp4 (other) support for best coverage. thats why this is an array
-//     callToAction: String
-//     thumbnail: String
-//     infographicLink: String
-//     aspectRatio: String! # Temp hardcoded for mobile fullscreen video
-//     themeColor: String
-//   }
+  type AnalyticsMemo {
+    id: ID!
+    timestamp: Int!
+    affiliateID: ID!
+    affiliateType: AffiliateType!
+    offerID: ID!
+    advertiserID: ID!
+    adEventID: ID!
+    activationID: ID!
+    mmpAlias: String!
+    mmp: MeasurementPartnerType!
+    tournamentID: ID
+    amount: Float!
+  }
 
-//   type DecisionAdApiBetaV2ResponseSuccess {
-//     ad: AdServed
-//   }
-// `;
+  # --------------- _________Report ---------------
+  # type _____ResponseSuccess {
+  #   data: [AnalyticsAdEvent!]!
+  # }
+  # union _____Response = _____ResponseSuccess | ResponseError
 
-// export default AnalyticsTypeDefs;
+  # --------------- reportAdvertiserOfferPerformance ---------------
+  type ReportAdvertiserOfferPerformanceResponseSuccess {
+    events: [AnalyticsAdEvent!]!
+    memos: [AnalyticsMemo!]!
+  }
+  union ReportAdvertiserOfferPerformanceResponse =
+      ReportAdvertiserOfferPerformanceResponseSuccess
+    | ResponseError
+
+  # --------------- reportAdvertiserTournamentPerf ---------------
+  input ReportAdvertiserTournamentPerfInput {
+    tournamentID: ID!
+    advertiserID: ID!
+  }
+  type ReportAdvertiserTournamentPerfResponseSuccess {
+    events: [AnalyticsAdEvent!]!
+    memos: [AnalyticsMemo!]!
+  }
+  union ReportAdvertiserTournamentPerfResponse =
+      ReportAdvertiserTournamentPerfResponseSuccess
+    | ResponseError
+
+  # --------------- reportAdvertiserAffiliatePerf ---------------
+  input ReportAdvertiserAffiliatePerfInput {
+    affiliateID: ID!
+    affiliateType: AffiliateType!
+    advertiserID: ID!
+  }
+  type ReportAdvertiserAffiliatePerfResponseSuccess {
+    events: [AnalyticsAdEvent!]!
+    memos: [AnalyticsMemo!]!
+  }
+  union ReportAdvertiserAffiliatePerfResponse =
+      ReportAdvertiserAffiliatePerfResponseSuccess
+    | ResponseError
+
+  # --------------- reportOrganizerTournamentReport ---------------
+  input ReportOrganizerTournamentPerfInput {
+    tournamentID: ID!
+    organizerID: ID!
+  }
+  type ReportOrganizerTournamentResponseSuccess {
+    events: [AnalyticsAdEvent!]!
+    memos: [AnalyticsMemo!]!
+  }
+  union ReportOrganizerTournamentResponse =
+      ReportOrganizerTournamentResponseSuccess
+    | ResponseError
+
+  # --------------- reportOrganizerOfferPerf ---------------
+  input ReportOrganizerOfferPerfInput {
+    offerID: ID!
+    organizerID: ID!
+  }
+  type ReportOrganizerOfferPerfResponseSuccess {
+    events: [AnalyticsAdEvent!]!
+    memos: [AnalyticsMemo!]!
+  }
+  union ReportOrganizerOfferPerfResponse =
+      ReportOrganizerOfferPerfResponseSuccess
+    | ResponseError
+
+  # --------------- reportPromoterTournamentPerf ---------------
+  input ReportPromoterTournamentPerfInput {
+    tournamentID: ID!
+    promoterID: ID!
+  }
+  type ReportPromoterTournamentPerfResponseSuccess {
+    events: [AnalyticsAdEvent!]!
+    memos: [AnalyticsMemo!]!
+  }
+  union ReportPromoterTournamentPerfResponse =
+      ReportPromoterTournamentPerfResponseSuccess
+    | ResponseError
+
+  extend type Query {
+    # advertiser to see how an offer performs across all tournaments & affiliates
+    reportAdvertiserOfferPerformance(
+      offerID: ID!
+    ): ReportAdvertiserOfferPerformanceResponse!
+    # advertiser to see how a tournament performs across all offers & affiliates
+    reportAdvertiserTournamentPerf(
+      payload: ReportAdvertiserTournamentPerfInput!
+    ): ReportAdvertiserTournamentPerfResponse!
+    # advertiser to see how an affiliate performs across all offers & tournaments
+    reportAdvertiserAffiliatePerf(
+      payload: ReportAdvertiserAffiliatePerfInput!
+    ): ReportAdvertiserAffiliatePerfResponse!
+    # organizer to see how a tournament performs across all offers
+    reportOrganizerTournamentPerf(
+      payload: ReportOrganizerTournamentPerfInput!
+    ): ReportOrganizerTournamentResponse!
+    # organizer to see how an offer performs across all tournaments
+    reportOrganizerOfferPerf(
+      payload: ReportOrganizerOfferPerfInput!
+    ): ReportOrganizerOfferPerfResponse!
+    # promoter to see how they performed in a tournament
+    reportPromoterTournamentPerf(
+      payload: ReportPromoterTournamentPerfInput!
+    ): ReportPromoterTournamentPerfResponse!
+  }
+`;
+
+export default AnalyticsTypeDefs;

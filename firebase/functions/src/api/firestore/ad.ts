@@ -46,13 +46,15 @@ export const createAdEvent = async ({
 }: CreateAdEventRequest): Promise<AdEvent_Firestore> => {
     const documentWithoutId: Omit<AdEvent_Firestore, "id"> = {
         timestamp: Timestamp.now().toMillis(),
-        adId: flight.adID,
-        adSetId: flight.adSetID,
-        sessionId: flight.sessionID,
-        campaignId: flight.campaignID,
-        flightId: flight.id,
+        adID: flight.adID,
+        adSetID: flight.adSetID,
+        sessionID: flight.sessionID,
+        campaignID: flight.campaignID,
+        flightID: flight.id,
         action: action,
-        claimId: flight.claimID,
+        claimID: flight.claimID,
+        offerID: flight.offerID,
+        advertiserID: flight.advertiserID,
         nonce,
         metadata: {
             clickRedirectUrl: flight.clickUrl,
