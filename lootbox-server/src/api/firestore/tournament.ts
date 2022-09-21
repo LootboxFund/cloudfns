@@ -1,4 +1,3 @@
-import { Collection } from "./collection.types";
 import {
   CollectionReference,
   DocumentReference,
@@ -19,7 +18,15 @@ import {
   EditStreamPayload,
   StreamType,
 } from "../../graphql/generated/types";
-import { UserID, UserIdpID, TournamentID, StreamID } from "../../lib/types";
+import {
+  UserID,
+  UserIdpID,
+  TournamentID,
+  StreamID,
+  AffiliateID,
+} from "../../lib/types";
+import { Affiliate } from "../../graphql/generated/types";
+import { Collection } from "@wormgraph/helpers";
 
 export const getTournamentById = async (
   id: TournamentID
@@ -227,6 +234,7 @@ export interface CreateTournamentArgs {
   coverPhoto?: string | null;
   tournamentDate: number;
   communityURL?: string | null;
+  organizer?: AffiliateID;
 }
 export const createTournament = async ({
   title,
@@ -237,6 +245,7 @@ export const createTournament = async ({
   coverPhoto,
   tournamentDate,
   communityURL,
+  organizer,
 }: CreateTournamentArgs): Promise<Tournament> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -272,6 +281,10 @@ export const createTournament = async ({
 
   if (!!communityURL) {
     tournament.communityURL = communityURL;
+  }
+
+  if (!!organizer) {
+    tournament.organizer = organizer;
   }
 
   await tournamentRef.set(tournament);

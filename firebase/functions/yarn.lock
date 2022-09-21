@@ -1449,18 +1449,35 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.1.13":
-  version "0.1.13"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.13.tgz#b86fa3fae869c3381a6a26eccbc71cf52aa2e51d"
-  integrity sha512-SISm6MjHOJdnNldFp8+IrNNoYMaLZNrz0TF03hbDdkK6G4LpvfMkIiRYTZqU9i3gfCupxlVmwRGoMzaPgD3xxw==
+"@wormgraph/helpers@0.1.14-afn-alpha4":
+  version "0.1.14-afn-alpha4"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.14-afn-alpha4.tgz#d21256e54e2068418668dfc2a2ed63af6fd26973"
+  integrity sha512-h9Tv6tZ3lG8POy2GiZFH1qKwatoOjUGBCXLwjkfR4HiKkxB7JlOl3bgP75/xEXdVHSbcvj12dm93uQjsF2fCzw==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/manifest@0.3.128":
-  version "0.3.128"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.128.tgz#e0d0b3159b2d19f5b12df97dce468f6aef4e03bb"
-  integrity sha512-A2IcXQd355pA4plkC7k+BHGfIa0cbK3wuuwd1C2K2E+pLvcIluNBWdyotPxb3xNFOBWPeMz9cOWf9B8z7CyVTg==
+"@wormgraph/helpers@0.2.0-afn-alpha26":
+  version "0.2.0-afn-alpha26"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha26.tgz#c97a42d2f2d86e91079637c6f918a7ba4d60385c"
+  integrity sha512-aFtNyEZYYkcARf7RQvjAqkF8v4D85C/gHNS6AWPptQn6OaBhV/PCPcX55VlphUXkxUQ+skVy3HxxMUZFSn9n7w==
+  dependencies:
+    "@wormgraph/helpers" "0.1.14-afn-alpha4"
+    "@wormgraph/manifest" "0.4.0-afm-alpha1"
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@wormgraph/manifest@0.4.0-afm-alpha1":
+  version "0.4.0-afm-alpha1"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha1.tgz#7e162c7f8d1a31352464ffb9fc38446bd98b5c29"
+  integrity sha512-+ki1chfkdI3pgNWnh4yN0TBPpac9spKVZtNYv6hp8yQwwH8SpSEPPaRrocfjLksY2y6uxNfeBFZLMoWmV8T1Eg==
+  dependencies:
+    "@wormgraph/helpers" "0.1.10"
+
+"@wormgraph/manifest@0.4.0-afm-alpha6":
+  version "0.4.0-afm-alpha6"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha6.tgz#ff2fac0d4afeb3eeb46cce29e42f65c48582453e"
+  integrity sha512-8inHe1lVd2Gf/GkynNj9NUCWqxXwId/S87HpJeClmXNeg96BRpzyH8iXQ1ZKtwu2gxGLm6+VP6Zz6VfTQdp2hg==
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
@@ -2761,10 +2778,10 @@ firebase-functions-test@^0.2.0:
     "@types/lodash" "^4.14.104"
     lodash "^4.17.5"
 
-firebase-functions@^3.18.0:
-  version "3.22.0"
-  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-3.22.0.tgz#d1b6c190551e29705d91819d8369a752ba5e061a"
-  integrity sha512-d1BxBpT95MhvVqXkpLWDvWbyuX7e2l69cFAiqG3U1XQDaMV88bM9S+Zg7H8i9pitEGFr+76ErjKgrY0n+g3ZDA==
+firebase-functions@^3.23.0:
+  version "3.23.0"
+  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-3.23.0.tgz#ac8da127ff3e97c354f3cd740a71534572d1f4ca"
+  integrity sha512-/jujnNChTWIuoXK3IPNGYu1zjXF1fYRy88uYbkrJhs3dhK6EdXZi0rX6JUEOCB7h6IkRQvbio+bvtaoI7h+4Lg==
   dependencies:
     "@types/cors" "^2.8.5"
     "@types/express" "4.17.3"

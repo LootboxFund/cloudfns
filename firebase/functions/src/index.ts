@@ -1,22 +1,22 @@
 import { db } from "./api/firebase";
 import * as functions from "firebase-functions";
-import {
-    Ad,
-    AdEvent,
-    AdEventAction,
-    AdStatus,
-    Claim,
-    ClaimStatus,
-    PartyBasket,
-    PartyBasketStatus,
-} from "./api/graphql/generated/types";
-import { AdID, CampaignID, Collection, FlightID } from "./lib/types";
+import { Ad, AdEventAction, Claim, ClaimStatus, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
+import { AdID, Collection } from "./lib/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
 import { extractURLStatePixelTracking } from "./lib/url";
-import { createAdEvent, getAdById, getAdEventsBySessionId, updateAdCounts, getAdEventsByNonce } from "./api/firestore";
+import {
+    createAdEvent,
+    getAdEventsBySessionId,
+    updateAdCounts,
+    getAdEventsByNonce,
+    getFlightById,
+} from "./api/firestore";
 import { manifest } from "./manifest";
+import { AdEvent_Firestore, AdFlight_Firestore } from "@wormgraph/helpers";
+import { reportViewToMMP } from "./api/mmp/mmp";
+import { generateMemoBills } from "./api/firestore/memo";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
@@ -115,6 +115,7 @@ export const onPartyBasketWrite = functions.firestore
  * httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"
  * ```
  */
+
 export const pubsubPixelTracking = functions.pubsub
     .topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
@@ -137,12 +138,29 @@ export const pubsubPixelTracking = functions.pubsub
             return;
         }
 
-        const { adId, sessionId, eventAction, nonce, claimId } = extractURLStatePixelTracking(url);
+        const {
+            // userId,
+            // adId,
+            // adSetId,
+            // offerId,
+            // claimId,
+            // campaignId,
+            // tournamentId,
+            // organizerID,
+            // promoterID,
+            // sessionId,
+            flightId,
+            eventAction,
+            nonce,
+            timeElapsed,
+        } = extractURLStatePixelTracking(url);
 
-        let ad: Ad;
-        let createdEvent: AdEvent;
+        // get for existing flight
+        let flight: AdFlight_Firestore;
+        let createdEvent: AdEvent_Firestore;
+
         try {
-            if (!adId || !sessionId || !eventAction || !nonce) {
+            if (!flightId || !eventAction || !nonce) {
                 logger.error("Malformed URL", url);
                 return;
             }
@@ -152,39 +170,24 @@ export const pubsubPixelTracking = functions.pubsub
                 return;
             }
 
-            // make sure the ad exists & active
-            const _ad = await getAdById(adId);
+            flight = await getFlightById(flightId);
 
-            if (!_ad) {
-                logger.error("Ad does not exist", { adId });
-                return;
-            }
-            if (_ad.status !== AdStatus.Active) {
-                logger.error("Ad is not active", { adId, status: _ad.status });
-                return;
-            }
-
-            ad = _ad;
-
-            const eventsByNonce = await getAdEventsByNonce(ad.id as AdID, nonce, 1);
-
+            // check if nonce already used (deduplication of events)
+            const eventsByNonce = await getAdEventsByNonce(flight.adID as AdID, nonce, 1);
             if (eventsByNonce.length > 0) {
-                logger.error("Nonce already used", { adId, nonce });
+                logger.error("Nonce already used", { adId: flight.adID, nonce });
                 return;
             }
 
             // Now write the AdEvent subcollection document
             createdEvent = await createAdEvent({
                 action: eventAction,
-                adId: ad.id as AdID,
-                campaignId: ad.campaignId as CampaignID,
-                flightId: ad.flightId as FlightID,
-                sessionId,
-                claimId: claimId ? claimId : undefined,
+                flight,
                 nonce,
+                timeElapsed,
             });
 
-            logger.info("Successfully created ad event", { id: createdEvent.id, ad: adId });
+            logger.info("Successfully created ad event", { id: createdEvent.id, ad: flight.adID });
         } catch (err) {
             logger.error("Pubsub error", err);
             return;
@@ -193,6 +196,8 @@ export const pubsubPixelTracking = functions.pubsub
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {
             updateRequest.impressions = FieldValue.increment(1) as unknown as number;
+            // Report to the MMP
+            await reportViewToMMP(flight, createdEvent);
         }
 
         if (eventAction === AdEventAction.Click) {
@@ -202,7 +207,7 @@ export const pubsubPixelTracking = functions.pubsub
             // Check if unique click by session id
             // A unique click is counted when only one click adEvent exists for a given sessionId
             try {
-                const sessionAdEvents = await getAdEventsBySessionId(adId, sessionId, {
+                const sessionAdEvents = await getAdEventsBySessionId(flight.adID, flight.sessionID, {
                     actionType: AdEventAction.Click,
                     limit: 2,
                 });
@@ -212,7 +217,7 @@ export const pubsubPixelTracking = functions.pubsub
                 }
             } catch (err) {
                 logger.error(err);
-                // Just fail silently... although, this shouldnt really throw.
+                // Just fail silently
             }
         }
 
@@ -222,10 +227,35 @@ export const pubsubPixelTracking = functions.pubsub
         }
 
         try {
-            await updateAdCounts(adId, updateRequest);
+            await updateAdCounts(flight.adID, updateRequest);
         } catch (err) {
             logger.error("Error updating ad counts...", err);
         }
 
+        return;
+    });
+
+export const pubsubBillableActivationEvent = functions.pubsub
+    .topic(manifest.cloudFunctions.pubsubBillableActivationEvent.topic)
+    .onPublish(async (message: Message) => {
+        logger.log("PUB SUB TRIGGERED", {
+            topic: manifest.cloudFunctions.pubsubBillableActivationEvent.topic,
+            message,
+        });
+        // Get the AdEvent from firestore
+        const AdEventID = message.data;
+        const adEventRef = db.collection(Collection.AdEvent).doc(AdEventID) as DocumentReference<AdEvent_Firestore>;
+        const adEventSnapshot = await adEventRef.get();
+        if (!adEventSnapshot.exists) {
+            throw Error(`No AdEvent with id ${AdEventID} found`);
+        }
+        const adEvent = adEventSnapshot.data();
+        if (!adEvent) {
+            throw Error(`AdEvent with id ${AdEventID} was undefined`);
+        }
+        // Generate the Memos
+        const memos = await generateMemoBills(adEvent);
+        console.log(memos);
+        // end
         return;
     });

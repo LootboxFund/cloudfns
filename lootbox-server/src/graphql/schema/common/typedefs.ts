@@ -16,6 +16,12 @@ const CommonTypeDefs = gql`
     Unauthorized
   }
 
+  enum AffiliateType {
+    Organizer
+    Promoter
+    Lootbox
+  }
+
   type Status {
     code: StatusCode!
     message: String!

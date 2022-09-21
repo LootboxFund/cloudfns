@@ -15,8 +15,8 @@
     "@google-cloud/secret-manager": "^4.0.0",
     "@graphql-tools/resolvers-composition": "^6.4.12",
     "@graphql-tools/schema": "^8.3.13",
-    "@wormgraph/helpers": "^0.1.13",
-    "@wormgraph/manifest": "0.3.128",
+    "@wormgraph/helpers": "0.2.0-afn-alpha26",
+    "@wormgraph/manifest": "0.4.0-afm-alpha5",
     "apollo-server": "^3.8.1",
     "crypto": "^1.0.1",
     "dotenv": "^16.0.1",
@@ -24,12 +24,16 @@
     "firebase-admin": "^10.2.0",
     "graphql": "^16.5.0",
     "graphql-scalars": "^1.17.0",
-    "nanoid": "3.3.4"
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "nanoid": "3.3.4",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^2.6.2",
     "@graphql-codegen/typescript": "^2.4.11",
     "@graphql-codegen/typescript-resolvers": "^2.6.4",
+    "@graphql-eslint/eslint-plugin": "^3.10.7",
     "ts-node": "^10.8.0",
     "typescript": "^4.7.2"
   }

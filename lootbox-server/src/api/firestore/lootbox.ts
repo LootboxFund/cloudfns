@@ -1,4 +1,3 @@
-import { Collection } from "./collection.types";
 import {
   CollectionReference,
   DocumentReference,
@@ -9,7 +8,7 @@ import {
   Lootbox,
   LootboxFeedResponseSuccess,
 } from "../../graphql/generated/types";
-import { Address } from "@wormgraph/helpers";
+import { Address, Collection } from "@wormgraph/helpers";
 import { LootboxID } from "../../lib/types";
 import { convertLootboxToSnapshot } from "../../lib/lootbox";
 

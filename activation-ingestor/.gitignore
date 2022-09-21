@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# production bundles
+dist/
+public/js/app.js
+
+export
+
+.DS_Store
+
+generated
+.secrets
+
+.env
+
+.npmrc

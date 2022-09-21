@@ -23,7 +23,6 @@ import {
   UserIdpID,
   ClaimsCsvRow,
 } from "../../lib/types";
-import { Collection } from "./collection.types";
 import { db } from "../firebase";
 import {
   CollectionGroup,
@@ -33,7 +32,7 @@ import {
   Query,
   Timestamp,
 } from "firebase-admin/firestore";
-import { Address, WhitelistSignatureID } from "@wormgraph/helpers";
+import { Address, Collection, WhitelistSignatureID } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 import { getUser } from "./user";
 import { getUserWallets } from "./wallet";

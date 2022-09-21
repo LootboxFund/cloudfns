@@ -1,4 +1,3 @@
-import { Collection } from "./collection.types";
 import {
   CollectionReference,
   DocumentReference,
@@ -7,6 +6,7 @@ import {
 import { db } from "../firebase";
 import { User, UserSocials } from "../../graphql/generated/types";
 import { IIdpUser } from "../identityProvider/interface";
+import { Collection } from "@wormgraph/helpers";
 
 export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   const userRef = db
