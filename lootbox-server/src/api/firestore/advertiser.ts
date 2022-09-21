@@ -1,4 +1,4 @@
-import { DocumentReference, Query } from "firebase-admin/firestore";
+import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import * as _ from "lodash";
 import {
   User,
@@ -107,8 +107,8 @@ export const createConquest = async (
     title: title || "My Campaign",
     description: "",
     image: placeholderImageConquest,
-    startDate: Number(new Date().getTime() / 1000),
-    endDate: Number(new Date().getTime() / 1000 + 60 * 60 * 24 * 90),
+    startDate: Number(Timestamp.now().toMillis()),
+    endDate: Number(Timestamp.now().toMillis() + 60 * 60 * 24 * 90),
     advertiserID: advertiserID,
     status: ConquestStatus.Planned,
     tournaments: [],

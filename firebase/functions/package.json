@@ -8,8 +8,8 @@
         "serve": "yarn run build && firebase emulators:start --only functions",
         "shell": "yarn run build && firebase functions:shell",
         "start": "yarn run shell",
-        "deploy": "firebase deploy --only functions --project lootbox-fund-staging",
-        "deploy:prod": "firebase deploy --only functions --project lootbox-fund-prod",
+        "deploy:staging": "yarn run build && firebase deploy --only functions --project lootbox-fund-staging",
+        "deploy:prod": "yarn run build && firebase deploy --only functions --project lootbox-fund-prod",
         "logs": "firebase functions:log"
     },
     "engines": {
@@ -17,10 +17,10 @@
     },
     "main": "lib/index.js",
     "dependencies": {
-        "@wormgraph/helpers": "0.2.0-afn-alpha19",
-        "@wormgraph/manifest": "0.4.0-afm-alpha3",
+        "@wormgraph/helpers": "0.2.0-afn-alpha26",
+        "@wormgraph/manifest": "0.4.0-afm-alpha6",
         "firebase-admin": "^10.0.2",
-        "firebase-functions": "^3.18.0"
+        "firebase-functions": "^3.23.0"
     },
     "devDependencies": {
         "@graphql-codegen/cli": "^2.6.2",

@@ -77,6 +77,8 @@ const AdTypeDefs = gql`
   type AdEventAffiliateAttribution {
     organizerID: ID
     promoterID: ID
+    userID: ID
+    tournamentID: ID
   }
 
   type AdEvent {

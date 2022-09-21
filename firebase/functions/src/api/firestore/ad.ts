@@ -1,7 +1,7 @@
 import { db } from "../firebase";
 import { AdID, Collection, SessionID, AdEventNonce } from "../../lib/types";
 import { Ad, AdEventAction } from "../graphql/generated/types";
-import { DocumentReference, Query } from "firebase-admin/firestore";
+import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { AdEventID, AdEvent_Firestore, AdFlight_Firestore, FlightID } from "@wormgraph/helpers";
 
 export const getAdById = async (id: AdID): Promise<Ad | undefined> => {
@@ -45,7 +45,7 @@ export const createAdEvent = async ({
     timeElapsed,
 }: CreateAdEventRequest): Promise<AdEvent_Firestore> => {
     const documentWithoutId: Omit<AdEvent_Firestore, "id"> = {
-        timestamp: new Date().getTime() / 1000,
+        timestamp: Timestamp.now().toMillis(),
         adId: flight.adID,
         adSetId: flight.adSetID,
         sessionId: flight.sessionID,

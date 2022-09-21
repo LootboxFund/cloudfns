@@ -255,6 +255,7 @@ export const pubsubBillableActivationEvent = functions.pubsub
         }
         // Generate the Memos
         const memos = await generateMemoBills(adEvent);
+        console.log(memos);
         // end
         return;
     });

@@ -1,5 +1,4 @@
-import { AdFlight_Firestore, AdEvent_Firestore } from "@wormgraph/helpers";
-import { MeasurementPartnerType } from "../../../../../lootbox-server/src/graphql/generated/types";
+import { AdFlight_Firestore, AdEvent_Firestore, MeasurementPartnerType } from "@wormgraph/helpers";
 
 /**
  *

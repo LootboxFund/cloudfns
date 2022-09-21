@@ -1,12 +1,12 @@
 // import { composeResolvers } from "@graphql-tools/resolvers-composition";
 // import { Resolvers } from "../../generated/types";
 
-// const CreativeResolvers: Resolvers = {
+// const AnalyticsResolvers: Resolvers = {
 //   Query: {},
 // };
 
-// const creativeComposition = {};
+// const analyticsComposition = {};
 
-// const resolvers = composeResolvers(CreativeResolvers, creativeComposition);
+// const resolvers = composeResolvers(AnalyticsResolvers, analyticsComposition);
 
 // export default resolvers;

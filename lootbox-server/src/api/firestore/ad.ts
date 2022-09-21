@@ -1,4 +1,4 @@
-import { DocumentReference, Query } from "firebase-admin/firestore";
+import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import {
   CreateAdPayload,
   CreateAdSetPayload,
@@ -66,8 +66,8 @@ export const createAd = async (
     },
     events: [],
     timestamps: {
-      createdAt: new Date().getTime(),
-      updatedAt: new Date().getTime(),
+      createdAt: Timestamp.now().toMillis(),
+      updatedAt: Timestamp.now().toMillis(),
     },
   };
   await adRef.set(adSchema);

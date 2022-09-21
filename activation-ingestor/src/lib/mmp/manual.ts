@@ -59,7 +59,7 @@ export const trackManualActivation = async (
     .doc() as DocumentReference<AdEvent_Firestore>;
   const adEventSchema: AdEvent_Firestore = {
     id: adEventRef.id as AdEventID,
-    timestamp: new Date().getTime() / 1000,
+    timestamp: Timestamp.now().toMillis(),
     action: AdEventAction.Activation,
     activationID: activationID as ActivationID,
     activationEventMmpAlias: activationEventMmpAlias as MMPActivationAlias,

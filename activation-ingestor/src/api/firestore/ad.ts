@@ -52,7 +52,7 @@
 //   timeElapsed,
 // }: CreateAdEventRequest): Promise<AdEvent_Firestore> => {
 //   const documentWithoutId: Omit<AdEvent_Firestore, "id"> = {
-//     timestamp: new Date().getTime() / 1000,
+//     timestamp: Timestamp.now().toMillis(),
 //     adId: flight.adID,
 //     adSetId: flight.adSetID,
 //     sessionId: flight.sessionID,

@@ -93,7 +93,7 @@ export const trackAppsFlyerActivation = async (
         );
         const adEventSchema: AdEvent_Firestore = {
           id: adEventRef.id as AdEventID,
-          timestamp: new Date().getTime() / 1000,
+          timestamp: Timestamp.now().toMillis(),
           adId: flight.adID,
           adSetId: flight.adSetID,
           sessionId: flight.sessionID,
@@ -131,7 +131,7 @@ export const trackAppsFlyerActivation = async (
     );
     const adEventSchema: AdEvent_Firestore = {
       id: adEventRef.id as AdEventID,
-      timestamp: new Date().getTime() / 1000,
+      timestamp: Timestamp.now().toMillis(),
       action: AdEventAction.Activation,
       activationEventMmpAlias: mmpAlias,
       activationID: matchingActivations[0].id,
@@ -143,7 +143,7 @@ export const trackAppsFlyerActivation = async (
   }
   const adEventSchema: AdEvent_Firestore = {
     id: adEventRef.id as AdEventID,
-    timestamp: new Date().getTime() / 1000,
+    timestamp: Timestamp.now().toMillis(),
     action: AdEventAction.Activation,
     extraData: extraData,
   };

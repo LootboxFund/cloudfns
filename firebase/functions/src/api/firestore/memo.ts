@@ -19,7 +19,7 @@ import {
     MemoID,
     Tournament_Firestore,
 } from "@wormgraph/helpers";
-import { DocumentReference, Query } from "firebase-admin/firestore";
+import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
 import { AdFlight_Firestore } from "@wormgraph/helpers";
 
@@ -46,7 +46,7 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
                 return memos;
             } catch (e) {
                 console.log(e);
-                console.log(`Attempting next fallback...`);
+                console.log("Attempting next fallback...");
             }
         }
 
@@ -69,7 +69,7 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
                 return memos;
             } catch (e) {
                 console.log(e);
-                console.log(`Attempting next fallback...`);
+                console.log("Attempting next fallback...");
             }
         }
 
@@ -87,7 +87,7 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
                 return memos;
             } catch (e) {
                 console.log(e);
-                console.log(`Attempting next fallback...`);
+                console.log("Attempting next fallback...");
             }
         }
 
@@ -449,22 +449,17 @@ export const getMatchingRateQuotesWithFullAttribution = async ({
 }): Promise<RateQuote_Firestore[]> => {
     const rateQuoteRef = db
         .collection(Collection.RateQuote)
-        .where("tournamentID", "==", tournamentID) as Query<RateQuote_Firestore>;
+        .where("tournamentID", "==", tournamentID)
+        .where("affiliateID", "==", affiliateID)
+        .where("activationID", "==", activationID)
+        .where("status", "==", status) as Query<RateQuote_Firestore>;
     const rateQuoteCollectionItems = await rateQuoteRef.get();
     if (rateQuoteCollectionItems.empty) {
         return [];
     }
-    const matchingRateQuotes = rateQuoteCollectionItems.docs
-        .map((doc) => {
-            return doc.data();
-        })
-        .filter((rq) => {
-            return (
-                rq.affiliateID === affiliateID &&
-                rq.activationID === activationID &&
-                rq.status === RateQuoteStatus.Active
-            );
-        });
+    const matchingRateQuotes = rateQuoteCollectionItems.docs.map((doc) => {
+        return doc.data();
+    });
     return matchingRateQuotes;
 };
 
@@ -487,7 +482,7 @@ export const createMemoBill = async (payload: CreateMemoBillArgs): Promise<Memo_
     const memoObj: Memo_Firestore = {
         ...payload,
         id: memoRef.id as MemoID,
-        timestamp: new Date().getTime() / 1000,
+        timestamp: Timestamp.now().toMillis(),
     };
     await memoRef.set(memoObj);
     return memoObj;

@@ -1457,10 +1457,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.2.0-afn-alpha19":
-  version "0.2.0-afn-alpha19"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha19.tgz#25baf48a92a135d4e224de82c158d31fd7769c2c"
-  integrity sha512-f4opR7AMKdVpuY0CKMVJn4MrlNTKUciccMyW62gjQcPqnHEuOQ+ghhfu1+9QNK5sasei/5B7CRYHE1KS2NdMJA==
+"@wormgraph/helpers@0.2.0-afn-alpha26":
+  version "0.2.0-afn-alpha26"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha26.tgz#c97a42d2f2d86e91079637c6f918a7ba4d60385c"
+  integrity sha512-aFtNyEZYYkcARf7RQvjAqkF8v4D85C/gHNS6AWPptQn6OaBhV/PCPcX55VlphUXkxUQ+skVy3HxxMUZFSn9n7w==
   dependencies:
     "@wormgraph/helpers" "0.1.14-afn-alpha4"
     "@wormgraph/manifest" "0.4.0-afm-alpha1"
@@ -1474,10 +1474,10 @@
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
-"@wormgraph/manifest@0.4.0-afm-alpha3":
-  version "0.4.0-afm-alpha3"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha3.tgz#d623971841f4087bba9dfe24f48f9434c3644e90"
-  integrity sha512-UoSunfOpotXAEc/jPLqyXv/oB4eikbd0JjczRtq/A9FUNEDT3DfqTnCbIcRmQBWnUyE6EwwHq5HTAxeh+FSuaw==
+"@wormgraph/manifest@0.4.0-afm-alpha6":
+  version "0.4.0-afm-alpha6"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha6.tgz#ff2fac0d4afeb3eeb46cce29e42f65c48582453e"
+  integrity sha512-8inHe1lVd2Gf/GkynNj9NUCWqxXwId/S87HpJeClmXNeg96BRpzyH8iXQ1ZKtwu2gxGLm6+VP6Zz6VfTQdp2hg==
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
@@ -2778,10 +2778,10 @@ firebase-functions-test@^0.2.0:
     "@types/lodash" "^4.14.104"
     lodash "^4.17.5"
 
-firebase-functions@^3.18.0:
-  version "3.22.0"
-  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-3.22.0.tgz#d1b6c190551e29705d91819d8369a752ba5e061a"
-  integrity sha512-d1BxBpT95MhvVqXkpLWDvWbyuX7e2l69cFAiqG3U1XQDaMV88bM9S+Zg7H8i9pitEGFr+76ErjKgrY0n+g3ZDA==
+firebase-functions@^3.23.0:
+  version "3.23.0"
+  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-3.23.0.tgz#ac8da127ff3e97c354f3cd740a71534572d1f4ca"
+  integrity sha512-/jujnNChTWIuoXK3IPNGYu1zjXF1fYRy88uYbkrJhs3dhK6EdXZi0rX6JUEOCB7h6IkRQvbio+bvtaoI7h+4Lg==
   dependencies:
     "@types/cors" "^2.8.5"
     "@types/express" "4.17.3"

@@ -13,23 +13,21 @@ export const getActivationsByMmpAliasAndOfferID = async (
 ): Promise<Activation_Firestore[]> => {
   const activationRef = db
     .collection(Collection.Activation)
-    .where("offerID", "==", offerID) as Query<Activation_Firestore>;
+    .where("offerID", "==", offerID)
+    .where(
+      "status",
+      "==",
+      ActivationStatus.Active
+    ) as Query<Activation_Firestore>;
 
   const activationCollectionItems = await activationRef.get();
 
   if (activationCollectionItems.empty) {
     return [];
   }
-  const matchingActivations = activationCollectionItems.docs
-    .map((doc) => {
-      const data = doc.data();
-      return data;
-    })
-    .filter((act) => {
-      return (
-        act.mmpAlias.toLowerCase() === mmpAlias.toLowerCase() &&
-        act.status === ActivationStatus.Active
-      );
-    });
+  const matchingActivations = activationCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return data;
+  });
   return matchingActivations;
 };

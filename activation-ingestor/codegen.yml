@@ -1,8 +1,7 @@
 overwrite: true
-schema: ["./src/graphql/schema/**/typedefs.ts"]
-documents: []
+schema: 'http://localhost:8080/graphql'
 generates:
-  src/graphql/generated/types.ts:
+  src/lib/api/graphql/generated/types.ts:
     plugins:
-      - "typescript"
-      - "typescript-resolvers"
+      - 'typescript'
+      - 'typescript-resolvers'
