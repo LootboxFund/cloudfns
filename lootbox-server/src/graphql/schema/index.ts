@@ -8,11 +8,13 @@ import LootboxTypeDefs from "./lootbox/typedefs";
 import UserTypeDefs from "./user/typedefs";
 import TournamentTypeDefs from "./tournament/typedefs";
 import AdvertiserTypeDefs from "./advertiser/typedefs";
+import AnalyticsTypeDefs from "./analytics/typedefs";
 import AffiliateTypeDefs from "./affiliate/typedefs";
 import OfferTypeDefs from "./offer/typedefs";
 import ReferralTypeDefs from "./referral/typedefs";
 import LootboxResolvers from "./lootbox/resolvers";
 import UserResolvers from "./user/resolvers";
+import AnalyticsResolvers from "./analytics/resolvers";
 import TournamentResolvers from "./tournament/resolvers";
 import AdvertiserResolvers from "./advertiser/resolvers";
 import AffiliateResolvers from "./affiliate/resolvers";
@@ -37,7 +39,7 @@ const typeDefs = [
   PartyBasketTypeDefs,
   ReferralTypeDefs,
   AdTypeDefs,
-  // CreativeTypeDefs,
+  AnalyticsTypeDefs,
 ];
 
 const resolvers = {
@@ -51,7 +53,7 @@ const resolvers = {
   ...PartyBasketResolvers,
   ...ReferralResolvers,
   ...AdResolvers,
-  // ...CreativeResolvers,
+  ...AnalyticsResolvers,
   Query: {
     ...ScalarResolvers.Query,
     ...LootboxResolvers.Query,
@@ -63,7 +65,7 @@ const resolvers = {
     ...PartyBasketResolvers.Query,
     ...ReferralResolvers.Query,
     ...AdResolvers.Query,
-    // ...CreativeResolvers.Query,
+    ...AnalyticsResolvers.Query,
   },
   Mutation: {
     ...ScalarResolvers.Mutation,
@@ -76,7 +78,6 @@ const resolvers = {
     ...PartyBasketResolvers.Mutation,
     ...ReferralResolvers.Mutation,
     ...AdResolvers.Mutation,
-    // ...CreativeResolvers.Mutation,
   },
 };
 

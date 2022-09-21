@@ -31,3 +31,10 @@ export const getActivationsByMmpAliasAndOfferID = async (
   });
   return matchingActivations;
 };
+
+export const getOfferByID = async (offerID: OfferID) => {
+  const offerRef = db.collection(Collection.Offer).doc(offerID);
+  const offerDoc = await offerRef.get();
+  const offer = offerDoc.data();
+  return offer;
+};

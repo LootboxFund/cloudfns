@@ -32,6 +32,7 @@ const AdTypeDefs = gql`
     Click
     TimerElapsed
     VideoTimestamp
+    Activation
   }
 
   type AdTimestamps {

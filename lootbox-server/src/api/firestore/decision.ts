@@ -177,6 +177,7 @@ export const createFlight = async (
     offerID: payload.offerID,
     placement: payload.placement,
     campaignID: payload.campaignID,
+    advertiserID: offer.advertiserID,
     tournamentID: payload.tournamentID,
     sessionID: payload.sessionId,
     claimID: payload.claimID,
@@ -265,8 +266,7 @@ export const getMatchingAdSetsForPlacement = async ({
 }) => {
   const adSetsRef = db
     .collection(Collection.AdSet)
-    .where("id", "in", adSetIDs)
-    .orderBy("timestamps.createdAt", "desc") as Query<AdSet_Firestore>;
+    .where("id", "in", adSetIDs) as Query<AdSet_Firestore>;
 
   const adSetsCollectionItems = await adSetsRef.get();
 
@@ -341,8 +341,7 @@ export const decideAdFromAdSetForUser = async ({
 }> => {
   const adRef = db
     .collection(Collection.Ad)
-    .where("id", "in", adIDs)
-    .orderBy("timestamps.createdAt", "desc") as Query<Ad_Firestore>;
+    .where("id", "in", adIDs) as Query<Ad_Firestore>;
   const advertiserRef = db
     .collection(Collection.Advertiser)
     .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;

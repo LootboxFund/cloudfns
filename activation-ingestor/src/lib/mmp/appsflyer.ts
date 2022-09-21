@@ -10,8 +10,11 @@ import {
   OfferID,
 } from "@wormgraph/helpers";
 import { db } from "../../api/firebase";
-import { DocumentReference } from "firebase-admin/firestore";
-import { getActivationsByMmpAliasAndOfferID } from "../../api/firestore/activation";
+import { DocumentReference, Timestamp } from "firebase-admin/firestore";
+import {
+  getActivationsByMmpAliasAndOfferID,
+  getOfferByID,
+} from "../../api/firestore/activation";
 
 import { notifyPubSubOfBillableActivation } from "../../api/pubsub/notify";
 import { TournamentID } from "@wormgraph/helpers";
@@ -94,13 +97,15 @@ export const trackAppsFlyerActivation = async (
         const adEventSchema: AdEvent_Firestore = {
           id: adEventRef.id as AdEventID,
           timestamp: Timestamp.now().toMillis(),
-          adId: flight.adID,
-          adSetId: flight.adSetID,
-          sessionId: flight.sessionID,
-          campaignId: flight.campaignID,
-          flightId: flight.id,
+          adID: flight.adID,
+          adSetID: flight.adSetID,
+          sessionID: flight.sessionID,
+          campaignID: flight.campaignID,
+          flightID: flight.id,
           action: AdEventAction.Activation,
-          claimId: flight.claimID,
+          advertiserID: flight.advertiserID,
+          claimID: flight.claimID,
+          offerID: flight.offerID,
           activationEventMmpAlias: mmpAlias,
           activationID: matchingActivations[0].id,
           metadata: {
@@ -135,7 +140,9 @@ export const trackAppsFlyerActivation = async (
       action: AdEventAction.Activation,
       activationEventMmpAlias: mmpAlias,
       activationID: matchingActivations[0].id,
+      offerID: offerID,
       extraData: extraData,
+      advertiserID: matchingActivations[0].advertiserID,
     };
     await adEventRef.set(adEventSchema);
     await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);
@@ -147,6 +154,16 @@ export const trackAppsFlyerActivation = async (
     action: AdEventAction.Activation,
     extraData: extraData,
   };
+  if (offerID) {
+    const offer = await getOfferByID(offerID);
+    adEventSchema.offerID = offerID;
+    if (offer) {
+      adEventSchema.advertiserID = offer.advertiserID;
+    }
+  }
+  if (mmpAlias) {
+    adEventSchema.activationEventMmpAlias = mmpAlias;
+  }
   await adEventRef.set(adEventSchema);
   await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);
   return adEventSchema;

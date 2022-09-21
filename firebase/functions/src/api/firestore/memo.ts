@@ -18,6 +18,7 @@ import {
     MeasurementPartnerType,
     MemoID,
     Tournament_Firestore,
+    UserID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -40,9 +41,9 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
 
         // if there is a flightID, we will be able to get the promoter
         // all 3 parties will get a memo (promoter, organizer, lootbox)
-        if (adEvent.flightId) {
+        if (adEvent.flightID) {
             try {
-                const memos = await handleWithFlightId(adEvent.flightId, activation, adEvent.id);
+                const memos = await handleWithFlightId(adEvent.flightID, activation, adEvent.id);
                 return memos;
             } catch (e) {
                 console.log(e);
@@ -63,6 +64,7 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
                         tournamentID: adEvent.affiliateAttribution.tournamentID,
                         promoterID: adEvent.affiliateAttribution.promoterID,
                         activation: activation,
+                        userID: adEvent.affiliateAttribution.userID,
                     },
                     adEvent.id
                 );
@@ -81,6 +83,7 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
                     {
                         tournamentID: adEvent.affiliateAttribution.tournamentID,
                         activation: activation,
+                        userID: adEvent.affiliateAttribution.userID,
                     },
                     adEvent.id
                 );
@@ -94,7 +97,11 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
         // but if there is only activationID
         // only lootbox will get a memo
         if (adEvent.activationID) {
-            const memos = await handleWithOnlyActivationId(activation, adEvent.id);
+            const memos = await handleWithOnlyActivationId(
+                activation,
+                adEvent.id,
+                adEvent.affiliateAttribution?.userID
+            );
             return memos;
         }
     }
@@ -166,6 +173,7 @@ export const handleWithFlightId = async (
         activationID: activation.id,
         mmpAlias: activation.mmpAlias,
         mmp: offer.mmp,
+        userID: flight.userID,
         flightID: flight.id,
         tournamentID: flight.tournamentID,
         note: `${activation.name} in Offer "${offer.title}" in TournamentID=${flight.tournamentID}`,
@@ -212,10 +220,12 @@ export const handleWithTournamentAffiliateActivation = async (
         tournamentID,
         promoterID,
         activation,
+        userID,
     }: {
         tournamentID: TournamentID;
         promoterID: AffiliateID;
         activation: Activation_Firestore;
+        userID?: UserID;
     },
     adEventID: AdEventID
 ): Promise<Memo_Firestore[]> => {
@@ -279,6 +289,7 @@ export const handleWithTournamentAffiliateActivation = async (
         advertiserID: offer.advertiserID,
         adEventID: adEventID,
         activationID: activation.id,
+        userID: userID,
         mmpAlias: activation.mmpAlias,
         mmp: offer.mmp,
         tournamentID: tournamentID,
@@ -325,9 +336,11 @@ export const handleWithTournamentActivation = async (
     {
         tournamentID,
         activation,
+        userID,
     }: {
         tournamentID: TournamentID;
         activation: Activation_Firestore;
+        userID?: UserID;
     },
     adEventID: AdEventID
 ): Promise<Memo_Firestore[]> => {
@@ -374,6 +387,7 @@ export const handleWithTournamentActivation = async (
         advertiserID: offer.advertiserID,
         adEventID: adEventID,
         activationID: activation.id,
+        userID: userID,
         mmpAlias: activation.mmpAlias,
         mmp: offer.mmp,
         tournamentID: tournamentID,
@@ -407,7 +421,8 @@ export const handleWithTournamentActivation = async (
 };
 export const handleWithOnlyActivationId = async (
     activation: Activation_Firestore,
-    adEventID: AdEventID
+    adEventID: AdEventID,
+    userID?: UserID
 ): Promise<Memo_Firestore[]> => {
     // get the offer
     const offerRef = db.collection(Collection.Offer).doc(activation.offerID) as DocumentReference<Offer_Firestore>;
@@ -425,6 +440,7 @@ export const handleWithOnlyActivationId = async (
         advertiserID: offer.advertiserID,
         adEventID: adEventID,
         activationID: activation.id,
+        userID: userID,
         mmpAlias: activation.mmpAlias,
         mmp: offer.mmp,
         note: `${activation.name} in Offer "${offer.title}" in no known tournament`,
@@ -470,6 +486,7 @@ interface CreateMemoBillArgs {
     advertiserID: AdvertiserID;
     adEventID: AdEventID;
     activationID: ActivationID;
+    userID?: UserID;
     mmpAlias: MMPActivationAlias;
     mmp: MeasurementPartnerType;
     flightID?: FlightID;
