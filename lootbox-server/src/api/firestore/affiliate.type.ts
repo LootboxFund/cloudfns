@@ -24,10 +24,17 @@ export enum OfferInTournamentStatus {
   Inactive = "Inactive",
 }
 
+enum OrganizerOfferWhitelistStatus {
+  Active = "Active",
+  Inactive = "Inactive",
+  Planned = "Planned",
+  Archived = "Archived",
+}
 export interface OrganizerOfferWhitelist_Firestore {
   id: OrganizerOfferWhitelistID;
   organizerID: AffiliateID;
   offerID: OfferID;
   advertiserID: AdvertiserID;
   timestamp: number;
+  status: OrganizerOfferWhitelistStatus;
 }

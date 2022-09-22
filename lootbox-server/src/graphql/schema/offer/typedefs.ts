@@ -28,6 +28,29 @@ const OfferTypeDefs = gql`
     #targetingTags: [AdTargetTag!]!
   }
 
+  type OfferAffiliateView {
+    id: ID!
+    title: String!
+    description: String
+    image: String
+    advertiserID: ID!
+    spentBudget: Float
+    maxBudget: Float
+    startDate: Timestamp
+    endDate: Timestamp
+    status: OfferStatus!
+    adSetPreviews: [AdSetPreview!]!
+    # activationsForAffiliate: [RateQuote!]!
+    #targetingTags: [AdTargetTag!]!
+  }
+
+  type RateQuote {
+    id: ID!
+    activationID: ID!
+    activationName: String!
+    rate: Float!
+  }
+
   type OfferPreview {
     id: ID!
     title: String!
@@ -126,15 +149,23 @@ const OfferTypeDefs = gql`
       ViewCreatedOfferResponseSuccess
     | ResponseError
 
+  # --------- List Offers Available to Organizer ---------
+  type ListOffersAvailableForOrganizerResponseSuccess {
+    offers: [OfferAffiliateView!]!
+  }
+  union ListOffersAvailableForOrganizerResponse =
+      ListOffersAvailableForOrganizerResponseSuccess
+    | ResponseError
+
   extend type Query {
     # view offers that an advertiser created
     listCreatedOffers(advertiserID: ID!): ListCreatedOffersResponse!
     # view an offer with its adsets, as an advertiser
     viewCreatedOffer(offerID: ID!): ViewCreatedOfferResponse!
     # view offers that an organizer affiliate has access to
-    #listOffersAvailableForOrganizer(
-    #  affiliateID: ID!
-    #): ListOffersAvailableForOrganizerResponse!
+    listOffersAvailableForOrganizer(
+      affiliateID: ID!
+    ): ListOffersAvailableForOrganizerResponse!
     # view an offer with its details, adsets, as an affiliate
     # viewOfferDetailsForEventAffiliate(
     #   offerID: ID!
