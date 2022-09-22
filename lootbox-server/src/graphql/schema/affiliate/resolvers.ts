@@ -6,9 +6,13 @@ import {
   MutationUpgradeToAffiliateArgs,
   // MutationWhitelistAffiliateToOfferArgs,
   QueryAffiliatePublicViewArgs,
+  QueryViewMyTournamentsAsOrganizerArgs,
+  QueryViewTournamentAsOrganizerArgs,
   Resolvers,
   StatusCode,
+  Tournament,
   UpgradeToAffiliateResponse,
+  ViewTournamentAsOrganizerResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -20,6 +24,8 @@ import {
   affiliatePublicView,
   removeWhitelistAffiliateToOffer,
   upgradeToAffiliate,
+  viewMyTournamentsAsOrganizer,
+  viewTournamentAsOrganizer,
   whitelistAffiliateToOffer,
 } from "../../../api/firestore/affiliate";
 import {
@@ -27,9 +33,14 @@ import {
   AffiliatePublicViewResponse,
   QueryAffiliateAdminViewArgs,
 } from "../../generated/types";
-import { OrganizerOfferWhitelistID, UserIdpID } from "@wormgraph/helpers";
+import {
+  OrganizerOfferWhitelistID,
+  TournamentID,
+  UserIdpID,
+} from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAffiliate } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import { ViewMyTournamentsAsOrganizerResponse } from "../../generated/types";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
@@ -91,6 +102,70 @@ const AffiliateResolvers: Resolvers = {
         }
         return {
           affiliate,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    viewMyTournamentsAsOrganizer: async (
+      _,
+      { affiliateID }: QueryViewMyTournamentsAsOrganizerArgs,
+      context: Context
+    ): Promise<ViewMyTournamentsAsOrganizerResponse> => {
+      try {
+        const tournaments = await viewMyTournamentsAsOrganizer(
+          affiliateID as AffiliateID
+        );
+        if (!tournaments) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No tournaments found for affiliate ID ${affiliateID}`,
+            },
+          };
+        }
+        return {
+          // this needs to be figured out how to cooperate types nicely
+          tournaments: tournaments as Tournament[],
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    viewTournamentAsOrganizer: async (
+      _,
+      { payload }: QueryViewTournamentAsOrganizerArgs,
+      context: Context
+    ): Promise<ViewTournamentAsOrganizerResponse> => {
+      const { affiliateID, tournamentID } = payload;
+      try {
+        const tournament = await viewTournamentAsOrganizer(
+          affiliateID as AffiliateID,
+          tournamentID as TournamentID
+        );
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No tournament ID ${tournamentID} found for affiliate ID ${affiliateID}`,
+            },
+          };
+        }
+        return {
+          // this needs to be figured out how to cooperate types nicely
+          tournament: tournament as Tournament,
         };
       } catch (err) {
         console.error(err);
@@ -251,11 +326,36 @@ const AffiliateResolvers: Resolvers = {
       return null;
     },
   },
+  ViewMyTournamentsAsOrganizerResponse: {
+    __resolveType: (obj: ViewMyTournamentsAsOrganizerResponse) => {
+      if ("tournaments" in obj) {
+        return "ViewMyTournamentsAsOrganizerResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ViewTournamentAsOrganizerResponse: {
+    __resolveType: (obj: ViewTournamentAsOrganizerResponse) => {
+      if ("tournament" in obj) {
+        return "ViewTournamentAsOrganizerResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const AffiliateComposition = {
   "Query.affiliateAdminView": [isAuthenticated()],
   "Query.affiliatePublicView": [isAuthenticated()],
+  // "Query.viewMyTournamentsAsOrganizer": [isAuthenticated()],
   "Mutation.upgradeToAffiliate": [isAuthenticated()],
 };
 

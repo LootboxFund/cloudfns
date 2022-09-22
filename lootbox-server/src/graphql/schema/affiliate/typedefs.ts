@@ -36,11 +36,39 @@ const AffiliateTypeDefs = gql`
       AffiliatePublicViewResponseSuccess
     | ResponseError
 
+  # ------ Affiliate View Tournaments ------
+  type ViewMyTournamentsAsOrganizerResponseSuccess {
+    tournaments: [Tournament!]!
+  }
+  union ViewMyTournamentsAsOrganizerResponse =
+      ViewMyTournamentsAsOrganizerResponseSuccess
+    | ResponseError
+
+  # ------ View Tournament as Organizer ------
+  input ViewTournamentAsOrganizerInput {
+    tournamentID: ID!
+    affiliateID: ID!
+  }
+  type ViewTournamentAsOrganizerResponseSuccess {
+    tournament: Tournament!
+  }
+  union ViewTournamentAsOrganizerResponse =
+      ViewTournamentAsOrganizerResponseSuccess
+    | ResponseError
+
   extend type Query {
     # For an affiliate to see their own private profile
     affiliateAdminView(affiliateID: ID!): AffiliateAdminViewResponse!
     # For another affiliate to view the public profile of another affiliate
     affiliatePublicView(affiliateID: ID!): AffiliatePublicViewResponse!
+    #
+    viewMyTournamentsAsOrganizer(
+      affiliateID: ID!
+    ): ViewMyTournamentsAsOrganizerResponse!
+    #
+    viewTournamentAsOrganizer(
+      payload: ViewTournamentAsOrganizerInput!
+    ): ViewTournamentAsOrganizerResponse!
     # For an affiliate to list the other affiliates they are working with
     # listAffiliatePartners(advertiserID: ID!): ListAffiliatePartnersResponse!
     # For an advertiser to see the relationship stats between them and another affiliate

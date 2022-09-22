@@ -710,3 +710,36 @@ export const deactivateRateQuote = async (
   await rateQuoteRef.update(updatePayload);
   return (await rateQuoteRef.get()).data() as RateQuote_Firestore;
 };
+
+export const viewMyTournamentsAsOrganizer = async (
+  organizerID: AffiliateID
+): Promise<Tournament_Firestore[]> => {
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .where("organizer", "==", organizerID) as Query<Tournament_Firestore>;
+
+  const tournamentCollectionItems = await tournamentRef.get();
+
+  if (tournamentCollectionItems.empty) {
+    return [];
+  }
+  const tournaments = tournamentCollectionItems.docs.map((doc) => doc.data());
+  return tournaments;
+};
+
+export const viewTournamentAsOrganizer = async (
+  affiliateID: AffiliateID,
+  tournamentID: TournamentID
+): Promise<Tournament_Firestore | undefined> => {
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID) as DocumentReference<Tournament_Firestore>;
+
+  const tournamentSnapshot = await tournamentRef.get();
+
+  if (!tournamentSnapshot.exists) {
+    return undefined;
+  }
+  const tournament = tournamentSnapshot.data();
+  return tournament;
+};
