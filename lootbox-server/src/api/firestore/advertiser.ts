@@ -402,13 +402,13 @@ const updateAdvertiserListOfAssociatedAffiliates = async ({
     .filter((o) => o) as AffiliateID[];
 
   const allExistingKnownAffiliates = relatedAffiliates || [];
-  const updatedUniqueSetOfKnownTournaments = _.union(
+  const updatedUniqueSetOfKnownAffiliates = _.union(
     allExistingKnownAffiliates,
     thisConquestsListOfOrganizerIDs
   );
 
   const updatePayload: Partial<Advertiser_Firestore> = {};
-  updatePayload.affiliatePartners = updatedUniqueSetOfKnownTournaments;
+  updatePayload.affiliatePartners = updatedUniqueSetOfKnownAffiliates;
   await advertiserRef.update(updatePayload);
   return;
 };

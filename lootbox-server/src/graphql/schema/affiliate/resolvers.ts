@@ -2,24 +2,36 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { AffiliateID, UserID } from "../../../lib/types";
 import {
   Affiliate,
+  ListWhitelistedAffiliatesToOfferResponse,
+  MutationEditWhitelistAffiliateToOfferArgs,
+
   // MutationRemoveWhitelistAffiliateToOfferArgs,
   MutationUpgradeToAffiliateArgs,
+  MutationWhitelistAffiliateToOfferArgs,
   // MutationWhitelistAffiliateToOfferArgs,
   QueryAffiliatePublicViewArgs,
+  QueryListWhitelistedAffiliatesToOfferArgs,
+  QueryViewMyTournamentsAsOrganizerArgs,
+  QueryViewTournamentAsOrganizerArgs,
   Resolvers,
   StatusCode,
+  Tournament,
   UpgradeToAffiliateResponse,
+  ViewTournamentAsOrganizerResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
   WhitelistAffiliateToOfferResponse,
-  RemoveWhitelistAffiliateToOfferResponse,
+  EditWhitelistAffiliateToOfferResponse,
 } from "../../generated/types";
 import {
   affiliateAdminView,
   affiliatePublicView,
-  removeWhitelistAffiliateToOffer,
+  editWhitelistAffiliateToOffer,
   upgradeToAffiliate,
+  viewMyTournamentsAsOrganizer,
+  viewTournamentAsOrganizer,
+  viewWhitelistedAffiliatesToOffer,
   whitelistAffiliateToOffer,
 } from "../../../api/firestore/affiliate";
 import {
@@ -27,9 +39,15 @@ import {
   AffiliatePublicViewResponse,
   QueryAffiliateAdminViewArgs,
 } from "../../generated/types";
-import { OrganizerOfferWhitelistID, UserIdpID } from "@wormgraph/helpers";
+import {
+  OfferID,
+  OrganizerOfferWhitelistID,
+  TournamentID,
+  UserIdpID,
+} from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAffiliate } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import { ViewMyTournamentsAsOrganizerResponse } from "../../generated/types";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
@@ -102,6 +120,91 @@ const AffiliateResolvers: Resolvers = {
         };
       }
     },
+    viewMyTournamentsAsOrganizer: async (
+      _,
+      { affiliateID }: QueryViewMyTournamentsAsOrganizerArgs,
+      context: Context
+    ): Promise<ViewMyTournamentsAsOrganizerResponse> => {
+      try {
+        const tournaments = await viewMyTournamentsAsOrganizer(
+          affiliateID as AffiliateID
+        );
+        if (!tournaments) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No tournaments found for affiliate ID ${affiliateID}`,
+            },
+          };
+        }
+        return {
+          // this needs to be figured out how to cooperate types nicely
+          tournaments: tournaments as Tournament[],
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    viewTournamentAsOrganizer: async (
+      _,
+      { payload }: QueryViewTournamentAsOrganizerArgs,
+      context: Context
+    ): Promise<ViewTournamentAsOrganizerResponse> => {
+      const { affiliateID, tournamentID } = payload;
+      try {
+        const tournament = await viewTournamentAsOrganizer(
+          affiliateID as AffiliateID,
+          tournamentID as TournamentID
+        );
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No tournament ID ${tournamentID} found for affiliate ID ${affiliateID}`,
+            },
+          };
+        }
+        return {
+          // this needs to be figured out how to cooperate types nicely
+          tournament: tournament as Tournament,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    listWhitelistedAffiliatesToOffer: async (
+      _,
+      { payload }: QueryListWhitelistedAffiliatesToOfferArgs,
+      context: Context
+    ): Promise<ListWhitelistedAffiliatesToOfferResponse> => {
+      try {
+        const whitelists = await viewWhitelistedAffiliatesToOffer(
+          payload.offerID as OfferID
+        );
+        return {
+          whitelists,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
   Mutation: {
     upgradeToAffiliate: async (
@@ -133,62 +236,60 @@ const AffiliateResolvers: Resolvers = {
         };
       }
     },
-    // whitelistAffiliateToOffer: async (
-    //   _,
-    //   { payload }: MutationWhitelistAffiliateToOfferArgs,
-    //   context: Context
-    // ): Promise<WhitelistAffiliateToOfferResponse> => {
-    //   if (!context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `Unauthorized`,
-    //       },
-    //     };
-    //   }
-    //   try {
-    //     const whitelist = await whitelistAffiliateToOffer(payload);
-    //     return {
-    //       whitelist,
-    //     };
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
-    // removeWhitelistAffiliateToOffer: async (
-    //   _,
-    //   { id }: MutationRemoveWhitelistAffiliateToOfferArgs,
-    //   context: Context
-    // ): Promise<RemoveWhitelistAffiliateToOfferResponse> => {
-    //   if (!context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `Unauthorized`,
-    //       },
-    //     };
-    //   }
-    //   try {
-    //     const idOfDeletedWhitelist = await removeWhitelistAffiliateToOffer(
-    //       id as OrganizerOfferWhitelistID
-    //     );
-    //     return {
-    //       message: `Successfully removed whitelist-affiliate-offer=${idOfDeletedWhitelist}`,
-    //     };
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
+    whitelistAffiliateToOffer: async (
+      _,
+      { payload }: MutationWhitelistAffiliateToOfferArgs,
+      context: Context
+    ): Promise<WhitelistAffiliateToOfferResponse> => {
+      try {
+        const whitelist = await whitelistAffiliateToOffer(payload);
+        return {
+          whitelist,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    editWhitelistAffiliateToOffer: async (
+      _,
+      { payload }: MutationEditWhitelistAffiliateToOfferArgs,
+      context: Context
+    ): Promise<EditWhitelistAffiliateToOfferResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      try {
+        const whitelist = await editWhitelistAffiliateToOffer(payload);
+        if (!whitelist) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No whitelist found with ID ${payload.id}`,
+            },
+          };
+        }
+        return {
+          whitelist,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   UpgradeToAffiliateResponse: {
@@ -239,10 +340,46 @@ const AffiliateResolvers: Resolvers = {
       return null;
     },
   },
-  RemoveWhitelistAffiliateToOfferResponse: {
-    __resolveType: (obj: RemoveWhitelistAffiliateToOfferResponse) => {
-      if ("message" in obj) {
-        return "RemoveWhitelistAffiliateToOfferResponseSuccess";
+  EditWhitelistAffiliateToOfferResponse: {
+    __resolveType: (obj: EditWhitelistAffiliateToOfferResponse) => {
+      if ("whitelist" in obj) {
+        return "EditWhitelistAffiliateToOfferResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ViewMyTournamentsAsOrganizerResponse: {
+    __resolveType: (obj: ViewMyTournamentsAsOrganizerResponse) => {
+      if ("tournaments" in obj) {
+        return "ViewMyTournamentsAsOrganizerResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ViewTournamentAsOrganizerResponse: {
+    __resolveType: (obj: ViewTournamentAsOrganizerResponse) => {
+      if ("tournament" in obj) {
+        return "ViewTournamentAsOrganizerResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ListWhitelistedAffiliatesToOfferResponse: {
+    __resolveType: (obj: ListWhitelistedAffiliatesToOfferResponse) => {
+      if ("whitelists" in obj) {
+        return "ListWhitelistedAffiliatesToOfferResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
@@ -256,7 +393,10 @@ const AffiliateResolvers: Resolvers = {
 const AffiliateComposition = {
   "Query.affiliateAdminView": [isAuthenticated()],
   "Query.affiliatePublicView": [isAuthenticated()],
+  "Query.viewMyTournamentsAsOrganizer": [isAuthenticated()],
+  "Query.listWhitelistedAffiliatesToOffer": [isAuthenticated()],
   "Mutation.upgradeToAffiliate": [isAuthenticated()],
+  "Mutation.whitelistAffiliateToOffer": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AffiliateResolvers, AffiliateComposition);
