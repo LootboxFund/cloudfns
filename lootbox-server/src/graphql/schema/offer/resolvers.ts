@@ -1,6 +1,7 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import {
   ActivationID,
+  AffiliateID,
   ConquestID,
   OfferID,
   UserIdpID,
@@ -45,6 +46,10 @@ import {
   QueryViewCreatedOfferArgs,
   Activation,
   MutationCreateActivationArgs,
+  ListOffersAvailableForOrganizerResponse,
+  QueryListOffersAvailableForOrganizerArgs,
+  OfferAffiliateView,
+  RateQuote,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
@@ -60,9 +65,10 @@ import {
   getAdSetPreviewsForOffer,
   listActivationsForOffer,
   listCreatedOffers,
+  listOffersAvailableForOrganizer,
   viewCreatedOffer,
 } from "../../../api/firestore/offer";
-import { CreateActivationResponse } from "../../generated/types";
+import { CreateActivationResponse, Affiliate } from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 
@@ -131,6 +137,36 @@ const OfferResolvers: Resolvers = {
         }
         return {
           offer,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    listOffersAvailableForOrganizer: async (
+      _,
+      args: QueryListOffersAvailableForOrganizerArgs,
+      context: Context
+    ): Promise<ListOffersAvailableForOrganizerResponse> => {
+      try {
+        const offers = await listOffersAvailableForOrganizer(
+          args.affiliateID as AffiliateID
+        );
+        if (!offers) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No offers found for Affiliate ID ${args.affiliateID}`,
+            },
+          };
+        }
+        return {
+          offers,
         };
       } catch (err) {
         console.error(err);
@@ -283,6 +319,22 @@ const OfferResolvers: Resolvers = {
       return getAdSetPreviewsForOffer(offer.id as OfferID);
     },
   },
+  OfferAffiliateView: {
+    adSetPreviews: async (
+      offer: OfferAffiliateView
+    ): Promise<AdSetPreview[]> => {
+      return getAdSetPreviewsForOffer(offer.id as OfferID);
+    },
+    // activationsForAffiliate: async (
+    //   offer: OfferAffiliateView,
+    //   args
+    // ): Promise<RateQuote[]> => {
+    //   return getRateQuoteForOfferAndAffiliate(
+    //     offer.id as OfferID,
+    //     affiliateID as AffiliateID
+    //   );
+    // },
+  },
 
   CreateOfferResponse: {
     __resolveType: (obj: CreateOfferResponse) => {
@@ -353,6 +405,19 @@ const OfferResolvers: Resolvers = {
     __resolveType: (obj: ViewCreatedOfferResponse) => {
       if ("offer" in obj) {
         return "ViewCreatedOfferResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ListOffersAvailableForOrganizerResponse: {
+    __resolveType: (obj: ListOffersAvailableForOrganizerResponse) => {
+      if ("offers" in obj) {
+        return "ListOffersAvailableForOrganizerResponseSuccess";
       }
 
       if ("error" in obj) {

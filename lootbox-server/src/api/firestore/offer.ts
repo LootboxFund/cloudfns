@@ -24,16 +24,22 @@ import {
   CreateOfferResponse,
   EditActivationInput,
   EditOfferPayload,
-  Offer,
+  OfferAffiliateView,
   User,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
-import { CreateActivationInput } from "../../graphql/generated/types";
+import {
+  CreateActivationInput,
+  Offer,
+  OrganizerOfferWhitelistStatus,
+} from "../../graphql/generated/types";
 import { CreateActivationPayload } from "../../graphql/generated/types";
 import { OfferPreview, OfferPreviewForOrganizer } from "./offer.type";
 import * as moment from "moment";
+import * as _ from "lodash";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { AdSet_Firestore } from "./ad.types";
+import { OrganizerOfferWhitelist_Firestore } from "./affiliate.type";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -318,40 +324,93 @@ export const viewCreatedOffer = async (
   return { ...offer, activations: [], adSetPreviews: [] };
 };
 
-// //
-// export const listOffersAvailableForOrganizer = async (
-//   affiliateID: AffiliateID
-// ): Promise<OfferPreviewForOrganizer[] | undefined> => {
-//   const offersRef = db
-//     .collection(Collection.Offer)
-//     .where("status", "==", OfferStatus.ACTIVE)
-//     .orderBy("timestamps.createdAt", "desc") as Query<Offer_Firestore>;
+export const listOffersAvailableForOrganizer = async (
+  affiliateID: AffiliateID
+): Promise<OfferAffiliateView[]> => {
+  const whitelistsRef = db
+    .collection(Collection.WhitelistOfferAffiliate)
+    .where(
+      "organizerID",
+      "==",
+      affiliateID
+    ) as Query<OrganizerOfferWhitelist_Firestore>;
 
-//   const offersSnapshot = await offersRef.get();
+  const whitelistsSnapshot = await whitelistsRef.get();
 
-//   if (offersSnapshot.empty) {
-//     return [];
-//   }
-//   const offerPreviews = offersSnapshot.docs.map((doc) => {
-//     const data = doc.data();
-//     const preview: OfferPreviewForOrganizer = {
-//       id: doc.id as OfferID,
-//       title: data.title,
-//       description: data.description,
-//       image: data.image,
-//       advertiserID: data.advertiserID,
-//       spentBudget: data.spentBudget,
-//       maxBudget: data.maxBudget,
-//       currency: data.currency,
-//       startDate: data.startDate,
-//       endDate: data.endDate,
-//       status: data.status,
-//       targetingTags: data.targetingTags,
-//     };
-//     return preview;
-//   });
-//   return offerPreviews;
-// };
+  if (whitelistsSnapshot.empty) {
+    return [];
+  }
+  const whitelists = whitelistsSnapshot.docs
+    .map((doc) => {
+      const data = doc.data();
+      return data;
+    })
+    .filter((d) => d.status === OrganizerOfferWhitelistStatus.Active);
+  const uniqueWhitelists = _.uniqBy(whitelists, "offerID");
+  const offers = (
+    await Promise.all(
+      uniqueWhitelists.map((w) => {
+        const offerRef = db
+          .collection(Collection.Offer)
+          .doc(w.id) as DocumentReference<Offer_Firestore>;
+        return offerRef.get();
+      })
+    )
+  )
+    .map((snap) => {
+      if (!snap.exists) {
+        return undefined;
+      }
+      return snap.data();
+    })
+    .filter((x) => x)
+    .map((x) => {
+      return {
+        id: x.id,
+        title: x.title,
+        description: x.description,
+        image: x.image,
+        advertiserID: x.advertiserID,
+        spentBudget: x.spentBudget,
+        maxBudget: x.maxBudget,
+        startDate: x.startDate,
+        endDate: x.endDate,
+        status: x.status,
+      };
+    });
+  return offers;
+};
+
+export const listAllOffersOnMarket = async (): Promise<
+  OfferPreviewForOrganizer[] | undefined
+> => {
+  const offersRef = db
+    .collection(Collection.Offer)
+    .where("status", "==", OfferStatus.Active) as Query<Offer_Firestore>;
+
+  const offersSnapshot = await offersRef.get();
+
+  if (offersSnapshot.empty) {
+    return [];
+  }
+  const offerPreviews = offersSnapshot.docs.map((doc) => {
+    const data = doc.data();
+    const preview: Omit<OfferPreviewForOrganizer, "adSets"> = {
+      id: doc.id as OfferID,
+      title: data.title,
+      description: data.description,
+      image: data.image,
+      advertiserID: data.advertiserID,
+      spentBudget: data.spentBudget,
+      maxBudget: data.maxBudget,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      status: data.status,
+    };
+    return preview;
+  });
+  return offerPreviews as OfferPreviewForOrganizer[];
+};
 
 export const listActiveActivationsForOffer = async (
   offerID: OfferID

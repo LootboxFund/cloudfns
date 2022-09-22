@@ -852,3 +852,54 @@ export const viewWhitelistedAffiliatesToOffer = async (
     }) as OrganizerOfferWhitelistWithProfile[];
   return x;
 };
+
+export const getRateQuoteForOfferAndAffiliate = async (
+  offerID: OfferID,
+  affiliateID: AffiliateID
+): Promise<OrganizerOfferWhitelistWithProfile[]> => {
+  const organizerOfferWhitelistRef = db
+    .collection(Collection.WhitelistOfferAffiliate)
+    .where(
+      "offerID",
+      "==",
+      offerID
+    ) as Query<OrganizerOfferWhitelist_Firestore>;
+
+  const whitelistCollectionItems = await organizerOfferWhitelistRef.get();
+
+  if (whitelistCollectionItems.empty) {
+    return [];
+  }
+  const whitelisted = whitelistCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return data;
+  });
+  const affiliateInfos = (
+    await Promise.all(
+      whitelisted.map((w) => {
+        const affiliateRef = db
+          .collection(Collection.Affiliate)
+          .doc(w.organizerID) as DocumentReference<Affiliate_Firestore>;
+        return affiliateRef.get();
+      })
+    )
+  ).map((w) => w.data());
+  const x = affiliateInfos
+    .map((o, i) => {
+      console.log(o?.name);
+      console.log(whitelisted[i]);
+      return {
+        organizer: o,
+        whitelist: whitelisted[i],
+      };
+    })
+    .filter((x) => x.organizer !== undefined)
+    .filter((x) => {
+      return {
+        ...x.whitelist,
+        name: x.organizer?.name,
+        avatar: x.organizer?.avatar,
+      };
+    }) as OrganizerOfferWhitelistWithProfile[];
+  return x;
+};
