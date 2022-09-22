@@ -1,6 +1,14 @@
 import { gql } from "apollo-server";
 
 const OfferTypeDefs = gql`
+  type AdSetPreview {
+    id: ID!
+    name: String!
+    status: AdSetStatus!
+    placement: Placement!
+    thumbnail: String
+  }
+
   type Offer {
     id: ID!
     title: String!
@@ -15,7 +23,8 @@ const OfferTypeDefs = gql`
     affiliateBaseLink: String
     mmp: MeasurementPartnerType!
     adSets: [ID!]!
-    activations: [Activation!]
+    activations: [Activation!]!
+    adSetPreviews: [AdSetPreview!]!
     #targetingTags: [AdTargetTag!]!
   }
 

@@ -74,6 +74,22 @@ const AdvertiserTypeDefs = gql`
   }
   union GetConquestResponse = GetConquestResponseSuccess | ResponseError
 
+  # ------ listEventsOfAdvertiser ------
+  type ListEventsOfAdvertiserResponseSuccess {
+    tournaments: [TournamentPreview!]!
+  }
+  union ListEventsOfAdvertiserResponse =
+      ListEventsOfAdvertiserResponseSuccess
+    | ResponseError
+
+  # ------ listPartnersOfAdvertiser ------
+  type ListPartnersOfAdvertiserResponseSuccess {
+    partners: [Affiliate!]!
+  }
+  union ListPartnersOfAdvertiserResponse =
+      ListPartnersOfAdvertiserResponseSuccess
+    | ResponseError
+
   extend type Query {
     # For advertiser to see their own private profile
     advertiserAdminView: AdvertiserAdminViewResponse!
@@ -83,6 +99,12 @@ const AdvertiserTypeDefs = gql`
     listConquestPreviews(advertiserID: ID!): ListConquestPreviewsResponse!
     # For advertiser to see a specific campaign (conquest page)
     getConquest(advertiserID: ID!, conquestID: ID!): GetConquestResponse!
+    # For advertiser to see their events
+    listEventsOfAdvertiser(advertiserID: ID!): ListEventsOfAdvertiserResponse!
+    # For advertiser to see their partners
+    listPartnersOfAdvertiser(
+      advertiserID: ID!
+    ): ListPartnersOfAdvertiserResponse!
     # For an advertiser to get their spendings report of total offers (analytics page)
     #generateAdvertiserSpendingReport(advertiserID: ID!): GetAdvertiserEarningsReportResponse!
   }

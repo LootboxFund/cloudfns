@@ -45,6 +45,7 @@ export interface AdSet_Firestore {
   id: AdSetID;
   name: string;
   description?: string;
+  thumbnail?: string;
   advertiserID: AdvertiserID;
   status: AdSetStatus;
   placement: Placement;

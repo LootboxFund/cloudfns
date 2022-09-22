@@ -6,6 +6,8 @@ import {
   createConquest,
   getConquest,
   listConquestPreviews,
+  listPartnersOfAdvertiser,
+  listTournamentsOfAdvertiser,
   updateAdvertiserDetails,
   updateConquest,
   upgradeToAdvertiser,
@@ -26,6 +28,7 @@ import {
   QueryAdvertiserPublicViewArgs,
   QueryGetConquestArgs,
   QueryListConquestPreviewsArgs,
+  QueryListPartnersOfAdvertiserArgs,
   Resolvers,
   StatusCode,
   UpdateAdvertiserDetailsResponse,
@@ -36,6 +39,11 @@ import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import { ListPartnersOfAdvertiserResponse } from "../../generated/types";
+import {
+  QueryListEventsOfAdvertiserArgs,
+  ListEventsOfAdvertiserResponse,
+} from "../../generated/types";
 
 const AdvertiserResolvers: Resolvers = {
   Query: {
@@ -176,6 +184,92 @@ const AdvertiserResolvers: Resolvers = {
           };
         }
         return conquestWithTournaments;
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    listEventsOfAdvertiser: async (
+      _,
+      args: QueryListEventsOfAdvertiserArgs,
+      context: Context
+    ): Promise<ListEventsOfAdvertiserResponse> => {
+      // check if user making request is the actual advertiser
+      const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+        context.userId || ("" as UserIdpID),
+        args.advertiserID as AdvertiserID
+      );
+      if (!isValidUserAdvertiser) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this advertiser`,
+          },
+        };
+      }
+      try {
+        const tournaments = await listTournamentsOfAdvertiser(
+          args.advertiserID as AdvertiserID
+        );
+        if (!tournaments) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not retrieve tournaments for AdvertiserID ${args.advertiserID}`,
+            },
+          };
+        }
+        return {
+          tournaments,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    listPartnersOfAdvertiser: async (
+      _,
+      args: QueryListPartnersOfAdvertiserArgs,
+      context: Context
+    ): Promise<ListPartnersOfAdvertiserResponse> => {
+      // check if user making request is the actual advertiser
+      const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+        context.userId || ("" as UserIdpID),
+        args.advertiserID as AdvertiserID
+      );
+      if (!isValidUserAdvertiser) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized. User do not have permissions for this advertiser`,
+          },
+        };
+      }
+      try {
+        const partners = await listPartnersOfAdvertiser(
+          args.advertiserID as AdvertiserID
+        );
+        if (!partners) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not retrieve partners for AdvertiserID ${args.advertiserID}`,
+            },
+          };
+        }
+        return {
+          partners,
+        };
       } catch (err) {
         console.error(err);
         return {
@@ -434,6 +528,30 @@ const AdvertiserResolvers: Resolvers = {
       return null;
     },
   },
+  ListEventsOfAdvertiserResponse: {
+    __resolveType: (obj: ListEventsOfAdvertiserResponse) => {
+      if ("tournaments" in obj) {
+        return "ListEventsOfAdvertiserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ListPartnersOfAdvertiserResponse: {
+    __resolveType: (obj: ListPartnersOfAdvertiserResponse) => {
+      if ("partners" in obj) {
+        return "ListPartnersOfAdvertiserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const advertiserComposition = {
@@ -445,6 +563,8 @@ const advertiserComposition = {
   "Query.getAdvertiserPublicView": [isAuthenticated()],
   "Query.listConquestPreviews": [isAuthenticated()],
   "Query.getConquest": [isAuthenticated()],
+  "Query.listEventsOfAdvertiser": [isAuthenticated()],
+  "Query.listPartnersOfAdvertiser": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AdvertiserResolvers, advertiserComposition);
