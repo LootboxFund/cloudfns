@@ -45,6 +45,7 @@ const AdTypeDefs = gql`
     id: ID!
     name: String!
     description: String
+    thumbnail: String
     status: AdSetStatus!
     advertiserID: ID!
     placement: Placement!
@@ -244,6 +245,7 @@ const AdTypeDefs = gql`
     advertiserID: ID!
     status: AdSetStatus!
     placement: Placement!
+    thumbnail: String
     adIDs: [ID!]!
     offerIDs: [ID!]!
   }
@@ -259,6 +261,7 @@ const AdTypeDefs = gql`
     description: String
     status: AdSetStatus
     placement: Placement
+    thumbnail: String
     adIDs: [ID!]
     offerIDs: [ID!]
   }

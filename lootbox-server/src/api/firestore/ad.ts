@@ -159,6 +159,8 @@ export const editAd = async (
 export const createAdSet = async (
   payload: CreateAdSetPayload
 ): Promise<AdSet_Firestore> => {
+  const placeholderImageAdSet =
+    "https://media.istockphoto.com/vectors/thumbnail-image-vector-graphic-vector-id1147544807?k=20&m=1147544807&s=612x612&w=0&h=pBhz1dkwsCMq37Udtp9sfxbjaMl27JUapoyYpQm0anc=";
   const adSetRef = db
     .collection(Collection.AdSet)
     .doc() as DocumentReference<AdSet_Firestore>;
@@ -166,6 +168,7 @@ export const createAdSet = async (
     id: adSetRef.id as AdSetID,
     name: payload.name,
     description: payload.description || "",
+    thumbnail: payload.thumbnail || placeholderImageAdSet,
     advertiserID: payload.advertiserID as AdvertiserID,
     status: payload.status as AdSetStatus,
     placement: payload.placement as Placement,
@@ -234,6 +237,9 @@ export const editAdSet = async (
 
   if (payload.status != undefined) {
     updatePayload.status = payload.status;
+  }
+  if (payload.thumbnail != undefined) {
+    updatePayload.thumbnail = payload.thumbnail;
   }
   if (payload.adIDs != undefined) {
     updatePayload.adIDs = payload.adIDs as AdID[];

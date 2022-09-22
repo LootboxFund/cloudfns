@@ -19,10 +19,12 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
+  AdSetPreview,
   CreateOfferPayload,
   CreateOfferResponse,
   EditActivationInput,
   EditOfferPayload,
+  Offer,
   User,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
@@ -31,6 +33,7 @@ import { CreateActivationPayload } from "../../graphql/generated/types";
 import { OfferPreview, OfferPreviewForOrganizer } from "./offer.type";
 import * as moment from "moment";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
+import { AdSet_Firestore } from "./ad.types";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -288,7 +291,7 @@ export const listCreatedOffers = async (
 export const viewCreatedOffer = async (
   offerID: OfferID,
   userIdpID: UserIdpID
-): Promise<Offer_Firestore | undefined> => {
+): Promise<Offer | undefined> => {
   const offerRef = db
     .collection(Collection.Offer)
     .doc(offerID) as DocumentReference<Offer_Firestore>;
@@ -312,7 +315,7 @@ export const viewCreatedOffer = async (
       `Unauthorized. User do not have permissions for this advertiser`
     );
   }
-  return offer;
+  return { ...offer, activations: [], adSetPreviews: [] };
 };
 
 // //
@@ -389,4 +392,28 @@ export const listActivationsForOffer = async (
     return data;
   });
   return activeActivations;
+};
+
+export const getAdSetPreviewsForOffer = async (
+  offerID: OfferID
+): Promise<AdSetPreview[]> => {
+  const adSetRef = db
+    .collection(Collection.AdSet)
+    .where("offerIDs", "array-contains", offerID) as Query<AdSet_Firestore>;
+
+  const adSetCollectionItems = await adSetRef.get();
+
+  if (adSetCollectionItems.empty) {
+    return [];
+  }
+  return adSetCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: data.id,
+      name: data.name,
+      status: data.status,
+      placement: data.placement,
+      thumbnail: data.thumbnail,
+    };
+  });
 };

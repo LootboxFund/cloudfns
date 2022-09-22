@@ -4,7 +4,8 @@ const AffiliateTypeDefs = gql`
   type Affiliate {
     id: ID!
     userID: ID!
-    name: String
+    name: String!
+    avatar: String
   }
 
   type Memo {

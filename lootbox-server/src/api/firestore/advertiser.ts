@@ -5,6 +5,7 @@ import {
   Tournament,
   UpdateAdvertiserDetailsPayload,
   UpdateConquestPayload,
+  Affiliate,
 } from "../../graphql/generated/types";
 import { AdvertiserID, UserID } from "../../lib/types";
 import { db } from "../firebase";
@@ -26,6 +27,7 @@ import {
 import * as moment from "moment";
 import { Affiliate_Firestore } from "./affiliate.type";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
+import { TournamentPreview } from "../../graphql/generated/types";
 
 export const upgradeToAdvertiser = async (
   userID: UserID,
@@ -409,4 +411,93 @@ const updateAdvertiserListOfAssociatedAffiliates = async ({
   updatePayload.affiliatePartners = updatedUniqueSetOfKnownTournaments;
   await advertiserRef.update(updatePayload);
   return;
+};
+
+export const listTournamentsOfAdvertiser = async (
+  advertiserID: AdvertiserID
+): Promise<TournamentPreview[] | undefined> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+
+  if (!advertiserSnapshot.exists) {
+    return undefined;
+  }
+  const advertiser = advertiserSnapshot.data();
+  if (!advertiser) {
+    return undefined;
+  }
+
+  const tournamentSnapshots = await Promise.all(
+    advertiser.relatedTournaments
+      .map((tid) => {
+        const tournamentRef = db
+          .collection(Collection.Tournament)
+          .doc(tid) as DocumentReference<Tournament_Firestore>;
+        return tournamentRef;
+      })
+      .map((ref) => {
+        return ref.get();
+      })
+  );
+  const tournaments = tournamentSnapshots
+    .filter((snap) => snap.exists)
+    .map((snap) => {
+      return snap.data();
+    }) as Tournament_Firestore[];
+  const tournamentPreview = tournaments.map((t) => {
+    return {
+      id: t.id,
+      title: t.title,
+      coverPhoto: t.coverPhoto,
+    };
+  });
+  return tournamentPreview;
+};
+
+export const listPartnersOfAdvertiser = async (
+  advertiserID: AdvertiserID
+): Promise<Affiliate[] | undefined> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+
+  if (!advertiserSnapshot.exists) {
+    return undefined;
+  }
+  const advertiser = advertiserSnapshot.data();
+  if (!advertiser) {
+    return undefined;
+  }
+
+  const affiliatesSnapshots = await Promise.all(
+    advertiser.affiliatePartners
+      .map((aid) => {
+        const affiliateRef = db
+          .collection(Collection.Affiliate)
+          .doc(aid) as DocumentReference<Affiliate_Firestore>;
+        return affiliateRef;
+      })
+      .map((ref) => {
+        return ref.get();
+      })
+  );
+  const affiliates = affiliatesSnapshots
+    .filter((snap) => snap.exists)
+    .map((snap) => {
+      return snap.data();
+    }) as Affiliate_Firestore[];
+  const affiliatePreviews = affiliates.map((a) => {
+    return {
+      id: a.id,
+      userID: a.userID,
+      name: a.name,
+      avatar: a.avatar,
+    };
+  });
+  return affiliatePreviews;
 };

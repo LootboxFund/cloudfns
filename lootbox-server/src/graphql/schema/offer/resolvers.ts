@@ -48,12 +48,16 @@ import {
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
-import { QueryListCreatedOffersArgs } from "../../generated/types";
+import {
+  QueryListCreatedOffersArgs,
+  AdSetPreview,
+} from "../../generated/types";
 import {
   createActivation,
   createOffer,
   editActivation,
   editOffer,
+  getAdSetPreviewsForOffer,
   listActivationsForOffer,
   listCreatedOffers,
   viewCreatedOffer,
@@ -274,6 +278,9 @@ const OfferResolvers: Resolvers = {
   Offer: {
     activations: async (offer: Offer): Promise<Activation[]> => {
       return listActivationsForOffer(offer.id as OfferID);
+    },
+    adSetPreviews: async (offer: Offer): Promise<AdSetPreview[]> => {
+      return getAdSetPreviewsForOffer(offer.id as OfferID);
     },
   },
 
