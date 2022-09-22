@@ -31,6 +31,8 @@ import {
   RateQuoteInput,
   RemovePromoterFromTournamentPayload,
   WhitelistAffiliateToOfferPayload,
+  OrganizerOfferWhitelistWithProfile,
+  EditWhitelistAffiliateToOfferPayload,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
@@ -41,6 +43,7 @@ import { AdSetStatus, AdSet_Firestore } from "./ad.types";
 import { TournamentOffers } from "../../graphql/generated/types";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { listActiveActivationsForOffer } from "./offer";
+import * as _ from "lodash";
 
 export const upgradeToAffiliate = async (
   userID: UserID,
@@ -69,6 +72,24 @@ export const upgradeToAffiliate = async (
 export const whitelistAffiliateToOffer = async (
   payload: WhitelistAffiliateToOfferPayload
 ): Promise<OrganizerOfferWhitelist_Firestore> => {
+  // check if it already exists
+  const existingWhitelistRef = db
+    .collection(Collection.WhitelistOfferAffiliate)
+    .where("organizerID", "==", payload.affiliateID)
+    .where(
+      "offerID",
+      "==",
+      payload.offerID
+    ) as Query<OrganizerOfferWhitelist_Firestore>;
+  const existingWhitelistCollectionItems = await existingWhitelistRef.get();
+  if (
+    !existingWhitelistCollectionItems.empty ||
+    existingWhitelistCollectionItems.docs.length > 0
+  ) {
+    return existingWhitelistCollectionItems.docs.map((x) => x.data())[0];
+  }
+
+  // add it if it doesn't exist
   const whitelistAffiliateToOfferRef = db
     .collection(Collection.WhitelistOfferAffiliate)
     .doc() as DocumentReference<OrganizerOfferWhitelist_Firestore>;
@@ -77,20 +98,58 @@ export const whitelistAffiliateToOffer = async (
     organizerID: payload.affiliateID as AffiliateID,
     offerID: payload.offerID as OfferID,
     advertiserID: payload.advertiserID as AdvertiserID,
+    status: payload.status,
     timestamp: new Date().getTime(),
   };
   await whitelistAffiliateToOfferRef.set(organizerOfferWhitelist);
+
+  // update the advertisers list
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(payload.advertiserID) as DocumentReference<Advertiser_Firestore>;
+  const advertiserSnapshot = await advertiserRef.get();
+  if (!advertiserSnapshot.exists) {
+    return organizerOfferWhitelist;
+  }
+  const advertiser = advertiserSnapshot.data();
+  if (!advertiser) {
+    return organizerOfferWhitelist;
+  }
+  const allExistingKnownAffiliates = advertiser.affiliatePartners;
+  const updatedUniqueSetOfKnownTournaments = _.union(
+    allExistingKnownAffiliates,
+    [payload.affiliateID]
+  );
+  const updatePayload: Partial<Advertiser_Firestore> = {};
+  updatePayload.affiliatePartners = updatedUniqueSetOfKnownTournaments;
+  await advertiserRef.update(updatePayload);
+
   return organizerOfferWhitelist;
 };
 
-export const removeWhitelistAffiliateToOffer = async (
-  id: OrganizerOfferWhitelistID
-): Promise<String> => {
+export const editWhitelistAffiliateToOffer = async (
+  payload: EditWhitelistAffiliateToOfferPayload
+): Promise<OrganizerOfferWhitelist_Firestore | undefined> => {
   const whitelistAffiliateToOfferRef = db
     .collection(Collection.WhitelistOfferAffiliate)
-    .doc(id) as DocumentReference<OrganizerOfferWhitelist_Firestore>;
-  await whitelistAffiliateToOfferRef.delete();
-  return id;
+    .doc(payload.id) as DocumentReference<OrganizerOfferWhitelist_Firestore>;
+  const whitelistAffiliateToOfferSnapshot =
+    await whitelistAffiliateToOfferRef.get();
+  if (!whitelistAffiliateToOfferSnapshot.exists) {
+    return undefined;
+  }
+  const existingObj = whitelistAffiliateToOfferSnapshot.data();
+
+  const updatePayload: Partial<OrganizerOfferWhitelist_Firestore> = {};
+  // repeat
+  if (payload.status != undefined) {
+    updatePayload.status = payload.status;
+  }
+  // until done
+  await whitelistAffiliateToOfferRef.update(updatePayload);
+  return (
+    await whitelistAffiliateToOfferRef.get()
+  ).data() as OrganizerOfferWhitelist_Firestore;
 };
 
 export const affiliateAdminView = async (
@@ -742,4 +801,54 @@ export const viewTournamentAsOrganizer = async (
   }
   const tournament = tournamentSnapshot.data();
   return tournament;
+};
+
+export const viewWhitelistedAffiliatesToOffer = async (
+  offerID: OfferID
+): Promise<OrganizerOfferWhitelistWithProfile[]> => {
+  const organizerOfferWhitelistRef = db
+    .collection(Collection.WhitelistOfferAffiliate)
+    .where(
+      "offerID",
+      "==",
+      offerID
+    ) as Query<OrganizerOfferWhitelist_Firestore>;
+
+  const whitelistCollectionItems = await organizerOfferWhitelistRef.get();
+
+  if (whitelistCollectionItems.empty) {
+    return [];
+  }
+  const whitelisted = whitelistCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return data;
+  });
+  const affiliateInfos = (
+    await Promise.all(
+      whitelisted.map((w) => {
+        const affiliateRef = db
+          .collection(Collection.Affiliate)
+          .doc(w.organizerID) as DocumentReference<Affiliate_Firestore>;
+        return affiliateRef.get();
+      })
+    )
+  ).map((w) => w.data());
+  const x = affiliateInfos
+    .map((o, i) => {
+      console.log(o?.name);
+      console.log(whitelisted[i]);
+      return {
+        organizer: o,
+        whitelist: whitelisted[i],
+      };
+    })
+    .filter((x) => x.organizer !== undefined)
+    .filter((x) => {
+      return {
+        ...x.whitelist,
+        name: x.organizer?.name,
+        avatar: x.organizer?.avatar,
+      };
+    }) as OrganizerOfferWhitelistWithProfile[];
+  return x;
 };
