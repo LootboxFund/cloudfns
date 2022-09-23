@@ -49,7 +49,11 @@ import {
   ListOffersAvailableForOrganizerResponse,
   QueryListOffersAvailableForOrganizerArgs,
   OfferAffiliateView,
-  RateQuote,
+  OfferAffiliateViewActivationsForAffiliateArgs,
+  RateQuoteEstimate,
+  ViewOfferDetailsAsEventAffiliateResponse,
+  ViewOfferDetailsAsEventAffiliatePayload,
+  QueryViewOfferDetailsAsAffiliateArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
@@ -71,6 +75,10 @@ import {
 import { CreateActivationResponse, Affiliate } from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import {
+  getActivationsWithRateQuoteForAffiliate,
+  viewOfferDetailsAsAffiliate,
+} from "../../../api/firestore/affiliate";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -178,6 +186,36 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
+    viewOfferDetailsAsAffiliate: async (
+      _,
+      { payload }: QueryViewOfferDetailsAsAffiliateArgs,
+      context: Context
+    ): Promise<ViewOfferDetailsAsEventAffiliateResponse> => {
+      try {
+        const offer = await viewOfferDetailsAsAffiliate(
+          payload.offerID as OfferID
+        );
+        if (offer === undefined) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No offer found with ID ${payload.offerID} for Affiliate ${payload.affiliateID}`,
+            },
+          };
+        }
+        return {
+          offer,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
   Mutation: {
     createOffer: async (
@@ -259,8 +297,6 @@ const OfferResolvers: Resolvers = {
           payload.activation,
           context.userId || ("" as UserIdpID)
         );
-        console.log(`After createActivation...`);
-        console.log(activation);
         if (!activation) {
           return {
             error: {
@@ -290,7 +326,7 @@ const OfferResolvers: Resolvers = {
           payload.activation,
           context.userId || ("" as UserIdpID)
         );
-        console.log(`activation= `, activation);
+
         if (!activation) {
           return {
             error: {
@@ -325,15 +361,17 @@ const OfferResolvers: Resolvers = {
     ): Promise<AdSetPreview[]> => {
       return getAdSetPreviewsForOffer(offer.id as OfferID);
     },
-    // activationsForAffiliate: async (
-    //   offer: OfferAffiliateView,
-    //   args
-    // ): Promise<RateQuote[]> => {
-    //   return getRateQuoteForOfferAndAffiliate(
-    //     offer.id as OfferID,
-    //     affiliateID as AffiliateID
-    //   );
-    // },
+    activationsForAffiliate: async (
+      offer: OfferAffiliateView,
+      args: OfferAffiliateViewActivationsForAffiliateArgs
+    ): Promise<Omit<RateQuoteEstimate, "__typename">[]> => {
+      const rateQuoteActivations =
+        await getActivationsWithRateQuoteForAffiliate(
+          args.affiliateID as AffiliateID,
+          offer.id as OfferID
+        );
+      return rateQuoteActivations;
+    },
   },
 
   CreateOfferResponse: {
@@ -418,6 +456,19 @@ const OfferResolvers: Resolvers = {
     __resolveType: (obj: ListOffersAvailableForOrganizerResponse) => {
       if ("offers" in obj) {
         return "ListOffersAvailableForOrganizerResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ViewOfferDetailsAsEventAffiliateResponse: {
+    __resolveType: (obj: ViewOfferDetailsAsEventAffiliateResponse) => {
+      if ("offer" in obj) {
+        return "ViewOfferDetailsAsEventAffiliateResponseSuccess";
       }
 
       if ("error" in obj) {
