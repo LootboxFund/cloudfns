@@ -54,6 +54,7 @@ import {
   ViewOfferDetailsAsEventAffiliateResponse,
   ViewOfferDetailsAsEventAffiliatePayload,
   QueryViewOfferDetailsAsAffiliateArgs,
+  AdSetStatus,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
@@ -359,7 +360,8 @@ const OfferResolvers: Resolvers = {
     adSetPreviews: async (
       offer: OfferAffiliateView
     ): Promise<AdSetPreview[]> => {
-      return getAdSetPreviewsForOffer(offer.id as OfferID);
+      const adSets = await getAdSetPreviewsForOffer(offer.id as OfferID);
+      return adSets.filter((a) => a.status === AdSetStatus.Active);
     },
     activationsForAffiliate: async (
       offer: OfferAffiliateView,
