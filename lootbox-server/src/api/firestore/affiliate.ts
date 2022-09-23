@@ -33,6 +33,7 @@ import {
   WhitelistAffiliateToOfferPayload,
   OrganizerOfferWhitelistWithProfile,
   EditWhitelistAffiliateToOfferPayload,
+  OfferAffiliateView,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
@@ -44,6 +45,7 @@ import { TournamentOffers } from "../../graphql/generated/types";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { listActiveActivationsForOffer } from "./offer";
 import * as _ from "lodash";
+import { Activation_Firestore } from "@wormgraph/helpers";
 
 export const upgradeToAffiliate = async (
   userID: UserID,
@@ -902,4 +904,79 @@ export const getRateQuoteForOfferAndAffiliate = async (
       };
     }) as OrganizerOfferWhitelistWithProfile[];
   return x;
+};
+
+export const getActivationsWithRateQuoteForAffiliate = async (
+  affiliateID: AffiliateID,
+  offerID: OfferID
+) => {
+  // get the activations for the offerID
+  const activationRef = db
+    .collection(Collection.Activation)
+    .where("offerID", "==", offerID) as Query<Activation_Firestore>;
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+
+  const [activationCollectionItems, affiliateSnap] = await Promise.all([
+    activationRef.get(),
+    affiliateRef.get(),
+  ]);
+  if (activationCollectionItems.empty || !affiliateSnap.exists) {
+    return [];
+  }
+  const existingAffiliate = affiliateSnap.data();
+  const rateQuoteRank =
+    rankInfoTable[existingAffiliate?.organizerRank || OrganizerRank.ClayRank1];
+  const activations = activationCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      activationID: data.id,
+      activationName: data.name,
+      description: data.description,
+      pricing: data.pricing * rateQuoteRank.revenueShare,
+      rank: rateQuoteRank.slug,
+      affiliateID: affiliateID,
+      order: data.order,
+    };
+  });
+  return activations;
+};
+
+export const viewOfferDetailsAsAffiliate = async (offerID: OfferID) => {
+  const offerRef = db
+    .collection(Collection.Offer)
+    .doc(offerID) as DocumentReference<Offer_Firestore>;
+  // const affiliateRef = db
+  //   .collection(Collection.Affiliate)
+  //   .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+  // const activationRef = db
+  //   .collection(Collection.Activation)
+  //   .where("offerID", "==", offerID) as Query<Activation_Firestore>;
+  // const [affiliateSnap, offerSnap, activationsSnaps] = await Promise.all([
+  //   affiliateRef.get(),
+  //   offerRef.get(),
+  //   affiliateRef.get(),
+  // ]);
+  const offerSnap = await offerRef.get();
+  if (!offerSnap.exists) {
+    return undefined;
+  }
+  const offer = offerSnap.data();
+  if (!offer) {
+    return undefined;
+  }
+  const offerAffiliateView = {
+    id: offer.id,
+    title: offer.title,
+    description: offer.description,
+    image: offer.image,
+    advertiserID: offer.advertiserID,
+    spentBudget: offer.spentBudget,
+    maxBudget: offer.maxBudget,
+    startDate: offer.startDate,
+    endDate: offer.endDate,
+    status: offer.status,
+  } as unknown as OfferAffiliateView;
+  return offerAffiliateView;
 };
