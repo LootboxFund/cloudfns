@@ -1,7 +1,7 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Address, UserID, UserIdpID } from "@wormgraph/helpers";
 import {
-  getLootboxSnapshotsForTournament,
+  getLootboxSnapshotsForTournamentDeprecated,
   getTournamentById,
   createTournament,
   updateTournament,
@@ -13,7 +13,7 @@ import {
   deleteStream,
   updateStream,
   getPartyBasketsForLootbox,
-  getLootboxSnapshotsForTournamentV2,
+  getLootboxSnapshotsForTournament,
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
@@ -155,13 +155,15 @@ const TournamentResolvers = {
     lootboxSnapshots: async (
       tournament: Tournament
     ): Promise<LootboxTournamentSnapshot[]> => {
-      if (!!tournament.version && tournament.version === "") {
-        const snapshots = await getLootboxSnapshotsForTournamentV2(
+      if (!!tournament.isPostCosmic) {
+        const snapshots = await getLootboxSnapshotsForTournament(
           tournament.id as TournamentID
         );
         return snapshots.map(convertLootboxTournamentSnapshotDBToGQL);
       } else {
-        return getLootboxSnapshotsForTournament(tournament.id as TournamentID);
+        return getLootboxSnapshotsForTournamentDeprecated(
+          tournament.id as TournamentID
+        );
       }
     },
     streams: async (tournament: Tournament): Promise<Stream[]> => {

@@ -13,7 +13,7 @@ import {
 } from "../../graphql/generated/types";
 import { Address, Collection } from "@wormgraph/helpers";
 import { UserID, UserIdpID, WalletID } from "../../lib/types";
-import { convertLootboxToSnapshot } from "../../lib/lootbox";
+import { convertLootboxToSnapshotOld } from "../../lib/lootbox";
 
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
 
@@ -116,7 +116,7 @@ export const getLootboxSnapshotsForWallet = async (
   } else {
     return lootboxSnapshot.docs.map((doc) => {
       const data = doc.data();
-      return convertLootboxToSnapshot(data);
+      return convertLootboxToSnapshotOld(data);
     });
   }
 };

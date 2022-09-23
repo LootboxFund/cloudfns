@@ -57,12 +57,13 @@ import {
   UserID,
   UserIdpID,
 } from "../../../lib/types";
-import { Address } from "@wormgraph/helpers";
+import { Address, Tournament_Firestore } from "@wormgraph/helpers";
 import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
 import { convertUserToPublicUser } from "../user/utils";
 import { csvCleaner } from "../../../lib/csv";
 import provider from "../../../api/identityProvider/firebase";
+import { convertTournamentDBToGQL } from "../../../lib/tournament";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -174,7 +175,7 @@ const ReferralResolvers: Resolvers = {
         claim.tournamentId as TournamentID
       );
 
-      return !tournament ? null : tournament;
+      return !tournament ? null : convertTournamentDBToGQL(tournament);
     },
   },
 
@@ -186,7 +187,7 @@ const ReferralResolvers: Resolvers = {
       const tournament = await getTournamentById(
         referral.tournamentId as TournamentID
       );
-      return !tournament ? null : tournament;
+      return !tournament ? null : convertTournamentDBToGQL(tournament);
     },
     seedPartyBasket: async (
       referral: Referral
@@ -237,7 +238,7 @@ const ReferralResolvers: Resolvers = {
 
       const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
 
-      let tournament: Tournament | undefined;
+      let tournament: Tournament_Firestore | undefined;
       let partyBasket: PartyBasket | undefined;
 
       // Tournament checks
@@ -265,7 +266,7 @@ const ReferralResolvers: Resolvers = {
 
       if (
         payload.type === ReferralType.OneTime &&
-        context.userId !== tournament.creatorId
+        (context.userId as unknown as UserID) !== tournament.creatorId
       ) {
         return {
           error: {
@@ -473,7 +474,7 @@ const ReferralResolvers: Resolvers = {
         }
         if (
           requestedReferralType === ReferralType.OneTime &&
-          context.userId !== tournament.creatorId
+          (context.userId as unknown as UserID) !== tournament.creatorId
         ) {
           throw new Error(
             "You must own the tournament to make a one time referral"
@@ -850,7 +851,9 @@ const ReferralResolvers: Resolvers = {
               message: "Tournament not found",
             },
           };
-        } else if (tournament?.creatorId !== context.userId) {
+        } else if (
+          (tournament?.creatorId as unknown as UserIdpID) !== context.userId
+        ) {
           return {
             error: {
               code: StatusCode.Forbidden,

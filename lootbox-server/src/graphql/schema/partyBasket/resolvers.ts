@@ -47,7 +47,10 @@ import { errors, ethers } from "ethers";
 import { PartyBasketID, WhitelistSignatureID } from "../../../lib/types";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { convertLootboxToSnapshot } from "../../../lib/lootbox";
+import {
+  convertLootboxDBToGQL,
+  convertLootboxToSnapshotOld,
+} from "../../../lib/lootbox";
 import { getWhitelisterPrivateKey } from "../../../lib/secrets";
 
 const PartyBasketResolvers: Resolvers = {
@@ -93,7 +96,7 @@ const PartyBasketResolvers: Resolvers = {
         if (!lootbox) {
           return null;
         }
-        return convertLootboxToSnapshot(lootbox);
+        return convertLootboxToSnapshotOld(convertLootboxDBToGQL(lootbox));
       } catch (err) {
         console.error(err);
         return null;

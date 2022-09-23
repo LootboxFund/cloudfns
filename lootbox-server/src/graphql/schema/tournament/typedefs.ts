@@ -60,7 +60,8 @@ const TournamentTypeDefs = gql`
     # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
     organizer: ID
     promoters: [ID!]
-    version: String
+    isPostCosmic: Boolean
+      @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
     offers: [TournamentOffers!]
     lootboxSnapshots: [LootboxTournamentSnapshot!]
   }

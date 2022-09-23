@@ -180,6 +180,7 @@ export const convertTournamentDBToGQL = (
     title: tournament.title,
     description: tournament.description,
     creatorId: tournament.creatorId,
+    isPostCosmic: tournament.isPostCosmic || false,
     timestamps: {
       createdAt: tournament.timestamps.createdAt,
       updatedAt: tournament.timestamps.updatedAt,

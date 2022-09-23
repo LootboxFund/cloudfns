@@ -24,7 +24,6 @@ import {
   StreamID,
   AffiliateID,
 } from "../../lib/types";
-import { Affiliate } from "../../graphql/generated/types";
 import { Collection, Tournament_Firestore } from "@wormgraph/helpers";
 import {
   LootboxTournamentSnapshot_Firestore,
@@ -55,7 +54,7 @@ export const getTournamentById = async (
   }
 };
 
-export const getLootboxSnapshotsForTournamentV2 = async (
+export const getLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID
 ): Promise<LootboxTournamentSnapshot_Firestore[]> => {
   const collectionRef = db
@@ -251,7 +250,7 @@ export const createTournament = async ({
     title,
     description,
     creatorId: creatorId as UserID,
-    isPostCovid: true,
+    isPostCosmic: true,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -435,8 +434,8 @@ export const paginateBattleFeedQuery = async (
   }
 };
 
-/** @deprecated please use getLootboxSnapshotsForTournamentV2 */
-export const getLootboxSnapshotsForTournament = async (
+/** @deprecated please use getLootboxSnapshotsForTournament */
+export const getLootboxSnapshotsForTournamentDeprecated = async (
   tournamentID: TournamentID
 ): Promise<LootboxTournamentSnapshot[]> => {
   const collectionRef = db

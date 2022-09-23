@@ -1,3 +1,5 @@
+// @ts-nocheck - remove this before running
+
 /**
  * Toggle all stamp images in storage (renaming, then renaming back lol) so that firebase extension resize will trigger
  * Run in your nodejs environment.
@@ -104,6 +106,7 @@ const sleep = async (ms: number = 3000) => {
   await new Promise((res) => {
     setTimeout(res, ms);
   });
+
   return;
 };
 
