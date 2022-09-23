@@ -378,8 +378,6 @@ export const listOffersAvailableForOrganizer = async (
         status: x.status,
       };
     });
-  console.log(`---- offers`);
-  console.log(offers);
   return offers;
 };
 

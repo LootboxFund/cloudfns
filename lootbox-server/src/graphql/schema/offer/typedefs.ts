@@ -47,6 +47,7 @@ const OfferTypeDefs = gql`
   type RateQuoteEstimate {
     activationID: ID!
     activationName: String!
+    description: String
     pricing: Float!
     affiliateID: ID!
     rank: String
@@ -159,6 +160,18 @@ const OfferTypeDefs = gql`
       ListOffersAvailableForOrganizerResponseSuccess
     | ResponseError
 
+  # --------- View Offer Details As Organizer ---------
+  input ViewOfferDetailsAsEventAffiliatePayload {
+    offerID: ID!
+    affiliateID: ID!
+  }
+  type ViewOfferDetailsAsEventAffiliateResponseSuccess {
+    offer: OfferAffiliateView!
+  }
+  union ViewOfferDetailsAsEventAffiliateResponse =
+      ViewOfferDetailsAsEventAffiliateResponseSuccess
+    | ResponseError
+
   extend type Query {
     # view offers that an advertiser created
     listCreatedOffers(advertiserID: ID!): ListCreatedOffersResponse!
@@ -169,10 +182,9 @@ const OfferTypeDefs = gql`
       affiliateID: ID!
     ): ListOffersAvailableForOrganizerResponse!
     # view an offer with its details, adsets, as an affiliate
-    # viewOfferDetailsForEventAffiliate(
-    #   offerID: ID!
-    #   eventID: ID!
-    # ): ViewOfferDetailsForEventAffiliateResponse!
+    viewOfferDetailsAsAffiliate(
+      payload: ViewOfferDetailsAsEventAffiliatePayload!
+    ): ViewOfferDetailsAsEventAffiliateResponse!
     # view the performance of an offer in an event, as an affiliate
     # viewOfferEventAffiliatePerformance(
     #   offerID: ID!

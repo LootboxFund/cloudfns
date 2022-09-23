@@ -51,6 +51,9 @@ import {
   OfferAffiliateView,
   OfferAffiliateViewActivationsForAffiliateArgs,
   RateQuoteEstimate,
+  ViewOfferDetailsAsEventAffiliateResponse,
+  ViewOfferDetailsAsEventAffiliatePayload,
+  QueryViewOfferDetailsAsAffiliateArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
@@ -72,7 +75,10 @@ import {
 import { CreateActivationResponse, Affiliate } from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { getActivationsWithRateQuoteForAffiliate } from "../../../api/firestore/affiliate";
+import {
+  getActivationsWithRateQuoteForAffiliate,
+  viewOfferDetailsAsAffiliate,
+} from "../../../api/firestore/affiliate";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -169,6 +175,36 @@ const OfferResolvers: Resolvers = {
         }
         return {
           offers,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    viewOfferDetailsAsAffiliate: async (
+      _,
+      { payload }: QueryViewOfferDetailsAsAffiliateArgs,
+      context: Context
+    ): Promise<ViewOfferDetailsAsEventAffiliateResponse> => {
+      try {
+        const offer = await viewOfferDetailsAsAffiliate(
+          payload.offerID as OfferID
+        );
+        if (offer === undefined) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No offer found with ID ${payload.offerID} for Affiliate ${payload.affiliateID}`,
+            },
+          };
+        }
+        return {
+          offer,
         };
       } catch (err) {
         console.error(err);
@@ -420,6 +456,19 @@ const OfferResolvers: Resolvers = {
     __resolveType: (obj: ListOffersAvailableForOrganizerResponse) => {
       if ("offers" in obj) {
         return "ListOffersAvailableForOrganizerResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ViewOfferDetailsAsEventAffiliateResponse: {
+    __resolveType: (obj: ViewOfferDetailsAsEventAffiliateResponse) => {
+      if ("offer" in obj) {
+        return "ViewOfferDetailsAsEventAffiliateResponseSuccess";
       }
 
       if ("error" in obj) {
