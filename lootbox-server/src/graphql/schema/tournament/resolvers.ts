@@ -18,7 +18,7 @@ import {
   addOfferAdSetToTournament,
   updatePromoterRateQuoteInTournament,
   removeOfferAdSetFromTournament,
-  transformOffersToArray,
+  // transformOffersToArray,
   removePromoterFromTournament,
 } from "../../../api/firestore/affiliate";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -51,6 +51,7 @@ import {
   MutationAddOfferAdSetToTournamentArgs,
   AddOfferAdSetToTournamentResponse,
   RemovePromoterFromTournamentResponse,
+  AdSetPreview,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
@@ -59,7 +60,6 @@ import {
   MutationUpdatePromoterRateQuoteInTournamentArgs,
 } from "../../generated/types";
 import {
-  TournamentOffers,
   MutationRemoveOfferAdSetFromTournamentArgs,
   RemoveOfferAdSetFromTournamentResponse,
 } from "../../generated/types";
@@ -152,9 +152,12 @@ const TournamentResolvers = {
     streams: async (tournament: Tournament): Promise<Stream[]> => {
       return getTournamentStreams(tournament.id as TournamentID);
     },
-    offers: async (tournament: Tournament): Promise<TournamentOffers[]> => {
-      return transformOffersToArray(tournament.id as TournamentID);
-    },
+    // offers: async (tournament: Tournament): Promise<TournamentOffers[]> => {
+    //   return transformOffersToArray(tournament.id as TournamentID);
+    // },
+    // dealConfigs: async (tournament: Tournament): Promise<AdSetPreview[]> => {
+    //   return renderDealConfigsOfTournament(tournament.id as TournamentID);
+    // },
   },
 
   LootboxTournamentSnapshot: {

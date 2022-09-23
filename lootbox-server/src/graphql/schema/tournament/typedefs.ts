@@ -59,15 +59,39 @@ const TournamentTypeDefs = gql`
     # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
     organizer: ID
     promoters: [ID!]
-    offers: [TournamentOffers!]
+    # offers: [TournamentOffers!]
+    dealConfigs: [DealConfigTournament!]!
+    # promoterConfigs: [PromoterConfigTournament!]!
   }
 
-  type TournamentOffers {
-    id: ID!
-    status: OfferInTournamentStatus!
-    rateQuotes: [ID!]
-    activeAdSets: [ID!]
-    inactiveAdSets: [ID!]
+  # type TournamentOffers {
+  #   id: ID!
+  #   status: OfferInTournamentStatus!
+  #   rateQuotes: [ID!]
+  #   activeAdSets: [ID!]
+  #   inactiveAdSets: [ID!]
+  # }
+
+  type DealConfigTournament {
+    tournamentID: ID!
+    offerID: ID!
+    offerName: String!
+    advertiserID: ID!
+    advertiserName: String!
+    advertiserAvatar: String
+    adSets: [AdSetPreview!]!
+    dealConfigs: [DealConfig!]!
+  }
+
+  type DealConfig {
+    rateQuoteID: ID!
+    activationID: ID!
+    activationName: String!
+    description: String
+    pricing: Float!
+    affiliateID: ID!
+    affiliateName: String!
+    affiliateAvatar: String
   }
 
   enum OfferInTournamentStatus {

@@ -41,11 +41,12 @@ import {
   OrganizerOfferWhitelist_Firestore,
 } from "./affiliate.type";
 import { AdSetStatus, AdSet_Firestore } from "./ad.types";
-import { TournamentOffers } from "../../graphql/generated/types";
+// import { TournamentOffers } from "../../graphql/generated/types";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { listActiveActivationsForOffer } from "./offer";
 import * as _ from "lodash";
 import { Activation_Firestore } from "@wormgraph/helpers";
+import { getTournamentById } from "./tournament";
 
 export const upgradeToAffiliate = async (
   userID: UserID,
@@ -482,57 +483,63 @@ export const removeOfferAdSetFromTournament = async (
   return (await tournamentRef.get()).data() as Tournament_Firestore;
 };
 
-export const transformOffersToArray = async (
-  tournamentID: TournamentID
-): Promise<TournamentOffers[]> => {
-  const tournamentRef = db
-    .collection(Collection.Tournament)
-    .doc(tournamentID) as DocumentReference<Tournament_Firestore>;
+// export const renderDealConfigsOfTournament = async (tournamentID: TournamentID) => {
+//   const tournament = await getTournamentById(tournamentID);
+//   if (!tournament) return [];
+//   const offersConfigs = tournament.offers
+// }
 
-  const tournamentSnapshot = await tournamentRef.get();
+// export const transformOffersToArray = async (
+//   tournamentID: TournamentID
+// ): Promise<TournamentOffers[]> => {
+//   const tournamentRef = db
+//     .collection(Collection.Tournament)
+//     .doc(tournamentID) as DocumentReference<Tournament_Firestore>;
 
-  if (!tournamentSnapshot.exists) {
-    return [];
-  }
-  const tournament = tournamentSnapshot.data();
-  if (!tournament || !tournament.offers) return [];
+//   const tournamentSnapshot = await tournamentRef.get();
 
-  const tournamentOffers: TournamentOffers[] = [];
-  for (const offerID in tournament.offers) {
-    const offerRef = db
-      .collection(Collection.Offer)
-      .doc(offerID) as DocumentReference<Offer_Firestore>;
-    const offerSnapshot = await offerRef.get();
-    if (!offerSnapshot.exists) continue;
-    const offerData = offerSnapshot.data();
-    if (!offerData) continue;
-    const activeAdSets: string[] = [];
-    const inactiveAdSets: string[] = [];
-    for (const adSetID in tournament.offers[offerID].adSets) {
-      if (
-        tournament.offers[offerID].adSets[adSetID] ===
-        OfferInTournamentStatus.Active
-      ) {
-        activeAdSets.push(adSetID);
-      }
-      if (
-        tournament.offers[offerID].adSets[adSetID] ===
-        OfferInTournamentStatus.Inactive
-      ) {
-        inactiveAdSets.push(adSetID);
-      }
-    }
-    tournamentOffers.push({
-      id: offerData.id,
-      rateQuotes: [] as RateQuoteID[],
-      status: offerData.status as unknown as OfferInTournamentStatus,
-      activeAdSets: activeAdSets,
-      inactiveAdSets: inactiveAdSets,
-    });
-  }
+//   if (!tournamentSnapshot.exists) {
+//     return [];
+//   }
+//   const tournament = tournamentSnapshot.data();
+//   if (!tournament || !tournament.offers) return [];
 
-  return tournamentOffers;
-};
+//   const tournamentOffers: TournamentOffers[] = [];
+//   for (const offerID in tournament.offers) {
+//     const offerRef = db
+//       .collection(Collection.Offer)
+//       .doc(offerID) as DocumentReference<Offer_Firestore>;
+//     const offerSnapshot = await offerRef.get();
+//     if (!offerSnapshot.exists) continue;
+//     const offerData = offerSnapshot.data();
+//     if (!offerData) continue;
+//     const activeAdSets: string[] = [];
+//     const inactiveAdSets: string[] = [];
+//     for (const adSetID in tournament.offers[offerID].adSets) {
+//       if (
+//         tournament.offers[offerID].adSets[adSetID] ===
+//         OfferInTournamentStatus.Active
+//       ) {
+//         activeAdSets.push(adSetID);
+//       }
+//       if (
+//         tournament.offers[offerID].adSets[adSetID] ===
+//         OfferInTournamentStatus.Inactive
+//       ) {
+//         inactiveAdSets.push(adSetID);
+//       }
+//     }
+//     tournamentOffers.push({
+//       id: offerData.id,
+//       rateQuotes: [] as RateQuoteID[],
+//       status: offerData.status as unknown as OfferInTournamentStatus,
+//       activeAdSets: activeAdSets,
+//       inactiveAdSets: inactiveAdSets,
+//     });
+//   }
+
+//   return tournamentOffers;
+// };
 
 export const updatePromoterRateQuoteInTournament = async (
   payload: UpdatePromoterRateQuoteToTournamentPayload
