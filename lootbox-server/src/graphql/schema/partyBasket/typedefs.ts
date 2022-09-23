@@ -1,5 +1,8 @@
 import { gql } from "apollo-server";
 
+/**
+ * @deprecated this entire schema will be removed and replaced with LootboxCosmic
+ */
 const PartyBasketTypeDefs = gql`
   enum PartyBasketStatus {
     active

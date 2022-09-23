@@ -1766,10 +1766,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.2.0-afn-alpha29":
-  version "0.2.0-afn-alpha29"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha29.tgz#638d2dbcc69944bf9d19deb50d9b8964f2cac281"
-  integrity sha512-yPe0vIzOVX8a60mraOG6cZVP4OHyqcYheA4EPpkwzf/jkzeXeKq4AQirWEAhXtqK71lra9y3g92qxlBjSwqzUA==
+"@wormgraph/helpers@0.2.0-afn-alpha32":
+  version "0.2.0-afn-alpha32"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha32.tgz#c7d8c1619984dd852ddaa73c44c7e0d82f6158d9"
+  integrity sha512-SS5fE4vKFMmJp9qquyYugoTT59hxj75VbYSC6z1Xz2xq8BoxmN+IV0Tn+Qxob2obS5SsWiYrv2iClkubLGltlw==
   dependencies:
     "@wormgraph/helpers" "0.1.14-afn-alpha4"
     "@wormgraph/manifest" "0.4.0-afm-alpha1"

@@ -1,3 +1,5 @@
+// @ts-nocheck - remove this before running
+
 /**
  * Migration script to index every lootbox JSON metadata file we have for a lootbox in cloud storage into our
  * firestore database. Run in your nodejs environment.

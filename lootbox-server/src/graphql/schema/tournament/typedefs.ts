@@ -2,9 +2,9 @@ import { gql } from "apollo-server";
 
 const TournamentTypeDefs = gql`
   enum LootboxTournamentStatus {
-    pending
     active
-    rejected
+    disabled
+    soldOut
   }
 
   enum StreamType {
@@ -26,6 +26,7 @@ const TournamentTypeDefs = gql`
     deletedAt: Timestamp
   }
 
+  # this will live as a subcollection under the lootbox
   type LootboxTournamentSnapshot {
     address: ID!
     issuer: ID!
@@ -37,9 +38,10 @@ const TournamentTypeDefs = gql`
     backgroundImage: String!
     metadataDownloadUrl: String
     timestamps: LootboxSnapshotTimestamps!
-    status: LootboxTournamentStatus!
     socials: LootboxSocialsWithoutEmail!
+    status: LootboxTournamentStatus!
     partyBaskets: [PartyBasket!]
+      @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
   }
 
   type Tournament {
@@ -48,7 +50,6 @@ const TournamentTypeDefs = gql`
     description: String!
     tournamentLink: String
     timestamps: TournamentTimestamps!
-    lootboxSnapshots: [LootboxTournamentSnapshot!]
     creatorId: ID!
     magicLink: String
     tournamentDate: Timestamp
@@ -59,7 +60,10 @@ const TournamentTypeDefs = gql`
     # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
     organizer: ID
     promoters: [ID!]
+    isPostCosmic: Boolean
+      @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
     offers: [TournamentOffers!]
+    lootboxSnapshots: [LootboxTournamentSnapshot!]
   }
 
   type TournamentOffers {
