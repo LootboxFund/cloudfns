@@ -49,7 +49,8 @@ import {
   ListOffersAvailableForOrganizerResponse,
   QueryListOffersAvailableForOrganizerArgs,
   OfferAffiliateView,
-  RateQuote,
+  OfferAffiliateViewActivationsForAffiliateArgs,
+  RateQuoteEstimate,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
@@ -71,6 +72,7 @@ import {
 import { CreateActivationResponse, Affiliate } from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import { getActivationsWithRateQuoteForAffiliate } from "../../../api/firestore/affiliate";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -259,8 +261,6 @@ const OfferResolvers: Resolvers = {
           payload.activation,
           context.userId || ("" as UserIdpID)
         );
-        console.log(`After createActivation...`);
-        console.log(activation);
         if (!activation) {
           return {
             error: {
@@ -290,7 +290,7 @@ const OfferResolvers: Resolvers = {
           payload.activation,
           context.userId || ("" as UserIdpID)
         );
-        console.log(`activation= `, activation);
+
         if (!activation) {
           return {
             error: {
@@ -325,15 +325,17 @@ const OfferResolvers: Resolvers = {
     ): Promise<AdSetPreview[]> => {
       return getAdSetPreviewsForOffer(offer.id as OfferID);
     },
-    // activationsForAffiliate: async (
-    //   offer: OfferAffiliateView,
-    //   args
-    // ): Promise<RateQuote[]> => {
-    //   return getRateQuoteForOfferAndAffiliate(
-    //     offer.id as OfferID,
-    //     affiliateID as AffiliateID
-    //   );
-    // },
+    activationsForAffiliate: async (
+      offer: OfferAffiliateView,
+      args: OfferAffiliateViewActivationsForAffiliateArgs
+    ): Promise<Omit<RateQuoteEstimate, "__typename">[]> => {
+      const rateQuoteActivations =
+        await getActivationsWithRateQuoteForAffiliate(
+          args.affiliateID as AffiliateID,
+          offer.id as OfferID
+        );
+      return rateQuoteActivations;
+    },
   },
 
   CreateOfferResponse: {

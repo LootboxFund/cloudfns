@@ -347,16 +347,16 @@ export const listOffersAvailableForOrganizer = async (
     })
     .filter((d) => d.status === OrganizerOfferWhitelistStatus.Active);
   const uniqueWhitelists = _.uniqBy(whitelists, "offerID");
-  const offers = (
-    await Promise.all(
-      uniqueWhitelists.map((w) => {
-        const offerRef = db
-          .collection(Collection.Offer)
-          .doc(w.id) as DocumentReference<Offer_Firestore>;
-        return offerRef.get();
-      })
-    )
-  )
+
+  const offersSnapshots = await Promise.all(
+    uniqueWhitelists.map((w) => {
+      const offerRef = db
+        .collection(Collection.Offer)
+        .doc(w.offerID) as DocumentReference<Offer_Firestore>;
+      return offerRef.get();
+    })
+  );
+  const offers = offersSnapshots
     .map((snap) => {
       if (!snap.exists) {
         return undefined;
@@ -378,6 +378,8 @@ export const listOffersAvailableForOrganizer = async (
         status: x.status,
       };
     });
+  console.log(`---- offers`);
+  console.log(offers);
   return offers;
 };
 

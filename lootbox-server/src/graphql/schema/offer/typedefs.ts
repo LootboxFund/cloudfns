@@ -40,15 +40,17 @@ const OfferTypeDefs = gql`
     endDate: Timestamp
     status: OfferStatus!
     adSetPreviews: [AdSetPreview!]!
-    # activationsForAffiliate: [RateQuote!]!
+    activationsForAffiliate(affiliateID: ID!): [RateQuoteEstimate!]!
     #targetingTags: [AdTargetTag!]!
   }
 
-  type RateQuote {
-    id: ID!
+  type RateQuoteEstimate {
     activationID: ID!
     activationName: String!
-    rate: Float!
+    pricing: Float!
+    affiliateID: ID!
+    rank: String
+    order: Int
   }
 
   type OfferPreview {
