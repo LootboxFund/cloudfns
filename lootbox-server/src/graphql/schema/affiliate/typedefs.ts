@@ -62,18 +62,6 @@ const AffiliateTypeDefs = gql`
       ViewMyTournamentsAsOrganizerResponseSuccess
     | ResponseError
 
-  # ------ View Tournament as Organizer ------
-  input ViewTournamentAsOrganizerInput {
-    tournamentID: ID!
-    affiliateID: ID!
-  }
-  type ViewTournamentAsOrganizerResponseSuccess {
-    tournament: Tournament!
-  }
-  union ViewTournamentAsOrganizerResponse =
-      ViewTournamentAsOrganizerResponseSuccess
-    | ResponseError
-
   # ------ View List of Whitelisted Affiliates to Offer ------
   input ListWhitelistedAffiliatesToOfferPayload {
     offerID: ID!
@@ -94,10 +82,6 @@ const AffiliateTypeDefs = gql`
     viewMyTournamentsAsOrganizer(
       affiliateID: ID!
     ): ViewMyTournamentsAsOrganizerResponse!
-    #
-    viewTournamentAsOrganizer(
-      payload: ViewTournamentAsOrganizerInput!
-    ): ViewTournamentAsOrganizerResponse!
     #
     listWhitelistedAffiliatesToOffer(
       payload: ListWhitelistedAffiliatesToOfferPayload!

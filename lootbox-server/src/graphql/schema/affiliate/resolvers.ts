@@ -153,26 +153,24 @@ const AffiliateResolvers: Resolvers = {
     },
     viewTournamentAsOrganizer: async (
       _,
-      { payload }: QueryViewTournamentAsOrganizerArgs,
+      { tournamentID }: QueryViewTournamentAsOrganizerArgs,
       context: Context
     ): Promise<ViewTournamentAsOrganizerResponse> => {
-      const { affiliateID, tournamentID } = payload;
       try {
         const tournament = await viewTournamentAsOrganizer(
-          affiliateID as AffiliateID,
           tournamentID as TournamentID
         );
         if (!tournament) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No tournament ID ${tournamentID} found for affiliate ID ${affiliateID}`,
+              message: `No tournament ID ${tournamentID}`,
             },
           };
         }
         return {
           // this needs to be figured out how to cooperate types nicely
-          tournament: tournament as Tournament,
+          tournament: tournament as unknown as Tournament,
         };
       } catch (err) {
         console.error(err);

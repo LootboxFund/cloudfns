@@ -1,5 +1,5 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { Address, UserID, UserIdpID } from "@wormgraph/helpers";
+import { Address, AffiliateID, UserID, UserIdpID } from "@wormgraph/helpers";
 import {
   getLootboxSnapshotsForTournamentDeprecated,
   getTournamentById,
@@ -21,6 +21,8 @@ import {
   removeOfferAdSetFromTournament,
   // transformOffersToArray,
   removePromoterFromTournament,
+  renderDealConfigsOfTournament,
+  getAffiliate,
 } from "../../../api/firestore/affiliate";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { StreamID, TournamentID } from "../../../lib/types";
@@ -53,6 +55,8 @@ import {
   AddOfferAdSetToTournamentResponse,
   RemovePromoterFromTournamentResponse,
   AdSetPreview,
+  DealConfigTournament,
+  OrganizerProfile,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
@@ -172,12 +176,27 @@ const TournamentResolvers = {
       );
       return streamsDB.map(convertStreamDBToGQL);
     },
-    // offers: async (tournament: Tournament): Promise<TournamentOffers[]> => {
-    //   return transformOffersToArray(tournament.id as TournamentID);
-    // },
-    // dealConfigs: async (tournament: Tournament): Promise<AdSetPreview[]> => {
-    //   return renderDealConfigsOfTournament(tournament.id as TournamentID);
-    // },
+    organizerProfile: async (
+      tournament: Tournament
+    ): Promise<OrganizerProfile | undefined> => {
+      if (tournament.organizer) {
+        const aff = await getAffiliate(tournament.organizer as AffiliateID);
+        if (aff) {
+          return {
+            id: aff.id,
+            name: aff.name,
+            avatar: aff.avatar,
+          };
+        }
+        return;
+      }
+      return;
+    },
+    dealConfigs: async (
+      tournament: Tournament
+    ): Promise<DealConfigTournament[]> => {
+      return renderDealConfigsOfTournament(tournament.id as TournamentID);
+    },
   },
 
   LootboxTournamentSnapshot: {
@@ -536,7 +555,7 @@ const TournamentResolvers = {
             },
           };
         }
-        return { tournament: tournament as Tournament };
+        return { tournament: tournament as unknown as Tournament };
       } catch (e) {
         return {
           error: {
@@ -570,7 +589,7 @@ const TournamentResolvers = {
             },
           };
         }
-        return { tournament: tournament as Tournament };
+        return { tournament: tournament as unknown as Tournament };
       } catch (e) {
         return {
           error: {
@@ -604,7 +623,7 @@ const TournamentResolvers = {
             },
           };
         }
-        return { tournament: tournament as Tournament };
+        return { tournament: tournament as unknown as Tournament };
       } catch (e) {
         return {
           error: {
@@ -638,7 +657,7 @@ const TournamentResolvers = {
             },
           };
         }
-        return { tournament: tournament as Tournament };
+        return { tournament: tournament as unknown as Tournament };
       } catch (e) {
         return {
           error: {

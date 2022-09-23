@@ -59,23 +59,20 @@ const TournamentTypeDefs = gql`
     streams: [Stream!]
     # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
     organizer: ID
+    organizerProfile: OrganizerProfile
     promoters: [ID!]
-    # offers: [TournamentOffers!]
     dealConfigs: [DealConfigTournament!]!
     # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
-    offers: [TournamentOffers!]
     lootboxSnapshots: [LootboxTournamentSnapshot!]
   }
 
-  # type TournamentOffers {
-  #   id: ID!
-  #   status: OfferInTournamentStatus!
-  #   rateQuotes: [ID!]
-  #   activeAdSets: [ID!]
-  #   inactiveAdSets: [ID!]
-  # }
+  type OrganizerProfile {
+    id: ID!
+    name: String!
+    avatar: String
+  }
 
   type DealConfigTournament {
     tournamentID: ID!
@@ -84,11 +81,11 @@ const TournamentTypeDefs = gql`
     advertiserID: ID!
     advertiserName: String!
     advertiserAvatar: String
-    adSets: [AdSetPreview!]!
-    dealConfigs: [DealConfig!]!
+    adSets: [AdSetPreviewInDealConfig!]!
+    rateQuoteConfigs: [RateQuoteDealConfig!]!
   }
 
-  type DealConfig {
+  type RateQuoteDealConfig {
     rateQuoteID: ID!
     activationID: ID!
     activationName: String!
@@ -97,6 +94,19 @@ const TournamentTypeDefs = gql`
     affiliateID: ID!
     affiliateName: String!
     affiliateAvatar: String
+  }
+
+  type AdSetPreviewInDealConfig {
+    id: ID!
+    name: String!
+    status: AdSetInTournamentStatus!
+    placement: Placement!
+    thumbnail: String
+  }
+
+  enum AdSetInTournamentStatus {
+    Active
+    Inactive
   }
 
   enum OfferInTournamentStatus {
@@ -229,6 +239,14 @@ const TournamentTypeDefs = gql`
     name: String!
   }
 
+  # ------ View Tournament as Organizer ------
+  type ViewTournamentAsOrganizerResponseSuccess {
+    tournament: Tournament!
+  }
+  union ViewTournamentAsOrganizerResponse =
+      ViewTournamentAsOrganizerResponseSuccess
+    | ResponseError
+
   extend type Query {
     # get the public view a specific tournament
     tournament(id: ID!): TournamentResponse!
@@ -236,10 +254,10 @@ const TournamentTypeDefs = gql`
     myTournament(id: ID!): MyTournamentResponse!
     # get the public view of recent tournaments
     battleFeed(first: Int!, after: ID): BattleFeedResponse!
-    # get the private organizer affiliate view of a tournament with earnings report
-    #viewTournamentAsOrganizer(
-    #  tournamentID: ID!
-    #): ViewTournamentAsOrganizerResponse!
+    #
+    viewTournamentAsOrganizer(
+      tournamentID: ID!
+    ): ViewTournamentAsOrganizerResponse!
     # get the private promoter affiliate view of a tournament with earnings report
     #myMonetizedPromoterTournament(
     #  id: ID!

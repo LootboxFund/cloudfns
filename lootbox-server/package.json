@@ -15,7 +15,7 @@
     "@google-cloud/secret-manager": "^4.0.0",
     "@graphql-tools/resolvers-composition": "^6.4.12",
     "@graphql-tools/schema": "^8.3.13",
-    "@wormgraph/helpers": "0.2.0-afn-alpha32",
+    "@wormgraph/helpers": "0.2.0-afn-alpha33",
     "@wormgraph/manifest": "0.4.0-afm-alpha5",
     "apollo-server": "^3.8.1",
     "crypto": "^1.0.1",
