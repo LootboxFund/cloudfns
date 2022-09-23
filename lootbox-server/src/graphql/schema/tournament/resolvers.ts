@@ -1,7 +1,7 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { Address } from "@wormgraph/helpers";
+import { Address, UserID, UserIdpID } from "@wormgraph/helpers";
 import {
-  getLootboxSnapshotsForTournament,
+  getLootboxSnapshotsForTournamentDeprecated,
   getTournamentById,
   createTournament,
   updateTournament,
@@ -13,6 +13,7 @@ import {
   deleteStream,
   updateStream,
   getPartyBasketsForLootbox,
+  getLootboxSnapshotsForTournament,
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
@@ -63,6 +64,11 @@ import {
   MutationRemoveOfferAdSetFromTournamentArgs,
   RemoveOfferAdSetFromTournamentResponse,
 } from "../../generated/types";
+import {
+  convertLootboxTournamentSnapshotDBToGQL,
+  convertStreamDBToGQL,
+  convertTournamentDBToGQL,
+} from "../../../lib/tournament";
 
 const TournamentResolvers = {
   Query: {
@@ -71,8 +77,8 @@ const TournamentResolvers = {
       { id }: QueryTournamentArgs
     ): Promise<TournamentResponse> => {
       try {
-        const tournament = await getTournamentById(id as TournamentID);
-        if (!tournament || !!tournament.timestamps.deletedAt) {
+        const tournamentDB = await getTournamentById(id as TournamentID);
+        if (!tournamentDB || !!tournamentDB.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
@@ -80,7 +86,7 @@ const TournamentResolvers = {
             },
           };
         }
-        return { tournament };
+        return { tournament: convertTournamentDBToGQL(tournamentDB) };
       } catch (err) {
         return {
           error: {
@@ -105,15 +111,17 @@ const TournamentResolvers = {
       }
 
       try {
-        const tournament = await getTournamentById(id as TournamentID);
-        if (!tournament || !!tournament.timestamps.deletedAt) {
+        const tournamentDB = await getTournamentById(id as TournamentID);
+        if (!tournamentDB || !!tournamentDB.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: `Tournament not found`,
             },
           };
-        } else if (tournament.creatorId !== context.userId) {
+        } else if (
+          (tournamentDB.creatorId as unknown as UserIdpID) !== context.userId
+        ) {
           return {
             error: {
               code: StatusCode.Forbidden,
@@ -122,7 +130,7 @@ const TournamentResolvers = {
           };
         }
 
-        return { tournament };
+        return { tournament: convertTournamentDBToGQL(tournamentDB) };
       } catch (err) {
         return {
           error: {
@@ -147,10 +155,22 @@ const TournamentResolvers = {
     lootboxSnapshots: async (
       tournament: Tournament
     ): Promise<LootboxTournamentSnapshot[]> => {
-      return getLootboxSnapshotsForTournament(tournament.id as TournamentID);
+      if (!!tournament.isPostCosmic) {
+        const snapshots = await getLootboxSnapshotsForTournament(
+          tournament.id as TournamentID
+        );
+        return snapshots.map(convertLootboxTournamentSnapshotDBToGQL);
+      } else {
+        return getLootboxSnapshotsForTournamentDeprecated(
+          tournament.id as TournamentID
+        );
+      }
     },
     streams: async (tournament: Tournament): Promise<Stream[]> => {
-      return getTournamentStreams(tournament.id as TournamentID);
+      const streamsDB = await getTournamentStreams(
+        tournament.id as TournamentID
+      );
+      return streamsDB.map(convertStreamDBToGQL);
     },
     // offers: async (tournament: Tournament): Promise<TournamentOffers[]> => {
     //   return transformOffersToArray(tournament.id as TournamentID);
@@ -161,6 +181,7 @@ const TournamentResolvers = {
   },
 
   LootboxTournamentSnapshot: {
+    /** @deprecated to be removed after Party Basket */
     partyBaskets: async (
       snapshot: LootboxTournamentSnapshot
     ): Promise<PartyBasket[]> => {
@@ -188,30 +209,18 @@ const TournamentResolvers = {
         };
       }
       try {
-        const tournament = await createTournament({
+        const tournamentDB = await createTournament({
           title: payload.title,
           description: payload.description,
           tournamentLink: payload.tournamentLink,
-          creatorId: context.userId,
+          creatorId: context.userId as unknown as UserID,
           coverPhoto: payload.coverPhoto,
           prize: payload.prize,
           tournamentDate: payload.tournamentDate,
           communityURL: payload.communityURL,
         });
 
-        let streams: Stream[] = [];
-        if (payload.streams) {
-          try {
-            streams = await createTournamentStreams(
-              context.userId,
-              tournament.id as TournamentID,
-              payload.streams
-            );
-          } catch (err) {
-            console.error("Error making streams", err);
-          }
-        }
-        return { tournament: { ...tournament, streams } };
+        return { tournament: convertTournamentDBToGQL(tournamentDB) };
       } catch (err) {
         return {
           error: {
@@ -237,22 +246,26 @@ const TournamentResolvers = {
 
       try {
         // Make sure the user owns the tournament
-        const tournament = await getTournamentById(payload.id as TournamentID);
-        if (!tournament) {
+        const tournamentDB = await getTournamentById(
+          payload.id as TournamentID
+        );
+        if (!tournamentDB) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: `Tournament not found`,
             },
           };
-        } else if (tournament.creatorId !== context.userId) {
+        } else if (
+          (tournamentDB.creatorId as unknown as UserIdpID) !== context.userId
+        ) {
           return {
             error: {
               code: StatusCode.Forbidden,
               message: `You do not own this tournament`,
             },
           };
-        } else if (!!tournament?.timestamps?.deletedAt) {
+        } else if (!!tournamentDB?.timestamps?.deletedAt) {
           return {
             error: {
               code: StatusCode.InvalidOperation,
@@ -263,12 +276,12 @@ const TournamentResolvers = {
 
         const { id, ...rest } = payload;
 
-        const updatedTournament = await updateTournament(
+        const updatedTournamentDB = await updateTournament(
           id as TournamentID,
           rest
         );
 
-        return { tournament: updatedTournament };
+        return { tournament: convertTournamentDBToGQL(updatedTournamentDB) };
       } catch (err) {
         return {
           error: {
@@ -294,15 +307,17 @@ const TournamentResolvers = {
 
       try {
         // Make sure the user owns the tournament
-        const tournament = await getTournamentById(id as TournamentID);
-        if (!tournament || !!tournament.timestamps.deletedAt) {
+        const tournamentDB = await getTournamentById(id as TournamentID);
+        if (!tournamentDB || !!tournamentDB.timestamps.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: `Tournament not found`,
             },
           };
-        } else if (tournament.creatorId !== context.userId) {
+        } else if (
+          (tournamentDB.creatorId as unknown as UserIdpID) !== context.userId
+        ) {
           return {
             error: {
               code: StatusCode.Forbidden,
@@ -311,9 +326,9 @@ const TournamentResolvers = {
           };
         }
 
-        const deletedTournament = await deleteTournament(id as TournamentID);
+        const deletedTournamentDB = await deleteTournament(id as TournamentID);
 
-        return { tournament: deletedTournament };
+        return { tournament: convertTournamentDBToGQL(deletedTournamentDB) };
       } catch (err) {
         return {
           error: {
@@ -349,7 +364,9 @@ const TournamentResolvers = {
               message: `Tournament not found`,
             },
           };
-        } else if (tournament.creatorId !== context.userId) {
+        } else if (
+          (tournament.creatorId as unknown as UserIdpID) !== context.userId
+        ) {
           /**
            * TODO: later, we will allow players to create their own tournament streams,
            * so this "if statement" might look like:
@@ -374,13 +391,13 @@ const TournamentResolvers = {
           };
         }
 
-        const [stream] = await createTournamentStreams(
+        const [streamDB] = await createTournamentStreams(
           context.userId,
           payload.tournamentId as TournamentID,
           [payload.stream]
         );
 
-        return { stream };
+        return { stream: convertStreamDBToGQL(streamDB) };
       } catch (err) {
         return {
           error: {
@@ -406,16 +423,18 @@ const TournamentResolvers = {
 
       try {
         // Make sure the user owns the stream
-        const stream = await getStreamById(streamId as StreamID);
+        const streamDB = await getStreamById(streamId as StreamID);
 
-        if (!stream || !!stream?.timestamps?.deletedAt) {
+        if (!streamDB || !!streamDB?.timestamps?.deletedAt) {
           return {
             error: {
               code: StatusCode.NotFound,
               message: `Stream not found`,
             },
           };
-        } else if (stream.creatorId !== context.userId) {
+        } else if (
+          (streamDB.creatorId as unknown as UserIdpID) !== context.userId
+        ) {
           return {
             error: {
               code: StatusCode.Forbidden,
@@ -424,12 +443,12 @@ const TournamentResolvers = {
           };
         }
 
-        const deletedStream = await deleteStream(
+        const deletedStreamDB = await deleteStream(
           streamId as StreamID,
-          stream.tournamentId as TournamentID
+          streamDB.tournamentId as TournamentID
         );
 
-        return { stream: deletedStream };
+        return { stream: convertStreamDBToGQL(deletedStreamDB) };
       } catch (err) {
         return {
           error: {
@@ -464,7 +483,9 @@ const TournamentResolvers = {
               message: `Stream not found`,
             },
           };
-        } else if (stream.creatorId !== context.userId) {
+        } else if (
+          (stream.creatorId as unknown as UserIdpID) !== context.userId
+        ) {
           return {
             error: {
               code: StatusCode.Forbidden,
@@ -481,7 +502,7 @@ const TournamentResolvers = {
           rest
         );
 
-        return { stream: updatedStream };
+        return { stream: convertStreamDBToGQL(updatedStream) };
       } catch (err) {
         return {
           error: {

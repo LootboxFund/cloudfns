@@ -24,6 +24,7 @@ import {
   PublicUser,
   MutationUpdateUserAuthArgs,
   MutationCreateUserRecordArgs,
+  Lootbox,
 } from "../../generated/types";
 import {
   getUser,
@@ -50,6 +51,7 @@ import { IIdpUser } from "../../../api/identityProvider/interface";
 import { generateUsername } from "../../../lib/rng";
 import { convertUserToPublicUser } from "./utils";
 import { paginateUserClaims } from "../../../api/firestore";
+import { convertTournamentDBToGQL } from "../../../lib/tournament";
 
 const UserResolvers = {
   Query: {
@@ -135,9 +137,20 @@ const UserResolvers = {
       return await getUserWallets(user.id as UserID);
     },
     tournaments: async (user: User): Promise<Tournament[]> => {
-      const tournaments = await getUserTournaments(user.id as UserID);
-      return tournaments.filter((tourny) => !tourny.timestamps.deletedAt);
+      try {
+        const tournaments = await getUserTournaments(user.id as UserID);
+        return tournaments
+          .filter((tourny) => !tourny.timestamps.deletedAt)
+          .map(convertTournamentDBToGQL);
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
     },
+    // lootboxes: async (user: User): Promise<Lootbox[]> => {
+    //   // paginated
+    // },
+    /** @deprecated use user.lootboxes instead */
     partyBaskets: async (
       user: User,
       lootbox: Address

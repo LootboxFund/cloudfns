@@ -10,7 +10,6 @@ import {
   EditTournamentPayload,
   Lootbox,
   LootboxTournamentSnapshot,
-  LootboxTournamentStatus,
   Tournament,
   PageInfo,
   Stream,
@@ -25,32 +24,47 @@ import {
   StreamID,
   AffiliateID,
 } from "../../lib/types";
-import { Affiliate } from "../../graphql/generated/types";
-import { Collection } from "@wormgraph/helpers";
+import { Collection, Tournament_Firestore } from "@wormgraph/helpers";
+import {
+  LootboxTournamentSnapshot_Firestore,
+  Stream_Firestore,
+} from "./tournament.types";
+import {
+  parseTournamentStreamDB,
+  parseTournamentDB,
+  convertTournamentDBToGQL,
+  parseLootboxTournamentSnapshotDB,
+  convertStreamTypeGQLToDB,
+} from "../../lib/tournament";
 
 export const getTournamentById = async (
   id: TournamentID
-): Promise<Tournament | undefined> => {
+): Promise<Tournament_Firestore | undefined> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
-    .doc(id) as DocumentReference<Tournament>;
+    .doc(id) as DocumentReference<Tournament_Firestore>;
 
   const tournamentSnapshot = await tournamentRef.get();
 
   if (!tournamentSnapshot.exists) {
     return undefined;
   } else {
-    return tournamentSnapshot.data();
+    const data = tournamentSnapshot.data();
+    return data === undefined ? undefined : parseTournamentDB(data);
   }
 };
 
 export const getLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID
-): Promise<LootboxTournamentSnapshot[]> => {
+): Promise<LootboxTournamentSnapshot_Firestore[]> => {
   const collectionRef = db
-    .collection(Collection.Lootbox)
-    .where("tournamentId", "==", tournamentID)
-    .orderBy("timestamps.createdAt", "asc") as Query<Lootbox>;
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .orderBy(
+      "timestamps.createdAt",
+      "asc"
+    ) as Query<LootboxTournamentSnapshot_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
 
@@ -59,42 +73,18 @@ export const getLootboxSnapshotsForTournament = async (
   } else {
     return collectionSnapshot.docs.map((doc) => {
       const data = doc.data();
-      return {
-        address: data.address,
-        issuer: data.issuer,
-        name: data.name,
-        metadataDownloadUrl: data.metadataDownloadUrl,
-        description:
-          data?.metadata?.lootboxCustomSchema?.lootbox?.description || "",
-        timestamps: {
-          updatedAt: data.timestamps.updatedAt,
-          createdAt: data.timestamps.createdAt,
-        },
-        backgroundColor:
-          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundColor || "",
-        backgroundImage:
-          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
-        image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
-        stampImage: data.metadata.image,
-        status:
-          data?.tournamentMetadata?.status || LootboxTournamentStatus.Pending,
-        socials: data?.metadata?.lootboxCustomSchema?.socials
-          ? {
-              ...data?.metadata?.lootboxCustomSchema?.socials,
-              email: undefined,
-            }
-          : {},
-      };
+      return parseLootboxTournamentSnapshotDB(data);
     });
   }
 };
 
 export const getStreamById = async (
   id: StreamID
-): Promise<Stream | undefined> => {
+): Promise<Stream_Firestore | undefined> => {
   const streamRef = db
     .collectionGroup(Collection.Stream)
-    .where("id", "==", id) as Query<Stream>;
+    .where("id", "==", id)
+    .limit(1) as Query<Stream_Firestore>;
 
   const streamSnapshot = await streamRef.get();
 
@@ -102,36 +92,38 @@ export const getStreamById = async (
     return undefined;
   } else {
     const doc = streamSnapshot.docs[0];
-    return doc.data();
+    return parseTournamentStreamDB(doc.data());
   }
 };
 
 export const deleteStream = async (
   streamId: StreamID,
   tournamentId: TournamentID
-): Promise<Stream> => {
+): Promise<Stream_Firestore> => {
   const streamRef = db
     .collection(Collection.Tournament)
     .doc(tournamentId)
     .collection(Collection.Stream)
-    .doc(streamId) as DocumentReference<Stream>;
+    .doc(streamId) as DocumentReference<Stream_Firestore>;
 
   await streamRef.update(
     "timestamps.deletedAt",
     Timestamp.now().toMillis() // soft delete
   );
 
-  return (await streamRef.get()).data() as Stream;
+  return parseTournamentStreamDB(
+    (await streamRef.get()).data() as Stream_Firestore
+  );
 };
 
 export const getTournamentStreams = async (
   tournamentID: TournamentID
-): Promise<Stream[]> => {
+): Promise<Stream_Firestore[]> => {
   const collectionRef = db
     .collection(Collection.Tournament)
     .doc(tournamentID)
     .collection(Collection.Stream)
-    .where("timestamps.deletedAt", "==", null) as Query<Stream>;
+    .where("timestamps.deletedAt", "==", null) as Query<Stream_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
 
@@ -139,7 +131,7 @@ export const getTournamentStreams = async (
     return [];
   } else {
     return collectionSnapshot.docs.map((doc) => {
-      return doc.data();
+      return parseTournamentStreamDB(doc.data());
     });
   }
 };
@@ -148,22 +140,22 @@ export const createTournamentStreams = async (
   userId: UserID | UserIdpID,
   tournamentId: TournamentID,
   streams: (StreamInput | EditStreamPayload)[]
-): Promise<Stream[]> => {
+): Promise<Stream_Firestore[]> => {
   const streamCollection = db
     .collection(Collection.Tournament)
     .doc(tournamentId)
-    .collection(Collection.Stream) as CollectionReference<Stream>;
+    .collection(Collection.Stream) as CollectionReference<Stream_Firestore>;
 
-  const createdStreams: Stream[] = [];
+  const createdStreams: Stream_Firestore[] = [];
 
   for (const stream of streams) {
     const streamRef = streamCollection.doc();
-    const documentToWrite = {
-      creatorId: userId,
-      type: stream.type,
+    const documentToWrite: Stream_Firestore = {
+      creatorId: userId as UserID,
+      type: convertStreamTypeGQLToDB(stream.type),
       url: stream.url,
       name: stream.name,
-      id: streamRef.id,
+      id: streamRef.id as StreamID,
       tournamentId: tournamentId,
       timestamps: {
         createdAt: Timestamp.now().toMillis(),
@@ -208,12 +200,12 @@ export const updateStream = async (
   streamId: StreamID,
   tournamentId: TournamentID,
   stream: UpdateStreamPayload
-): Promise<Stream> => {
+): Promise<Stream_Firestore> => {
   const streamRef = db
     .collection(Collection.Tournament)
     .doc(tournamentId)
     .collection(Collection.Stream)
-    .doc(streamId) as DocumentReference<Stream>;
+    .doc(streamId) as DocumentReference<Stream_Firestore>;
 
   await streamRef.update({
     type: stream.type,
@@ -222,14 +214,16 @@ export const updateStream = async (
     "timestamps.updatedAt": Timestamp.now().toMillis(), // soft delete
   });
 
-  return (await streamRef.get()).data() as Stream;
+  return parseTournamentStreamDB(
+    (await streamRef.get()).data() as Stream_Firestore
+  );
 };
 
 export interface CreateTournamentArgs {
   title: string;
   description: string;
   tournamentLink?: string | null;
-  creatorId: UserIdpID;
+  creatorId: UserID;
   prize?: string | null;
   coverPhoto?: string | null;
   tournamentDate: number;
@@ -246,16 +240,17 @@ export const createTournament = async ({
   tournamentDate,
   communityURL,
   organizer,
-}: CreateTournamentArgs): Promise<Tournament> => {
+}: CreateTournamentArgs): Promise<Tournament_Firestore> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
-    .doc() as DocumentReference<Tournament>;
+    .doc() as DocumentReference<Tournament_Firestore>;
 
-  const tournament: Tournament = {
-    id: tournamentRef.id,
+  const tournament: Tournament_Firestore = {
+    id: tournamentRef.id as TournamentID,
     title,
     description,
-    creatorId,
+    creatorId: creatorId as UserID,
+    isPostCosmic: true,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -295,7 +290,7 @@ export const createTournament = async ({
 export const updateTournament = async (
   id: TournamentID,
   payload: Omit<EditTournamentPayload, "id">
-): Promise<Tournament> => {
+): Promise<Tournament_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
   }
@@ -304,7 +299,7 @@ export const updateTournament = async (
     .collection(Collection.Tournament)
     .doc(id) as DocumentReference<Tournament>;
 
-  const updatePayload: Partial<Tournament> = {};
+  const updatePayload: Partial<Tournament_Firestore> = {};
 
   if (payload.title != undefined) {
     updatePayload.title = payload.title;
@@ -340,29 +335,35 @@ export const updateTournament = async (
 
   await tournamentRef.update(updatePayload);
 
-  return (await tournamentRef.get()).data() as Tournament;
+  return parseTournamentDB(
+    (await tournamentRef.get()).data() as Tournament_Firestore
+  );
 };
 
-export const deleteTournament = async (tournamentId: TournamentID) => {
+export const deleteTournament = async (
+  tournamentId: TournamentID
+): Promise<Tournament_Firestore> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
-    .doc(tournamentId) as DocumentReference<Tournament>;
+    .doc(tournamentId) as DocumentReference<Tournament_Firestore>;
 
   await tournamentRef.update(
     "timestamps.deletedAt",
     Timestamp.now().toMillis() // soft delete
   );
 
-  return (await tournamentRef.get()).data() as Tournament;
+  return parseTournamentDB(
+    (await tournamentRef.get()).data() as Tournament_Firestore
+  );
 };
 
 export const getUserTournaments = async (
   userId: UserID
-): Promise<Tournament[]> => {
+): Promise<Tournament_Firestore[]> => {
   const collectionRef = db
     .collection(Collection.Tournament)
     .where("creatorId", "==", userId)
-    .orderBy("timestamps.createdAt", "desc") as Query<Tournament>;
+    .orderBy("timestamps.createdAt", "desc") as Query<Tournament_Firestore>;
 
   const tournaments = await collectionRef.get();
 
@@ -371,22 +372,7 @@ export const getUserTournaments = async (
   } else {
     return tournaments.docs.map((doc) => {
       const data = doc.data();
-      return {
-        id: doc.id,
-        title: data.title,
-        description: data.description,
-        creatorId: data.creatorId,
-        timestamps: {
-          createdAt: data.timestamps.createdAt,
-          updatedAt: data.timestamps.updatedAt,
-          ...(data.timestamps.deletedAt && {
-            deletedAt: data.timestamps.deletedAt,
-          }),
-        },
-        ...(data.tournamentDate != undefined && {
-          tournamentDate: data.tournamentDate,
-        }),
-      };
+      return parseTournamentDB(data);
     });
   }
 };
@@ -402,12 +388,12 @@ export const paginateBattleFeedQuery = async (
   let tournamentQuery = db
     .collection(Collection.Tournament)
     .where("timestamps.deletedAt", "==", null)
-    .orderBy("timestamps.createdAt", "desc") as Query<Tournament>;
+    .orderBy("timestamps.createdAt", "desc") as Query<Tournament_Firestore>;
 
   if (cursor) {
     const cursorRef = db
       .collection(Collection.Tournament)
-      .doc(cursor) as DocumentReference<Tournament>;
+      .doc(cursor) as DocumentReference<Tournament_Firestore>;
 
     const cursorData = (await cursorRef.get()).data();
     if (cursorData) {
@@ -435,7 +421,7 @@ export const paginateBattleFeedQuery = async (
     return {
       edges: docs.map((doc) => {
         return {
-          node: doc.data(),
+          node: convertTournamentDBToGQL(doc.data()),
           cursor: doc.id,
         };
       }),
@@ -445,5 +431,53 @@ export const paginateBattleFeedQuery = async (
         hasNextPage: tournamentSnapshot.docs.length === limit + 1,
       },
     };
+  }
+};
+
+/** @deprecated please use getLootboxSnapshotsForTournament */
+export const getLootboxSnapshotsForTournamentDeprecated = async (
+  tournamentID: TournamentID
+): Promise<LootboxTournamentSnapshot[]> => {
+  const collectionRef = db
+    .collection(Collection.Lootbox)
+    .where("tournamentId", "==", tournamentID)
+    .orderBy("timestamps.createdAt", "asc") as Query<Lootbox>;
+
+  const collectionSnapshot = await collectionRef.get();
+
+  if (collectionSnapshot.empty) {
+    return [];
+  } else {
+    return collectionSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        address: data.address,
+        issuer: data.issuer,
+        name: data.name,
+        metadataDownloadUrl: data.metadataDownloadUrl,
+        description:
+          data?.metadata?.lootboxCustomSchema?.lootbox?.description || "",
+        timestamps: {
+          updatedAt: data.timestamps.updatedAt,
+          createdAt: data.timestamps.createdAt,
+        },
+        backgroundColor:
+          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundColor || "",
+        backgroundImage:
+          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
+        image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
+        // @ts-gignore
+        stampImage: data.metadata?.image || "",
+        status:
+          // @ts-ignore
+          data?.tournamentMetadata?.status || LootboxTournamentStatus.Pending,
+        socials: data?.metadata?.lootboxCustomSchema?.socials
+          ? {
+              ...data?.metadata?.lootboxCustomSchema?.socials,
+              email: undefined,
+            }
+          : {},
+      };
+    });
   }
 };

@@ -10,14 +10,22 @@ import {
 } from "../../graphql/generated/types";
 import { Address, Collection } from "@wormgraph/helpers";
 import { LootboxID } from "../../lib/types";
-import { convertLootboxToSnapshot } from "../../lib/lootbox";
+import {
+  convertLootboxToSnapshotOld,
+  parseLootboxDB,
+  parseMintWhitelistSignature,
+} from "../../lib/lootbox";
+import {
+  MintWhitelistSignature_Firestore,
+  Lootbox_Firestore,
+} from "./lootbox.types";
 
 export const getLootboxByAddress = async (
   address: Address
-): Promise<Lootbox | undefined> => {
+): Promise<Lootbox_Firestore | undefined> => {
   const lootboxRef = db
     .collection(Collection.Lootbox)
-    .where("address", "==", address) as CollectionReference<Lootbox>;
+    .where("address", "==", address) as CollectionReference<Lootbox_Firestore>;
 
   const lootboxSnapshot = await lootboxRef.get();
 
@@ -25,7 +33,7 @@ export const getLootboxByAddress = async (
     return undefined;
   } else {
     const doc = lootboxSnapshot.docs[0];
-    return doc.data();
+    return parseLootboxDB(doc.data());
   }
 };
 
@@ -68,7 +76,7 @@ export const paginateLootboxFeedQuery = async (
       edges: docs.map((doc) => {
         const data = doc.data();
         return {
-          node: convertLootboxToSnapshot(data),
+          node: convertLootboxToSnapshotOld(data),
           cursor: doc.id,
         };
       }),
@@ -79,4 +87,29 @@ export const paginateLootboxFeedQuery = async (
       },
     };
   }
+};
+
+export const getUserMintSignaturesForLootbox = async (
+  lootboxID: LootboxID,
+  userID: string
+): Promise<MintWhitelistSignature_Firestore[]> => {
+  const collectionRef = db
+    .collection(Collection.Lootbox)
+    .doc(lootboxID)
+    .collection(Collection.MintWhiteList)
+    .where("userID", "==", userID)
+    .orderBy(
+      "timestamp",
+      "asc"
+    ) as CollectionReference<MintWhitelistSignature_Firestore>;
+
+  const collectionSnapshot = await collectionRef.get();
+
+  if (collectionSnapshot.empty) {
+    return [];
+  }
+
+  return collectionSnapshot.docs.map((doc) =>
+    parseMintWhitelistSignature(doc.data())
+  );
 };
