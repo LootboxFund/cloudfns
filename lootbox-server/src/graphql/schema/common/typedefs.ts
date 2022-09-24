@@ -16,6 +16,17 @@ const CommonTypeDefs = gql`
     Unauthorized
   }
 
+  enum OrganizerRank {
+    ClayRank1
+    IronRank2
+    BronzeRank3
+    SilverRank4
+    GoldRank5
+    PlatinumRank6
+    DiamondRank7
+    GhostRank0
+  }
+
   enum AffiliateType {
     Organizer
     Promoter

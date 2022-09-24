@@ -74,6 +74,8 @@ export const upgradeToAffiliate = async (
     userID: userID,
     userIdpID: userIdpID,
     name: user.username || `New Affiliate ${affiliateRef.id}`,
+    description: "",
+    publicContactEmail: "",
     organizerRank: OrganizerRank.ClayRank1,
     avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
   };
@@ -1101,12 +1103,18 @@ export const viewOfferDetailsAsAffiliate = async (offerID: OfferID) => {
   if (!offer) {
     return undefined;
   }
+  const advertiser = await getAdvertiser(offer.advertiserID);
+  if (!offer) {
+    return undefined;
+  }
   const offerAffiliateView = {
     id: offer.id,
     title: offer.title,
     description: offer.description,
     image: offer.image,
     advertiserID: offer.advertiserID,
+    advertiserName: advertiser?.name || "",
+    advertiserAvatar: advertiser?.avatar || "",
     spentBudget: offer.spentBudget,
     maxBudget: offer.maxBudget,
     startDate: offer.startDate,
@@ -1153,4 +1161,20 @@ export const getActivation = async (activationID: ActivationID) => {
     return undefined;
   }
   return activationSnapshot.data();
+};
+
+export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {
+  if (userIdpID === null) {
+    throw new Error(`No userIdpID provided`);
+  }
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .where("userIdpID", "==", userIdpID) as Query<Affiliate_Firestore>;
+
+  const affiliateSnapshot = await affiliateRef.get();
+
+  if (affiliateSnapshot.empty) {
+    throw new Error(`No affiliate found for userIdpID: ${userIdpID}`);
+  }
+  return affiliateSnapshot.docs[0].data();
 };

@@ -6,6 +6,9 @@ const AffiliateTypeDefs = gql`
     userID: ID!
     name: String!
     avatar: String
+    description: String
+    rank: OrganizerRank
+    publicContactEmail: String
   }
 
   type Memo {

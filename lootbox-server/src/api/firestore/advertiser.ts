@@ -56,6 +56,7 @@ export const upgradeToAdvertiser = async (
     userIdpID: userIdpID,
     name: user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
+    publicContactEmail: "",
     offers: [],
     conquests: [],
     affiliatePartners: [],
@@ -333,7 +334,7 @@ type PublicAdvertiserView = Omit<
 >;
 export const advertiserPublicView = async (
   advertiserID: AdvertiserID
-): Promise<PublicAdvertiserView | undefined> => {
+): Promise<Omit<PublicAdvertiserView, "publicContactEmail"> | undefined> => {
   const advertiserRef = db
     .collection(Collection.Advertiser)
     .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
@@ -343,14 +344,13 @@ export const advertiserPublicView = async (
 
   if (!advertiserSnapshot.exists || !adv) {
     return undefined;
-  } else {
-    return {
-      id: adv.id,
-      name: adv.name,
-      description: adv.description,
-      avatar: adv.avatar,
-    };
   }
+  return {
+    id: adv.id,
+    name: adv.name,
+    description: adv.description,
+    avatar: adv.avatar,
+  };
 };
 
 const updateAdvertiserListOfAssociatedTournaments = async ({
