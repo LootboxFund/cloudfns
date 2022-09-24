@@ -165,18 +165,23 @@ export const editWhitelistAffiliateToOffer = async (
 };
 
 export const affiliateAdminView = async (
-  affiliateID: AffiliateID
+  userIdpID: UserIdpID
 ): Promise<Affiliate_Firestore | undefined> => {
   const affiliateRef = db
     .collection(Collection.Affiliate)
-    .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+    .where("userIdpID", "==", userIdpID) as Query<Affiliate_Firestore>;
 
-  const affiliateSnapshot = await affiliateRef.get();
+  const affiliateCollectionItems = await affiliateRef.get();
 
-  if (!affiliateSnapshot.exists) {
-    return undefined;
-  } else {
-    return affiliateSnapshot.data();
+  if (affiliateCollectionItems.empty) {
+    throw Error(`Affiliate with userIdpID ${userIdpID} does not exist`);
+  }
+  const affiliates = affiliateCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return data;
+  });
+  if (affiliates && affiliates[0]) {
+    return affiliates[0];
   }
 };
 

@@ -75,7 +75,7 @@ const AffiliateTypeDefs = gql`
 
   extend type Query {
     # For an affiliate to see their own private profile
-    affiliateAdminView(affiliateID: ID!): AffiliateAdminViewResponse!
+    affiliateAdminView: AffiliateAdminViewResponse!
     # For another affiliate to view the public profile of another affiliate
     affiliatePublicView(affiliateID: ID!): AffiliatePublicViewResponse!
     #
