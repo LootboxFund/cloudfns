@@ -40,6 +40,8 @@ import * as _ from "lodash";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { AdSet_Firestore } from "./ad.types";
 import { OrganizerOfferWhitelist_Firestore } from "./affiliate.type";
+import { getAdvertiser } from "./advertiser";
+import { Advertiser_Firestore } from "./advertiser.type";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -378,38 +380,23 @@ export const listOffersAvailableForOrganizer = async (
         status: x.status,
       };
     });
-  return offers;
-};
-
-export const listAllOffersOnMarket = async (): Promise<
-  OfferPreviewForOrganizer[] | undefined
-> => {
-  const offersRef = db
-    .collection(Collection.Offer)
-    .where("status", "==", OfferStatus.Active) as Query<Offer_Firestore>;
-
-  const offersSnapshot = await offersRef.get();
-
-  if (offersSnapshot.empty) {
-    return [];
-  }
-  const offerPreviews = offersSnapshot.docs.map((doc) => {
-    const data = doc.data();
-    const preview: Omit<OfferPreviewForOrganizer, "adSets"> = {
-      id: doc.id as OfferID,
-      title: data.title,
-      description: data.description,
-      image: data.image,
-      advertiserID: data.advertiserID,
-      spentBudget: data.spentBudget,
-      maxBudget: data.maxBudget,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      status: data.status,
+  const uniqueAdvertiserIDs = _.uniq(offers.map((o) => o.advertiserID));
+  const advertisers = await Promise.all(
+    uniqueAdvertiserIDs.map((aid) => {
+      return getAdvertiser(aid);
+    })
+  );
+  const offersWithDetails = offers.map((offer) => {
+    const advertiser = (
+      advertisers.filter((a) => a) as Advertiser_Firestore[]
+    ).find((a) => a.id === offer.advertiserID);
+    return {
+      ...offer,
+      advertiserName: advertiser?.name || "",
+      advertiserAvatar: advertiser?.avatar || "",
     };
-    return preview;
   });
-  return offerPreviews as OfferPreviewForOrganizer[];
+  return offersWithDetails;
 };
 
 export const listActiveActivationsForOffer = async (

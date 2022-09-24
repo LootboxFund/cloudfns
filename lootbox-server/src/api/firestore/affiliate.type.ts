@@ -15,6 +15,8 @@ export interface Affiliate_Firestore {
   userID: UserID;
   userIdpID: UserIdpID;
   name: string;
+  description: string;
+  publicContactEmail: string;
   organizerRank: OrganizerRank;
   avatar: string;
 }

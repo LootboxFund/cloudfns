@@ -17,6 +17,9 @@ const MarketplaceTypeDefs = gql`
     id: ID!
     name: String!
     avatar: String
+    description: String
+    rank: OrganizerRank
+    publicContactEmail: String
   }
 
   # -------- Browse Active Offers --------

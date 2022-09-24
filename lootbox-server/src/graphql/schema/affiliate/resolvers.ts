@@ -46,7 +46,13 @@ import {
 } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAffiliate } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { ViewMyTournamentsAsOrganizerResponse } from "../../generated/types";
+import {
+  ViewMyTournamentsAsOrganizerResponse,
+  MutationUpdateAffiliateDetailsArgs,
+  UpdateAffiliateDetailsResponse,
+} from "../../generated/types";
+import { updateAdvertiserDetails } from "../../../api/firestore";
+import { updateAffiliateDetails } from "../../../api/firestore/affiliate";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
@@ -228,6 +234,34 @@ const AffiliateResolvers: Resolvers = {
         };
       }
     },
+    updateAffiliateDetails: async (
+      _,
+      { affiliateID, payload }: MutationUpdateAffiliateDetailsArgs,
+      context: Context
+    ): Promise<UpdateAffiliateDetailsResponse> => {
+      try {
+        const affiliate = await updateAffiliateDetails(
+          affiliateID as AffiliateID,
+          payload
+        );
+        if (!affiliate) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No affiliate with ID ${affiliateID} updated`,
+            },
+          };
+        }
+        return { affiliate };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     whitelistAffiliateToOffer: async (
       _,
       { payload }: MutationWhitelistAffiliateToOfferArgs,
@@ -372,6 +406,18 @@ const AffiliateResolvers: Resolvers = {
     __resolveType: (obj: ListWhitelistedAffiliatesToOfferResponse) => {
       if ("whitelists" in obj) {
         return "ListWhitelistedAffiliatesToOfferResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  UpdateAffiliateDetailsResponse: {
+    __resolveType: (obj: UpdateAffiliateDetailsResponse) => {
+      if ("affiliate" in obj) {
+        return "UpdateAffiliateDetailsResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
