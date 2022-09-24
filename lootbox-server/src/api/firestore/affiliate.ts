@@ -21,6 +21,7 @@ import {
   UserIdpID,
   Placement,
   AdSetInTournamentStatus,
+  AdID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -41,21 +42,26 @@ import {
   DealConfigTournament,
   AdSetPreviewInDealConfig,
   Tournament,
+  UpdateAffiliateDetailsPayload,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
   Affiliate_Firestore,
   OrganizerOfferWhitelist_Firestore,
 } from "./affiliate.type";
-import { AdSetStatus, AdSet_Firestore } from "./ad.types";
+import { AdSetStatus, AdSet_Firestore, Ad_Firestore } from "./ad.types";
 // import { TournamentOffers } from "../../graphql/generated/types";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getOffer, listActiveActivationsForOffer } from "./offer";
 import * as _ from "lodash";
 import { Activation_Firestore } from "@wormgraph/helpers";
 import { getTournamentById } from "./tournament";
-import { getAdSet } from "./ad";
+import { getAd, getAdSet } from "./ad";
 import { getAdvertiser } from "./advertiser";
+import {
+  checkIfUserIdpMatchesAdvertiser,
+  checkIfUserIdpMatchesAffiliate,
+} from "../identityProvider/firebase";
 
 export const upgradeToAffiliate = async (
   userID: UserID,
@@ -74,6 +80,8 @@ export const upgradeToAffiliate = async (
     userID: userID,
     userIdpID: userIdpID,
     name: user.username || `New Affiliate ${affiliateRef.id}`,
+    description: "",
+    publicContactEmail: "",
     organizerRank: OrganizerRank.ClayRank1,
     avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
   };
@@ -81,9 +89,66 @@ export const upgradeToAffiliate = async (
   return affiliate;
 };
 
+export const updateAffiliateDetails = async (
+  affiliateID: AffiliateID,
+  payload: UpdateAffiliateDetailsPayload,
+  userIdpID
+): Promise<Affiliate_Firestore> => {
+  // check if user is allowed to run this operation
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userIdpID,
+    affiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this affiliate`
+    );
+  }
+  //
+  if (Object.keys(payload).length === 0) {
+    throw new Error("No data provided");
+  }
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+  const updatePayload: Partial<Affiliate_Firestore> = {};
+  // repeat
+  if (payload.name != undefined) {
+    updatePayload.name = payload.name;
+  }
+  if (payload.description != undefined) {
+    updatePayload.description = payload.description;
+  }
+  if (payload.avatar != undefined) {
+    updatePayload.avatar = payload.avatar;
+  }
+  if (payload.publicContactEmail != undefined) {
+    updatePayload.publicContactEmail = payload.publicContactEmail;
+  }
+
+  // until done
+  await affiliateRef.update(updatePayload);
+  return (await affiliateRef.get()).data() as Affiliate_Firestore;
+};
+
 export const whitelistAffiliateToOffer = async (
-  payload: WhitelistAffiliateToOfferPayload
+  payload: WhitelistAffiliateToOfferPayload,
+  userIdpID
 ): Promise<OrganizerOfferWhitelist_Firestore> => {
+  const offer = await getOffer(payload.offerID as OfferID);
+  if (!offer) {
+    throw Error(`Offer not found`);
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    offer.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
   // check if it already exists
   const existingWhitelistRef = db
     .collection(Collection.WhitelistOfferAffiliate)
@@ -140,8 +205,23 @@ export const whitelistAffiliateToOffer = async (
 };
 
 export const editWhitelistAffiliateToOffer = async (
-  payload: EditWhitelistAffiliateToOfferPayload
+  payload: EditWhitelistAffiliateToOfferPayload,
+  userIdpID
 ): Promise<OrganizerOfferWhitelist_Firestore | undefined> => {
+  const offer = await getOffer(payload.offerID as OfferID);
+  if (!offer) {
+    throw Error(`Offer not found`);
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    offer.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
   const whitelistAffiliateToOfferRef = db
     .collection(Collection.WhitelistOfferAffiliate)
     .doc(payload.id) as DocumentReference<OrganizerOfferWhitelist_Firestore>;
@@ -202,7 +282,8 @@ export const affiliatePublicView = async (
 };
 
 export const addOfferAdSetToTournament = async (
-  payload: AddOfferAdSetToTournamentPayload
+  payload: AddOfferAdSetToTournamentPayload,
+  userIdpID
 ): Promise<Tournament_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -254,6 +335,18 @@ export const addOfferAdSetToTournament = async (
   const existingOffer = offerSnapshot.data() as Offer_Firestore;
   const existingAdSet = adSetSnapshot.data() as AdSet_Firestore;
   const existingAffiliate = affiliateSnapshot.data() as Affiliate_Firestore;
+
+  // check if user is allowed to run this operation
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userIdpID,
+    existingTournament.organizer as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this affiliate`
+    );
+  }
+  //
 
   if (existingOffer.status !== OfferStatus.Active) {
     throw new Error("Offer is not active, cannot add to tournament");
@@ -396,7 +489,8 @@ export const addOfferAdSetToTournament = async (
 };
 
 export const removeOfferAdSetFromTournament = async (
-  payload: RemoveOfferAdSetFromTournamentPayload
+  payload: RemoveOfferAdSetFromTournamentPayload,
+  userIdpID
 ): Promise<Tournament_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -419,6 +513,18 @@ export const removeOfferAdSetFromTournament = async (
     return undefined;
   }
   const existingTournament = tournamentSnapshot.data() as Tournament_Firestore;
+
+  // check if user is allowed to run this operation
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userIdpID,
+    existingTournament.organizer as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this affiliate`
+    );
+  }
+  //
   // check tournament for existing historical rate quotes
   let historicalRateQuotes: RateQuote_Firestore[] = [];
   if (!rateQuoteSnapshots.empty) {
@@ -509,6 +615,7 @@ export const renderDealConfigsOfTournament = async (
 
   const offers = Object.values(offersConfigs);
   const adSetIDs: AdSetID[] = [];
+  const adIDs: AdID[] = [];
   const rateQuoteIDs: RateQuoteID[] = [];
   const affiliateIDs: AffiliateID[] = [];
 
@@ -546,11 +653,20 @@ export const renderDealConfigsOfTournament = async (
   rateQuotesFirestore.forEach((rq) => {
     affiliateIDs.push(rq.affiliateID);
   });
+  _.flatten(adSetsFirestore.map((ads) => ads.adIDs)).forEach((adi) =>
+    adIDs.push(adi)
+  );
 
-  const [advertisersFirestore, activationsFirestore, affiliatesFirestore]: [
+  const [
+    advertisersFirestore,
+    activationsFirestore,
+    affiliatesFirestore,
+    adsFirestore,
+  ]: [
     Advertiser_Firestore[],
     Activation_Firestore[],
-    Affiliate_Firestore[]
+    Affiliate_Firestore[],
+    Ad_Firestore[]
   ] = await Promise.all([
     Promise.all(
       _.uniq(adSetsFirestore.map((adset) => getAdvertiser(adset.advertiserID)))
@@ -563,6 +679,11 @@ export const renderDealConfigsOfTournament = async (
         return getAffiliate(aid);
       })
     ),
+    Promise.all(
+      _.uniq(adIDs).map((aid) => {
+        return getAd(aid);
+      })
+    ),
   ]);
   const dealConfigSets = offers.map((offer) => {
     const offerName = offersFirestore.find((o) => o.id === offer.id)?.title;
@@ -573,13 +694,25 @@ export const renderDealConfigsOfTournament = async (
     const adSets = Object.keys(offer.adSets)
       .map((asid) => {
         const adSet = adSetsFirestore.find((a) => a.id === asid);
-        return {
+        const ad = adsFirestore.find((a) => a.id === adSet?.adIDs[0]);
+        let adSetToReturn: any = {
           id: asid,
           name: adSet?.name || "",
           status: offer.adSets[asid],
           placement: adSet?.placement,
           thumbnail: adSet?.thumbnail || "",
         };
+        if (ad) {
+          adSetToReturn.ad = {
+            adID: ad.id || "",
+            creativeType: ad.creative.creativeType || "",
+            creativeLinks: ad.creative.creativeLinks || [],
+            callToAction: ad.creative.callToAction || "",
+            aspectRatio: ad.creative.aspectRatio || "",
+            themeColor: ad.creative.themeColor || "",
+          };
+        }
+        return adSetToReturn;
       })
       .filter((a) => a.placement) as AdSetPreviewInDealConfig[];
     const rateQuoteConfigs = offer.rateQuotes.map((rqid) => {
@@ -619,60 +752,9 @@ export const renderDealConfigsOfTournament = async (
   return dealConfigSets;
 };
 
-// export const transformOffersToArray = async (
-//   tournamentID: TournamentID
-// ): Promise<TournamentOffers[]> => {
-//   const tournamentRef = db
-//     .collection(Collection.Tournament)
-//     .doc(tournamentID) as DocumentReference<Tournament_Firestore>;
-
-//   const tournamentSnapshot = await tournamentRef.get();
-
-//   if (!tournamentSnapshot.exists) {
-//     return [];
-//   }
-//   const tournament = tournamentSnapshot.data();
-//   if (!tournament || !tournament.offers) return [];
-
-//   const tournamentOffers: TournamentOffers[] = [];
-//   for (const offerID in tournament.offers) {
-//     const offerRef = db
-//       .collection(Collection.Offer)
-//       .doc(offerID) as DocumentReference<Offer_Firestore>;
-//     const offerSnapshot = await offerRef.get();
-//     if (!offerSnapshot.exists) continue;
-//     const offerData = offerSnapshot.data();
-//     if (!offerData) continue;
-//     const activeAdSets: string[] = [];
-//     const inactiveAdSets: string[] = [];
-//     for (const adSetID in tournament.offers[offerID].adSets) {
-//       if (
-//         tournament.offers[offerID].adSets[adSetID] ===
-//         OfferInTournamentStatus.Active
-//       ) {
-//         activeAdSets.push(adSetID);
-//       }
-//       if (
-//         tournament.offers[offerID].adSets[adSetID] ===
-//         OfferInTournamentStatus.Inactive
-//       ) {
-//         inactiveAdSets.push(adSetID);
-//       }
-//     }
-//     tournamentOffers.push({
-//       id: offerData.id,
-//       rateQuotes: [] as RateQuoteID[],
-//       status: offerData.status as unknown as OfferInTournamentStatus,
-//       activeAdSets: activeAdSets,
-//       inactiveAdSets: inactiveAdSets,
-//     });
-//   }
-
-//   return tournamentOffers;
-// };
-
 export const addUpdatePromoterRateQuoteInTournament = async (
-  payload: AddUpdatePromoterRateQuoteToTournamentPayload
+  payload: AddUpdatePromoterRateQuoteToTournamentPayload,
+  userIdpID
 ): Promise<Tournament_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -716,6 +798,17 @@ export const addUpdatePromoterRateQuoteInTournament = async (
     });
   }
   const existingTournament = tournamentSnapshot.data() as Tournament_Firestore;
+  // check if user is allowed to run this operation
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userIdpID,
+    existingTournament.organizer as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this affiliate`
+    );
+  }
+  //
   // start updating tournament
   const updatePayload: Partial<Tournament_Firestore> = {};
   // add promoter to tournament and remove duplicates
@@ -780,7 +873,8 @@ export const addUpdatePromoterRateQuoteInTournament = async (
 };
 
 export const removePromoterFromTournament = async (
-  payload: RemovePromoterFromTournamentPayload
+  payload: RemovePromoterFromTournamentPayload,
+  userIdpID
 ): Promise<Tournament_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -828,6 +922,17 @@ export const removePromoterFromTournament = async (
       .map((rq) => rq.id);
   }
   const existingTournament = tournamentSnapshot.data() as Tournament_Firestore;
+  // check if user is allowed to run this operation
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userIdpID,
+    existingTournament.organizer as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this affiliate`
+    );
+  }
+  //
   const updatePayload: Partial<Tournament_Firestore> = {};
   // repeat
   if (
@@ -909,8 +1014,20 @@ export const deactivateRateQuote = async (
 };
 
 export const viewMyTournamentsAsOrganizer = async (
-  organizerID: AffiliateID
+  organizerID: AffiliateID,
+  userIdpID
 ): Promise<Tournament[]> => {
+  // check if user is allowed to run this operation
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userIdpID,
+    organizerID as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this affiliate`
+    );
+  }
+  //
   const tournamentRef = db
     .collection(Collection.Tournament)
     .where("organizer", "==", organizerID) as Query<Tournament_Firestore>;
@@ -925,7 +1042,8 @@ export const viewMyTournamentsAsOrganizer = async (
 };
 
 export const viewTournamentAsOrganizer = async (
-  tournamentID: TournamentID
+  tournamentID: TournamentID,
+  userIdpID
 ): Promise<Tournament_Firestore | undefined> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -937,12 +1055,36 @@ export const viewTournamentAsOrganizer = async (
     return undefined;
   }
   const tournament = tournamentSnapshot.data();
+  // check if user is allowed to run this operation
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userIdpID,
+    tournament?.organizer as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this affiliate`
+    );
+  }
+  //
   return tournament;
 };
 
 export const viewWhitelistedAffiliatesToOffer = async (
-  offerID: OfferID
+  offerID: OfferID,
+  userIdpID
 ): Promise<OrganizerOfferWhitelistWithProfile[]> => {
+  const offer = await getOffer(offerID);
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    offer?.advertiserID as AdvertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
+  }
+  //
   const organizerOfferWhitelistRef = db
     .collection(Collection.WhitelistOfferAffiliate)
     .where(
@@ -1101,12 +1243,18 @@ export const viewOfferDetailsAsAffiliate = async (offerID: OfferID) => {
   if (!offer) {
     return undefined;
   }
+  const advertiser = await getAdvertiser(offer.advertiserID);
+  if (!offer) {
+    return undefined;
+  }
   const offerAffiliateView = {
     id: offer.id,
     title: offer.title,
     description: offer.description,
     image: offer.image,
     advertiserID: offer.advertiserID,
+    advertiserName: advertiser?.name || "",
+    advertiserAvatar: advertiser?.avatar || "",
     spentBudget: offer.spentBudget,
     maxBudget: offer.maxBudget,
     startDate: offer.startDate,
@@ -1153,4 +1301,20 @@ export const getActivation = async (activationID: ActivationID) => {
     return undefined;
   }
   return activationSnapshot.data();
+};
+
+export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {
+  if (userIdpID === null) {
+    throw new Error(`No userIdpID provided`);
+  }
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .where("userIdpID", "==", userIdpID) as Query<Affiliate_Firestore>;
+
+  const affiliateSnapshot = await affiliateRef.get();
+
+  if (affiliateSnapshot.empty) {
+    throw new Error(`No affiliate found for userIdpID: ${userIdpID}`);
+  }
+  return affiliateSnapshot.docs[0].data();
 };

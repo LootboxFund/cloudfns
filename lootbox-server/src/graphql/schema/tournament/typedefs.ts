@@ -102,6 +102,16 @@ const TournamentTypeDefs = gql`
     status: AdSetInTournamentStatus!
     placement: Placement!
     thumbnail: String
+    ad: AdPreviewInDealConfig
+  }
+
+  type AdPreviewInDealConfig {
+    adID: ID!
+    creativeType: CreativeType!
+    creativeLinks: [String!]!
+    callToAction: String!
+    aspectRatio: AspectRatio!
+    themeColor: String!
   }
 
   enum AdSetInTournamentStatus {

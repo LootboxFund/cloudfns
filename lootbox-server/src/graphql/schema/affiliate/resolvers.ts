@@ -46,7 +46,13 @@ import {
 } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAffiliate } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { ViewMyTournamentsAsOrganizerResponse } from "../../generated/types";
+import {
+  ViewMyTournamentsAsOrganizerResponse,
+  MutationUpdateAffiliateDetailsArgs,
+  UpdateAffiliateDetailsResponse,
+} from "../../generated/types";
+import { updateAdvertiserDetails } from "../../../api/firestore";
+import { updateAffiliateDetails } from "../../../api/firestore/affiliate";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
@@ -121,7 +127,8 @@ const AffiliateResolvers: Resolvers = {
     ): Promise<ViewMyTournamentsAsOrganizerResponse> => {
       try {
         const tournaments = await viewMyTournamentsAsOrganizer(
-          affiliateID as AffiliateID
+          affiliateID as AffiliateID,
+          context.userId
         );
         if (!tournaments) {
           return {
@@ -152,7 +159,8 @@ const AffiliateResolvers: Resolvers = {
     ): Promise<ViewTournamentAsOrganizerResponse> => {
       try {
         const tournament = await viewTournamentAsOrganizer(
-          tournamentID as TournamentID
+          tournamentID as TournamentID,
+          context.userId
         );
         if (!tournament) {
           return {
@@ -183,7 +191,8 @@ const AffiliateResolvers: Resolvers = {
     ): Promise<ListWhitelistedAffiliatesToOfferResponse> => {
       try {
         const whitelists = await viewWhitelistedAffiliatesToOffer(
-          payload.offerID as OfferID
+          payload.offerID as OfferID,
+          context.userId
         );
         return {
           whitelists,
@@ -228,13 +237,45 @@ const AffiliateResolvers: Resolvers = {
         };
       }
     },
+    updateAffiliateDetails: async (
+      _,
+      { affiliateID, payload }: MutationUpdateAffiliateDetailsArgs,
+      context: Context
+    ): Promise<UpdateAffiliateDetailsResponse> => {
+      try {
+        const affiliate = await updateAffiliateDetails(
+          affiliateID as AffiliateID,
+          payload,
+          context.userId
+        );
+        if (!affiliate) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `No affiliate with ID ${affiliateID} updated`,
+            },
+          };
+        }
+        return { affiliate };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     whitelistAffiliateToOffer: async (
       _,
       { payload }: MutationWhitelistAffiliateToOfferArgs,
       context: Context
     ): Promise<WhitelistAffiliateToOfferResponse> => {
       try {
-        const whitelist = await whitelistAffiliateToOffer(payload);
+        const whitelist = await whitelistAffiliateToOffer(
+          payload,
+          context.userId
+        );
         return {
           whitelist,
         };
@@ -261,7 +302,10 @@ const AffiliateResolvers: Resolvers = {
         };
       }
       try {
-        const whitelist = await editWhitelistAffiliateToOffer(payload);
+        const whitelist = await editWhitelistAffiliateToOffer(
+          payload,
+          context.userId
+        );
         if (!whitelist) {
           return {
             error: {
@@ -380,6 +424,18 @@ const AffiliateResolvers: Resolvers = {
       return null;
     },
   },
+  UpdateAffiliateDetailsResponse: {
+    __resolveType: (obj: UpdateAffiliateDetailsResponse) => {
+      if ("affiliate" in obj) {
+        return "UpdateAffiliateDetailsResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const AffiliateComposition = {
@@ -388,7 +444,9 @@ const AffiliateComposition = {
   "Query.viewMyTournamentsAsOrganizer": [isAuthenticated()],
   "Query.listWhitelistedAffiliatesToOffer": [isAuthenticated()],
   "Mutation.upgradeToAffiliate": [isAuthenticated()],
+  "Mutation.updateAffiliateDetails": [isAuthenticated()],
   "Mutation.whitelistAffiliateToOffer": [isAuthenticated()],
+  "Mutation.editWhitelistAffiliateToOffer": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AffiliateResolvers, AffiliateComposition);

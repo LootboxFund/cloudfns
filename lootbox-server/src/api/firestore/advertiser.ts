@@ -56,6 +56,7 @@ export const upgradeToAdvertiser = async (
     userIdpID: userIdpID,
     name: user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
+    publicContactEmail: "",
     offers: [],
     conquests: [],
     affiliatePartners: [],
@@ -68,10 +69,21 @@ export const upgradeToAdvertiser = async (
 
 export const updateAdvertiserDetails = async (
   advertiserID: AdvertiserID,
-  payload: UpdateAdvertiserDetailsPayload
+  payload: UpdateAdvertiserDetailsPayload,
+  userIdpID: UserIdpID
 ): Promise<Advertiser_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
   }
   const advertiserRef = db
     .collection(Collection.Advertiser)
@@ -86,6 +98,9 @@ export const updateAdvertiserDetails = async (
   }
   if (payload.avatar != undefined) {
     updatePayload.avatar = payload.avatar;
+  }
+  if (payload.publicContactEmail != undefined) {
+    updatePayload.publicContactEmail = payload.publicContactEmail;
   }
 
   // until done
@@ -333,7 +348,7 @@ type PublicAdvertiserView = Omit<
 >;
 export const advertiserPublicView = async (
   advertiserID: AdvertiserID
-): Promise<PublicAdvertiserView | undefined> => {
+): Promise<Omit<PublicAdvertiserView, "publicContactEmail"> | undefined> => {
   const advertiserRef = db
     .collection(Collection.Advertiser)
     .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
@@ -343,14 +358,13 @@ export const advertiserPublicView = async (
 
   if (!advertiserSnapshot.exists || !adv) {
     return undefined;
-  } else {
-    return {
-      id: adv.id,
-      name: adv.name,
-      description: adv.description,
-      avatar: adv.avatar,
-    };
   }
+  return {
+    id: adv.id,
+    name: adv.name,
+    description: adv.description,
+    avatar: adv.avatar,
+  };
 };
 
 const updateAdvertiserListOfAssociatedTournaments = async ({

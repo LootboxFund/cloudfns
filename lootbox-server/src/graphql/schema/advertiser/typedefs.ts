@@ -15,6 +15,8 @@ const AdvertiserTypeDefs = gql`
     description: String
     offers: [ID!]!
     conquests: [Conquest!]!
+    avatar: String
+    publicContactEmail: String
   }
 
   type Conquest {
@@ -44,6 +46,7 @@ const AdvertiserTypeDefs = gql`
     name: String!
     description: String
     avatar: String!
+    publicContactEmail: String
   }
   union AdvertiserAdminViewResponse =
       AdvertiserAdminViewResponseSuccess
@@ -54,6 +57,7 @@ const AdvertiserTypeDefs = gql`
     id: ID!
     name: String!
     description: String
+    avatar: String
   }
   union AdvertiserPublicViewResponse =
       AdvertiserPublicViewResponseSuccess
@@ -125,6 +129,7 @@ const AdvertiserTypeDefs = gql`
     name: String
     description: String
     avatar: String
+    publicContactEmail: String
   }
   type UpdateAdvertiserDetailsResponseSuccess {
     advertiser: Advertiser

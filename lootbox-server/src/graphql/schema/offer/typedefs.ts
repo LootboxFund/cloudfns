@@ -34,6 +34,8 @@ const OfferTypeDefs = gql`
     description: String
     image: String
     advertiserID: ID!
+    advertiserName: String!
+    advertiserAvatar: String
     spentBudget: Float
     maxBudget: Float
     startDate: Timestamp
