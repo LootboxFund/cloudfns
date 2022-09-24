@@ -89,6 +89,7 @@ const TournamentTypeDefs = gql`
     rateQuoteID: ID!
     activationID: ID!
     activationName: String!
+    activationOrder: Int!
     description: String
     pricing: Float!
     affiliateID: ID!
@@ -305,7 +306,7 @@ const TournamentTypeDefs = gql`
     affiliateID: ID!
     affiliateType: AffiliateType!
   }
-  input UpdatePromoterRateQuoteToTournamentPayload {
+  input AddUpdatePromoterRateQuoteToTournamentPayload {
     tournamentID: ID!
     promoterID: ID!
     offerID: ID!
@@ -314,7 +315,7 @@ const TournamentTypeDefs = gql`
   type UpdatePromoterRateQuoteInTournamentResponseSuccess {
     tournament: Tournament!
   }
-  union UpdatePromoterRateQuoteInTournamentResponse =
+  union AddUpdatePromoterRateQuoteInTournamentResponse =
       UpdatePromoterRateQuoteInTournamentResponseSuccess
     | ResponseError
 
@@ -354,9 +355,9 @@ const TournamentTypeDefs = gql`
       payload: RemoveOfferAdSetFromTournamentPayload!
     ): RemoveOfferAdSetFromTournamentResponse!
     # organizer updates a promoters rate quote in a tournament
-    updatePromoterRateQuoteInTournament(
-      payload: UpdatePromoterRateQuoteToTournamentPayload!
-    ): UpdatePromoterRateQuoteInTournamentResponse!
+    addUpdatePromoterRateQuoteInTournament(
+      payload: AddUpdatePromoterRateQuoteToTournamentPayload!
+    ): AddUpdatePromoterRateQuoteInTournamentResponse!
     # organizer removes a promoter from a tournament
     removePromoterFromTournament(
       payload: RemovePromoterFromTournamentPayload!

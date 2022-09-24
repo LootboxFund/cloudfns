@@ -17,7 +17,7 @@ import {
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
-  updatePromoterRateQuoteInTournament,
+  addUpdatePromoterRateQuoteInTournament,
   removeOfferAdSetFromTournament,
   // transformOffersToArray,
   removePromoterFromTournament,
@@ -57,13 +57,11 @@ import {
   AdSetPreview,
   DealConfigTournament,
   OrganizerProfile,
+  MutationAddUpdatePromoterRateQuoteInTournamentArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
-import {
-  UpdatePromoterRateQuoteInTournamentResponse,
-  MutationUpdatePromoterRateQuoteInTournamentArgs,
-} from "../../generated/types";
+import { AddUpdatePromoterRateQuoteInTournamentResponse } from "../../generated/types";
 import {
   MutationRemoveOfferAdSetFromTournamentArgs,
   RemoveOfferAdSetFromTournamentResponse,
@@ -599,11 +597,11 @@ const TournamentResolvers = {
         };
       }
     },
-    updatePromoterRateQuoteInTournament: async (
+    addUpdatePromoterRateQuoteInTournament: async (
       _,
-      { payload }: MutationUpdatePromoterRateQuoteInTournamentArgs,
+      { payload }: MutationAddUpdatePromoterRateQuoteInTournamentArgs,
       context: Context
-    ): Promise<UpdatePromoterRateQuoteInTournamentResponse> => {
+    ): Promise<AddUpdatePromoterRateQuoteInTournamentResponse> => {
       if (!context.userId) {
         return {
           error: {
@@ -614,7 +612,9 @@ const TournamentResolvers = {
       }
       try {
         // Make sure the user owns the tournament
-        const tournament = await updatePromoterRateQuoteInTournament(payload);
+        const tournament = await addUpdatePromoterRateQuoteInTournament(
+          payload
+        );
         if (!tournament) {
           return {
             error: {
@@ -813,8 +813,8 @@ const TournamentResolvers = {
       return null;
     },
   },
-  UpdatePromoterRateQuoteInTournamentResponse: {
-    __resolveType: (obj: UpdatePromoterRateQuoteInTournamentResponse) => {
+  AddUpdatePromoterRateQuoteInTournamentResponse: {
+    __resolveType: (obj: AddUpdatePromoterRateQuoteInTournamentResponse) => {
       if ("tournament" in obj) {
         return "UpdatePromoterRateQuoteInTournamentResponseSuccess";
       }
@@ -850,7 +850,7 @@ const tournamentResolverComposition = {
   "Mutation.editStream": [isAuthenticated()],
   "Mutation.addOfferAdSetToTournament": [isAuthenticated()],
   "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
-  "Mutation.updatePromoterRateQuoteInTournament": [isAuthenticated()],
+  "Mutation.addUpdatePromoterRateQuoteInTournament": [isAuthenticated()],
   "Mutation.removePromoterFromTournament": [isAuthenticated()],
   // "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],

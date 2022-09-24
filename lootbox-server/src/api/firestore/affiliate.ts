@@ -29,7 +29,7 @@ import {
   AddOfferAdSetToTournamentPayload,
   AdSet,
   RemoveOfferAdSetFromTournamentPayload,
-  UpdatePromoterRateQuoteToTournamentPayload,
+  AddUpdatePromoterRateQuoteToTournamentPayload,
   RateQuoteInput,
   RemovePromoterFromTournamentPayload,
   WhitelistAffiliateToOfferPayload,
@@ -590,6 +590,7 @@ export const renderDealConfigsOfTournament = async (
         rateQuoteID: rqid,
         activationID: rateQuote?.activationID || "",
         activationName: activation?.name || "",
+        activationOrder: activation?.order || 99,
         description: activation?.description || "",
         pricing: rateQuote?.pricing,
         affiliateID: rateQuote?.affiliateID || "",
@@ -665,8 +666,8 @@ export const renderDealConfigsOfTournament = async (
 //   return tournamentOffers;
 // };
 
-export const updatePromoterRateQuoteInTournament = async (
-  payload: UpdatePromoterRateQuoteToTournamentPayload
+export const addUpdatePromoterRateQuoteInTournament = async (
+  payload: AddUpdatePromoterRateQuoteToTournamentPayload
 ): Promise<Tournament_Firestore | undefined> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -724,7 +725,6 @@ export const updatePromoterRateQuoteInTournament = async (
   // add rate quotes to tournament
   // or replace existing rate quotes
   if (payload.rateQuotes && existingTournament.offers) {
-    const historicalRateQuoteIDs = historicalRateQuotes.map((rq) => rq.id);
     const currentRateQuoteIDs: RateQuoteID[] =
       existingTournament.offers[payload.offerID].rateQuotes || [];
     const rateQuotesToAdd: RateQuoteInput[] = [];
