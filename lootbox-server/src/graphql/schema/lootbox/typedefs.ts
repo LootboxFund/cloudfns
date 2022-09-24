@@ -21,98 +21,6 @@ const LootboxTypeDefs = gql`
     chainName: String!
   }
 
-  type LootboxCustomSchemaDataV2 {
-    name: String!
-    description: String!
-    image: String!
-    backgroundColor: String!
-    backgroundImage: String!
-    badgeImage: String!
-    createdAt: Timestamp!
-    lootboxThemeColor: String!
-    transactionHash: String!
-    blockNumber: String!
-    factory: ID!
-  }
-
-  type LootboxCustomSchemaData {
-    name: String!
-    description: String!
-    image: String!
-    backgroundColor: String!
-    backgroundImage: String!
-    badgeImage: String!
-    targetPaybackDate: Timestamp
-    createdAt: Timestamp!
-    fundraisingTarget: String!
-    fundraisingTargetMax: String!
-    basisPointsReturnTarget: String!
-    returnAmountTarget: String!
-    pricePerShare: String!
-    lootboxThemeColor: String!
-    transactionHash: String!
-    blockNumber: String!
-    factory: ID!
-    tournamentId: ID
-  }
-
-  type LootboxSocials {
-    twitter: String
-    email: String!
-    instagram: String
-    tiktok: String
-    facebook: String
-    discord: String
-    youtube: String
-    snapchat: String
-    twitch: String
-    web: String
-  }
-
-  type LootboxSocialsWithoutEmail {
-    twitter: String
-    instagram: String
-    tiktok: String
-    facebook: String
-    discord: String
-    youtube: String
-    snapchat: String
-    twitch: String
-    web: String
-  }
-
-  type LootboxCustomSchema {
-    version: String!
-    chain: LootboxChain!
-    lootbox: LootboxCustomSchemaData!
-    socials: LootboxSocials!
-  }
-
-  # DEPRECATED
-  type LootboxMetadata {
-    # points to stamp image - opensea compatible
-    image: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # points to lootbox page on lootbox.fund - opensea compatible
-    external_url: String!
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # description of the lootbox - opensea compatible
-    description: String!
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # name of the lootbox - opensea compatible
-    name: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
-    background_color: String!
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
-    animation_url: String
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # A URL to a YouTube video - opensea compatible
-    youtube_url: String
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    lootboxCustomSchema: LootboxCustomSchema
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor") # Used in lootbox custom code etc
-  }
-
   type LootboxTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -169,20 +77,15 @@ const LootboxTypeDefs = gql`
     status: LootboxStatus!
     nftBountyValue: String
     joinCommunityUrl: String
-    status: LootboxStatus
     maxTickets: Int!
     stampImage: String!
     logo: String!
     backgroundImage: String!
     badgeImage: String
     themeColor: String!
-    socials: LootboxSocials!
     version: String!
 
-    # Metadata
-    # metadataDownloadUrl: String!
-    # metadataV2: LootboxMetadataV2!
-
+    # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
     partyBaskets: [PartyBasket!]
       @deprecated(reason: "Use Cosmic Lootbox Instead")
@@ -312,6 +215,90 @@ const LootboxTypeDefs = gql`
     mintLootboxTicket(
       payload: MintLootboxTicketPayload!
     ): MintLootboxTicketResponse!
+  }
+
+  # -------------- DEPRECATED SHIT --------------
+
+  # DEPRECATED
+  type LootboxSocials {
+    twitter: String
+    email: String!
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    youtube: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
+  # DEPRECATED
+  type LootboxSocialsWithoutEmail {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    youtube: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
+  # DEPRECATED
+  type LootboxCustomSchemaData {
+    name: String!
+    description: String!
+    image: String!
+    backgroundColor: String!
+    backgroundImage: String!
+    badgeImage: String!
+    targetPaybackDate: Timestamp
+    createdAt: Timestamp!
+    fundraisingTarget: String!
+    fundraisingTargetMax: String!
+    basisPointsReturnTarget: String!
+    returnAmountTarget: String!
+    pricePerShare: String!
+    lootboxThemeColor: String!
+    transactionHash: String!
+    blockNumber: String!
+    factory: ID!
+    tournamentId: ID
+  }
+
+  # DEPRECATED
+  type LootboxCustomSchema {
+    version: String!
+    chain: LootboxChain!
+    lootbox: LootboxCustomSchemaData!
+    socials: LootboxSocials!
+  }
+
+  # DEPRECATED
+  type LootboxMetadata {
+    # points to stamp image - opensea compatible
+    image: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # points to lootbox page on lootbox.fund - opensea compatible
+    external_url: String!
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # description of the lootbox - opensea compatible
+    description: String!
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # name of the lootbox - opensea compatible
+    name: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
+    background_color: String!
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
+    animation_url: String
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # A URL to a YouTube video - opensea compatible
+    youtube_url: String
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    lootboxCustomSchema: LootboxCustomSchema
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor") # Used in lootbox custom code etc
   }
 `;
 

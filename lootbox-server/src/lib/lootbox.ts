@@ -3,6 +3,8 @@ import {
   LootboxID,
   UserID,
   LootboxTicketID_Web3,
+  LootboxTicket_Firestore,
+  LootboxTicketMetadataV2_Firestore,
 } from "@wormgraph/helpers";
 import {
   Lootbox_Firestore,
@@ -10,8 +12,6 @@ import {
   MintWhitelistSignature_Firestore,
   LootboxStatus_Firestore,
   LootboxDeprecated_Firestore,
-  LootboxTicketMetadataV2_Firestore,
-  LootboxTicket_Firestore,
 } from "../api/firestore/lootbox.types";
 import {
   Lootbox,
@@ -100,7 +100,6 @@ export const convertLootboxToTicketMetadata = (
       createdAt: lootboxFragment.timestamps.createdAt,
       lootboxThemeColor: lootboxFragment.themeColor,
       factory: lootboxFragment.factory,
-      socials: lootboxFragment.socials,
       themeColor: lootboxFragment.themeColor,
     },
   };
@@ -134,7 +133,6 @@ export const parseLootboxDB = (
     backgroundImage: lootbox.backgroundImage,
     badgeImage: lootbox.badgeImage,
     themeColor: lootbox.themeColor,
-    socials: lootbox.socials,
     version: lootbox.version,
     timestamps: {
       createdAt: lootbox.timestamps.createdAt,
@@ -239,24 +237,6 @@ export const convertLootboxGQLToDB = (lootbox: Lootbox): Lootbox_Firestore => {
     backgroundImage: lootbox.backgroundImage,
     badgeImage: !!lootbox.badgeImage ? lootbox.badgeImage : undefined,
     themeColor: lootbox.themeColor,
-    socials: {
-      email: lootbox.socials.email,
-      discord: !!lootbox.socials.discord ? lootbox.socials.discord : undefined,
-      twitter: !!lootbox.socials.twitter ? lootbox.socials.twitter : undefined,
-      web: !!lootbox.socials.web ? lootbox.socials.web : undefined,
-      instagram: !!lootbox.socials.instagram
-        ? lootbox.socials.instagram
-        : undefined,
-      tiktok: !!lootbox.socials.tiktok ? lootbox.socials.tiktok : undefined,
-      facebook: !!lootbox.socials.facebook
-        ? lootbox.socials.facebook
-        : undefined,
-      youtube: !!lootbox.socials.youtube ? lootbox.socials.youtube : undefined,
-      snapchat: !!lootbox.socials.snapchat
-        ? lootbox.socials.snapchat
-        : undefined,
-      twitch: !!lootbox.socials.twitch ? lootbox.socials.twitch : undefined,
-    },
     version: lootbox.version,
   };
 };
@@ -296,7 +276,6 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       backgroundImage: lootbox.backgroundImage,
       badgeImage: lootbox.badgeImage,
       themeColor: lootbox.themeColor,
-      socials: lootbox.socials,
       version: lootbox.version,
     };
   } else {
@@ -334,7 +313,6 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
         deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.badgeImage,
       themeColor:
         deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.backgroundColor,
-      socials: deprecatedLootbox.metadata.lootboxCustomSchema.socials,
       version: "",
     };
   }

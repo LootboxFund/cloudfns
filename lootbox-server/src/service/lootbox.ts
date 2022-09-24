@@ -9,10 +9,8 @@ import {
 import { ethers } from "ethers";
 import { whitelistLootboxMintSignature } from "../api/ethers";
 import { createMintWhitelistSignature, finalizeMint } from "../api/firestore";
-import { LootboxTicket_Firestore } from "../api/firestore/lootbox.types";
 import { Lootbox, LootboxTicket } from "../graphql/generated/types";
 import {
-  convertLootboxDBToGQL,
   convertLootboxGQLToDB,
   convertLootboxTicketDBToLootboxTicket,
   convertLootboxToTicketMetadata,

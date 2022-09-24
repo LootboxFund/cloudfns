@@ -1,24 +1,14 @@
 import axios from "axios";
 import { manifest } from "../manifest";
-import { Address, ChainIDHex, ContractAddress, Url } from "@wormgraph/helpers";
-import { LootboxTicketMetadataV2_Firestore } from "./firestore/lootbox.types";
+import {
+  StampNewTicketProps,
+  StampNewTicketResponse,
+  LootboxTicketMetadataV2_Firestore,
+  Address,
+  ChainIDHex,
+  Url,
+} from "@wormgraph/helpers";
 
-interface StampNewTicketProps {
-  backgroundImage: Url;
-  badgeImage?: Url;
-  logoImage: Url;
-  themeColor: string;
-  name: string;
-  ticketID: string;
-  lootboxAddress: Address;
-  chainIdHex: ChainIDHex;
-  numShares: string;
-  metadata: LootboxTicketMetadataV2_Firestore;
-}
-interface StampNewTicketResponse {
-  stamp: string;
-  uri: string;
-}
 export const stampNewTicket = async (
   secret: string,
   props: StampNewTicketProps
