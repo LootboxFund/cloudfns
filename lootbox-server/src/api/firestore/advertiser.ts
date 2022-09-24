@@ -88,6 +88,9 @@ export const updateAdvertiserDetails = async (
   if (payload.avatar != undefined) {
     updatePayload.avatar = payload.avatar;
   }
+  if (payload.publicContactEmail != undefined) {
+    updatePayload.publicContactEmail = payload.publicContactEmail;
+  }
 
   // until done
   await advertiserRef.update(updatePayload);

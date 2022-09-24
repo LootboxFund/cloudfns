@@ -41,6 +41,7 @@ import {
   DealConfigTournament,
   AdSetPreviewInDealConfig,
   Tournament,
+  UpdateAffiliateDetailsPayload,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
@@ -81,6 +82,36 @@ export const upgradeToAffiliate = async (
   };
   await affiliateRef.set(affiliate);
   return affiliate;
+};
+
+export const updateAffiliateDetails = async (
+  affiliateID: AffiliateID,
+  payload: UpdateAffiliateDetailsPayload
+): Promise<Affiliate_Firestore> => {
+  if (Object.keys(payload).length === 0) {
+    throw new Error("No data provided");
+  }
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .doc(affiliateID) as DocumentReference<Affiliate_Firestore>;
+  const updatePayload: Partial<Affiliate_Firestore> = {};
+  // repeat
+  if (payload.name != undefined) {
+    updatePayload.name = payload.name;
+  }
+  if (payload.description != undefined) {
+    updatePayload.description = payload.description;
+  }
+  if (payload.avatar != undefined) {
+    updatePayload.avatar = payload.avatar;
+  }
+  if (payload.publicContactEmail != undefined) {
+    updatePayload.publicContactEmail = payload.publicContactEmail;
+  }
+
+  // until done
+  await affiliateRef.update(updatePayload);
+  return (await affiliateRef.get()).data() as Affiliate_Firestore;
 };
 
 export const whitelistAffiliateToOffer = async (
@@ -620,58 +651,6 @@ export const renderDealConfigsOfTournament = async (
 
   return dealConfigSets;
 };
-
-// export const transformOffersToArray = async (
-//   tournamentID: TournamentID
-// ): Promise<TournamentOffers[]> => {
-//   const tournamentRef = db
-//     .collection(Collection.Tournament)
-//     .doc(tournamentID) as DocumentReference<Tournament_Firestore>;
-
-//   const tournamentSnapshot = await tournamentRef.get();
-
-//   if (!tournamentSnapshot.exists) {
-//     return [];
-//   }
-//   const tournament = tournamentSnapshot.data();
-//   if (!tournament || !tournament.offers) return [];
-
-//   const tournamentOffers: TournamentOffers[] = [];
-//   for (const offerID in tournament.offers) {
-//     const offerRef = db
-//       .collection(Collection.Offer)
-//       .doc(offerID) as DocumentReference<Offer_Firestore>;
-//     const offerSnapshot = await offerRef.get();
-//     if (!offerSnapshot.exists) continue;
-//     const offerData = offerSnapshot.data();
-//     if (!offerData) continue;
-//     const activeAdSets: string[] = [];
-//     const inactiveAdSets: string[] = [];
-//     for (const adSetID in tournament.offers[offerID].adSets) {
-//       if (
-//         tournament.offers[offerID].adSets[adSetID] ===
-//         OfferInTournamentStatus.Active
-//       ) {
-//         activeAdSets.push(adSetID);
-//       }
-//       if (
-//         tournament.offers[offerID].adSets[adSetID] ===
-//         OfferInTournamentStatus.Inactive
-//       ) {
-//         inactiveAdSets.push(adSetID);
-//       }
-//     }
-//     tournamentOffers.push({
-//       id: offerData.id,
-//       rateQuotes: [] as RateQuoteID[],
-//       status: offerData.status as unknown as OfferInTournamentStatus,
-//       activeAdSets: activeAdSets,
-//       inactiveAdSets: inactiveAdSets,
-//     });
-//   }
-
-//   return tournamentOffers;
-// };
 
 export const addUpdatePromoterRateQuoteInTournament = async (
   payload: AddUpdatePromoterRateQuoteToTournamentPayload

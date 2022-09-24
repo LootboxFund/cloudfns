@@ -154,9 +154,28 @@ const AffiliateTypeDefs = gql`
       EditWhitelistAffiliateToOfferResponseSuccess
     | ResponseError
 
+  # ------ Update an Affiliate Details ------
+  input UpdateAffiliateDetailsPayload {
+    name: String!
+    avatar: String
+    description: String
+    publicContactEmail: String
+  }
+  type UpdateAffiliateDetailsResponseSuccess {
+    affiliate: Affiliate!
+  }
+  union UpdateAffiliateDetailsResponse =
+      UpdateAffiliateDetailsResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     # Upgrade a regular user and give them an affiliate account
     upgradeToAffiliate(userID: ID!): UpgradeToAffiliateResponse!
+    # Update an affiliate's profile
+    updateAffiliateDetails(
+      affiliateID: ID!
+      payload: UpdateAffiliateDetailsPayload!
+    ): UpdateAffiliateDetailsResponse!
     # Whitelist an offer to an affiliate (be careful about auth here)
     whitelistAffiliateToOffer(
       payload: WhitelistAffiliateToOfferPayload!
