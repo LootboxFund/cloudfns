@@ -127,7 +127,8 @@ const AffiliateResolvers: Resolvers = {
     ): Promise<ViewMyTournamentsAsOrganizerResponse> => {
       try {
         const tournaments = await viewMyTournamentsAsOrganizer(
-          affiliateID as AffiliateID
+          affiliateID as AffiliateID,
+          context.userId
         );
         if (!tournaments) {
           return {
@@ -158,7 +159,8 @@ const AffiliateResolvers: Resolvers = {
     ): Promise<ViewTournamentAsOrganizerResponse> => {
       try {
         const tournament = await viewTournamentAsOrganizer(
-          tournamentID as TournamentID
+          tournamentID as TournamentID,
+          context.userId
         );
         if (!tournament) {
           return {
@@ -189,7 +191,8 @@ const AffiliateResolvers: Resolvers = {
     ): Promise<ListWhitelistedAffiliatesToOfferResponse> => {
       try {
         const whitelists = await viewWhitelistedAffiliatesToOffer(
-          payload.offerID as OfferID
+          payload.offerID as OfferID,
+          context.userId
         );
         return {
           whitelists,
@@ -242,7 +245,8 @@ const AffiliateResolvers: Resolvers = {
       try {
         const affiliate = await updateAffiliateDetails(
           affiliateID as AffiliateID,
-          payload
+          payload,
+          context.userId
         );
         if (!affiliate) {
           return {
@@ -268,7 +272,10 @@ const AffiliateResolvers: Resolvers = {
       context: Context
     ): Promise<WhitelistAffiliateToOfferResponse> => {
       try {
-        const whitelist = await whitelistAffiliateToOffer(payload);
+        const whitelist = await whitelistAffiliateToOffer(
+          payload,
+          context.userId
+        );
         return {
           whitelist,
         };
@@ -295,7 +302,10 @@ const AffiliateResolvers: Resolvers = {
         };
       }
       try {
-        const whitelist = await editWhitelistAffiliateToOffer(payload);
+        const whitelist = await editWhitelistAffiliateToOffer(
+          payload,
+          context.userId
+        );
         if (!whitelist) {
           return {
             error: {
@@ -434,7 +444,9 @@ const AffiliateComposition = {
   "Query.viewMyTournamentsAsOrganizer": [isAuthenticated()],
   "Query.listWhitelistedAffiliatesToOffer": [isAuthenticated()],
   "Mutation.upgradeToAffiliate": [isAuthenticated()],
+  "Mutation.updateAffiliateDetails": [isAuthenticated()],
   "Mutation.whitelistAffiliateToOffer": [isAuthenticated()],
+  "Mutation.editWhitelistAffiliateToOffer": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AffiliateResolvers, AffiliateComposition);

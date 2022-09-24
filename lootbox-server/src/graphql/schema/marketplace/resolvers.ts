@@ -4,6 +4,7 @@ import {
   browseActiveOffers,
   browseAllAffiliates,
 } from "../../../api/firestore/marketplace";
+import { isAuthenticated } from "../../../lib/permissionGuard";
 import {
   BrowseActiveOffersResponse,
   BrowseAllAffiliatesResponse,
@@ -105,7 +106,10 @@ const MarketplaceResolvers: Resolvers = {
   },
 };
 
-const marketplaceResolverComposition = {};
+const marketplaceResolverComposition = {
+  "Query.browseActiveOffers": [isAuthenticated()],
+  "Query.browseAllAffiliates": [isAuthenticated()],
+};
 
 const marketplaceResolvers = composeResolvers(
   MarketplaceResolvers,
