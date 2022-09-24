@@ -9,6 +9,7 @@ import {
   AdFlight_Firestore,
   AdID,
   AdSetID,
+  AdSetInTournamentStatus,
   AdvertiserID,
   AffiliateID,
   CampaignID,
@@ -59,7 +60,7 @@ export const decideAdToServe = async ({
     (acc, curr) => {
       const adSets = curr[1].adSets;
       const activeAdSetIds = Object.keys(adSets).filter((key) => {
-        return adSets[key] === OfferInTournamentStatus.Active;
+        return adSets[key] === AdSetInTournamentStatus.Active;
       }) as AdSetID[];
       return [...acc, ...activeAdSetIds];
     },

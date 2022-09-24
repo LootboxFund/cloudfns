@@ -88,6 +88,9 @@ export const parseTournamentDB = (
   if (data.tournamentLink) {
     res.tournamentDate = data.tournamentDate;
   }
+  if (data.offers) {
+    res.offers = data.offers;
+  }
 
   return res;
 };
@@ -175,7 +178,7 @@ export const convertStreamTypeGQLToDB = (
 export const convertTournamentDBToGQL = (
   tournament: Tournament_Firestore
 ): Tournament => {
-  const res: Tournament = {
+  const res: Omit<Tournament, "dealConfigs"> = {
     id: tournament.id,
     title: tournament.title,
     description: tournament.description,
@@ -212,7 +215,7 @@ export const convertTournamentDBToGQL = (
     res.tournamentLink = tournament.tournamentLink;
   }
 
-  return res;
+  return res as unknown as Tournament;
 };
 
 export const convertLootboxTournamentSnapshotDBToGQL = (

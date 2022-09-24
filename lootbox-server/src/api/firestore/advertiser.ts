@@ -501,3 +501,18 @@ export const listPartnersOfAdvertiser = async (
   });
   return affiliatePreviews;
 };
+
+export const getAdvertiser = async (
+  advertiserID: AdvertiserID
+): Promise<Advertiser_Firestore | undefined> => {
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+
+  if (!advertiserSnapshot.exists) {
+    return undefined;
+  }
+  return advertiserSnapshot.data();
+};

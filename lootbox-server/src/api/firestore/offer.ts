@@ -476,3 +476,18 @@ export const getAdSetPreviewsForOffer = async (
     };
   });
 };
+
+export const getOffer = async (
+  offerID: OfferID
+): Promise<Offer_Firestore | undefined> => {
+  const offerRef = db
+    .collection(Collection.Offer)
+    .doc(offerID) as DocumentReference<Offer_Firestore>;
+
+  const offerSnapshot = await offerRef.get();
+
+  if (!offerSnapshot.exists) {
+    return undefined;
+  }
+  return offerSnapshot.data();
+};

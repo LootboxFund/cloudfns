@@ -59,19 +59,55 @@ const TournamentTypeDefs = gql`
     streams: [Stream!]
     # affiliateAdIds: [String] # For v0, we use an array of ids on the tournament
     organizer: ID
+    organizerProfile: OrganizerProfile
     promoters: [ID!]
+    dealConfigs: [DealConfigTournament!]!
+    # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
-    offers: [TournamentOffers!]
     lootboxSnapshots: [LootboxTournamentSnapshot!]
   }
 
-  type TournamentOffers {
+  type OrganizerProfile {
     id: ID!
-    status: OfferInTournamentStatus!
-    rateQuotes: [ID!]
-    activeAdSets: [ID!]
-    inactiveAdSets: [ID!]
+    name: String!
+    avatar: String
+  }
+
+  type DealConfigTournament {
+    tournamentID: ID!
+    offerID: ID!
+    offerName: String!
+    advertiserID: ID!
+    advertiserName: String!
+    advertiserAvatar: String
+    adSets: [AdSetPreviewInDealConfig!]!
+    rateQuoteConfigs: [RateQuoteDealConfig!]!
+  }
+
+  type RateQuoteDealConfig {
+    rateQuoteID: ID!
+    activationID: ID!
+    activationName: String!
+    activationOrder: Int!
+    description: String
+    pricing: Float!
+    affiliateID: ID!
+    affiliateName: String!
+    affiliateAvatar: String
+  }
+
+  type AdSetPreviewInDealConfig {
+    id: ID!
+    name: String!
+    status: AdSetInTournamentStatus!
+    placement: Placement!
+    thumbnail: String
+  }
+
+  enum AdSetInTournamentStatus {
+    Active
+    Inactive
   }
 
   enum OfferInTournamentStatus {
@@ -204,6 +240,14 @@ const TournamentTypeDefs = gql`
     name: String!
   }
 
+  # ------ View Tournament as Organizer ------
+  type ViewTournamentAsOrganizerResponseSuccess {
+    tournament: Tournament!
+  }
+  union ViewTournamentAsOrganizerResponse =
+      ViewTournamentAsOrganizerResponseSuccess
+    | ResponseError
+
   extend type Query {
     # get the public view a specific tournament
     tournament(id: ID!): TournamentResponse!
@@ -211,10 +255,10 @@ const TournamentTypeDefs = gql`
     myTournament(id: ID!): MyTournamentResponse!
     # get the public view of recent tournaments
     battleFeed(first: Int!, after: ID): BattleFeedResponse!
-    # get the private organizer affiliate view of a tournament with earnings report
-    #viewTournamentAsOrganizer(
-    #  tournamentID: ID!
-    #): ViewTournamentAsOrganizerResponse!
+    #
+    viewTournamentAsOrganizer(
+      tournamentID: ID!
+    ): ViewTournamentAsOrganizerResponse!
     # get the private promoter affiliate view of a tournament with earnings report
     #myMonetizedPromoterTournament(
     #  id: ID!
@@ -262,7 +306,7 @@ const TournamentTypeDefs = gql`
     affiliateID: ID!
     affiliateType: AffiliateType!
   }
-  input UpdatePromoterRateQuoteToTournamentPayload {
+  input AddUpdatePromoterRateQuoteToTournamentPayload {
     tournamentID: ID!
     promoterID: ID!
     offerID: ID!
@@ -271,7 +315,7 @@ const TournamentTypeDefs = gql`
   type UpdatePromoterRateQuoteInTournamentResponseSuccess {
     tournament: Tournament!
   }
-  union UpdatePromoterRateQuoteInTournamentResponse =
+  union AddUpdatePromoterRateQuoteInTournamentResponse =
       UpdatePromoterRateQuoteInTournamentResponseSuccess
     | ResponseError
 
@@ -311,9 +355,9 @@ const TournamentTypeDefs = gql`
       payload: RemoveOfferAdSetFromTournamentPayload!
     ): RemoveOfferAdSetFromTournamentResponse!
     # organizer updates a promoters rate quote in a tournament
-    updatePromoterRateQuoteInTournament(
-      payload: UpdatePromoterRateQuoteToTournamentPayload!
-    ): UpdatePromoterRateQuoteInTournamentResponse!
+    addUpdatePromoterRateQuoteInTournament(
+      payload: AddUpdatePromoterRateQuoteToTournamentPayload!
+    ): AddUpdatePromoterRateQuoteInTournamentResponse!
     # organizer removes a promoter from a tournament
     removePromoterFromTournament(
       payload: RemovePromoterFromTournamentPayload!

@@ -62,18 +62,6 @@ const AffiliateTypeDefs = gql`
       ViewMyTournamentsAsOrganizerResponseSuccess
     | ResponseError
 
-  # ------ View Tournament as Organizer ------
-  input ViewTournamentAsOrganizerInput {
-    tournamentID: ID!
-    affiliateID: ID!
-  }
-  type ViewTournamentAsOrganizerResponseSuccess {
-    tournament: Tournament!
-  }
-  union ViewTournamentAsOrganizerResponse =
-      ViewTournamentAsOrganizerResponseSuccess
-    | ResponseError
-
   # ------ View List of Whitelisted Affiliates to Offer ------
   input ListWhitelistedAffiliatesToOfferPayload {
     offerID: ID!
@@ -87,17 +75,13 @@ const AffiliateTypeDefs = gql`
 
   extend type Query {
     # For an affiliate to see their own private profile
-    affiliateAdminView(affiliateID: ID!): AffiliateAdminViewResponse!
+    affiliateAdminView: AffiliateAdminViewResponse!
     # For another affiliate to view the public profile of another affiliate
     affiliatePublicView(affiliateID: ID!): AffiliatePublicViewResponse!
     #
     viewMyTournamentsAsOrganizer(
       affiliateID: ID!
     ): ViewMyTournamentsAsOrganizerResponse!
-    #
-    viewTournamentAsOrganizer(
-      payload: ViewTournamentAsOrganizerInput!
-    ): ViewTournamentAsOrganizerResponse!
     #
     listWhitelistedAffiliatesToOffer(
       payload: ListWhitelistedAffiliatesToOfferPayload!

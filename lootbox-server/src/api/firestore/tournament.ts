@@ -336,7 +336,7 @@ export const updateTournament = async (
   await tournamentRef.update(updatePayload);
 
   return parseTournamentDB(
-    (await tournamentRef.get()).data() as Tournament_Firestore
+    (await tournamentRef.get()).data() as unknown as Tournament_Firestore
   );
 };
 
