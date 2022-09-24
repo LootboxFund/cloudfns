@@ -7,20 +7,44 @@ import {
   QueryLootboxFeedArgs,
   LootboxFeedResponse,
   MintWhitelistSignature,
+  MutationEditLootboxArgs,
+  EditLootboxResponse,
+  LootboxStatus,
+  BulkMintWhitelistResponse,
+  MutationBulkMintWhitelistArgs,
+  MintLootboxTicketResponse,
+  MutationMintLootboxTicketArgs,
 } from "../../generated/types";
 import {
+  getLootbox,
   getLootboxByAddress,
+  getUser,
   getUserMintSignaturesForLootbox,
   getUserPartyBasketsForLootbox,
+  editLootbox,
   paginateLootboxFeedQuery,
+  getTicketByWeb3ID,
 } from "../../../api/firestore";
-import { Address } from "@wormgraph/helpers";
+import {
+  Address,
+  ClaimID,
+  LootboxMintWhitelistID,
+  LootboxTicketID_Web3,
+} from "@wormgraph/helpers";
 import { Context } from "../../server";
 import { LootboxID, UserID } from "../../../lib/types";
 import {
   convertLootboxDBToGQL,
+  convertLootboxStatusGQLToDB,
   convertMintWhitelistSignatureDBToGQL,
 } from "../../../lib/lootbox";
+import { isAuthenticated } from "../../../lib/permissionGuard";
+import { composeResolvers } from "@graphql-tools/resolvers-composition";
+import { ethers } from "ethers";
+import {
+  bulkSignMintWhitelistSignatures,
+  mintNewTicketCallback,
+} from "../../../service/lootbox";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -64,436 +88,255 @@ const LootboxResolvers: Resolvers = {
   },
 
   Mutation: {
-    // getWhitelistSignatures: async (
-    //   _,
-    //   { payload }: MutationGetWhitelistSignaturesArgs
-    // ): Promise<GetWhitelistSignaturesResponse> => {
-    //   let address: Address;
-    //   let nonce: string;
-    //   let partyBasketAddress: Address;
-    //   try {
-    //     const res = await validatePartyBasketSignature(
-    //       payload?.message,
-    //       payload?.signedMessage
-    //     );
-    //     address = res.address;
-    //     nonce = res.nonce;
-    //     partyBasketAddress = res.partyBasket;
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    //   try {
-    //     // TODO: add the nonce to the database to avoid reuse
-    //     const whitelistSignatures = await getWhitelistSignaturesByAddress(
-    //       address,
-    //       partyBasketAddress
-    //     );
-    //     return {
-    //       signatures: whitelistSignatures,
-    //     };
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
-    // bulkWhitelist: async (
-    //   _,
-    //   { payload }: MutationBulkWhitelistArgs,
-    //   context: Context
-    // ): Promise<BulkWhitelistResponse> => {
-    //   if (!context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `Unauthorized`,
-    //       },
-    //     };
-    //   }
-    //   const { partyBasketAddress, whitelistAddresses } = payload;
-    //   if (whitelistAddresses.length > 50) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: `Too many addresses. At free tier, you can only whitelist up to 50 addresses at a time.`,
-    //       },
-    //     };
-    //   }
-    //   if (!ethers.utils.isAddress(partyBasketAddress)) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: `Invalid party basket address.`,
-    //       },
-    //     };
-    //   }
-    //   let partyBasket: PartyBasket;
-    //   try {
-    //     partyBasket = (await getPartyBasketByAddress(
-    //       partyBasketAddress as Address
-    //     )) as PartyBasket;
-    //     if (!partyBasket) {
-    //       throw new Error("Party Basket Not Found");
-    //     }
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    //   if (partyBasket.status === PartyBasketStatus.Disabled) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: "Party Basket is disabled",
-    //       },
-    //     };
-    //   }
-    //   if (partyBasket.creatorId !== context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `You do not own this Party Basket`,
-    //       },
-    //     };
-    //   }
-    //   let whitelisterPrivateKey: string;
-    //   try {
-    //     whitelisterPrivateKey = await getWhitelisterPrivateKey();
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    //   try {
-    //     const signer = new ethers.Wallet(whitelisterPrivateKey);
-    //     const res = await Promise.allSettled(
-    //       whitelistAddresses.map(async (whitelistAddress: string) => {
-    //         if (!ethers.utils.isAddress(whitelistAddress)) {
-    //           throw new Error("Invalid Address");
-    //         }
-    //         const nonce = generateNonce();
-    //         const signature = await whitelistPartyBasketSignature(
-    //           partyBasket.chainIdHex,
-    //           partyBasket.address,
-    //           whitelistAddress,
-    //           whitelisterPrivateKey,
-    //           nonce
-    //         );
-    //         await createWhitelistSignature({
-    //           signature,
-    //           signer: signer.address as Address,
-    //           whitelistedAddress: whitelistAddress as Address,
-    //           partyBasketId: partyBasket.id as PartyBasketID,
-    //           partyBasketAddress: partyBasketAddress as Address,
-    //           nonce,
-    //         });
-    //         return signature;
-    //       })
-    //     );
-    //     const signatures: (string | null)[] = [];
-    //     const partialErrors: (string | null)[] = [];
-    //     res.forEach((result) => {
-    //       if (result.status === "fulfilled") {
-    //         signatures.push(result.value);
-    //         partialErrors.push(null);
-    //       } else {
-    //         partialErrors.push(result.reason);
-    //         signatures.push(null);
-    //       }
-    //     });
-    //     return {
-    //       signatures,
-    //       errors: partialErrors.every((err) => !!err) ? partialErrors : null,
-    //     };
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
-    // whitelistAllUnassignedClaims: async (
-    //   _,
-    //   { payload }: MutationWhitelistAllUnassignedClaimsArgs,
-    //   context: Context
-    // ): Promise<WhitelistAllUnassignedClaimsResponse> => {
-    //   if (!context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `Unauthorized`,
-    //       },
-    //     };
-    //   }
-    //   let partyBasket: PartyBasket;
-    //   try {
-    //     const _partyBasket = await getPartyBasketById(
-    //       payload.partyBasketId as PartyBasketID
-    //     );
-    //     if (!_partyBasket) {
-    //       throw new Error("Not found");
-    //     }
-    //     partyBasket = _partyBasket;
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: "Error fetching Party Basket",
-    //       },
-    //     };
-    //   }
-    //   if (partyBasket.status === PartyBasketStatus.Disabled) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: "Party Basket is disabled",
-    //       },
-    //     };
-    //   }
-    //   if (partyBasket.creatorId !== context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `You do not own this Party Basket`,
-    //       },
-    //     };
-    //   }
-    //   let whitelisterPrivateKey: string;
-    //   let claimsWithoutWhitelist: Claim[];
-    //   try {
-    //     [whitelisterPrivateKey, claimsWithoutWhitelist] = await Promise.all([
-    //       getWhitelisterPrivateKey(),
-    //       getUnassignedClaims(payload.partyBasketId as PartyBasketID),
-    //     ]);
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: "Server error",
-    //       },
-    //     };
-    //   }
-    //   const signer = new ethers.Wallet(whitelisterPrivateKey);
-    //   const userWalletAddressMap: { [key: UserID]: Address } = {};
-    //   const signatures: (string | null)[] = [];
-    //   const partialErrors: (string | null)[] = [];
-    //   for (const claim of claimsWithoutWhitelist) {
-    //     if (!claim.claimerUserId) {
-    //       continue;
-    //     }
-    //     try {
-    //       if (!userWalletAddressMap[claim.claimerUserId]) {
-    //         const user = await getUser(claim.claimerUserId);
-    //         if (!user) {
-    //           continue;
-    //         }
-    //         const wallets = await getUserWallets(user.id as UserID, 1);
-    //         const wallet = wallets[0];
-    //         if (!wallet) {
-    //           continue;
-    //         }
-    //         userWalletAddressMap[claim.claimerUserId] = wallet.address;
-    //       }
-    //       const walletAddress = userWalletAddressMap[claim.claimerUserId];
-    //       if (!walletAddress) {
-    //         continue;
-    //       }
-    //       // Generate a whitelist
-    //       const nonce = generateNonce();
-    //       const signature = await whitelistPartyBasketSignature(
-    //         partyBasket.chainIdHex,
-    //         partyBasket.address,
-    //         walletAddress,
-    //         whitelisterPrivateKey,
-    //         nonce
-    //       );
-    //       const signatureDocument = await createWhitelistSignature({
-    //         signature,
-    //         signer: signer.address as Address,
-    //         whitelistedAddress: walletAddress,
-    //         partyBasketId: partyBasket.id as PartyBasketID,
-    //         partyBasketAddress: partyBasket.address as Address,
-    //         nonce,
-    //       });
-    //       // Update the claim document
-    //       await attachWhitelistIdToClaim(
-    //         claim.referralId as ReferralID,
-    //         claim.id as ClaimID,
-    //         signatureDocument.id as WhitelistSignatureID
-    //       );
-    //       signatures.push(
-    //         `${claim.claimerUserId} - ${walletAddress} - ${signature}`
-    //       );
-    //     } catch (err) {
-    //       partialErrors.push(
-    //         (err as unknown as any)?.message || "Error occured"
-    //       );
-    //       console.error(err);
-    //     }
-    //   }
-    //   return {
-    //     signatures,
-    //     errors: partialErrors,
-    //   };
-    // },
-    // redeemSignature: async (
-    //   _,
-    //   { payload }: MutationRedeemSignatureArgs
-    // ): Promise<RedeemSignatureResponse> => {
-    //   let address: Address;
-    //   let nonce: string;
-    //   try {
-    //     const res = await validateSignature(
-    //       payload?.message,
-    //       payload?.signedMessage
-    //     );
-    //     address = res.address;
-    //     nonce = res.nonce;
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    //   try {
-    //     const signatureDocument = await getWhitelistSignature(
-    //       payload.signatureId as WhitelistSignatureID,
-    //       payload.partyBasketId as PartyBasketID
-    //     );
-    //     if (!signatureDocument) {
-    //       return {
-    //         error: {
-    //           code: StatusCode.NotFound,
-    //           message: `Signature not found`,
-    //         },
-    //       };
-    //     }
-    //     if (signatureDocument.whitelistedAddress !== address) {
-    //       return {
-    //         error: {
-    //           code: StatusCode.Unauthorized,
-    //           message: `You do not own this bounty`,
-    //         },
-    //       };
-    //     }
-    //     if (signatureDocument.isRedeemed) {
-    //       return {
-    //         error: {
-    //           code: StatusCode.InvalidOperation,
-    //           message: `Bounty already reedeemed`,
-    //         },
-    //       };
-    //     }
-    //     const updatedSignature = await redeemSignature(
-    //       payload.signatureId as WhitelistSignatureID,
-    //       payload.partyBasketId as PartyBasketID
-    //     );
-    //     return {
-    //       signature: updatedSignature,
-    //     };
-    //   } catch (err) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
-    // editPartyBasket: async (
-    //   _,
-    //   { payload }: MutationEditPartyBasketArgs,
-    //   context: Context
-    // ): Promise<EditPartyBasketResponse> => {
-    //   if (!context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `You are not logged in`,
-    //       },
-    //     };
-    //   }
-    //   const { id, ...args } = payload;
-    //   if (Object.values(args).every((value) => value == undefined)) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: `No arguments provided`,
-    //       },
-    //     };
-    //   }
-    //   try {
-    //     const partyBasket = await getPartyBasketById(
-    //       payload.id as PartyBasketID
-    //     );
-    //     if (!partyBasket || !!partyBasket?.timestamps?.deletedAt) {
-    //       return {
-    //         error: {
-    //           code: StatusCode.NotFound,
-    //           message: `Party Basket not found`,
-    //         },
-    //       };
-    //     }
-    //     if (partyBasket.creatorId !== context.userId) {
-    //       return {
-    //         error: {
-    //           code: StatusCode.Unauthorized,
-    //           message: `You do not own this Party Basket`,
-    //         },
-    //       };
-    //     }
-    //     if (payload?.maxClaimsAllowed != undefined) {
-    //       if (payload.maxClaimsAllowed <= 0) {
-    //         return {
-    //           error: {
-    //             code: StatusCode.BadRequest,
-    //             message: "Max Claims Allowed must be greater than 0",
-    //           },
-    //         };
-    //       }
-    //     }
-    //     const updatedPartyBasket = await editPartyBasket({
-    //       id: payload.id as PartyBasketID,
-    //       name: payload.name,
-    //       nftBountyValue: payload.nftBountyValue,
-    //       joinCommunityUrl: payload.joinCommunityUrl,
-    //       status: payload.status,
-    //       maxClaimsAllowed: payload.maxClaimsAllowed,
-    //     });
-    //     return {
-    //       partyBasket: updatedPartyBasket,
-    //     };
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
+    editLootbox: async (
+      _,
+      { payload }: MutationEditLootboxArgs,
+      context: Context
+    ): Promise<EditLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "User is not authenticated",
+          },
+        };
+      }
+
+      try {
+        const [user, lootbox] = await Promise.all([
+          getUser(context.userId),
+          getLootbox(payload.lootboxID as LootboxID),
+        ]);
+        if (!user || !!user.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        if (!lootbox || !!lootbox.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Lootbox not found",
+            },
+          };
+        }
+        if (
+          !!lootbox?.timestamps.deletedAt ||
+          (context.userId as unknown as UserID) !== lootbox.creatorID
+        ) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "You do not own this Lootbox",
+            },
+          };
+        }
+        if (!!payload.maxTickets && payload.maxTickets < lootbox.maxTickets) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "MaxTickets must be increasing.",
+            },
+          };
+        }
+        const res = await editLootbox(payload.lootboxID as LootboxID, {
+          name: payload.name || undefined,
+          description: payload.description || undefined,
+          maxTickets: payload.maxTickets || undefined,
+          nftBountyValue: payload.nftBountyValue || undefined,
+          joinCommunityUrl: payload.joinCommunityUrl || undefined,
+          status: payload.status
+            ? convertLootboxStatusGQLToDB(payload.status)
+            : undefined,
+          logo: payload.logo || undefined,
+          backgroundImage: payload.backgroundImage || undefined,
+          themeColor: payload.themeColor || undefined,
+        });
+
+        return { lootbox: convertLootboxDBToGQL(res) };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    mintLootboxTicket: async (
+      _,
+      { payload }: MutationMintLootboxTicketArgs,
+      context: Context
+    ): Promise<MintLootboxTicketResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "User is not authenticated",
+          },
+        };
+      }
+      try {
+        const [user, lootbox, existingTicket] = await Promise.all([
+          getUser(context.userId),
+          getLootbox(payload.lootboxID as LootboxID),
+          getTicketByWeb3ID(
+            payload.lootboxID as LootboxID,
+            payload.ticketID as LootboxTicketID_Web3
+          ),
+        ]);
+        if (!user || !!user.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        if (!lootbox || !!lootbox.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Lootbox not found",
+            },
+          };
+        }
+        if (!!existingTicket) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Ticket already minted!",
+            },
+          };
+        }
+
+        const ticket = await mintNewTicketCallback({
+          lootbox: convertLootboxDBToGQL(lootbox),
+          payload: {
+            minterUserID: context.userId as unknown as UserID,
+            ticketID: payload.ticketID as LootboxTicketID_Web3,
+            minterAddress: payload.minterAddress as Address,
+            mintWhitelistID: payload.mintWhitelistID as LootboxMintWhitelistID,
+            claimID: !!payload.claimID
+              ? (payload.claimID as ClaimID)
+              : undefined,
+          },
+        });
+
+        return { ticket };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    bulkMintWhitelist: async (
+      _,
+      { payload }: MutationBulkMintWhitelistArgs,
+      context: Context
+    ): Promise<BulkMintWhitelistResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+
+      const { lootboxAddress, whitelistAddresses } = payload;
+
+      if (whitelistAddresses.length > 100) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `Too many addresses. Max 100.`,
+          },
+        };
+      }
+
+      if (!ethers.utils.isAddress(lootboxAddress)) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `Invalid Lootbox address.`,
+          },
+        };
+      }
+
+      let lootbox: Lootbox;
+
+      try {
+        const lootboxDB = await getLootboxByAddress(lootboxAddress as Address);
+        if (!lootboxDB) {
+          throw new Error("Lootbox Not Found");
+        }
+        lootbox = convertLootboxDBToGQL(lootboxDB);
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+
+      if (lootbox.status === LootboxStatus.Disabled) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Lootbox is disabled",
+          },
+        };
+      }
+
+      if (lootbox.status === LootboxStatus.SoldOut) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Lootbox is sold out",
+          },
+        };
+      }
+
+      if (lootbox.creatorID !== context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `You do not own this Lootbox`,
+          },
+        };
+      }
+
+      try {
+        const { signatures, errors } = await bulkSignMintWhitelistSignatures(
+          whitelistAddresses as Address[],
+          lootbox
+        );
+
+        return {
+          signatures,
+          errors: errors.every((err) => !!err) ? errors : null,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   Lootbox: {
@@ -561,6 +404,62 @@ const LootboxResolvers: Resolvers = {
       return null;
     },
   },
+
+  EditLootboxResponse: {
+    __resolveType: (obj: EditLootboxResponse) => {
+      if ("lootbox" in obj) {
+        return "EditLootboxResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  BulkMintWhitelistResponse: {
+    __resolveType: (obj: BulkMintWhitelistResponse) => {
+      if ("signatures" in obj) {
+        return "BulkMintWhitelistResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  MintLootboxTicketResponse: {
+    __resolveType: (obj: MintLootboxTicketResponse) => {
+      if ("ticket" in obj) {
+        return "MintLootboxTicketResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
-export default LootboxResolvers;
+const lootboxResolverComposition = {
+  "Mutation.createPartyBasket": [isAuthenticated()],
+  "Mutation.bulkWhitelist": [isAuthenticated()],
+  "Mutation.editPartyBasket": [isAuthenticated()],
+  "Mutation.whitelistAllUnassignedClaims": [isAuthenticated()],
+  "Mutation.editLootbox": [isAuthenticated()],
+  "Mutation.bulkMintWhitelist": [isAuthenticated()],
+  "Mutation.mintLootboxTicket": [isAuthenticated()],
+};
+
+const lootboxResolvers = composeResolvers(
+  LootboxResolvers,
+  lootboxResolverComposition
+);
+
+export default lootboxResolvers;

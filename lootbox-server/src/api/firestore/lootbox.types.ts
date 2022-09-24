@@ -1,8 +1,11 @@
-import { Address, LootboxID, TournamentID, UserID } from "@wormgraph/helpers";
-
-// TODO move to helpers
-export type LootboxMintSignatureID = string & { readonly _: unique symbol };
-export type LootboxMintSignatureNonce = string & { readonly _: unique symbol };
+import {
+  Address,
+  LootboxID,
+  TournamentID,
+  UserID,
+  LootboxMintWhitelistID,
+  LootboxMintSignatureNonce,
+} from "@wormgraph/helpers";
 
 export enum LootboxVariant_Firestore {
   escrow = "escrow",
@@ -10,32 +13,13 @@ export enum LootboxVariant_Firestore {
   cosmic = "cosmic",
 }
 
-export interface LootboxMetadataV2_Firestore {
-  // points to stamp image - opensea compatible
-  image: string;
-  // points to lootbox page on lootbox.fund - opensea compatible
-  external_url: string;
-  // description of the lootbox - opensea compatible
-  description: string;
-  // name of the lootbox - opensea compatible
-  name: string;
-  // hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
-  background_color: string;
-  // A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
-  animation_url?: string;
-  // A URL to a YouTube video - opensea compatible
-  youtube_url?: string;
-  lootboxCustomSchema: LootboxCustomSchemaV2;
-}
-
 export type MintWhitelistSignature_Firestore = {
-  id: LootboxMintSignatureID;
+  id: LootboxMintWhitelistID;
   signature: string;
   signer: Address;
   whitelistedAddress: Address;
   lootboxAddress: Address;
   isRedeemed: boolean;
-  timestamps: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -44,23 +28,48 @@ export type MintWhitelistSignature_Firestore = {
 
 export type LootboxTimestamps = {
   createdAt: number;
-  indexedAt: number;
   updatedAt: number;
+  deletedAt: number | null;
 };
 
+export enum LootboxStatus_Firestore {
+  active,
+  disabled,
+  soldOut,
+}
+
 export interface Lootbox_Firestore {
+  // Immutable
   id: LootboxID;
   address: Address;
   factory: Address;
-  userId: UserID;
-  name: string;
-  description?: string; // TODO - make this required after full cosmic roll out
+  creatorID: UserID;
+  creatorAddress: Address;
   chainIdHex: string;
   variant: LootboxVariant_Firestore;
   issuer: UserID;
+  chainIdDecimal: string;
+  chainName: string;
+  transactionHash: string;
+  blockNumber: string;
+  version: string;
+  stampImage: string;
+
+  // Mutable
+  logo: string;
+  name: string;
+  description: string;
+  nftBountyValue?: string;
+  joinCommunityUrl?: string;
+  status?: LootboxStatus_Firestore;
+  maxTickets: number;
+  backgroundImage: string;
+  badgeImage?: string;
+  themeColor: string;
+
   timestamps: LootboxTimestamps;
-  metadataDownloadUrl: string;
-  metadataV2: LootboxMetadataV2_Firestore;
+  // metadataDownloadUrl: string;
+  // metadataV2: LootboxMetadataV2_Firestore;
   /** @deprecated */
   metadata?: LootboxMetadata_Firestore;
 }
@@ -86,56 +95,11 @@ export interface LootboxSnapshot {
   timestamps: LootboxSnapshotTimestamps;
 }
 
-export interface LootboxCustomSchemaV2 {
-  version: string;
-  address: Address;
-  chainIdHex: string;
-  chainIdDecimal: string;
-  chainName: string;
-  transactionHash: string;
-  blockNumber: string;
-  name: string;
-  description: string;
-  image: string;
-  backgroundColor: string;
-  backgroundImage: string;
-  badgeImage: string;
-  createdAt: number;
-  lootboxThemeColor: string;
-  factory: Address;
-  socials: LootboxSocials;
-}
-
-export interface LootboxSocials {
-  twitter?: string;
-  email: string;
-  instagram?: string;
-  tiktok?: string;
-  facebook?: string;
-  discord?: string;
-  youtube?: string;
-  snapchat?: string;
-  twitch?: string;
-  web?: string;
-}
-
-export interface LootboxSocialsWithoutEmail_Firestore {
-  twitter?: string;
-  instagram?: string;
-  tiktok?: string;
-  facebook?: string;
-  discord?: string;
-  youtube?: string;
-  snapchat?: string;
-  twitch?: string;
-  web?: string;
-}
-
 /**
  * Deprecated from here onwards mostly from Cosmic Lootbox Refactor
  */
 
-/** @deprecated use LootboxCustomSchemaDataV2 */
+/** @deprecated lootbox does not have JSON metadata anymore (just database entry) */
 export interface LootboxCustomSchemaData {
   name: string;
   description: string;
@@ -171,7 +135,8 @@ export interface LootboxCustomSchema {
   version: string;
   chain: LootboxChain;
   lootbox: LootboxCustomSchemaData;
-  socials: LootboxSocials;
+  /** @deprecated */
+  socials: LootboxSocials_Firestore;
 }
 
 /** @deprecated, use LootboxMetadataV2 */
@@ -192,3 +157,48 @@ export interface LootboxMetadata_Firestore {
   youtube_url?: string;
   lootboxCustomSchema: LootboxCustomSchema;
 }
+
+/** @deprecated will eventually be removed after cosmic */
+export type LootboxDeprecated_Firestore = {
+  address: Address;
+  factory: Address;
+  tournamentId: TournamentID;
+  name: string;
+  chainIdHex: string;
+  variant: LootboxVariant_Firestore;
+
+  issuer: UserID;
+  treasury: Address;
+  targetSharesSold: string;
+  maxSharesSold: string;
+
+  timestamps: {
+    createdAt: number;
+    indexedAt: number;
+    updatedAt: number;
+  };
+
+  // # Metadata
+  metadataDownloadUrl: string;
+  metadata: LootboxMetadata_Firestore;
+};
+
+/** @deprecated we will use the lootbox creator socials for brevity */
+export interface LootboxSocials_Firestore {
+  twitter?: string;
+  email: string;
+  instagram?: string;
+  tiktok?: string;
+  facebook?: string;
+  discord?: string;
+  youtube?: string;
+  snapchat?: string;
+  twitch?: string;
+  web?: string;
+}
+
+/** @deprecated */
+export type LootboxSocialsWithoutEmail_Firestore = Omit<
+  LootboxSocials_Firestore,
+  "email"
+>;

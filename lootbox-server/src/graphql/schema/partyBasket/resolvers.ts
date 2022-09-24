@@ -49,9 +49,9 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import {
   convertLootboxDBToGQL,
-  convertLootboxToSnapshotOld,
+  convertLootboxToSnapshot,
 } from "../../../lib/lootbox";
-import { getWhitelisterPrivateKey } from "../../../lib/secrets";
+import { getWhitelisterPrivateKey } from "../../../api/secrets";
 
 const PartyBasketResolvers: Resolvers = {
   Query: {
@@ -96,7 +96,7 @@ const PartyBasketResolvers: Resolvers = {
         if (!lootbox) {
           return null;
         }
-        return convertLootboxToSnapshotOld(convertLootboxDBToGQL(lootbox));
+        return convertLootboxToSnapshot(lootbox);
       } catch (err) {
         console.error(err);
         return null;

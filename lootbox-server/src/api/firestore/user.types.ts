@@ -11,6 +11,7 @@ export interface Wallet {
   userId: UserID;
   address: string;
   createdAt: number;
+  /** @deprecated - just use the User.Lootboxes resolver */
   lootboxSnapshots: LootboxSnapshot[];
 }
 
@@ -26,9 +27,6 @@ export interface User_Firestore {
   createdAt: number;
   updatedAt: number;
   deletedAt?: number;
-  wallets?: Wallet[];
-  tournaments?: TournamentID[];
-  partyBaskets?: PartyBasketID[];
 }
 
 export type UserSocials = {

@@ -1,6 +1,12 @@
 import { gql } from "apollo-server";
 
 const LootboxTypeDefs = gql`
+  enum LootboxStatus {
+    active
+    disabled
+    soldOut
+  }
+
   enum LootboxVariant {
     escrow
     instant
@@ -15,141 +21,10 @@ const LootboxTypeDefs = gql`
     chainName: String!
   }
 
-  type LootboxCustomSchemaDataV2 {
-    name: String!
-    description: String!
-    image: String!
-    backgroundColor: String!
-    backgroundImage: String!
-    badgeImage: String!
-    createdAt: Timestamp!
-    lootboxThemeColor: String!
-    transactionHash: String!
-    blockNumber: String!
-    factory: ID!
-  }
-
-  type LootboxCustomSchemaData {
-    name: String!
-    description: String!
-    image: String!
-    backgroundColor: String!
-    backgroundImage: String!
-    badgeImage: String!
-    targetPaybackDate: Timestamp
-    createdAt: Timestamp!
-    fundraisingTarget: String!
-    fundraisingTargetMax: String!
-    basisPointsReturnTarget: String!
-    returnAmountTarget: String!
-    pricePerShare: String!
-    lootboxThemeColor: String!
-    transactionHash: String!
-    blockNumber: String!
-    factory: ID!
-    tournamentId: ID
-  }
-
-  type LootboxSocials {
-    twitter: String
-    email: String!
-    instagram: String
-    tiktok: String
-    facebook: String
-    discord: String
-    youtube: String
-    snapchat: String
-    twitch: String
-    web: String
-  }
-
-  type LootboxSocialsWithoutEmail {
-    twitter: String
-    instagram: String
-    tiktok: String
-    facebook: String
-    discord: String
-    youtube: String
-    snapchat: String
-    twitch: String
-    web: String
-  }
-
-  type LootboxCustomSchema {
-    version: String!
-    chain: LootboxChain!
-    lootbox: LootboxCustomSchemaData!
-    socials: LootboxSocials!
-  }
-
-  type LootboxCustomSchemaV2 {
-    version: String!
-    address: ID!
-    chainIdHex: String!
-    chainIdDecimal: String!
-    chainName: String!
-    transactionHash: String!
-    blockNumber: String!
-    # Lootbox data
-    name: String!
-    description: String!
-    image: String!
-    backgroundColor: String!
-    backgroundImage: String!
-    badgeImage: String!
-    createdAt: Timestamp!
-    lootboxThemeColor: String!
-    factory: ID!
-    socials: LootboxSocials!
-  }
-
-  type LootboxMetadataV2 {
-    # points to stamp image - opensea compatible
-    image: String!
-    # points to lootbox page on lootbox.fund - opensea compatible
-    external_url: String!
-    # description of the lootbox - opensea compatible
-    description: String!
-    # name of the lootbox - opensea compatible
-    name: String!
-    # hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
-    background_color: String!
-    # A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
-    animation_url: String
-    # A URL to a YouTube video - opensea compatible
-    youtube_url: String
-    lootboxCustomSchema: LootboxCustomSchemaV2!
-  }
-
-  # DEPRECATED
-  type LootboxMetadata {
-    # points to stamp image - opensea compatible
-    image: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # points to lootbox page on lootbox.fund - opensea compatible
-    external_url: String!
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # description of the lootbox - opensea compatible
-    description: String!
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # name of the lootbox - opensea compatible
-    name: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
-    background_color: String!
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
-    animation_url: String
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    # A URL to a YouTube video - opensea compatible
-    youtube_url: String
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    lootboxCustomSchema: LootboxCustomSchema
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor") # Used in lootbox custom code etc
-  }
-
   type LootboxTimestamps {
     createdAt: Timestamp!
-    indexedAt: Timestamp!
     updatedAt: Timestamp!
+    deletedAt: Timestamp
   }
 
   type MintWhitelistSignature {
@@ -165,22 +40,52 @@ const LootboxTypeDefs = gql`
     deletedAt: Timestamp
   }
 
+  # Subcollection under the Lootbox
+  type LootboxTicket {
+    id: ID!
+    lootboxID: ID!
+    lootboxAddress: ID!
+    ticketID: ID! # web3 ticket id
+    minterUserID: ID!
+    minterAddress: ID!
+    mintWhitelistID: ID!
+    createdAt: Timestamp!
+    stampImage: String!
+    metadataURL: String!
+    claimID: ID
+  }
+
   type Lootbox {
+    # Immutable stuff
     id: ID!
     address: ID!
     factory: ID!
-    userId: ID!
-    name: String!
-    description: String!
+    creatorAddress: ID!
+    creatorID: ID!
     chainIdHex: String!
     variant: LootboxVariant!
     issuer: ID!
     timestamps: LootboxTimestamps!
+    chainIdDecimal: String!
+    chainName: String!
+    transactionHash: String!
+    blockNumber: String!
 
-    # Metadata
-    metadataDownloadUrl: String!
-    metadataV2: LootboxMetadataV2!
+    # Mutable
+    name: String!
+    description: String!
+    status: LootboxStatus!
+    nftBountyValue: String
+    joinCommunityUrl: String
+    maxTickets: Int!
+    stampImage: String!
+    logo: String!
+    backgroundImage: String!
+    badgeImage: String
+    themeColor: String!
+    version: String!
 
+    # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
     partyBaskets: [PartyBasket!]
       @deprecated(reason: "Use Cosmic Lootbox Instead")
@@ -239,66 +144,161 @@ const LootboxTypeDefs = gql`
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
   }
 
-  input CreateLootboxPayload {
-    address: ID!
-    name: String!
-  }
+  # input CreateLootboxPayload {
+  #   address: ID!
+  #   name: String!
+  # }
 
   input EditLootboxPayload {
-    address: ID!
-    name: String!
+    lootboxID: ID!
+    name: String
+    description: String
+    logo: String
+    backgroundImage: String
+    nftBountyValue: String
+    joinCommunityUrl: String
+    status: LootboxStatus
+    maxTickets: Int
+    themeColor: String
   }
 
-  input GrantMintWhitelistToClaimsPlayload {
+  input BulkMintWhitelistPayload {
     whitelistAddresses: [ID!]! # Address of the user being whitelisted
     lootboxAddress: ID!
   }
 
   input MintLootboxTicketPayload {
-    signatureId: ID!
+    mintWhitelistID: ID!
     message: String!
     signedMessage: String!
     lootboxID: ID!
+    ticketID: ID!
+    minterAddress: ID!
+    claimID: ID
   }
 
-  type CreateLootboxResponseSuccess {
-    lootbox: Lootbox!
-  }
+  # type CreateLootboxResponseSuccess {
+  #   lootbox: Lootbox!
+  # }
 
   type MintLootboxTicketResponseSuccess {
-    signature: MintWhitelistSignature!
+    ticket: LootboxTicket!
   }
 
   type EditLootboxResponseSuccess {
     lootbox: Lootbox!
   }
 
-  type GrantMintWhitelistToClaimsResponseSuccess {
+  type BulkMintWhitelistResponseSuccess {
     signatures: [String]!
     errors: [String] # For partial errors
   }
 
-  union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
+  # union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
   union EditLootboxResponse = EditLootboxResponseSuccess | ResponseError
   union GetWhitelistSignaturesResponse =
       GetWhitelistSignaturesResponseSuccess
     | ResponseError
-  union GrantMintWhitelistToClaimsResponse =
-      GrantMintWhitelistToClaimsResponseSuccess
+  union BulkMintWhitelistResponse =
+      BulkMintWhitelistResponseSuccess
     | ResponseError
   union MintLootboxTicketResponse =
       MintLootboxTicketResponseSuccess
     | ResponseError
 
   extend type Mutation {
-    createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
+    # createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
-    grantMintWhitelistToClaims(
-      payload: GrantMintWhitelistToClaimsPlayload!
-    ): GrantMintWhitelistToClaimsResponse!
+    bulkMintWhitelist(
+      payload: BulkMintWhitelistPayload!
+    ): BulkMintWhitelistResponse!
     mintLootboxTicket(
       payload: MintLootboxTicketPayload!
     ): MintLootboxTicketResponse!
+  }
+
+  # -------------- DEPRECATED SHIT --------------
+
+  # DEPRECATED
+  type LootboxSocials {
+    twitter: String
+    email: String!
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    youtube: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
+  # DEPRECATED
+  type LootboxSocialsWithoutEmail {
+    twitter: String
+    instagram: String
+    tiktok: String
+    facebook: String
+    discord: String
+    youtube: String
+    snapchat: String
+    twitch: String
+    web: String
+  }
+
+  # DEPRECATED
+  type LootboxCustomSchemaData {
+    name: String!
+    description: String!
+    image: String!
+    backgroundColor: String!
+    backgroundImage: String!
+    badgeImage: String!
+    targetPaybackDate: Timestamp
+    createdAt: Timestamp!
+    fundraisingTarget: String!
+    fundraisingTargetMax: String!
+    basisPointsReturnTarget: String!
+    returnAmountTarget: String!
+    pricePerShare: String!
+    lootboxThemeColor: String!
+    transactionHash: String!
+    blockNumber: String!
+    factory: ID!
+    tournamentId: ID
+  }
+
+  # DEPRECATED
+  type LootboxCustomSchema {
+    version: String!
+    chain: LootboxChain!
+    lootbox: LootboxCustomSchemaData!
+    socials: LootboxSocials!
+  }
+
+  # DEPRECATED
+  type LootboxMetadata {
+    # points to stamp image - opensea compatible
+    image: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # points to lootbox page on lootbox.fund - opensea compatible
+    external_url: String!
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # description of the lootbox - opensea compatible
+    description: String!
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # name of the lootbox - opensea compatible
+    name: String! @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
+    background_color: String!
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
+    animation_url: String
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    # A URL to a YouTube video - opensea compatible
+    youtube_url: String
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    lootboxCustomSchema: LootboxCustomSchema
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor") # Used in lootbox custom code etc
   }
 `;
 
