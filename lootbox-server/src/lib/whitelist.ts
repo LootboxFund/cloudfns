@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
+import { LootboxMintSignatureNonce } from "@wormgraph/helpers";
 
-export const generateNonce = () => {
+export const generateNonce = (): LootboxMintSignatureNonce => {
   const hexToDec = (s: string) => {
     var i,
       j,
@@ -21,5 +22,5 @@ export const generateNonce = () => {
     return digits.reverse().join("");
   };
   const bytes = randomBytes(16);
-  return hexToDec(bytes.toString("hex"));
+  return hexToDec(bytes.toString("hex")) as LootboxMintSignatureNonce;
 };

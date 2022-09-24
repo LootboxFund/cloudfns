@@ -4,7 +4,6 @@ const TournamentTypeDefs = gql`
   enum LootboxTournamentStatus {
     active
     disabled
-    soldOut
   }
 
   enum StreamType {

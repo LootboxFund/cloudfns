@@ -13,7 +13,8 @@ import {
 } from "../../graphql/generated/types";
 import { Address, Collection } from "@wormgraph/helpers";
 import { UserID, UserIdpID, WalletID } from "../../lib/types";
-import { convertLootboxToSnapshotOld } from "../../lib/lootbox";
+import { convertLootboxToSnapshot } from "../../lib/lootbox";
+import { Lootbox_Firestore } from "./lootbox.types";
 
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
 
@@ -102,12 +103,13 @@ export const createUserWallet = async (
   return wallet;
 };
 
+/** @deprecated - just use User.lootbox resolver */
 export const getLootboxSnapshotsForWallet = async (
   walletAddress: Address
 ): Promise<LootboxSnapshot[]> => {
   const collectionRef = db
     .collection(Collection.Lootbox)
-    .where("issuer", "==", walletAddress) as CollectionGroup<Lootbox>;
+    .where("issuer", "==", walletAddress) as CollectionGroup<Lootbox_Firestore>;
 
   const lootboxSnapshot = await collectionRef.get();
 
@@ -116,7 +118,7 @@ export const getLootboxSnapshotsForWallet = async (
   } else {
     return lootboxSnapshot.docs.map((doc) => {
       const data = doc.data();
-      return convertLootboxToSnapshotOld(data);
+      return convertLootboxToSnapshot(data);
     });
   }
 };

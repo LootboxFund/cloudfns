@@ -18,7 +18,6 @@ export interface StreamTimestamps {
 export enum LootboxTournamentStatus_Firestore {
   active,
   disabled,
-  soldOut,
 }
 
 export enum StreamType_Firestore {

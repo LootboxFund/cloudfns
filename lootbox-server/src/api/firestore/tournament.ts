@@ -36,6 +36,10 @@ import {
   parseLootboxTournamentSnapshotDB,
   convertStreamTypeGQLToDB,
 } from "../../lib/tournament";
+import {
+  LootboxDeprecated_Firestore,
+  Lootbox_Firestore,
+} from "./lootbox.types";
 
 export const getTournamentById = async (
   id: TournamentID
@@ -297,7 +301,7 @@ export const updateTournament = async (
 
   const tournamentRef = db
     .collection(Collection.Tournament)
-    .doc(id) as DocumentReference<Tournament>;
+    .doc(id) as DocumentReference<Tournament_Firestore>;
 
   const updatePayload: Partial<Tournament_Firestore> = {};
 
@@ -441,7 +445,10 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
   const collectionRef = db
     .collection(Collection.Lootbox)
     .where("tournamentId", "==", tournamentID)
-    .orderBy("timestamps.createdAt", "asc") as Query<Lootbox>;
+    .orderBy(
+      "timestamps.createdAt",
+      "asc"
+    ) as Query<LootboxDeprecated_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
 

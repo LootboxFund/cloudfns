@@ -13,6 +13,7 @@ import {
   WhitelistSignatureID,
 } from "../../lib/types";
 
+/** @deprecated */
 export const getUserPartyBasketsForLootbox = async (
   id: UserID,
   lootbox: Address
@@ -33,6 +34,7 @@ export const getUserPartyBasketsForLootbox = async (
   }
 };
 
+/** @deprecated */
 export const getPartyBasketsForLootbox = async (
   lootbox: Address
 ): Promise<PartyBasket[]> => {
@@ -52,6 +54,7 @@ export const getPartyBasketsForLootbox = async (
   }
 };
 
+/** @deprecated */
 export const getUserPartyBaskets = async (
   id: UserID
 ): Promise<PartyBasket[]> => {
@@ -69,6 +72,7 @@ export const getUserPartyBaskets = async (
   }
 };
 
+/** @deprecated */
 export const getPartyBasketById = async (
   id: PartyBasketID
 ): Promise<PartyBasket | undefined> => {
@@ -84,6 +88,7 @@ export const getPartyBasketById = async (
   }
 };
 
+/** @deprecated */
 export const getPartyBasketByAddress = async (
   address: Address
 ): Promise<PartyBasket | undefined> => {
@@ -102,6 +107,7 @@ export const getPartyBasketByAddress = async (
   }
 };
 
+/** @deprecated */
 export const getWhitelistSignaturesByAddress = async (
   whitelistedAddress: Address,
   partyBasketAddress: Address
@@ -130,6 +136,7 @@ export const getWhitelistSignaturesByAddress = async (
   }
 };
 
+/** @deprecated */
 export const getWhitelistSignature = async (
   id: WhitelistSignatureID,
   partyBasketId: PartyBasketID
@@ -157,6 +164,7 @@ interface CreateWhitelistSignatureRequest {
   partyBasketAddress: Address;
   nonce: string;
 }
+/** @deprecated */
 export const createWhitelistSignature = async ({
   signature,
   signer,
@@ -190,6 +198,7 @@ export const createWhitelistSignature = async ({
   return signatureDocument;
 };
 
+/** @deprecated */
 export const redeemSignature = async (
   signatureId: WhitelistSignatureID,
   partyBasketId: PartyBasketID
@@ -222,6 +231,7 @@ interface CreatePartyBasketRequest {
   joinCommunityUrl?: string;
   maxClaimsAllowed: number;
 }
+/** @deprecated */
 export const createPartyBasket = async ({
   address,
   factory,
@@ -278,6 +288,7 @@ interface EditPartyBasketRequest {
   maxClaimsAllowed?: number | null;
 }
 
+/** @deprecated */
 export const editPartyBasket = async ({
   id,
   name,
