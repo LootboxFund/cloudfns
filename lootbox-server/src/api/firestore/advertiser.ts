@@ -69,10 +69,21 @@ export const upgradeToAdvertiser = async (
 
 export const updateAdvertiserDetails = async (
   advertiserID: AdvertiserID,
-  payload: UpdateAdvertiserDetailsPayload
+  payload: UpdateAdvertiserDetailsPayload,
+  userIdpID: UserIdpID
 ): Promise<Advertiser_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    userIdpID,
+    advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(
+      `Unauthorized. User do not have permissions for this advertiser`
+    );
   }
   const advertiserRef = db
     .collection(Collection.Advertiser)

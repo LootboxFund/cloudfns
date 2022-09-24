@@ -534,17 +534,12 @@ const TournamentResolvers = {
       { payload }: MutationAddOfferAdSetToTournamentArgs,
       context: Context
     ): Promise<AddOfferAdSetToTournamentResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         // Make sure the user owns the tournament
-        const tournament = await addOfferAdSetToTournament(payload);
+        const tournament = await addOfferAdSetToTournament(
+          payload,
+          context.userId
+        );
         if (!tournament) {
           return {
             error: {
@@ -568,17 +563,12 @@ const TournamentResolvers = {
       { payload }: MutationRemoveOfferAdSetFromTournamentArgs,
       context: Context
     ): Promise<RemoveOfferAdSetFromTournamentResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         // Make sure the user owns the tournament
-        const tournament = await removeOfferAdSetFromTournament(payload);
+        const tournament = await removeOfferAdSetFromTournament(
+          payload,
+          context.userId
+        );
         if (!tournament) {
           return {
             error: {
@@ -602,18 +592,11 @@ const TournamentResolvers = {
       { payload }: MutationAddUpdatePromoterRateQuoteInTournamentArgs,
       context: Context
     ): Promise<AddUpdatePromoterRateQuoteInTournamentResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         // Make sure the user owns the tournament
         const tournament = await addUpdatePromoterRateQuoteInTournament(
-          payload
+          payload,
+          context.userId
         );
         if (!tournament) {
           return {
@@ -638,17 +621,12 @@ const TournamentResolvers = {
       { payload }: MutationRemovePromoterFromTournamentArgs,
       context: Context
     ): Promise<RemovePromoterFromTournamentResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: `Unauthorized`,
-          },
-        };
-      }
       try {
         // Make sure the user owns the tournament
-        const tournament = await removePromoterFromTournament(payload);
+        const tournament = await removePromoterFromTournament(
+          payload,
+          context.userId
+        );
         if (!tournament) {
           return {
             error: {

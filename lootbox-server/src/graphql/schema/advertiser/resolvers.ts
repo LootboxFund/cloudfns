@@ -332,7 +332,8 @@ const AdvertiserResolvers: Resolvers = {
       try {
         const advertiser = await updateAdvertiserDetails(
           advertiserID as AdvertiserID,
-          payload
+          payload,
+          context.userId || ("" as UserIdpID)
         );
         if (!advertiser) {
           return {
@@ -555,16 +556,16 @@ const AdvertiserResolvers: Resolvers = {
 };
 
 const advertiserComposition = {
-  "Mutation.upgradeToAdvertiser": [isAuthenticated()],
-  "Mutation.updateAdvertiserDetails": [isAuthenticated()],
-  "Mutation.createConquest": [isAuthenticated()],
-  "Mutation.updateConquest": [isAuthenticated()],
   "Query.advertiserAdminView": [isAuthenticated()],
   "Query.advertiserPublicView": [isAuthenticated()],
   "Query.listConquestPreviews": [isAuthenticated()],
   "Query.getConquest": [isAuthenticated()],
   "Query.listEventsOfAdvertiser": [isAuthenticated()],
   "Query.listPartnersOfAdvertiser": [isAuthenticated()],
+  "Mutation.upgradeToAdvertiser": [isAuthenticated()],
+  "Mutation.updateAdvertiserDetails": [isAuthenticated()],
+  "Mutation.createConquest": [isAuthenticated()],
+  "Mutation.updateConquest": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AdvertiserResolvers, advertiserComposition);
