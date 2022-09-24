@@ -21,6 +21,7 @@ import {
   UserIdpID,
   Placement,
   AdSetInTournamentStatus,
+  AdID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -48,14 +49,14 @@ import {
   Affiliate_Firestore,
   OrganizerOfferWhitelist_Firestore,
 } from "./affiliate.type";
-import { AdSetStatus, AdSet_Firestore } from "./ad.types";
+import { AdSetStatus, AdSet_Firestore, Ad_Firestore } from "./ad.types";
 // import { TournamentOffers } from "../../graphql/generated/types";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getOffer, listActiveActivationsForOffer } from "./offer";
 import * as _ from "lodash";
 import { Activation_Firestore } from "@wormgraph/helpers";
 import { getTournamentById } from "./tournament";
-import { getAdSet } from "./ad";
+import { getAd, getAdSet } from "./ad";
 import { getAdvertiser } from "./advertiser";
 import {
   checkIfUserIdpMatchesAdvertiser,
@@ -614,6 +615,7 @@ export const renderDealConfigsOfTournament = async (
 
   const offers = Object.values(offersConfigs);
   const adSetIDs: AdSetID[] = [];
+  const adIDs: AdID[] = [];
   const rateQuoteIDs: RateQuoteID[] = [];
   const affiliateIDs: AffiliateID[] = [];
 
@@ -651,11 +653,20 @@ export const renderDealConfigsOfTournament = async (
   rateQuotesFirestore.forEach((rq) => {
     affiliateIDs.push(rq.affiliateID);
   });
+  _.flatten(adSetsFirestore.map((ads) => ads.adIDs)).forEach((adi) =>
+    adIDs.push(adi)
+  );
 
-  const [advertisersFirestore, activationsFirestore, affiliatesFirestore]: [
+  const [
+    advertisersFirestore,
+    activationsFirestore,
+    affiliatesFirestore,
+    adsFirestore,
+  ]: [
     Advertiser_Firestore[],
     Activation_Firestore[],
-    Affiliate_Firestore[]
+    Affiliate_Firestore[],
+    Ad_Firestore[]
   ] = await Promise.all([
     Promise.all(
       _.uniq(adSetsFirestore.map((adset) => getAdvertiser(adset.advertiserID)))
@@ -668,6 +679,11 @@ export const renderDealConfigsOfTournament = async (
         return getAffiliate(aid);
       })
     ),
+    Promise.all(
+      _.uniq(adIDs).map((aid) => {
+        return getAd(aid);
+      })
+    ),
   ]);
   const dealConfigSets = offers.map((offer) => {
     const offerName = offersFirestore.find((o) => o.id === offer.id)?.title;
@@ -678,13 +694,25 @@ export const renderDealConfigsOfTournament = async (
     const adSets = Object.keys(offer.adSets)
       .map((asid) => {
         const adSet = adSetsFirestore.find((a) => a.id === asid);
-        return {
+        const ad = adsFirestore.find((a) => a.id === adSet?.adIDs[0]);
+        let adSetToReturn: any = {
           id: asid,
           name: adSet?.name || "",
           status: offer.adSets[asid],
           placement: adSet?.placement,
           thumbnail: adSet?.thumbnail || "",
         };
+        if (ad) {
+          adSetToReturn.ad = {
+            adID: ad.id || "",
+            creativeType: ad.creative.creativeType || "",
+            creativeLinks: ad.creative.creativeLinks || [],
+            callToAction: ad.creative.callToAction || "",
+            aspectRatio: ad.creative.aspectRatio || "",
+            themeColor: ad.creative.themeColor || "",
+          };
+        }
+        return adSetToReturn;
       })
       .filter((a) => a.placement) as AdSetPreviewInDealConfig[];
     const rateQuoteConfigs = offer.rateQuotes.map((rqid) => {
