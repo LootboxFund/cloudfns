@@ -37,7 +37,6 @@ import {
 import {
   AffiliateAdminViewResponse,
   AffiliatePublicViewResponse,
-  QueryAffiliateAdminViewArgs,
 } from "../../generated/types";
 import {
   OfferID,
@@ -53,24 +52,19 @@ const AffiliateResolvers: Resolvers = {
   Query: {
     affiliateAdminView: async (
       _,
-      { affiliateID }: QueryAffiliateAdminViewArgs,
+      args,
       context: Context
     ): Promise<AffiliateAdminViewResponse> => {
-      // check if user making request is the actual advertiser
-      const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
-        context.userId || ("" as UserIdpID),
-        affiliateID as AffiliateID
-      );
-      if (!isValidUserAffiliate) {
+      if (!context.userId) {
         return {
           error: {
             code: StatusCode.Unauthorized,
-            message: `Unauthorized. User do not have permissions for this affiliate`,
+            message: `Unauthorized`,
           },
         };
       }
       try {
-        const affiliate = await affiliateAdminView(affiliateID as AffiliateID);
+        const affiliate = await affiliateAdminView(context.userId);
         if (!affiliate) {
           return {
             error: {
@@ -153,26 +147,24 @@ const AffiliateResolvers: Resolvers = {
     },
     viewTournamentAsOrganizer: async (
       _,
-      { payload }: QueryViewTournamentAsOrganizerArgs,
+      { tournamentID }: QueryViewTournamentAsOrganizerArgs,
       context: Context
     ): Promise<ViewTournamentAsOrganizerResponse> => {
-      const { affiliateID, tournamentID } = payload;
       try {
         const tournament = await viewTournamentAsOrganizer(
-          affiliateID as AffiliateID,
           tournamentID as TournamentID
         );
         if (!tournament) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No tournament ID ${tournamentID} found for affiliate ID ${affiliateID}`,
+              message: `No tournament ID ${tournamentID}`,
             },
           };
         }
         return {
           // this needs to be figured out how to cooperate types nicely
-          tournament: tournament as Tournament,
+          tournament: tournament as unknown as Tournament,
         };
       } catch (err) {
         console.error(err);
