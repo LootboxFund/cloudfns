@@ -84,6 +84,8 @@ export const upgradeToAffiliate = async (
     publicContactEmail: "",
     organizerRank: OrganizerRank.ClayRank1,
     avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
+    website: "",
+    audienceSize: 0,
   };
   await affiliateRef.set(affiliate);
   return affiliate;
@@ -124,6 +126,12 @@ export const updateAffiliateDetails = async (
   }
   if (payload.publicContactEmail != undefined) {
     updatePayload.publicContactEmail = payload.publicContactEmail;
+  }
+  if (payload.website != undefined) {
+    updatePayload.website = payload.website;
+  }
+  if (payload.audienceSize != undefined) {
+    updatePayload.audienceSize = payload.audienceSize;
   }
 
   // until done

@@ -15,6 +15,7 @@ export interface Advertiser_Firestore {
   description: string;
   avatar: string;
   publicContactEmail: string;
+  website: string;
   offers: OfferID[];
   conquests: Conquest_Firestore[];
   affiliatePartners: AffiliateID[];
