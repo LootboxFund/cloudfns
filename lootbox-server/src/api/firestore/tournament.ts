@@ -36,10 +36,7 @@ import {
   parseLootboxTournamentSnapshotDB,
   convertStreamTypeGQLToDB,
 } from "../../lib/tournament";
-import {
-  LootboxDeprecated_Firestore,
-  Lootbox_Firestore,
-} from "./lootbox.types";
+import { LootboxDeprecated_Firestore } from "./lootbox.types";
 
 export const getTournamentById = async (
   id: TournamentID

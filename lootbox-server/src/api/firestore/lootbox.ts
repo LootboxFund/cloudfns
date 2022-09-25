@@ -19,6 +19,8 @@ import {
   LootboxTicketID_Web3,
   LootboxTicketID,
   LootboxTicket_Firestore,
+  Lootbox_Firestore,
+  LootboxStatus_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID } from "../../lib/types";
 import {
@@ -26,11 +28,7 @@ import {
   parseLootboxDB,
   parseMintWhitelistSignature,
 } from "../../lib/lootbox";
-import {
-  MintWhitelistSignature_Firestore,
-  Lootbox_Firestore,
-  LootboxStatus_Firestore,
-} from "./lootbox.types";
+import { MintWhitelistSignature_Firestore } from "./lootbox.types";
 
 export const getLootbox = async (
   id: LootboxID
