@@ -24,6 +24,9 @@ const server = new ApolloServer({
             "https://www.lootbox.fund",
             "https://staging.go.lootbox.fund", // Viral onboarding
             "https://staging.advertiser.lootbox.fund",
+            "https://staging.affiliate.lootbox.fund",
+            "https://staging.marketing.lootbox.fund",
+            "https://staging.promoter.lootbox.fund",
           ]
         : [
             "https://lootbox.fund",
