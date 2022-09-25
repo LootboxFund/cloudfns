@@ -20,6 +20,8 @@ const MarketplaceTypeDefs = gql`
     description: String
     rank: OrganizerRank
     publicContactEmail: String
+    website: String
+    audienceSize: Int
   }
 
   # -------- Browse Active Offers --------

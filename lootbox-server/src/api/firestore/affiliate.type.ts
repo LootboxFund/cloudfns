@@ -19,6 +19,8 @@ export interface Affiliate_Firestore {
   publicContactEmail: string;
   organizerRank: OrganizerRank;
   avatar: string;
+  website: string;
+  audienceSize: number;
 }
 
 export enum OfferInTournamentStatus {

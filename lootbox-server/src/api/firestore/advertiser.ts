@@ -57,6 +57,7 @@ export const upgradeToAdvertiser = async (
     name: user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
     publicContactEmail: "",
+    website: "",
     offers: [],
     conquests: [],
     affiliatePartners: [],
@@ -101,6 +102,9 @@ export const updateAdvertiserDetails = async (
   }
   if (payload.publicContactEmail != undefined) {
     updatePayload.publicContactEmail = payload.publicContactEmail;
+  }
+  if (payload.website != undefined) {
+    updatePayload.website = payload.website;
   }
 
   // until done
@@ -364,6 +368,7 @@ export const advertiserPublicView = async (
     name: adv.name,
     description: adv.description,
     avatar: adv.avatar,
+    website: adv.website,
   };
 };
 
@@ -511,6 +516,8 @@ export const listPartnersOfAdvertiser = async (
       userID: a.userID,
       name: a.name,
       avatar: a.avatar,
+      website: a.website,
+      audienceSize: a.audienceSize,
     };
   });
   return affiliatePreviews;

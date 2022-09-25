@@ -42,6 +42,8 @@ export const browseAllAffiliates = async (): Promise<
       avatar: data.avatar,
       description: data.description,
       rank: data.organizerRank,
+      website: data.website,
+      audienceSize: data.audienceSize,
     };
   });
   return affiliates;
