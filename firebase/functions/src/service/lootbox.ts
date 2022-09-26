@@ -28,11 +28,6 @@ interface CreateLootboxRequest {
     transactionHash: string;
 }
 
-/**
- * 1. stamp lootbox
- * 2. write to database
- * 3. write tournament snapshot subcollection if included
- */
 export const create = async (request: CreateLootboxRequest, chain: ChainInfo): Promise<Lootbox_Firestore> => {
     // stamp lootbox image
     const stampImageUrl = await stampNewLootbox({

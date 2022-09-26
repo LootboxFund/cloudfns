@@ -3,7 +3,7 @@
     "scripts": {
         "codegen": "graphql-codegen --config codegen.yml",
         "lint": "eslint --ext .js,.ts .",
-        "build": "tsc",
+        "build": "tsc ",
         "build:watch": "tsc --watch",
         "serve": "yarn run build && firebase emulators:start --only functions",
         "shell": "yarn run build && firebase functions:shell",
@@ -17,7 +17,7 @@
     },
     "main": "lib/index.js",
     "dependencies": {
-        "@wormgraph/helpers": "0.2.0-afn-alpha52",
+        "@wormgraph/helpers": "0.2.0-afn-alpha60",
         "@wormgraph/manifest": "0.4.0-afm-alpha6",
         "ethers": "^5.7.1",
         "firebase-admin": "^10.0.2",

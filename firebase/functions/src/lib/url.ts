@@ -1,6 +1,17 @@
-import { AdEventNonce, AdID, ClaimID, SessionID } from "./types";
 import { AdEventAction } from "../api/graphql/generated/types";
-import { AdSetID, AffiliateID, FlightID, OfferID, TournamentID, UserID, CampaignID } from "@wormgraph/helpers";
+import {
+    AdEventNonce,
+    AdID,
+    ClaimID,
+    SessionID,
+    AdSetID,
+    AffiliateID,
+    FlightID,
+    OfferID,
+    TournamentID,
+    UserID,
+    CampaignID,
+} from "@wormgraph/helpers";
 
 interface PixelTrackingParams {
     flightId: FlightID | null;

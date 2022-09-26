@@ -9,10 +9,10 @@ export const decodeEVMLog = <T>({
 }: {
     eventName: string;
     log: any;
-    abi: string;
+    abi: any;
     keys: (keyof (T | ethers.utils.Result))[];
 }): T => {
-    const iface = new ethers.utils.Interface([abi]);
+    const iface = new ethers.utils.Interface(abi);
     const data = iface.decodeEventLog(eventName, log.data, log.topics);
 
     const formattedData = keys.reduce(

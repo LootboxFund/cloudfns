@@ -337,7 +337,7 @@ export const indexLootboxOnCreate = functions
                 try {
                     // make sure lootbox not created yet
                     const _lootbox = await getLootboxByChainAddress(lootboxAddress, data.chain.chainIdHex);
-                    if (!!_lootbox) {
+                    if (_lootbox) {
                         logger.warn("Lootbox already created", { lootbox: decodedLog.lootbox });
                         res(null);
                         return;

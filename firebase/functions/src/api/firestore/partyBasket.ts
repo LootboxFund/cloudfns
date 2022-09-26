@@ -1,4 +1,4 @@
-import { PartyBasketID, Collection } from "../../lib/types";
+import { PartyBasketID, Collection } from "@wormgraph/helpers";
 import { PartyBasket } from "../graphql/generated/types";
 import { db } from "../firebase";
 import { DocumentReference } from "firebase-admin/firestore";
