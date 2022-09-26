@@ -1,7 +1,6 @@
-import { db } from "./api/firebase";
+import { db, fun } from "./api/firebase";
 import * as functions from "firebase-functions";
 import { Ad, AdEventAction, Claim, ClaimStatus, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
-import { AdID, Collection } from "./lib/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
@@ -13,13 +12,31 @@ import {
     getAdEventsByNonce,
     getFlightById,
 } from "./api/firestore";
-import { manifest } from "./manifest";
-import { AdEvent_Firestore, AdFlight_Firestore } from "@wormgraph/helpers";
+import { manifest, SecretName } from "./manifest";
+import {
+    Address,
+    AdEvent_Firestore,
+    AdFlight_Firestore,
+    BLOCKCHAINS,
+    chainIdHexToSlug,
+    UserID,
+    Collection,
+    AdID,
+    LootboxCosmicFactoryABI,
+    ChainInfo,
+    LootboxCreatedNonce,
+    EnqueueLootboxOnCreateCallableRequest,
+} from "@wormgraph/helpers";
 import { reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
+import { ethers } from "ethers";
+import { decodeLootboxCreatedEvent } from "./api/evm";
+import * as lootboxService from "./service/lootbox";
+import { getLootboxByChainAddress } from "./api/firestore/lootbox";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 
+/** @deprecated no longer using party baskets */
 export const onClaimWrite = functions.firestore
     .document(`/${Collection.Referral}/{referralId}/${Collection.Claim}/{claimId}`)
     .onWrite(async (snap) => {
@@ -259,3 +276,154 @@ export const pubsubBillableActivationEvent = functions.pubsub
         // end
         return;
     });
+
+interface IndexLootboxOnCreateTaskRequest {
+    chain: ChainInfo;
+    payload: {
+        creatorID: UserID;
+        factory: Address;
+        lootboxDescription: string;
+        // version: string;
+        backgroundImage: string;
+        logoImage: string;
+        themeColor: string;
+        nftBountyValue: string;
+        joinCommunityUrl?: string;
+        nonce: LootboxCreatedNonce;
+    };
+    filter: {
+        fromBlock: number;
+        address: Address; // Contract address to listen to
+        topics: string[]; // I.e. ethers.utils.solidityKeccak256(['string'], ['LootboxCreated(string,address,address,address,uint256,uint256,string)'])
+    };
+}
+const stampSecretName: SecretName = "STAMP_SECRET";
+export const indexLootboxOnCreate = functions
+    .runWith({
+        timeoutSeconds: 540,
+        failurePolicy: true,
+        secrets: [stampSecretName],
+    })
+    .tasks.taskQueue({
+        retryConfig: {
+            maxAttempts: 5,
+        },
+    })
+    .onDispatch(async (data: IndexLootboxOnCreateTaskRequest) => {
+        logger.info("indexLootboxOnCreate", { data });
+        // Any errors thrown or timeouts will trigger a retry
+
+        // Start a listener to listen for the event
+        const provider = new ethers.providers.JsonRpcProvider(data.chain.rpcUrls[0]);
+        await new Promise((res) => {
+            provider.on(data.filter, async (log) => {
+                if (log === undefined) {
+                    return;
+                }
+                const decodedLog = decodeLootboxCreatedEvent(log);
+                const { lootboxName, issuer, maxTickets, lootbox: lootboxAddress, nonce, baseTokenURI } = decodedLog;
+
+                if (!lootboxAddress || !issuer || !maxTickets || !lootboxName || !nonce || !baseTokenURI) {
+                    logger.warn("invalid event", decodedLog);
+                    return;
+                }
+
+                // Make sure its the right event
+                if (nonce !== data.payload.nonce) {
+                    logger.info("Nonce does not match", { nonce, expectedNonce: data.payload.nonce });
+                    return;
+                }
+
+                try {
+                    // make sure lootbox not created yet
+                    const _lootbox = await getLootboxByChainAddress(lootboxAddress, data.chain.chainIdHex);
+                    if (!!_lootbox) {
+                        logger.warn("Lootbox already created", { lootbox: decodedLog.lootbox });
+                        res(null);
+                        return;
+                    }
+
+                    // Get the lootbox info
+                    await lootboxService.create(
+                        {
+                            factory: data.payload.factory,
+                            lootboxDescription: data.payload.lootboxDescription,
+                            backgroundImage: data.payload.backgroundImage,
+                            logoImage: data.payload.logoImage,
+                            themeColor: data.payload.themeColor,
+                            nftBountyValue: data.payload.nftBountyValue,
+                            joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
+
+                            lootboxAddress: decodedLog.lootbox,
+                            blockNumber: log.blockNumber,
+                            lootboxName: decodedLog.lootboxName,
+                            transactionHash: log.transactionHash || log.hash,
+                            creatorAddress: issuer,
+                            maxTickets: maxTickets,
+                            creatorID: data.payload.creatorID,
+                            baseTokenURI: baseTokenURI,
+                        },
+                        data.chain
+                    );
+                    provider.removeAllListeners(data.filter);
+                    res(null);
+                    return;
+                } catch (err) {
+                    logger.error("Error creating lootbox", err);
+                    return;
+                }
+            });
+        });
+    });
+
+export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
+    async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
+        if (!context.auth?.uid) {
+            // Unauthenticated
+            return;
+        }
+
+        if (!ethers.utils.isAddress(data.listenAddress)) {
+            logger.error("Address not valid", { listenAddress: data.listenAddress });
+            return;
+        }
+
+        const chainSlug = chainIdHexToSlug(data.chainIdHex);
+        if (!chainSlug) {
+            logger.warn("Could not match chain", { chainIdHex: data.chainIdHex });
+            return;
+        }
+        const chain = BLOCKCHAINS[chainSlug];
+
+        const iface = new ethers.utils.Interface(LootboxCosmicFactoryABI);
+        const selector = iface.getSighash("LootboxCreated");
+
+        const taskData: IndexLootboxOnCreateTaskRequest = {
+            chain,
+            payload: {
+                factory: JSON.stringify(data.listenAddress) as Address,
+                nonce: JSON.stringify(data.payload.nonce) as LootboxCreatedNonce,
+                lootboxDescription: JSON.stringify(data.payload.lootboxDescription),
+                backgroundImage: JSON.stringify(data.payload.backgroundImage),
+                logoImage: JSON.stringify(data.payload.logoImage),
+                themeColor: JSON.stringify(data.payload.themeColor),
+                nftBountyValue: JSON.stringify(data.payload.nftBountyValue),
+                joinCommunityUrl: data.payload.joinCommunityUrl
+                    ? JSON.stringify(data.payload.joinCommunityUrl)
+                    : undefined,
+
+                creatorID: context.auth.uid as UserID, // implicit
+            },
+            filter: {
+                fromBlock: data.fromBlock,
+                address: data.listenAddress,
+                topics: [selector],
+            },
+        };
+
+        const queue = fun.taskQueue("indexLootboxOnCreate");
+        await queue.enqueue(taskData);
+
+        return;
+    }
+);

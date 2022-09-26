@@ -1,2 +1,3 @@
-import { latest as Manifest } from "@wormgraph/manifest";
+import { latest as Manifest, SecretName } from "@wormgraph/manifest";
 export const manifest = Manifest.default;
+export { SecretName };
