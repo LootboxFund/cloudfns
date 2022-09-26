@@ -217,7 +217,7 @@ const AffiliateResolvers: Resolvers = {
       try {
         const affiliate = await upgradeToAffiliate(
           userID as UserID,
-          context.userId || ("" as UserIdpID)
+          context.userId || (userID as UserIdpID)
         );
         if (!affiliate) {
           return {
