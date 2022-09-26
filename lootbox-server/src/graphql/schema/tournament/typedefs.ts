@@ -173,10 +173,6 @@ const TournamentTypeDefs = gql`
     tournament: Tournament!
   }
 
-  type CreateTournamentResponseSuccess {
-    tournament: Tournament!
-  }
-
   type EditTournamentResponseSuccess {
     tournament: Tournament!
   }

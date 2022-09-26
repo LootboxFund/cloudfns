@@ -213,6 +213,7 @@ const AffiliateResolvers: Resolvers = {
       { userID }: MutationUpgradeToAffiliateArgs,
       context: Context
     ): Promise<UpgradeToAffiliateResponse> => {
+      console.log(context);
       try {
         const affiliate = await upgradeToAffiliate(
           userID as UserID,
