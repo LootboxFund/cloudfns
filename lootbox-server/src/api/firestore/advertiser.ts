@@ -62,7 +62,8 @@ export const upgradeToAdvertiser = async (
     conquests: [],
     affiliatePartners: [],
     relatedTournaments: [],
-    avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
+    avatar:
+      "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/assets%2Fcompany.png?alt=media&token=b03bd52a-5e08-4ab4-80fa-029b5dfa9267",
   };
   await advertiserRef.set(advertiser);
   return advertiser;

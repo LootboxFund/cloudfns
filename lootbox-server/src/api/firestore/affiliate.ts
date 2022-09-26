@@ -83,7 +83,8 @@ export const upgradeToAffiliate = async (
     description: "",
     publicContactEmail: "",
     organizerRank: OrganizerRank.ClayRank1,
-    avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
+    avatar:
+      "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/assets%2Fshield.png?alt=media&token=d1a8bf9a-3903-449a-8de6-1e382b79fef6",
     website: "",
     audienceSize: 0,
   };
