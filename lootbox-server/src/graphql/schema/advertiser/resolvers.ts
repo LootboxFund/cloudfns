@@ -290,7 +290,7 @@ const AdvertiserResolvers: Resolvers = {
       try {
         const advertiser = await upgradeToAdvertiser(
           payload.userID as UserID,
-          context.userId || ("" as UserIdpID)
+          context.userId || (payload.userID as UserIdpID)
         );
         if (!advertiser) {
           return {

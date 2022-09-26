@@ -85,6 +85,9 @@ export const parseTournamentDB = (
     },
   };
 
+  if (data.coverPhoto) {
+    res.coverPhoto = data.coverPhoto;
+  }
   if (data.tournamentLink) {
     res.tournamentDate = data.tournamentDate;
   }
@@ -190,6 +193,9 @@ export const convertTournamentDBToGQL = (
       deletedAt: tournament.timestamps.deletedAt || null,
     },
   };
+  console.log(tournament);
+  console.log(tournament.coverPhoto);
+  console.log(`converting....`);
 
   if (!!tournament.magicLink) {
     res.magicLink = tournament.magicLink;
