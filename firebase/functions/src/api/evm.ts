@@ -1,5 +1,6 @@
-import { ethers } from "ethers";
-import { Address, LootboxCosmicFactoryABI, LootboxCreatedNonce } from "@wormgraph/helpers";
+import { ethers, logger } from "ethers";
+import { Address, LootboxCreatedNonce } from "@wormgraph/helpers";
+import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 
 export const decodeEVMLog = <T>({
     eventName,
@@ -9,7 +10,7 @@ export const decodeEVMLog = <T>({
 }: {
     eventName: string;
     log: any;
-    abi: any;
+    abi: string;
     keys: (keyof (T | ethers.utils.Result))[];
 }): T => {
     const iface = new ethers.utils.Interface(abi);
@@ -35,10 +36,11 @@ interface LootboxCreatedEvent {
 }
 
 export const decodeLootboxCreatedEvent = (log: any): LootboxCreatedEvent => {
+    logger.debug("using abi", JSON.stringify(LootboxCosmicFactoryABI));
     const decodedLog = <LootboxCreatedEvent>decodeEVMLog({
         eventName: "LootboxCreated",
         log,
-        abi: LootboxCosmicFactoryABI,
+        abi: JSON.stringify(LootboxCosmicFactoryABI),
         keys: ["lootboxName", "lootbox", "issuer", "maxTickets", "nonce", "baseTokenURI"],
     });
 

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { manifest } from "../manifest";
 import { ChainIDHex, ContractAddress, Url } from "@wormgraph/helpers";
+import { logger } from "ethers";
 
 // TODO move to helpers
 interface StampNewLootboxProps {
@@ -19,6 +20,7 @@ interface StampResponse {
 }
 
 export const stampNewLootbox = async (props: StampNewLootboxProps): Promise<string> => {
+    logger.info("Stamping new lootbox", props);
     const { backgroundImage, logoImage, themeColor, name, ticketID, lootboxAddress, chainIdHex, numShares } = props;
     const stampConfig = {
         backgroundImage,
@@ -31,6 +33,7 @@ export const stampNewLootbox = async (props: StampNewLootboxProps): Promise<stri
         numShares,
     };
     const secret = process.env.STAMP_SECRET || "";
+    logger.debug("secret", `${secret.slice(0, 5)}...`);
     const response = await axios.post<StampResponse>(
         manifest.cloudRun.containers.stampNewLootbox.fullRoute,
         JSON.stringify(stampConfig),

@@ -22,19 +22,21 @@ import {
     UserID,
     Collection,
     AdID,
-    LootboxCosmicFactoryABI,
     ChainInfo,
     LootboxCreatedNonce,
     EnqueueLootboxOnCreateCallableRequest,
 } from "@wormgraph/helpers";
+import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import { reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import { decodeLootboxCreatedEvent } from "./api/evm";
 import * as lootboxService from "./service/lootbox";
 import { getLootboxByChainAddress } from "./api/firestore/lootbox";
+import { FormatTypes } from "ethers/lib/utils";
 
 const DEFAULT_MAX_CLAIMS = 10000;
+const stampSecretName: SecretName = "STAMP_SECRET";
 
 /** @deprecated no longer using party baskets */
 export const onClaimWrite = functions.firestore
@@ -297,11 +299,11 @@ interface IndexLootboxOnCreateTaskRequest {
         topics: string[]; // I.e. ethers.utils.solidityKeccak256(['string'], ['LootboxCreated(string,address,address,address,uint256,uint256,string)'])
     };
 }
-const stampSecretName: SecretName = "STAMP_SECRET";
+
 export const indexLootboxOnCreate = functions
     .runWith({
         timeoutSeconds: 540,
-        failurePolicy: true,
+        // failurePolicy: true,  // TODO FIX THIS
         secrets: [stampSecretName],
     })
     .tasks.taskQueue({
@@ -314,13 +316,56 @@ export const indexLootboxOnCreate = functions
         // Any errors thrown or timeouts will trigger a retry
 
         // Start a listener to listen for the event
+
         const provider = new ethers.providers.JsonRpcProvider(data.chain.rpcUrls[0]);
+
+        const lootboxFactory = new ethers.Contract(data.payload.factory, LootboxCosmicFactoryABI, provider);
+
+        // See if the event has already been recoreded on the block
+        // eslint-disable-next-line
+        const lootboxEventFilter = lootboxFactory.filters.LootboxCreated(
+            null,
+            null,
+            null,
+            null,
+            null,
+            data.payload.nonce
+        );
+        const events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        logger.info("past events", events);
+
+        // const lootboxCreatedEvents = await lootboxFactory.queryFilter(
+        //     lootboxFactory.filters.LootboxCreated(
+        //         data.payload.creatorID,
+        //         null,
+        //         null,
+        //         null,
+        //         null,
+        //         null,
+        //         data.payload.nonce
+        //     ),
+        //     data.filter.fromBlock
+        // );
+
         await new Promise((res) => {
-            provider.on(data.filter, async (log) => {
+            logger.info("Starting listener", data);
+            logger.info("provider", provider);
+            logger.info("getting network...");
+            provider
+                .getNetwork()
+                .then((net) => logger.info("provider network", { network: net }))
+                .catch((err) => {
+                    logger.error(err);
+                });
+            logger.info("filter", data.filter);
+            // provider.on(data.filter, async (log) => {
+            lootboxFactory.on(lootboxEventFilter, async (log) => {
+                logger.debug("Got log", { log });
                 if (log === undefined) {
                     return;
                 }
                 const decodedLog = decodeLootboxCreatedEvent(log);
+                logger.info("Decoded log", { decodedLog });
                 const { lootboxName, issuer, maxTickets, lootbox: lootboxAddress, nonce, baseTokenURI } = decodedLog;
 
                 if (!lootboxAddress || !issuer || !maxTickets || !lootboxName || !nonce || !baseTokenURI) {
@@ -353,7 +398,6 @@ export const indexLootboxOnCreate = functions
                             themeColor: data.payload.themeColor,
                             nftBountyValue: data.payload.nftBountyValue,
                             joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
-
                             lootboxAddress: decodedLog.lootbox,
                             blockNumber: log.blockNumber,
                             lootboxName: decodedLog.lootboxName,
@@ -373,15 +417,17 @@ export const indexLootboxOnCreate = functions
                     return;
                 }
             });
+            logger.info("Started listener", data.filter);
         });
+        logger.info("done listening", data.filter);
     });
 
 export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
     async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
-        if (!context.auth?.uid) {
-            // Unauthenticated
-            return;
-        }
+        // if (!context.auth?.uid) {
+        //     // Unauthenticated
+        //     return;
+        // }
 
         if (!ethers.utils.isAddress(data.listenAddress)) {
             logger.error("Address not valid", { listenAddress: data.listenAddress });
@@ -395,32 +441,46 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
         }
         const chain = BLOCKCHAINS[chainSlug];
 
-        const iface = new ethers.utils.Interface(LootboxCosmicFactoryABI);
-        const selector = iface.getSighash("LootboxCreated");
+        const iface = new ethers.utils.Interface(JSON.stringify(LootboxCosmicFactoryABI));
+        const _topic = iface.getEventTopic("LootboxCreated");
+        const event = iface.getEvent("LootboxCreated");
+        const minimalABISnippet = event.format(FormatTypes.sighash);
+        const __topic = ethers.utils.id(minimalABISnippet);
+
+        logger.log("minimalABISnippet ---> ", { minimalABISnippet });
+
+        const topic = ethers.utils.solidityKeccak256(
+            ["string"],
+            // ["LootboxCreated(string,address,address,address,uint256,uint256,string)"]
+            [minimalABISnippet]
+        );
+
+        logger.log(`logging topic diffs equal? ${_topic === topic}`, { _topic, topic });
+        logger.log(`logging event 2 -- __topic ${__topic === topic}`, { __topic });
 
         const taskData: IndexLootboxOnCreateTaskRequest = {
             chain,
             payload: {
-                factory: JSON.stringify(data.listenAddress) as Address,
-                nonce: JSON.stringify(data.payload.nonce) as LootboxCreatedNonce,
-                lootboxDescription: JSON.stringify(data.payload.lootboxDescription),
-                backgroundImage: JSON.stringify(data.payload.backgroundImage),
-                logoImage: JSON.stringify(data.payload.logoImage),
-                themeColor: JSON.stringify(data.payload.themeColor),
-                nftBountyValue: JSON.stringify(data.payload.nftBountyValue),
-                joinCommunityUrl: data.payload.joinCommunityUrl
-                    ? JSON.stringify(data.payload.joinCommunityUrl)
-                    : undefined,
+                factory: data.listenAddress,
+                nonce: data.payload.nonce,
+                lootboxDescription: data.payload.lootboxDescription,
+                backgroundImage: data.payload.backgroundImage,
+                logoImage: data.payload.logoImage,
+                themeColor: data.payload.themeColor,
+                nftBountyValue: data.payload.nftBountyValue,
+                joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
 
-                creatorID: context.auth.uid as UserID, // implicit
+                creatorID: "testtest" as UserID, // TODO FIX THIS
+                // creatorID: context.auth.uid as UserID, // implicit
             },
             filter: {
                 fromBlock: data.fromBlock,
                 address: data.listenAddress,
-                topics: [selector],
+                // topics: [topic],
+                topics: [__topic],
             },
         };
-
+        logger.debug("Enqueing task", taskData);
         const queue = fun.taskQueue("indexLootboxOnCreate");
         await queue.enqueue(taskData);
 

@@ -29,6 +29,7 @@ interface CreateLootboxRequest {
 }
 
 export const create = async (request: CreateLootboxRequest, chain: ChainInfo): Promise<Lootbox_Firestore> => {
+    logger.info("creating lootbox", request);
     // stamp lootbox image
     const stampImageUrl = await stampNewLootbox({
         backgroundImage: request.backgroundImage,

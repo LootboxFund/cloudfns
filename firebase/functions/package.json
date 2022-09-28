@@ -8,6 +8,7 @@
         "serve": "yarn run build && firebase emulators:start --only functions",
         "shell": "yarn run build && firebase functions:shell",
         "start": "yarn run shell",
+        "deploy:demo": "yarn run build && firebase deploy --only functions:enqueueIndexLootboxOnCreateTasks,functions:indexLootboxOnCreate --project lootbox-fund-staging",
         "deploy:staging": "yarn run build && firebase deploy --only functions --project lootbox-fund-staging",
         "deploy:prod": "yarn run build && firebase deploy --only functions --project lootbox-fund-prod",
         "logs": "firebase functions:log"
@@ -17,7 +18,7 @@
     },
     "main": "lib/index.js",
     "dependencies": {
-        "@wormgraph/helpers": "0.2.0-afn-alpha60",
+        "@wormgraph/helpers": "0.2.0-afn-alpha65",
         "@wormgraph/manifest": "0.4.0-afm-alpha6",
         "ethers": "^5.7.1",
         "firebase-admin": "^10.0.2",
