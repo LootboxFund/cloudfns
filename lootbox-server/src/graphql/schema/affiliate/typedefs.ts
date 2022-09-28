@@ -9,6 +9,8 @@ const AffiliateTypeDefs = gql`
     description: String
     rank: OrganizerRank
     publicContactEmail: String
+    website: String
+    audienceSize: Int
   }
 
   type Memo {
@@ -160,6 +162,8 @@ const AffiliateTypeDefs = gql`
     avatar: String
     description: String
     publicContactEmail: String
+    website: String
+    audienceSize: Int
   }
   type UpdateAffiliateDetailsResponseSuccess {
     affiliate: Affiliate!

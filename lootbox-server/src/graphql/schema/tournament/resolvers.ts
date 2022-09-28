@@ -235,6 +235,7 @@ const TournamentResolvers = {
           prize: payload.prize,
           tournamentDate: payload.tournamentDate,
           communityURL: payload.communityURL,
+          organizer: (payload.organizer || "") as AffiliateID,
         });
 
         return { tournament: convertTournamentDBToGQL(tournamentDB) };

@@ -57,11 +57,13 @@ export const upgradeToAdvertiser = async (
     name: user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
     publicContactEmail: "",
+    website: "",
     offers: [],
     conquests: [],
     affiliatePartners: [],
     relatedTournaments: [],
-    avatar: "https://www.dlf.pt/png/big/9/95276_corporate-icon-png.png",
+    avatar:
+      "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/assets%2Fcompany.png?alt=media&token=b03bd52a-5e08-4ab4-80fa-029b5dfa9267",
   };
   await advertiserRef.set(advertiser);
   return advertiser;
@@ -101,6 +103,9 @@ export const updateAdvertiserDetails = async (
   }
   if (payload.publicContactEmail != undefined) {
     updatePayload.publicContactEmail = payload.publicContactEmail;
+  }
+  if (payload.website != undefined) {
+    updatePayload.website = payload.website;
   }
 
   // until done
@@ -364,6 +369,7 @@ export const advertiserPublicView = async (
     name: adv.name,
     description: adv.description,
     avatar: adv.avatar,
+    website: adv.website,
   };
 };
 
@@ -511,6 +517,8 @@ export const listPartnersOfAdvertiser = async (
       userID: a.userID,
       name: a.name,
       avatar: a.avatar,
+      website: a.website,
+      audienceSize: a.audienceSize,
     };
   });
   return affiliatePreviews;
