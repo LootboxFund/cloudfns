@@ -1,6 +1,6 @@
 import { Address, ChainInfo, ContractAddress, Lootbox_Firestore, UserID } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
-import { createLootbox } from "../api/firestore/lootbox";
+import { createLootbox, getLootboxByChainAddress } from "../api/firestore/lootbox";
 import { stampNewLootbox } from "../api/stamp";
 
 interface CreateLootboxRequest {
@@ -29,6 +29,13 @@ interface CreateLootboxRequest {
 }
 
 export const create = async (request: CreateLootboxRequest, chain: ChainInfo): Promise<Lootbox_Firestore> => {
+    // make sure lootbox not created yet
+    const _lootbox = await getLootboxByChainAddress(request.lootboxAddress, chain.chainIdHex);
+    if (_lootbox) {
+        logger.warn("Lootbox already created", { lootbox: request.lootboxAddress });
+        throw new Error("Lootbox already created");
+    }
+
     logger.info("creating lootbox", request);
     // stamp lootbox image
     const stampImageUrl = await stampNewLootbox({

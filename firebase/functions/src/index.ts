@@ -32,7 +32,7 @@ import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 // import { decodeLootboxCreatedEvent } from "./api/evm";
 import * as lootboxService from "./service/lootbox";
-import { getLootboxByChainAddress } from "./api/firestore/lootbox";
+// import { getLootboxByChainAddress } from "./api/firestore/lootbox";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -328,29 +328,33 @@ export const indexLootboxOnCreate = functions
             data.payload.nonce
         );
 
-        // TODO: check past events
         // const events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
-        // logger.info("past events", events);
 
         await new Promise((res) => {
             // This is the event listener
             lootboxFactory.on(
                 lootboxEventFilter,
-                async (lootboxName, lootboxAddress, description, issuerAddress, maxTickets, baseTokenURI, nonce) => {
+                async (
+                    lootboxName: string,
+                    lootboxAddress: Address,
+                    issuerAddress: Address,
+                    maxTickets: ethers.BigNumber,
+                    baseTokenURI: string,
+                    nonce: { hash: string }
+                ) => {
                     logger.debug("Got log", {
                         lootboxName,
                         lootboxAddress,
-                        description,
                         issuerAddress,
                         maxTickets,
                         baseTokenURI,
                         nonce,
+                        maxTicketsParsed: maxTickets.toNumber(),
                     });
 
                     if (
                         lootboxName === undefined ||
                         lootboxAddress === undefined ||
-                        description === undefined ||
                         issuerAddress === undefined ||
                         maxTickets === undefined ||
                         baseTokenURI === undefined ||
@@ -359,37 +363,20 @@ export const indexLootboxOnCreate = functions
                         return;
                     }
 
-                    // const decodedLog = decodeLootboxCreatedEvent(log);
-                    // logger.info("Decoded log", { decodedLog });
-                    // const {
-                    //     lootboxName,
-                    //     issuer,
-                    //     maxTickets,
-                    //     lootbox: lootboxAddress,
-                    //     nonce,
-                    //     baseTokenURI,
-                    // } = decodedLog;
-
-                    // if (!lootboxAddress || !issuer || !maxTickets || !lootboxName || !nonce || !baseTokenURI) {
-                    //     logger.warn("invalid event", decodedLog);
-                    //     return;
-                    // }
-
                     // Make sure its the right event
-                    if (nonce !== data.payload.nonce) {
-                        logger.info("Nonce does not match", { nonce, expectedNonce: data.payload.nonce });
+                    // const decodedEventNonce = ethers.utils.defaultAbiCoder.decode(["string"], nonce.hash)[0];
+                    const testNonce = data.payload.nonce;
+                    const hashedTestNonce = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(testNonce));
+                    if (nonce.hash !== hashedTestNonce) {
+                        logger.info("Nonce does not match", {
+                            nonceHash: nonce.hash,
+                            expectedNonce: testNonce,
+                            expectedNonceHash: hashedTestNonce,
+                        });
                         return;
                     }
 
                     try {
-                        // make sure lootbox not created yet
-                        const _lootbox = await getLootboxByChainAddress(lootboxAddress, data.chain.chainIdHex);
-                        if (_lootbox) {
-                            logger.warn("Lootbox already created", { lootbox: lootboxAddress });
-                            res(null);
-                            return;
-                        }
-
                         // Get the lootbox info
                         await lootboxService.create(
                             {
@@ -408,7 +395,7 @@ export const indexLootboxOnCreate = functions
                                 lootboxName,
                                 transactionHash: "",
                                 creatorAddress: issuerAddress,
-                                maxTickets: maxTickets,
+                                maxTickets: maxTickets.toNumber(),
                                 creatorID: data.payload.creatorID,
                                 baseTokenURI: baseTokenURI,
                             },
@@ -445,9 +432,6 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
             return;
         }
         const chain = BLOCKCHAINS[chainSlug];
-
-        // const iface = new ethers.utils.Interface(JSON.stringify(LootboxCosmicFactoryABI));
-        // const topic = iface.getEventTopic("LootboxCreated");
 
         const taskData: IndexLootboxOnCreateTaskRequest = {
             chain,
