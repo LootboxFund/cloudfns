@@ -4,14 +4,11 @@ import {
   TournamentID,
   UserID,
   LootboxMintWhitelistID,
+  LootboxVariant_Firestore,
   LootboxMintSignatureNonce,
+  LootboxMetadata_Firestore,
+  LootboxSocials_Firestore,
 } from "@wormgraph/helpers";
-
-export enum LootboxVariant_Firestore {
-  escrow = "escrow",
-  instant = "instant",
-  cosmic = "cosmic",
-}
 
 export type MintWhitelistSignature_Firestore = {
   id: LootboxMintWhitelistID;
@@ -26,53 +23,17 @@ export type MintWhitelistSignature_Firestore = {
   nonce: LootboxMintSignatureNonce;
 };
 
-export type LootboxTimestamps = {
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
 export enum LootboxStatus_Firestore {
   active,
   disabled,
   soldOut,
 }
 
-export interface Lootbox_Firestore {
-  // Immutable
-  id: LootboxID;
-  address: Address;
-  factory: Address;
-  creatorID: UserID;
-  creatorAddress: Address;
-  chainIdHex: string;
-  variant: LootboxVariant_Firestore;
-  issuer: UserID;
-  chainIdDecimal: string;
-  chainName: string;
-  transactionHash: string;
-  blockNumber: string;
-  version: string;
-  stampImage: string;
-
-  // Mutable
-  logo: string;
-  name: string;
-  description: string;
-  nftBountyValue?: string;
-  joinCommunityUrl?: string;
-  status?: LootboxStatus_Firestore;
-  maxTickets: number;
-  backgroundImage: string;
-  badgeImage?: string;
-  themeColor: string;
-
-  timestamps: LootboxTimestamps;
-  // metadataDownloadUrl: string;
-  // metadataV2: LootboxMetadataV2_Firestore;
-  /** @deprecated */
-  metadata?: LootboxMetadata_Firestore;
-}
+export type LootboxTimestamps = {
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number | null;
+};
 
 export type LootboxSnapshotTimestamps = {
   createdAt: number;
@@ -93,69 +54,6 @@ export interface LootboxSnapshot {
 
   metadataDownloadUrl?: string;
   timestamps: LootboxSnapshotTimestamps;
-}
-
-/**
- * Deprecated from here onwards mostly from Cosmic Lootbox Refactor
- */
-
-/** @deprecated lootbox does not have JSON metadata anymore (just database entry) */
-export interface LootboxCustomSchemaData {
-  name: string;
-  description: string;
-  image: string;
-  backgroundColor: string;
-  backgroundImage: string;
-  badgeImage: string;
-  targetPaybackDate?: number;
-  createdAt: number;
-  fundraisingTarget: string;
-  fundraisingTargetMax: string;
-  basisPointsReturnTarget: string;
-  returnAmountTarget: string;
-  pricePerShare: string;
-  lootboxThemeColor: string;
-  transactionHash: string;
-  blockNumber: string;
-  factory: Address;
-  tournamentId: TournamentID;
-}
-
-/** @deprecated will be removed after cosmic refactor */
-export interface LootboxChain {
-  address: Address;
-  title: string;
-  chainIdHex: string;
-  chainIdDecimal: string;
-  chainName: string;
-}
-
-/** @deprecated use LootboxCustomSchemaV2 */
-export interface LootboxCustomSchema {
-  version: string;
-  chain: LootboxChain;
-  lootbox: LootboxCustomSchemaData;
-  /** @deprecated */
-  socials: LootboxSocials_Firestore;
-}
-
-/** @deprecated, use LootboxMetadataV2 */
-export interface LootboxMetadata_Firestore {
-  // points to stamp image - opensea compatible
-  image: string;
-  // points to lootbox page on lootbox.fund - opensea compatible
-  external_url: string;
-  // description of the lootbox - opensea compatible
-  description: string;
-  // name of the lootbox - opensea compatible
-  name: string;
-  // hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
-  background_color: string;
-  // A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
-  animation_url?: string;
-  // A URL to a YouTube video - opensea compatible
-  youtube_url?: string;
-  lootboxCustomSchema: LootboxCustomSchema;
 }
 
 /** @deprecated will eventually be removed after cosmic */
@@ -182,20 +80,6 @@ export type LootboxDeprecated_Firestore = {
   metadataDownloadUrl: string;
   metadata: LootboxMetadata_Firestore;
 };
-
-/** @deprecated we will use the lootbox creator socials for brevity */
-export interface LootboxSocials_Firestore {
-  twitter?: string;
-  email: string;
-  instagram?: string;
-  tiktok?: string;
-  facebook?: string;
-  discord?: string;
-  youtube?: string;
-  snapchat?: string;
-  twitch?: string;
-  web?: string;
-}
 
 /** @deprecated */
 export type LootboxSocialsWithoutEmail_Firestore = Omit<

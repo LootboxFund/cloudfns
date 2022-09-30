@@ -64,7 +64,6 @@ const LootboxTypeDefs = gql`
     creatorID: ID!
     chainIdHex: String!
     variant: LootboxVariant!
-    issuer: ID!
     timestamps: LootboxTimestamps!
     chainIdDecimal: String!
     chainName: String!

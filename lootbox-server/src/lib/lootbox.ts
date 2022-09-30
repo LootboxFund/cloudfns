@@ -5,13 +5,13 @@ import {
   LootboxTicketID_Web3,
   LootboxTicket_Firestore,
   LootboxTicketMetadataV2_Firestore,
-} from "@wormgraph/helpers";
-import {
   Lootbox_Firestore,
   LootboxVariant_Firestore,
+} from "@wormgraph/helpers";
+import {
   MintWhitelistSignature_Firestore,
-  LootboxStatus_Firestore,
   LootboxDeprecated_Firestore,
+  LootboxStatus_Firestore,
 } from "../api/firestore/lootbox.types";
 import {
   Lootbox,
@@ -20,6 +20,7 @@ import {
   LootboxTicket,
   LootboxVariant,
   MintWhitelistSignature,
+  User,
 } from "../graphql/generated/types";
 import { manifest } from "../manifest";
 
@@ -114,10 +115,9 @@ export const parseLootboxDB = (
     address: lootbox.address,
     factory: lootbox.factory,
     creatorAddress: lootbox.creatorAddress,
-    creatorID: lootbox.creatorID,
     chainIdHex: lootbox.chainIdHex,
     variant: lootbox.variant,
-    issuer: lootbox.issuer,
+    creatorID: lootbox.creatorID,
     chainIdDecimal: lootbox.chainIdDecimal,
     chainName: lootbox.chainName,
     transactionHash: lootbox.transactionHash,
@@ -207,10 +207,9 @@ export const convertLootboxGQLToDB = (lootbox: Lootbox): Lootbox_Firestore => {
     address: lootbox.address as Address,
     factory: lootbox.factory as Address,
     creatorAddress: lootbox.creatorAddress as Address,
-    creatorID: lootbox.creatorID as UserID,
     chainIdHex: lootbox.chainIdHex,
     variant: convertLootboxVariantGQLToDB(lootbox.variant),
-    issuer: lootbox.issuer as UserID,
+    creatorID: lootbox.creatorID as UserID,
     timestamps: {
       createdAt: lootbox.timestamps.createdAt,
       updatedAt: lootbox.timestamps.updatedAt,
@@ -242,22 +241,15 @@ export const convertLootboxGQLToDB = (lootbox: Lootbox): Lootbox_Firestore => {
 };
 
 export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
-  const description: string = !!lootbox.description
-    ? lootbox.description
-    : !!lootbox.metadata?.description
-    ? lootbox.metadata?.description // v1 compat
-    : "";
-
   if (lootbox.variant === LootboxVariant_Firestore.cosmic) {
     return {
       id: lootbox.id,
       address: lootbox.address,
       factory: lootbox.factory,
       creatorAddress: lootbox.creatorAddress,
-      creatorID: lootbox.creatorID,
       chainIdHex: lootbox.chainIdHex,
       variant: convertLootboxVariantDBToGQL(lootbox.variant),
-      issuer: lootbox.issuer,
+      creatorID: lootbox.creatorID,
       timestamps: lootbox.timestamps,
       chainIdDecimal: lootbox.chainIdDecimal,
       chainName: lootbox.chainName,
@@ -289,7 +281,6 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       creatorID: "",
       chainIdHex: deprecatedLootbox.chainIdHex,
       variant: convertLootboxVariantDBToGQL(deprecatedLootbox.variant),
-      issuer: deprecatedLootbox.issuer,
       timestamps: deprecatedLootbox.timestamps,
       chainIdDecimal:
         deprecatedLootbox.metadata.lootboxCustomSchema.chain.chainIdDecimal,
@@ -345,7 +336,7 @@ export const convertLootboxToSnapshot = (
     lootbox = lootbox as Lootbox_Firestore;
     return {
       address: lootbox.address,
-      issuer: lootbox.issuer,
+      issuer: lootbox.creatorAddress,
       name: lootbox.name,
       metadataDownloadUrl: "",
       description: lootbox.description,

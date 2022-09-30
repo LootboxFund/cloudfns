@@ -41,10 +41,7 @@ import {
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { ethers } from "ethers";
-import {
-  bulkSignMintWhitelistSignatures,
-  mintNewTicketCallback,
-} from "../../../service/lootbox";
+import * as lootboxService from "../../../service/lootbox";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -214,7 +211,7 @@ const LootboxResolvers: Resolvers = {
           };
         }
 
-        const ticket = await mintNewTicketCallback({
+        const ticket = await lootboxService.mintNewTicketCallback({
           lootbox: convertLootboxDBToGQL(lootbox),
           payload: {
             minterUserID: context.userId as unknown as UserID,
@@ -318,10 +315,11 @@ const LootboxResolvers: Resolvers = {
       }
 
       try {
-        const { signatures, errors } = await bulkSignMintWhitelistSignatures(
-          whitelistAddresses as Address[],
-          lootbox
-        );
+        const { signatures, errors } =
+          await lootboxService.bulkSignMintWhitelistSignatures(
+            whitelistAddresses as Address[],
+            lootbox
+          );
 
         return {
           signatures,

@@ -6,15 +6,10 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import {
-  Lootbox,
-  LootboxSnapshot,
-  Wallet,
-} from "../../graphql/generated/types";
-import { Address, Collection } from "@wormgraph/helpers";
+import { LootboxSnapshot, Wallet } from "../../graphql/generated/types";
+import { Address, Collection, Lootbox_Firestore } from "@wormgraph/helpers";
 import { UserID, UserIdpID, WalletID } from "../../lib/types";
 import { convertLootboxToSnapshot } from "../../lib/lootbox";
-import { Lootbox_Firestore } from "./lootbox.types";
 
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
 

@@ -9,7 +9,6 @@ import {
     ActivationID,
     Offer_Firestore,
     RateQuote_Firestore,
-    RateQuoteStatus,
     AffiliateType,
     OfferID,
     AdvertiserID,

@@ -1,8 +1,16 @@
 import { db } from "../firebase";
-import { AdID, Collection, SessionID, AdEventNonce } from "../../lib/types";
 import { Ad, AdEventAction } from "../graphql/generated/types";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
-import { AdEventID, AdEvent_Firestore, AdFlight_Firestore, FlightID } from "@wormgraph/helpers";
+import {
+    AdEventID,
+    AdEvent_Firestore,
+    AdFlight_Firestore,
+    FlightID,
+    AdID,
+    Collection,
+    SessionID,
+    AdEventNonce,
+} from "@wormgraph/helpers";
 
 export const getAdById = async (id: AdID): Promise<Ad | undefined> => {
     const docRef = db.collection(Collection.Ad).doc(id) as DocumentReference<Ad>;
