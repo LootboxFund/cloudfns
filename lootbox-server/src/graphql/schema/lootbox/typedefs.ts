@@ -119,6 +119,8 @@ const LootboxTypeDefs = gql`
     lootbox: Lootbox!
   }
 
+  union GetLootboxByIDResponse = LootboxResponseSuccess | ResponseError
+
   union GetLootboxByAddressResponse = LootboxResponseSuccess | ResponseError
 
   type LootboxFeedEdge {
@@ -139,6 +141,7 @@ const LootboxTypeDefs = gql`
   union LootboxFeedResponse = LootboxFeedResponseSuccess | ResponseError
 
   extend type Query {
+    getLootboxByID(id: ID!): GetLootboxByIDResponse!
     getLootboxByAddress(address: ID!): GetLootboxByAddressResponse!
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
   }

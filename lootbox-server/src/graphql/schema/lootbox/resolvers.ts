@@ -14,6 +14,8 @@ import {
   MutationBulkMintWhitelistArgs,
   MintLootboxTicketResponse,
   MutationMintLootboxTicketArgs,
+  QueryGetLootboxByIdArgs,
+  GetLootboxByIdResponse,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -45,6 +47,33 @@ import * as lootboxService from "../../../service/lootbox";
 
 const LootboxResolvers: Resolvers = {
   Query: {
+    getLootboxByID: async (
+      _,
+      args: QueryGetLootboxByIdArgs
+    ): Promise<GetLootboxByIdResponse> => {
+      try {
+        const lootboxID = args.id as LootboxID;
+        const lootbox = await getLootbox(lootboxID);
+        if (!lootbox) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Lootbox not found",
+            },
+          };
+        }
+        return {
+          lootbox: convertLootboxDBToGQL(lootbox),
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An Error Occurred",
+          },
+        };
+      }
+    },
     getLootboxByAddress: async (
       _,
       args: QueryGetLootboxByAddressArgs
@@ -381,6 +410,19 @@ const LootboxResolvers: Resolvers = {
     __resolveType: (obj: LootboxFeedResponse) => {
       if ("edges" in obj) {
         return "LootboxFeedResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  GetLootboxByIDResponse: {
+    __resolveType: (obj: GetLootboxByIdResponse) => {
+      if ("lootbox" in obj) {
+        return "LootboxResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
