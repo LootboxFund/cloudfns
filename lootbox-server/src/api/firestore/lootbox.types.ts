@@ -10,12 +10,6 @@ import {
   LootboxSocials_Firestore,
 } from "@wormgraph/helpers";
 
-// export enum LootboxVariant_Firestore {
-//   escrow = "escrow",
-//   instant = "instant",
-//   cosmic = "cosmic",
-// }
-
 export type MintWhitelistSignature_Firestore = {
   id: LootboxMintWhitelistID;
   signature: string;
@@ -40,41 +34,6 @@ export type LootboxTimestamps = {
   updatedAt: number;
   deletedAt: number | null;
 };
-
-// export interface Lootbox_Firestore {
-//   // Immutable
-//   id: LootboxID;
-//   address: Address;
-//   factory: Address;
-//   creatorAddress: Address;
-//   chainIdHex: string;
-//   variant: LootboxVariant_Firestore;
-//   issuer: UserID;
-//   chainIdDecimal: string;
-//   chainName: string;
-//   transactionHash: string;
-//   blockNumber: string;
-//   version: string;
-//   stampImage: string;
-
-//   // Mutable
-//   logo: string;
-//   name: string;
-//   description: string;
-//   nftBountyValue?: string;
-//   joinCommunityUrl?: string;
-//   status?: LootboxStatus_Firestore;
-//   maxTickets: number;
-//   backgroundImage: string;
-//   badgeImage?: string;
-//   themeColor: string;
-
-//   timestamps: LootboxTimestamps;
-//   // metadataDownloadUrl: string;
-//   // metadataV2: LootboxMetadataV2_Firestore;
-//   /** @deprecated */
-//   metadata?: LootboxMetadata_Firestore;
-// }
 
 export type LootboxSnapshotTimestamps = {
   createdAt: number;

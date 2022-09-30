@@ -30,9 +30,7 @@ import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFac
 import { reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
-// import { decodeLootboxCreatedEvent } from "./api/evm";
 import * as lootboxService from "./service/lootbox";
-// import { getLootboxByChainAddress } from "./api/firestore/lootbox";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -340,6 +338,7 @@ export const indexLootboxOnCreate = functions
                     issuerAddress: Address,
                     maxTickets: ethers.BigNumber,
                     baseTokenURI: string,
+                    // TODO: correct typing on these paramaters, maybe typechain?
                     nonce: { hash: string }
                 ) => {
                     logger.debug("Got log", {
@@ -364,7 +363,6 @@ export const indexLootboxOnCreate = functions
                     }
 
                     // Make sure its the right event
-                    // const decodedEventNonce = ethers.utils.defaultAbiCoder.decode(["string"], nonce.hash)[0];
                     const testNonce = data.payload.nonce;
                     const hashedTestNonce = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(testNonce));
                     if (nonce.hash !== hashedTestNonce) {

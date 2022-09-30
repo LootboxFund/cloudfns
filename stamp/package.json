@@ -1,6 +1,6 @@
 {
   "name": "@lootboxfund/stamp",
-  "version": "0.6.3-prod",
+  "version": "0.7.0-demo",
   "description": "",
   "main": "dist/server.js",
   "scripts": {

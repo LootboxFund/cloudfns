@@ -1783,10 +1783,10 @@
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
-"@wormgraph/manifest@0.4.0-afm-alpha7":
-  version "0.4.0-afm-alpha7"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha7.tgz#6c5e9c38c4b90f1f0bb9f02b30e478db5686f38c"
-  integrity sha512-lWD3wXejhAqlqkScIikK7hFv+LOQOqGI8luoe/kZYJsu8HMsGISQpw+67ID6xscZtTFb2D1uxBM30ksezsc0gw==
+"@wormgraph/manifest@0.4.0-afm-alpha10":
+  version "0.4.0-afm-alpha10"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha10.tgz#974263fff72af116b0f7dbaed0619359d4ed4bce"
+  integrity sha512-4Cr7O1jjTOXFEbMHkNrT2jVU2St7QHAkXyg5B07BCmHMUwaqIilAK8Ahl8EOdQsbFkZ/DaJNxPnHsO3+/9PMnQ==
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
