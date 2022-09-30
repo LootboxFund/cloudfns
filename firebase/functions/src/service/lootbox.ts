@@ -1,5 +1,5 @@
 import { Address, ChainInfo, ContractAddress, Lootbox_Firestore, UserID } from "@wormgraph/helpers";
-import { logger } from "ethers";
+import { logger } from "firebase-functions";
 import { createLootbox } from "../api/firestore/lootbox";
 import { stampNewLootbox } from "../api/stamp";
 

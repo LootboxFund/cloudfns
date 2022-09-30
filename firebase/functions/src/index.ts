@@ -30,10 +30,9 @@ import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFac
 import { reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
-import { decodeLootboxCreatedEvent } from "./api/evm";
+// import { decodeLootboxCreatedEvent } from "./api/evm";
 import * as lootboxService from "./service/lootbox";
 import { getLootboxByChainAddress } from "./api/firestore/lootbox";
-import { FormatTypes } from "ethers/lib/utils";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -295,15 +294,15 @@ interface IndexLootboxOnCreateTaskRequest {
     };
     filter: {
         fromBlock: number;
-        address: Address; // Contract address to listen to
-        topics: string[]; // I.e. ethers.utils.solidityKeccak256(['string'], ['LootboxCreated(string,address,address,address,uint256,uint256,string)'])
+        //     address: Address; // Contract address to listen to
+        //     topics: string[]; // I.e. ethers.utils.solidityKeccak256(['string'], ['LootboxCreated(string,address,address,address,uint256,uint256,string)'])
     };
 }
 
 export const indexLootboxOnCreate = functions
     .runWith({
         timeoutSeconds: 540,
-        // failurePolicy: true,  // TODO FIX THIS
+        failurePolicy: true,
         secrets: [stampSecretName],
     })
     .tasks.taskQueue({
@@ -316,12 +315,9 @@ export const indexLootboxOnCreate = functions
         // Any errors thrown or timeouts will trigger a retry
 
         // Start a listener to listen for the event
-
         const provider = new ethers.providers.JsonRpcProvider(data.chain.rpcUrls[0]);
-
         const lootboxFactory = new ethers.Contract(data.payload.factory, LootboxCosmicFactoryABI, provider);
 
-        // See if the event has already been recoreded on the block
         // eslint-disable-next-line
         const lootboxEventFilter = lootboxFactory.filters.LootboxCreated(
             null,
@@ -331,103 +327,112 @@ export const indexLootboxOnCreate = functions
             null,
             data.payload.nonce
         );
-        const events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
-        logger.info("past events", events);
 
-        // const lootboxCreatedEvents = await lootboxFactory.queryFilter(
-        //     lootboxFactory.filters.LootboxCreated(
-        //         data.payload.creatorID,
-        //         null,
-        //         null,
-        //         null,
-        //         null,
-        //         null,
-        //         data.payload.nonce
-        //     ),
-        //     data.filter.fromBlock
-        // );
+        // TODO: check past events
+        // const events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        // logger.info("past events", events);
 
         await new Promise((res) => {
-            logger.info("Starting listener", data);
-            logger.info("provider", provider);
-            logger.info("getting network...");
-            provider
-                .getNetwork()
-                .then((net) => logger.info("provider network", { network: net }))
-                .catch((err) => {
-                    logger.error(err);
-                });
-            logger.info("filter", data.filter);
-            // provider.on(data.filter, async (log) => {
-            lootboxFactory.on(lootboxEventFilter, async (log) => {
-                logger.debug("Got log", { log });
-                if (log === undefined) {
-                    return;
-                }
-                const decodedLog = decodeLootboxCreatedEvent(log);
-                logger.info("Decoded log", { decodedLog });
-                const { lootboxName, issuer, maxTickets, lootbox: lootboxAddress, nonce, baseTokenURI } = decodedLog;
+            // This is the event listener
+            lootboxFactory.on(
+                lootboxEventFilter,
+                async (lootboxName, lootboxAddress, description, issuerAddress, maxTickets, baseTokenURI, nonce) => {
+                    logger.debug("Got log", {
+                        lootboxName,
+                        lootboxAddress,
+                        description,
+                        issuerAddress,
+                        maxTickets,
+                        baseTokenURI,
+                        nonce,
+                    });
 
-                if (!lootboxAddress || !issuer || !maxTickets || !lootboxName || !nonce || !baseTokenURI) {
-                    logger.warn("invalid event", decodedLog);
-                    return;
-                }
-
-                // Make sure its the right event
-                if (nonce !== data.payload.nonce) {
-                    logger.info("Nonce does not match", { nonce, expectedNonce: data.payload.nonce });
-                    return;
-                }
-
-                try {
-                    // make sure lootbox not created yet
-                    const _lootbox = await getLootboxByChainAddress(lootboxAddress, data.chain.chainIdHex);
-                    if (_lootbox) {
-                        logger.warn("Lootbox already created", { lootbox: decodedLog.lootbox });
-                        res(null);
+                    if (
+                        lootboxName === undefined ||
+                        lootboxAddress === undefined ||
+                        description === undefined ||
+                        issuerAddress === undefined ||
+                        maxTickets === undefined ||
+                        baseTokenURI === undefined ||
+                        nonce === undefined
+                    ) {
                         return;
                     }
 
-                    // Get the lootbox info
-                    await lootboxService.create(
-                        {
-                            factory: data.payload.factory,
-                            lootboxDescription: data.payload.lootboxDescription,
-                            backgroundImage: data.payload.backgroundImage,
-                            logoImage: data.payload.logoImage,
-                            themeColor: data.payload.themeColor,
-                            nftBountyValue: data.payload.nftBountyValue,
-                            joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
-                            lootboxAddress: decodedLog.lootbox,
-                            blockNumber: log.blockNumber,
-                            lootboxName: decodedLog.lootboxName,
-                            transactionHash: log.transactionHash || log.hash,
-                            creatorAddress: issuer,
-                            maxTickets: maxTickets,
-                            creatorID: data.payload.creatorID,
-                            baseTokenURI: baseTokenURI,
-                        },
-                        data.chain
-                    );
-                    provider.removeAllListeners(data.filter);
-                    res(null);
-                    return;
-                } catch (err) {
-                    logger.error("Error creating lootbox", err);
-                    return;
+                    // const decodedLog = decodeLootboxCreatedEvent(log);
+                    // logger.info("Decoded log", { decodedLog });
+                    // const {
+                    //     lootboxName,
+                    //     issuer,
+                    //     maxTickets,
+                    //     lootbox: lootboxAddress,
+                    //     nonce,
+                    //     baseTokenURI,
+                    // } = decodedLog;
+
+                    // if (!lootboxAddress || !issuer || !maxTickets || !lootboxName || !nonce || !baseTokenURI) {
+                    //     logger.warn("invalid event", decodedLog);
+                    //     return;
+                    // }
+
+                    // Make sure its the right event
+                    if (nonce !== data.payload.nonce) {
+                        logger.info("Nonce does not match", { nonce, expectedNonce: data.payload.nonce });
+                        return;
+                    }
+
+                    try {
+                        // make sure lootbox not created yet
+                        const _lootbox = await getLootboxByChainAddress(lootboxAddress, data.chain.chainIdHex);
+                        if (_lootbox) {
+                            logger.warn("Lootbox already created", { lootbox: lootboxAddress });
+                            res(null);
+                            return;
+                        }
+
+                        // Get the lootbox info
+                        await lootboxService.create(
+                            {
+                                factory: data.payload.factory,
+                                lootboxDescription: data.payload.lootboxDescription,
+                                backgroundImage: data.payload.backgroundImage,
+                                logoImage: data.payload.logoImage,
+                                themeColor: data.payload.themeColor,
+                                nftBountyValue: data.payload.nftBountyValue,
+                                joinCommunityUrl: data.payload.joinCommunityUrl
+                                    ? data.payload.joinCommunityUrl
+                                    : undefined,
+                                lootboxAddress,
+                                // blockNumber: log.blockNumber,
+                                blockNumber: "",
+                                lootboxName,
+                                transactionHash: "",
+                                creatorAddress: issuerAddress,
+                                maxTickets: maxTickets,
+                                creatorID: data.payload.creatorID,
+                                baseTokenURI: baseTokenURI,
+                            },
+                            data.chain
+                        );
+                        provider.removeAllListeners(lootboxEventFilter);
+                        res(null);
+                        return;
+                    } catch (err) {
+                        logger.error("Error creating lootbox", err);
+                        return;
+                    }
                 }
-            });
-            logger.info("Started listener", data.filter);
+            );
         });
-        logger.info("done listening", data.filter);
     });
 
 export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
     async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
-        // if (!context.auth?.uid) {
-        //     // Unauthenticated
-        //     return;
-        // }
+        if (!context.auth?.uid) {
+            // Unauthenticated
+            logger.error("Unauthenticated");
+            return;
+        }
 
         if (!ethers.utils.isAddress(data.listenAddress)) {
             logger.error("Address not valid", { listenAddress: data.listenAddress });
@@ -441,22 +446,8 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
         }
         const chain = BLOCKCHAINS[chainSlug];
 
-        const iface = new ethers.utils.Interface(JSON.stringify(LootboxCosmicFactoryABI));
-        const _topic = iface.getEventTopic("LootboxCreated");
-        const event = iface.getEvent("LootboxCreated");
-        const minimalABISnippet = event.format(FormatTypes.sighash);
-        const __topic = ethers.utils.id(minimalABISnippet);
-
-        logger.log("minimalABISnippet ---> ", { minimalABISnippet });
-
-        const topic = ethers.utils.solidityKeccak256(
-            ["string"],
-            // ["LootboxCreated(string,address,address,address,uint256,uint256,string)"]
-            [minimalABISnippet]
-        );
-
-        logger.log(`logging topic diffs equal? ${_topic === topic}`, { _topic, topic });
-        logger.log(`logging event 2 -- __topic ${__topic === topic}`, { __topic });
+        // const iface = new ethers.utils.Interface(JSON.stringify(LootboxCosmicFactoryABI));
+        // const topic = iface.getEventTopic("LootboxCreated");
 
         const taskData: IndexLootboxOnCreateTaskRequest = {
             chain,
@@ -469,15 +460,12 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
                 themeColor: data.payload.themeColor,
                 nftBountyValue: data.payload.nftBountyValue,
                 joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
-
-                creatorID: "testtest" as UserID, // TODO FIX THIS
-                // creatorID: context.auth.uid as UserID, // implicit
+                creatorID: context.auth.uid as UserID,
             },
             filter: {
                 fromBlock: data.fromBlock,
-                address: data.listenAddress,
+                // address: data.listenAddress,
                 // topics: [topic],
-                topics: [__topic],
             },
         };
         logger.debug("Enqueing task", taskData);

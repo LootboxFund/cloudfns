@@ -1,7 +1,7 @@
 import axios from "axios";
 import { manifest } from "../manifest";
 import { ChainIDHex, ContractAddress, Url } from "@wormgraph/helpers";
-import { logger } from "ethers";
+import { logger } from "firebase-functions";
 
 // TODO move to helpers
 interface StampNewLootboxProps {
