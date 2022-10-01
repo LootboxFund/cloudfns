@@ -1,4 +1,10 @@
-import { Address, StreamID, TournamentID, UserID } from "@wormgraph/helpers";
+import {
+  Address,
+  LootboxID,
+  StreamID,
+  TournamentID,
+  UserID,
+} from "@wormgraph/helpers";
 import {
   LootboxSocialsWithoutEmail_Firestore,
   LootboxSnapshotTimestamps,
@@ -30,17 +36,18 @@ export enum StreamType_Firestore {
 export interface LootboxTournamentSnapshot_Firestore {
   id: LootboxTournamentSnapshotID;
   address: Address;
-  issuer: Address;
+  lootboxID: LootboxID;
+  creatorID: string;
+  lootboxCreatorID: UserID;
   description: string;
   name: string;
   stampImage: string;
-  image: string;
-  backgroundColor: string;
-  backgroundImage: string;
-  metadataDownloadUrl: string;
   timestamps: LootboxSnapshotTimestamps;
-  socials: LootboxSocialsWithoutEmail_Firestore;
   status: LootboxTournamentStatus_Firestore;
+  // backgroundImage: string;
+  // image: string;
+  // metadataDownloadUrl: string;
+  // socials: LootboxSocialsWithoutEmail_Firestore;
 }
 
 export interface Stream_Firestore {
