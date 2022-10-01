@@ -3,6 +3,7 @@ import {
   Address,
   AffiliateID,
   LootboxID,
+  LootboxTournamentSnapshotID,
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
@@ -21,6 +22,7 @@ import {
   getPartyBasketsForLootbox,
   getLootboxSnapshotsForTournament,
   getLootbox,
+  paginateLootboxSnapshotsForTournament,
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
@@ -66,6 +68,8 @@ import {
   OrganizerProfile,
   MutationAddUpdatePromoterRateQuoteInTournamentArgs,
   Lootbox,
+  TournamentPaginateLootboxSnapshotsArgs,
+  PaginateLootboxTournamentSnapshots,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
@@ -163,6 +167,17 @@ const TournamentResolvers = {
     },
   },
   Tournament: {
+    paginateLootboxSnapshot: async (
+      tournament: Tournament,
+      { first, after }: TournamentPaginateLootboxSnapshotsArgs
+    ): Promise<PaginateLootboxTournamentSnapshots> => {
+      const response = await paginateLootboxSnapshotsForTournament(
+        tournament.id as TournamentID,
+        first,
+        after as LootboxTournamentSnapshotID | null
+      );
+      return response;
+    },
     lootboxSnapshots: async (
       tournament: Tournament
     ): Promise<LootboxTournamentSnapshot[]> => {

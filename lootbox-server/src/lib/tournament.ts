@@ -24,7 +24,10 @@ export const parseLootboxTournamentSnapshotDB = (
     lootboxCreatorID: data.lootboxCreatorID,
     creatorID: data.creatorID,
     lootboxID: data.lootboxID,
+    tournamentID: data.tournamentID,
+    impressionPriority: data.impressionPriority,
     description: data.description,
+
     name: data.name,
     stampImage: data.stampImage,
     // image: data.image,
@@ -166,9 +169,6 @@ export const convertTournamentDBToGQL = (
       deletedAt: tournament.timestamps.deletedAt || null,
     },
   };
-  console.log(tournament);
-  console.log(tournament.coverPhoto);
-  console.log(`converting....`);
 
   if (!!tournament.magicLink) {
     res.magicLink = tournament.magicLink;
