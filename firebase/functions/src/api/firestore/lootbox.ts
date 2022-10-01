@@ -54,6 +54,7 @@ interface CreateLootboxPayload {
     logo: string;
     name: string;
     description: string;
+    symbol: string;
     maxTickets: number;
     baseTokenURI: string;
     backgroundImage: string;
@@ -87,6 +88,7 @@ export const createLootbox = async (payload: CreateLootboxPayload, chain: ChainI
         maxTickets: payload.maxTickets,
         backgroundImage: payload.backgroundImage,
         themeColor: payload.themeColor,
+        symbol: payload.symbol,
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),

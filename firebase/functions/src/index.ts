@@ -288,6 +288,7 @@ interface IndexLootboxOnCreateTaskRequest {
         themeColor: string;
         nftBountyValue: string;
         joinCommunityUrl?: string;
+        symbol: string;
         nonce: LootboxCreatedNonce;
     };
     filter: {
@@ -396,6 +397,7 @@ export const indexLootboxOnCreate = functions
                                 maxTickets: maxTickets.toNumber(),
                                 creatorID: data.payload.creatorID,
                                 baseTokenURI: baseTokenURI,
+                                symbol: data.payload.symbol, // Todo move this to onchain event
                             },
                             data.chain
                         );
@@ -442,6 +444,7 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
                 themeColor: data.payload.themeColor,
                 nftBountyValue: data.payload.nftBountyValue,
                 joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
+                symbol: data.payload.symbol,
                 creatorID: context.auth.uid as UserID,
             },
             filter: {

@@ -15,6 +15,7 @@ interface CreateLootboxRequest {
     maxTickets: number;
     joinCommunityUrl?: string;
     baseTokenURI: string;
+    symbol: string;
 
     // implicitly passed in
     creatorID: UserID;
@@ -60,6 +61,7 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
             blockNumber: request.blockNumber,
             stampImage: stampImageUrl,
             logo: request.logoImage,
+            symbol: request.symbol,
             name: request.lootboxName,
             description: request.lootboxDescription,
             nftBountyValue: request.nftBountyValue,

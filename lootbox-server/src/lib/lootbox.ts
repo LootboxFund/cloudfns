@@ -268,7 +268,7 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       // badgeImage: lootbox.badgeImage,
       themeColor: lootbox.themeColor,
       // version: lootbox.version,
-      symbol: lootbox.symbol,
+      symbol: lootbox.symbol || "",
       baseTokenURI: lootbox.baseTokenURI,
     };
   } else {
