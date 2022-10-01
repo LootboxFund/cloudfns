@@ -8,6 +8,7 @@ import {
   LootboxMintSignatureNonce,
   LootboxMetadata_Firestore,
   LootboxSocials_Firestore,
+  LootboxSnapshotTimestamps,
 } from "@wormgraph/helpers";
 
 export type MintWhitelistSignature_Firestore = {
@@ -35,11 +36,11 @@ export type LootboxTimestamps = {
   deletedAt: number | null;
 };
 
-export type LootboxSnapshotTimestamps = {
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
+// export type LootboxSnapshotTimestamps = {
+//   createdAt: number;
+//   updatedAt: number;
+//   deletedAt: number | null;
+// };
 
 export interface LootboxSnapshot {
   address: Address;

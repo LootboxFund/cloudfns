@@ -25,11 +25,12 @@ import {
   StreamID,
   AffiliateID,
 } from "../../lib/types";
-import { Collection, Tournament_Firestore } from "@wormgraph/helpers";
 import {
+  Collection,
+  Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
-  Stream_Firestore,
-} from "./tournament.types";
+} from "@wormgraph/helpers";
+import { Stream_Firestore } from "./tournament.types";
 import {
   parseTournamentStreamDB,
   parseTournamentDB,

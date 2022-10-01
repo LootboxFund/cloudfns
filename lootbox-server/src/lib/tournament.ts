@@ -5,14 +5,15 @@ import {
   StreamType,
   Tournament,
 } from "../graphql/generated/types";
-import { Collection, Tournament_Firestore } from "@wormgraph/helpers";
 import {
+  Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
+} from "@wormgraph/helpers";
+import {
   Stream_Firestore,
   StreamType_Firestore,
 } from "../api/firestore/tournament.types";
-import { LootboxSocialsWithoutEmail_Firestore } from "../api/firestore/lootbox.types";
 
 export const parseLootboxTournamentSnapshotDB = (
   data: LootboxTournamentSnapshot_Firestore
