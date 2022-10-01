@@ -135,7 +135,7 @@ export const createLootboxTournamentSnapshot = async (
         name: payload.name,
         stampImage: payload.stampImage,
         impressionPriority: 0,
-        status: LootboxTournamentStatus_Firestore.disabled,
+        status: LootboxTournamentStatus_Firestore.active,
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),
