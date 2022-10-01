@@ -72,6 +72,7 @@ const LootboxTypeDefs = gql`
 
     # Mutable
     name: String!
+    symbol: String!
     description: String!
     status: LootboxStatus!
     nftBountyValue: String
@@ -80,9 +81,10 @@ const LootboxTypeDefs = gql`
     stampImage: String!
     logo: String!
     backgroundImage: String!
-    badgeImage: String
+    # badgeImage: String
     themeColor: String!
-    version: String!
+    baseTokenURI: String!
+    # version: String!
 
     # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
@@ -119,6 +121,8 @@ const LootboxTypeDefs = gql`
     lootbox: Lootbox!
   }
 
+  union GetLootboxByIDResponse = LootboxResponseSuccess | ResponseError
+
   union GetLootboxByAddressResponse = LootboxResponseSuccess | ResponseError
 
   type LootboxFeedEdge {
@@ -139,6 +143,7 @@ const LootboxTypeDefs = gql`
   union LootboxFeedResponse = LootboxFeedResponseSuccess | ResponseError
 
   extend type Query {
+    getLootboxByID(id: ID!): GetLootboxByIDResponse!
     getLootboxByAddress(address: ID!): GetLootboxByAddressResponse!
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
   }
@@ -153,6 +158,7 @@ const LootboxTypeDefs = gql`
     name: String
     description: String
     logo: String
+    symbol: String
     backgroundImage: String
     nftBountyValue: String
     joinCommunityUrl: String

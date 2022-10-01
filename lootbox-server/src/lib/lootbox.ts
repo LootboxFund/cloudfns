@@ -20,7 +20,6 @@ import {
   LootboxTicket,
   LootboxVariant,
   MintWhitelistSignature,
-  User,
 } from "../graphql/generated/types";
 import { manifest } from "../manifest";
 
@@ -86,7 +85,7 @@ export const convertLootboxToTicketMetadata = (
     // A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
     lootboxCustomSchema: {
       ticketID,
-      version: lootboxFragment.version,
+      version: "",
       address: lootboxFragment.address,
       chainIdHex: lootboxFragment.chainIdHex,
       chainIdDecimal: lootboxFragment.chainIdDecimal,
@@ -97,7 +96,7 @@ export const convertLootboxToTicketMetadata = (
       description: lootboxFragment.description || "",
       logo: lootboxFragment.logo || "",
       backgroundImage: lootboxFragment.backgroundImage,
-      badgeImage: lootboxFragment.badgeImage,
+      badgeImage: "",
       createdAt: lootboxFragment.timestamps.createdAt,
       lootboxThemeColor: lootboxFragment.themeColor,
       factory: lootboxFragment.factory,
@@ -131,9 +130,9 @@ export const parseLootboxDB = (
     stampImage: lootbox.stampImage,
     logo: lootbox.logo,
     backgroundImage: lootbox.backgroundImage,
-    badgeImage: lootbox.badgeImage,
     themeColor: lootbox.themeColor,
-    version: lootbox.version,
+    symbol: lootbox.symbol,
+    baseTokenURI: lootbox.baseTokenURI,
     timestamps: {
       createdAt: lootbox.timestamps.createdAt,
       updatedAt: lootbox.timestamps.updatedAt,
@@ -234,9 +233,9 @@ export const convertLootboxGQLToDB = (lootbox: Lootbox): Lootbox_Firestore => {
     stampImage: lootbox.stampImage,
     logo: lootbox.logo,
     backgroundImage: lootbox.backgroundImage,
-    badgeImage: !!lootbox.badgeImage ? lootbox.badgeImage : undefined,
     themeColor: lootbox.themeColor,
-    version: lootbox.version,
+    symbol: lootbox.symbol,
+    baseTokenURI: lootbox.baseTokenURI,
   };
 };
 
@@ -266,9 +265,11 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       stampImage: lootbox.stampImage,
       logo: lootbox.logo,
       backgroundImage: lootbox.backgroundImage,
-      badgeImage: lootbox.badgeImage,
+      // badgeImage: lootbox.badgeImage,
       themeColor: lootbox.themeColor,
-      version: lootbox.version,
+      // version: lootbox.version,
+      symbol: lootbox.symbol || "",
+      baseTokenURI: lootbox.baseTokenURI,
     };
   } else {
     // this should all be removed soon
@@ -300,11 +301,12 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       logo: deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.image,
       backgroundImage:
         deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.backgroundImage,
-      badgeImage:
-        deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.badgeImage,
+      // badgeImage:
+      //   deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.badgeImage,
       themeColor:
         deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.backgroundColor,
-      version: "",
+      symbol: "",
+      baseTokenURI: "",
     };
   }
 };

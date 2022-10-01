@@ -5,65 +5,38 @@ import {
   StreamType,
   Tournament,
 } from "../graphql/generated/types";
-import { Collection, Tournament_Firestore } from "@wormgraph/helpers";
 import {
+  Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
+} from "@wormgraph/helpers";
+import {
   Stream_Firestore,
   StreamType_Firestore,
 } from "../api/firestore/tournament.types";
-import { LootboxSocialsWithoutEmail_Firestore } from "../api/firestore/lootbox.types";
 
 export const parseLootboxTournamentSnapshotDB = (
   data: LootboxTournamentSnapshot_Firestore
 ): LootboxTournamentSnapshot_Firestore => {
-  const socials: LootboxSocialsWithoutEmail_Firestore = {};
-
-  if (!!data?.socials?.twitter) {
-    socials.twitter = data.socials.twitter;
-  }
-  if (!!data?.socials?.instagram) {
-    socials.instagram = data.socials.instagram;
-  }
-  if (!!data?.socials?.tiktok) {
-    socials.tiktok = data.socials.tiktok;
-  }
-  if (!!data?.socials?.facebook) {
-    socials.facebook = data.socials.facebook;
-  }
-  if (!!data?.socials?.discord) {
-    socials.discord = data.socials.discord;
-  }
-  if (!!data?.socials?.youtube) {
-    socials.youtube = data.socials.youtube;
-  }
-  if (!!data?.socials?.snapchat) {
-    socials.snapchat = data.socials.snapchat;
-  }
-  if (!!data?.socials?.twitch) {
-    socials.twitch = data.socials.twitch;
-  }
-  if (!!data?.socials?.web) {
-    socials.web = data.socials.web;
-  }
-
   const res: LootboxTournamentSnapshot_Firestore = {
     id: data.id,
     address: data.address,
-    issuer: data.issuer,
+    lootboxCreatorID: data.lootboxCreatorID,
+    creatorID: data.creatorID,
+    lootboxID: data.lootboxID,
     description: data.description,
     name: data.name,
     stampImage: data.stampImage,
-    image: data.image,
-    backgroundColor: data.backgroundColor,
-    backgroundImage: data.backgroundImage,
-    metadataDownloadUrl: data.metadataDownloadUrl,
+    // image: data.image,
+    // backgroundColor: data.backgroundColor,
+    // backgroundImage: data.backgroundImage,
+    // metadataDownloadUrl: data.metadataDownloadUrl,
     timestamps: {
       createdAt: data.timestamps.createdAt,
       updatedAt: data.timestamps.updatedAt,
       deletedAt: data.timestamps.deletedAt,
     },
-    socials,
+    // socials,
     status: data.status || LootboxTournamentStatus_Firestore.disabled,
   };
 
@@ -227,51 +200,23 @@ export const convertTournamentDBToGQL = (
 export const convertLootboxTournamentSnapshotDBToGQL = (
   snapshot: LootboxTournamentSnapshot_Firestore
 ) => {
-  const socials: LootboxSocialsWithoutEmail_Firestore = {};
-
-  if (!!snapshot?.socials?.twitter) {
-    socials.twitter = snapshot.socials.twitter;
-  }
-  if (!!snapshot?.socials?.instagram) {
-    socials.instagram = snapshot.socials.instagram;
-  }
-  if (!!snapshot?.socials?.tiktok) {
-    socials.tiktok = snapshot.socials.tiktok;
-  }
-  if (!!snapshot?.socials?.facebook) {
-    socials.facebook = snapshot.socials.facebook;
-  }
-  if (!!snapshot?.socials?.discord) {
-    socials.discord = snapshot.socials.discord;
-  }
-  if (!!snapshot?.socials?.youtube) {
-    socials.youtube = snapshot.socials.youtube;
-  }
-  if (!!snapshot?.socials?.snapchat) {
-    socials.snapchat = snapshot.socials.snapchat;
-  }
-  if (!!snapshot?.socials?.twitch) {
-    socials.twitch = snapshot.socials.twitch;
-  }
-  if (!!snapshot?.socials?.web) {
-    socials.web = snapshot.socials.web;
-  }
-
   const res: LootboxTournamentSnapshot = {
     address: snapshot.address,
-    issuer: snapshot.issuer,
+    lootboxID: snapshot.lootboxID,
+    creatorID: snapshot.creatorID,
+    lootboxCreatorID: snapshot.lootboxCreatorID,
     description: snapshot.description,
     name: snapshot.name,
     stampImage: snapshot.stampImage,
-    image: snapshot.image,
-    backgroundColor: snapshot.backgroundColor,
-    backgroundImage: snapshot.backgroundImage,
-    metadataDownloadUrl: snapshot.metadataDownloadUrl,
+    // image: snapshot.image,
+    // backgroundColor: snapshot.backgroundColor,
+    // backgroundImage: snapshot.backgroundImage,
+    // metadataDownloadUrl: snapshot.metadataDownloadUrl,
     timestamps: {
       createdAt: snapshot.timestamps.createdAt,
       updatedAt: snapshot.timestamps.updatedAt,
     },
-    socials,
+    // socials,
     status: convertLootboxTournamentSnapshotStatusDBToGQL(snapshot.status),
   };
 

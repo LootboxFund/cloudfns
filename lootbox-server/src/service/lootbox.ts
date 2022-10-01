@@ -90,7 +90,6 @@ export const mintNewTicketCallback = async ({
   // stamp the new ticket
   const { stampURL, metadataURL } = await stampNewTicket(secret, {
     backgroundImage: lootbox.backgroundImage,
-    badgeImage: lootbox.badgeImage ? lootbox.badgeImage : undefined,
     logoImage: lootbox.logo,
     themeColor: lootbox.themeColor,
     name: lootbox.name,

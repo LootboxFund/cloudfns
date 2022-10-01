@@ -1,6 +1,7 @@
-import { Address, ChainInfo, ContractAddress, Lootbox_Firestore, UserID } from "@wormgraph/helpers";
+import { Address, ChainInfo, ContractAddress, Lootbox_Firestore, TournamentID, UserID } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
-import { createLootbox, getLootboxByChainAddress } from "../api/firestore/lootbox";
+import { createLootbox, createLootboxTournamentSnapshot, getLootboxByChainAddress } from "../api/firestore/lootbox";
+import { getTournamentByID } from "../api/firestore/tournament";
 import { stampNewLootbox } from "../api/stamp";
 
 interface CreateLootboxRequest {
@@ -15,6 +16,7 @@ interface CreateLootboxRequest {
     maxTickets: number;
     joinCommunityUrl?: string;
     baseTokenURI: string;
+    symbol: string;
 
     // implicitly passed in
     creatorID: UserID;
@@ -26,6 +28,8 @@ interface CreateLootboxRequest {
     blockNumber: string;
     lootboxName: string;
     transactionHash: string;
+
+    tournamentID?: TournamentID;
 }
 
 export const create = async (request: CreateLootboxRequest, chain: ChainInfo): Promise<Lootbox_Firestore> => {
@@ -60,6 +64,7 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
             blockNumber: request.blockNumber,
             stampImage: stampImageUrl,
             logo: request.logoImage,
+            symbol: request.symbol,
             name: request.lootboxName,
             description: request.lootboxDescription,
             nftBountyValue: request.nftBountyValue,
@@ -71,11 +76,22 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
         chain
     );
 
-    // TODO - write tournament snapshot subcollection if included
-    logger.warn("TOURNAMENT SNAPSHOT NOT IMPLEMENTED!!!!!!");
-    // if (request.tournamentID) {
-    //     await createTournamentSnapshot({ tournamentID: request.tournamentID, lootboxID: createdLootbox.id });
-    // }
+    if (request.tournamentID) {
+        // Make sure tournament exists
+        const tournament = await getTournamentByID(request.tournamentID);
+        if (tournament != null) {
+            await createLootboxTournamentSnapshot({
+                tournamentID: request.tournamentID,
+                lootboxID: createdLootbox.id,
+                lootboxAddress: createdLootbox.address,
+                creatorID: request.creatorID,
+                lootboxCreatorID: createdLootbox.creatorID,
+                description: createdLootbox.description,
+                name: createdLootbox.name,
+                stampImage: createdLootbox.stampImage,
+            });
+        }
+    }
 
     return createdLootbox;
 };

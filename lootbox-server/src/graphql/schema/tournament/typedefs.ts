@@ -28,17 +28,22 @@ const TournamentTypeDefs = gql`
   # this will live as a subcollection under the lootbox
   type LootboxTournamentSnapshot {
     address: ID!
-    issuer: ID!
+    lootboxID: ID!
+    lootboxCreatorID: ID!
+    creatorID: ID!
     description: String!
     name: String!
     stampImage: String!
-    image: String!
-    backgroundColor: String!
-    backgroundImage: String!
-    metadataDownloadUrl: String
-    timestamps: LootboxSnapshotTimestamps!
-    socials: LootboxSocialsWithoutEmail!
     status: LootboxTournamentStatus!
+    timestamps: LootboxSnapshotTimestamps!
+    lootbox: Lootbox # Extra Firestore lookup
+    # -- BREAKING CHANGE --
+    # image: String!
+    # backgroundColor: String!
+    # backgroundImage: String!
+    # @depreacted remove this
+    # metadataDownloadUrl: String
+    # socials: LootboxSocialsWithoutEmail!
     partyBaskets: [PartyBasket!]
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
   }

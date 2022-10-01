@@ -16,6 +16,7 @@ import {
   StreamInput,
   EditStreamPayload,
   StreamType,
+  LootboxTournamentStatus,
 } from "../../graphql/generated/types";
 import {
   UserID,
@@ -24,11 +25,12 @@ import {
   StreamID,
   AffiliateID,
 } from "../../lib/types";
-import { Collection, Tournament_Firestore } from "@wormgraph/helpers";
 import {
+  Collection,
+  Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
-  Stream_Firestore,
-} from "./tournament.types";
+} from "@wormgraph/helpers";
+import { Stream_Firestore } from "./tournament.types";
 import {
   parseTournamentStreamDB,
   parseTournamentDB,
@@ -456,7 +458,11 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
       const data = doc.data();
       return {
         address: data.address,
-        issuer: data.issuer,
+        // creatorID: data?.creatorID || "",
+        creatorID: "",
+        // issuer: data.issuer,
+        lootboxCreatorID: "",
+        lootboxID: "",
         name: data.name,
         metadataDownloadUrl: data.metadataDownloadUrl,
         description:
@@ -465,22 +471,8 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
           updatedAt: data.timestamps.updatedAt,
           createdAt: data.timestamps.createdAt,
         },
-        backgroundColor:
-          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundColor || "",
-        backgroundImage:
-          data?.metadata?.lootboxCustomSchema?.lootbox.backgroundImage || "",
-        image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
-        // @ts-gignore
         stampImage: data.metadata?.image || "",
-        status:
-          // @ts-ignore
-          data?.tournamentMetadata?.status || LootboxTournamentStatus.Pending,
-        socials: data?.metadata?.lootboxCustomSchema?.socials
-          ? {
-              ...data?.metadata?.lootboxCustomSchema?.socials,
-              email: undefined,
-            }
-          : {},
+        status: LootboxTournamentStatus.Active,
       };
     });
   }

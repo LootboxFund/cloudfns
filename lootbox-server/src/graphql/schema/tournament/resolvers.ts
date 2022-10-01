@@ -1,5 +1,11 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { Address, AffiliateID, UserID, UserIdpID } from "@wormgraph/helpers";
+import {
+  Address,
+  AffiliateID,
+  LootboxID,
+  UserID,
+  UserIdpID,
+} from "@wormgraph/helpers";
 import {
   getLootboxSnapshotsForTournamentDeprecated,
   getTournamentById,
@@ -14,6 +20,7 @@ import {
   updateStream,
   getPartyBasketsForLootbox,
   getLootboxSnapshotsForTournament,
+  getLootbox,
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
@@ -58,6 +65,7 @@ import {
   DealConfigTournament,
   OrganizerProfile,
   MutationAddUpdatePromoterRateQuoteInTournamentArgs,
+  Lootbox,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
@@ -71,6 +79,7 @@ import {
   convertStreamDBToGQL,
   convertTournamentDBToGQL,
 } from "../../../lib/tournament";
+import { convertLootboxDBToGQL } from "../../../lib/lootbox";
 
 const TournamentResolvers = {
   Query: {
@@ -198,6 +207,13 @@ const TournamentResolvers = {
   },
 
   LootboxTournamentSnapshot: {
+    lootbox: async (snapshot: LootboxTournamentSnapshot): Promise<Lootbox> => {
+      const lootbox = await getLootbox(snapshot.lootboxID as LootboxID);
+      if (!lootbox) {
+        throw new Error(`Lootbox not found`);
+      }
+      return convertLootboxDBToGQL(lootbox);
+    },
     /** @deprecated to be removed after Party Basket */
     partyBaskets: async (
       snapshot: LootboxTournamentSnapshot

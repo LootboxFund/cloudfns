@@ -75,6 +75,7 @@ interface EditLootboxPayload {
   backgroundImage?: string;
   badgeImage?: string;
   themeColor?: string;
+  symbol?: string;
 }
 export const editLootbox = async (
   lootboxID: LootboxID,
@@ -120,6 +121,10 @@ export const editLootbox = async (
 
   if (!!payload.themeColor) {
     updateRequest.themeColor = payload.themeColor;
+  }
+
+  if (!!payload.symbol) {
+    updateRequest.symbol = payload.symbol;
   }
 
   updateRequest["timestamps.updatedAt"] = Timestamp.now().toMillis();
