@@ -5,12 +5,17 @@ import {
     Collection,
     LootboxID,
     LootboxStatus_Firestore,
+    LootboxTournamentSnapshotID,
+    LootboxTournamentSnapshot_Firestore,
+    LootboxTournamentStatus_Firestore,
     LootboxVariant_Firestore,
     Lootbox_Firestore,
+    TournamentID,
     UserID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
+import { LootboxTournamentSnapshot, Tournament } from "../graphql/generated/types";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(id) as DocumentReference<Lootbox_Firestore>;
@@ -99,4 +104,46 @@ export const createLootbox = async (payload: CreateLootboxPayload, chain: ChainI
     await lootboxRef.set(lootboxPayload);
 
     return lootboxPayload;
+};
+
+interface CreateLootboxTournamentSnapshot {
+    tournamentID: TournamentID;
+    lootboxAddress: Address;
+    lootboxID: LootboxID;
+    creatorID: UserID;
+    lootboxCreatorID: UserID;
+    description: string;
+    name: string;
+    stampImage: string;
+}
+export const createLootboxTournamentSnapshot = async (
+    payload: CreateLootboxTournamentSnapshot
+): Promise<LootboxTournamentSnapshot_Firestore> => {
+    const doc = db
+        .collection(Collection.LootboxTournamentSnapshot)
+        .doc(payload.tournamentID)
+        .collection(Collection.LootboxTournamentSnapshot)
+        .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+    const request: LootboxTournamentSnapshot_Firestore = {
+        id: doc.id as LootboxTournamentSnapshotID,
+        tournamentID: payload.tournamentID as TournamentID,
+        address: payload.lootboxAddress,
+        lootboxID: payload.lootboxID,
+        creatorID: payload.creatorID,
+        lootboxCreatorID: payload.lootboxCreatorID,
+        description: payload.description,
+        name: payload.name,
+        stampImage: payload.stampImage,
+        status: LootboxTournamentStatus_Firestore.disabled,
+        timestamps: {
+            createdAt: Timestamp.now().toMillis(),
+            updatedAt: Timestamp.now().toMillis(),
+            deletedAt: null,
+        },
+    };
+
+    await doc.set(request);
+
+    return request;
 };
