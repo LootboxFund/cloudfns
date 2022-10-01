@@ -15,7 +15,6 @@ import {
 } from "@wormgraph/helpers";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import { LootboxTournamentSnapshot, Tournament } from "../graphql/generated/types";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(id) as DocumentReference<Lootbox_Firestore>;
@@ -120,7 +119,7 @@ export const createLootboxTournamentSnapshot = async (
     payload: CreateLootboxTournamentSnapshot
 ): Promise<LootboxTournamentSnapshot_Firestore> => {
     const doc = db
-        .collection(Collection.LootboxTournamentSnapshot)
+        .collection(Collection.Tournament)
         .doc(payload.tournamentID)
         .collection(Collection.LootboxTournamentSnapshot)
         .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;

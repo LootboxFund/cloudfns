@@ -167,7 +167,7 @@ const TournamentResolvers = {
     },
   },
   Tournament: {
-    paginateLootboxSnapshot: async (
+    paginateLootboxSnapshots: async (
       tournament: Tournament,
       { first, after }: TournamentPaginateLootboxSnapshotsArgs
     ): Promise<PaginateLootboxTournamentSnapshots> => {

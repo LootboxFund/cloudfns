@@ -25,6 +25,7 @@ import {
     ChainInfo,
     LootboxCreatedNonce,
     EnqueueLootboxOnCreateCallableRequest,
+    TournamentID,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import { reportViewToMMP } from "./api/mmp/mmp";
@@ -290,6 +291,7 @@ interface IndexLootboxOnCreateTaskRequest {
         joinCommunityUrl?: string;
         symbol: string;
         nonce: LootboxCreatedNonce;
+        tournamentID?: TournamentID;
     };
     filter: {
         fromBlock: number;
@@ -379,6 +381,7 @@ export const indexLootboxOnCreate = functions
                         // Get the lootbox info
                         await lootboxService.create(
                             {
+                                tournamentID: data.payload.tournamentID,
                                 factory: data.payload.factory,
                                 lootboxDescription: data.payload.lootboxDescription,
                                 backgroundImage: data.payload.backgroundImage,
@@ -446,6 +449,7 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
                 joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
                 symbol: data.payload.symbol,
                 creatorID: context.auth.uid as UserID,
+                tournamentID: data.payload.tournamentID,
             },
             filter: {
                 fromBlock: data.fromBlock,

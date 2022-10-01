@@ -77,9 +77,17 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
     );
 
     if (request.tournamentID) {
+        logger.info("Checking to add tournament snapshot", {
+            tournamentID: request.tournamentID,
+            lootboxID: createdLootbox.id,
+        });
         // Make sure tournament exists
         const tournament = await getTournamentByID(request.tournamentID);
         if (tournament != null) {
+            logger.info("creating tournament snapshot", {
+                tournamentID: request.tournamentID,
+                lootboxID: createdLootbox.id,
+            });
             await createLootboxTournamentSnapshot({
                 tournamentID: request.tournamentID,
                 lootboxID: createdLootbox.id,
