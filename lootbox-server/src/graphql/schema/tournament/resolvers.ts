@@ -4,6 +4,7 @@ import {
   AffiliateID,
   LootboxID,
   LootboxTournamentSnapshotID,
+  Lootbox_Firestore,
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
@@ -23,6 +24,7 @@ import {
   getLootboxSnapshotsForTournament,
   getLootbox,
   paginateLootboxSnapshotsForTournament,
+  getLootboxByAddress,
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
@@ -223,7 +225,13 @@ const TournamentResolvers = {
 
   LootboxTournamentSnapshot: {
     lootbox: async (snapshot: LootboxTournamentSnapshot): Promise<Lootbox> => {
-      const lootbox = await getLootbox(snapshot.lootboxID as LootboxID);
+      let lootbox: Lootbox_Firestore | undefined;
+      if (!!snapshot.lootboxID) {
+        lootbox = await getLootbox(snapshot.lootboxID as LootboxID);
+      } else {
+        // DEPRECATED lookup via lootbox address. Can remove this after comismic.
+        lootbox = await getLootboxByAddress(snapshot.address as Address);
+      }
       if (!lootbox) {
         throw new Error(`Lootbox not found`);
       }

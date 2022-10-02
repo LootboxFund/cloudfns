@@ -122,6 +122,7 @@ export const getLootboxSnapshotsForTournament = async (
     .collection(Collection.Tournament)
     .doc(tournamentID)
     .collection(Collection.LootboxTournamentSnapshot)
+    .orderBy("impressionPriority", "desc")
     .orderBy(
       "timestamps.createdAt",
       "asc"
