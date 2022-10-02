@@ -12,7 +12,7 @@ import {
   updateConquest,
   upgradeToAdvertiser,
 } from "../../../api/firestore/advertiser";
-import { AdvertiserID, UserID } from "../../../lib/types";
+import { AdvertiserID, UserID } from "@wormgraph/helpers";
 import {
   Advertiser,
   AdvertiserAdminViewResponse,

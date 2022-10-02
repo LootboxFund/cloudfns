@@ -20,11 +20,9 @@ import {
   QueryPublicUserArgs,
   PublicUserResponse,
   QueryUserClaimsArgs,
-  UserClaimsResponse,
   PublicUser,
   MutationUpdateUserAuthArgs,
   MutationCreateUserRecordArgs,
-  Lootbox,
 } from "../../generated/types";
 import {
   getUser,
@@ -39,14 +37,13 @@ import {
   updateUser,
   getUserByEmail,
 } from "../../../api/firestore";
-import { EmailIdentifier } from "firebase-admin/auth";
 import { validateSignature } from "../../../api/ethers";
 import { Address } from "@wormgraph/helpers";
 import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { UserID, UserIdpID, WalletID } from "../../../lib/types";
+import { UserID, UserIdpID, WalletID } from "@wormgraph/helpers";
 import { IIdpUser } from "../../../api/identityProvider/interface";
 import { generateUsername } from "../../../lib/rng";
 import { convertUserToPublicUser } from "./utils";

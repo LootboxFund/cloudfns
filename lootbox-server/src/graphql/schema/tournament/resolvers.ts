@@ -36,7 +36,7 @@ import {
   getAffiliate,
 } from "../../../api/firestore/affiliate";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import { StreamID, TournamentID } from "../../../lib/types";
+import { StreamID, TournamentID } from "@wormgraph/helpers";
 import {
   CreateTournamentResponse,
   MutationCreateTournamentArgs,

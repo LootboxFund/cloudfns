@@ -22,7 +22,7 @@ import {
   Lootbox_Firestore,
   LootboxStatus_Firestore,
 } from "@wormgraph/helpers";
-import { LootboxID } from "../../lib/types";
+import { LootboxID } from "@wormgraph/helpers";
 import {
   convertLootboxToSnapshot,
   parseLootboxDB,

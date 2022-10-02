@@ -25,7 +25,7 @@ import {
   TournamentID,
   StreamID,
   AffiliateID,
-} from "../../lib/types";
+} from "@wormgraph/helpers";
 import {
   Collection,
   Tournament_Firestore,

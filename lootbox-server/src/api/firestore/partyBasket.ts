@@ -11,7 +11,7 @@ import {
   UserIdpID,
   PartyBasketID,
   WhitelistSignatureID,
-} from "../../lib/types";
+} from "@wormgraph/helpers";
 
 /** @deprecated */
 export const getUserPartyBasketsForLootbox = async (

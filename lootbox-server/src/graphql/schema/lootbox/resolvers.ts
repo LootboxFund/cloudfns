@@ -34,7 +34,7 @@ import {
   LootboxTicketID_Web3,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
-import { LootboxID, UserID } from "../../../lib/types";
+import { LootboxID, UserID } from "@wormgraph/helpers";
 import {
   convertLootboxDBToGQL,
   convertLootboxStatusGQLToDB,

@@ -1,86 +1,94 @@
 import {
   Address,
   ClaimID,
+  LootboxID,
   PartyBasketID,
   ReferralID,
   TournamentID,
   UserID,
+  WhitelistSignatureID,
 } from "@wormgraph/helpers";
-import { Tournament } from "../../graphql/generated/types";
 
-import { PublicUser } from "./user.types";
-
-export interface Referral {
+export interface Referral_Firestore {
   id: ReferralID;
   referrerId: UserID;
   creatorId: UserID;
   slug: string;
   tournamentId: TournamentID;
-  seedPartyBasketId?: PartyBasketID;
   campaignName: string;
   nConversions: number;
-  timestamps: ReferralTimestamps;
-  claims?: Claim[];
-  tournament: Tournament;
-  seedPartyBasket: PartyBasketID;
-  type: ReferralType;
+  timestamps: ReferralTimestamps_Firestore;
+  type: ReferralType_Firestore;
+  seedLootboxID?: LootboxID;
+
+  /** @deprecated use seedLootboxID */
+  seedPartyBasketId?: PartyBasketID;
 }
 
-export type ReferralTimestamps = {
+export type ReferralTimestamps_Firestore = {
   createdAt: number;
   updatedAt: number;
-  deletedAt?: number;
+  deletedAt: number | null;
 };
 
-export type ClaimTimestamps = {
+export type ClaimTimestamps_Firestore = {
   createdAt: number;
-  completedAt?: number;
+  completedAt: number | null;
   updatedAt: number;
-  deletedAt?: number;
+  deletedAt: number | null;
 };
 
-export enum ClaimType {
+export enum ClaimType_Firestore {
   referral = "referral",
   reward = "reward",
   one_time = "one_time",
 }
 
-export enum ReferralType {
+export enum ReferralType_Firestore {
   viral = "viral",
   one_time = "one_time",
   genesis = "genesis",
 }
 
-export enum ClaimStatus {
+export enum ClaimStatus_Firestore {
   pending = "pending",
   pending_verification = "pending_verification",
   verification_sent = "verification_sent",
   complete = "complete",
 }
 
-export interface Claim {
+export interface Claim_Firestore {
   id: ClaimID;
-  referrerId?: UserID;
+  referrerId: UserID | null;
   referralCampaignName?: string;
   referralId: ReferralID;
   referralSlug: string;
-  referralType: ReferralType;
+  referralType: ReferralType_Firestore;
   tournamentId: TournamentID;
   tournamentName: string;
-  originPartyBasketId?: PartyBasketID;
-  chosenPartyBasketId?: PartyBasketID;
-  chosenPartyBasketAddress?: Address;
-  chosenPartyBasketName?: string;
-  chosenPartyBasketNFTBountyValue?: string;
-  lootboxAddress: Address;
-  lootboxName: string;
-  rewardFromClaim?: UserID;
+  originLootboxId?: LootboxID;
+  chosenLootboxId?: LootboxID;
+  chosenLootboxAddress?: Address;
+  chosenLootboxName?: string;
+  chosenLootboxNFTBountyValue?: string;
+  whitelistId: WhitelistSignatureID | null;
+  lootboxAddress?: Address;
+  lootboxName?: string;
+  rewardFromClaim?: ClaimID;
   rewardFromFriendReferred?: UserID;
   claimerUserId?: UserID;
-  status: ClaimStatus;
-  type: ClaimType;
-  timestamps: ClaimTimestamps;
-  chosenPartyBasket?: PartyBasketID;
-  tournament?: Tournament;
-  userLink?: PublicUser;
+  status: ClaimStatus_Firestore;
+  type: ClaimType_Firestore;
+  timestamps: ClaimTimestamps_Firestore;
+
+  /** @deprecated use lootbox */
+  originPartyBasketId?: PartyBasketID;
+  /** @deprecated use lootbox */
+  chosenPartyBasketId?: PartyBasketID;
+  /** @deprecated use lootbox */
+  chosenPartyBasketAddress?: Address;
+  /** @deprecated use lootbox */
+  chosenPartyBasketName?: string;
+  /** @deprecated use lootbox */
+  chosenPartyBasketNFTBountyValue?: string;
 }

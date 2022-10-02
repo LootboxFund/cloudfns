@@ -56,7 +56,7 @@ import {
   TournamentID,
   UserID,
   UserIdpID,
-} from "../../../lib/types";
+} from "@wormgraph/helpers";
 import { Address, Tournament_Firestore } from "@wormgraph/helpers";
 import { saveCsvToStorage } from "../../../api/storage";
 import { manifest } from "../../../manifest";
@@ -64,6 +64,17 @@ import { convertUserToPublicUser } from "../user/utils";
 import { csvCleaner } from "../../../lib/csv";
 import provider from "../../../api/identityProvider/firebase";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
+import {
+  convertClaimDBToGQL,
+  convertReferralDBToGQL,
+  convertReferralTypeDBToGQL,
+  convertReferralTypeGQLToDB,
+} from "../../../lib/referral";
+import {
+  ClaimStatus_Firestore,
+  ClaimType_Firestore,
+  ReferralType_Firestore,
+} from "../../../api/firestore/referral.types";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -88,7 +99,7 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        return { referral };
+        return { referral: convertReferralDBToGQL(referral) };
       } catch (err) {
         return {
           error: {
@@ -181,7 +192,8 @@ const ReferralResolvers: Resolvers = {
 
   Referral: {
     claims: async (referral: Referral): Promise<Claim[]> => {
-      return getAllClaimsForReferral(referral.id as ReferralID);
+      const claims = await getAllClaimsForReferral(referral.id as ReferralID);
+      return claims.map(convertClaimDBToGQL);
     },
     tournament: async (referral: Referral): Promise<Tournament | null> => {
       const tournament = await getTournamentById(
@@ -328,7 +340,7 @@ const ReferralResolvers: Resolvers = {
         const referrals = await Promise.allSettled(
           Array.from(Array(payload.numReferrals).keys()).map(async () => {
             const referrer = (payload.referrerId || context.userId) as
-              | UserIdpID
+              | UserID
               | undefined;
             const creator = context.userId as UserIdpID | undefined;
             if (!referrer) {
@@ -357,9 +369,9 @@ const ReferralResolvers: Resolvers = {
             const res = await createReferral({
               slug,
               referrerId: referrer,
-              creatorId: creator,
+              creatorId: creator as unknown as UserID,
               campaignName,
-              type: payload.type,
+              type: convertReferralTypeGQLToDB(payload.type),
               tournamentId: payload.tournamentId as TournamentID,
               seedPartyBasketId: payload.partyBasketId
                 ? (payload.partyBasketId as PartyBasketID)
@@ -490,22 +502,22 @@ const ReferralResolvers: Resolvers = {
 
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
         const referrerIdToSet = payload.referrerId
-          ? (payload.referrerId as UserIdpID)
-          : context.userId;
+          ? (payload.referrerId as UserID)
+          : (context.userId as unknown as UserID);
 
         const referral = await createReferral({
           slug,
           referrerId: referrerIdToSet,
-          creatorId: context.userId,
+          creatorId: context.userId as unknown as UserID,
           campaignName,
-          type: requestedReferralType,
+          type: convertReferralTypeGQLToDB(requestedReferralType),
           tournamentId: payload.tournamentId as TournamentID,
           seedPartyBasketId: payload.partyBasketId
             ? (payload.partyBasketId as PartyBasketID)
             : undefined,
         });
 
-        return { referral };
+        return { referral: convertReferralDBToGQL(referral) };
       } catch (err) {
         return {
           error: {
@@ -546,19 +558,21 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        let claimType: ClaimType.OneTime | ClaimType.Referral;
-        if (referral.type === ReferralType.OneTime) {
-          claimType = ClaimType.OneTime;
+        let claimType:
+          | ClaimType_Firestore.one_time
+          | ClaimType_Firestore.referral;
+        if (referral.type === ReferralType_Firestore.one_time) {
+          claimType = ClaimType_Firestore.one_time;
         } else if (
-          referral.type === ReferralType.Viral ||
-          referral.type === ReferralType.Genesis
+          referral.type === ReferralType_Firestore.viral ||
+          referral.type === ReferralType_Firestore.genesis
         ) {
-          claimType = ClaimType.Referral;
+          claimType = ClaimType_Firestore.referral;
         } else {
           console.warn("invalid referral", referral);
           // This should throw an error, but allowed to allow old referrals to work (when referral.tyle===undefined)
           // default to viral
-          claimType = ClaimType.Referral;
+          claimType = ClaimType_Firestore.referral;
         }
 
         const claim = await createStartingClaim({
@@ -566,7 +580,7 @@ const ReferralResolvers: Resolvers = {
           referralCampaignName: referral.campaignName,
           referralId: referral.id as ReferralID,
           tournamentId: referral.tournamentId as TournamentID,
-          referrerId: referral.referrerId as UserIdpID,
+          referrerId: referral.referrerId as unknown as UserIdpID,
           referralSlug: payload.referralSlug as ReferralSlug,
           tournamentName: tournament.title,
           referralType: referral.type || ReferralType.Viral, // default to viral
@@ -576,7 +590,7 @@ const ReferralResolvers: Resolvers = {
         });
 
         return {
-          claim,
+          claim: convertClaimDBToGQL(claim),
         };
       } catch (err) {
         return {
@@ -626,7 +640,7 @@ const ReferralResolvers: Resolvers = {
             },
           };
         }
-        if (context.userId === claim.referrerId) {
+        if ((context.userId as unknown as UserID) === claim.referrerId) {
           return {
             error: {
               code: StatusCode.Forbidden,
@@ -642,7 +656,7 @@ const ReferralResolvers: Resolvers = {
             },
           };
         }
-        if (claim.status === ClaimStatus.Complete) {
+        if (claim.status === ClaimStatus_Firestore.complete) {
           return {
             error: {
               code: StatusCode.BadRequest,
@@ -661,7 +675,7 @@ const ReferralResolvers: Resolvers = {
             },
           };
         }
-        if (claim.type === ClaimType.Reward) {
+        if (claim.type === ClaimType_Firestore.reward) {
           return {
             error: {
               code: StatusCode.ServerError,
@@ -700,7 +714,7 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        if (referral.referrerId === context.userId) {
+        if ((referral.referrerId as unknown as UserIdpID) === context.userId) {
           return {
             error: {
               code: StatusCode.Forbidden,
@@ -732,9 +746,9 @@ const ReferralResolvers: Resolvers = {
         } else {
           // New validation logic
           if (
-            referral.type === ReferralType.Viral ||
-            referral.type === ReferralType.Genesis ||
-            claim.type === ClaimType.Referral
+            referral.type === ReferralType_Firestore.viral ||
+            referral.type === ReferralType_Firestore.genesis ||
+            claim.type === ClaimType_Firestore.referral
           ) {
             if (previousClaims.length > 0) {
               return {
@@ -748,7 +762,7 @@ const ReferralResolvers: Resolvers = {
             }
           }
 
-          if (referral.type === ReferralType.OneTime) {
+          if (referral.type === ReferralType_Firestore.one_time) {
             const previousClaimsForReferral =
               await getCompletedClaimsForReferral(referral.id as ReferralID, 1);
             if (previousClaimsForReferral.length > 0) {
@@ -773,7 +787,7 @@ const ReferralResolvers: Resolvers = {
             : undefined,
           lootboxAddress: lootbox.address as Address,
           lootboxName: lootbox.name,
-          claimerUserId: context.userId,
+          claimerUserId: context.userId as unknown as UserID,
         });
 
         // Now write the referrers reward claim (type=REWARD)
@@ -782,11 +796,7 @@ const ReferralResolvers: Resolvers = {
         const isBonuxWithinLimit = currentAmount + 1 <= maxAmount; // +1 because we will be adding one bonus claim
         if (
           isBonuxWithinLimit &&
-          (referral.type === ReferralType.Viral ||
-            // Old deprecated thing
-            (referral.type == undefined &&
-              referral.referrerId &&
-              !referral.isRewardDisabled))
+          referral.type === ReferralType_Firestore.viral
         ) {
           try {
             await createRewardClaim({
@@ -814,7 +824,7 @@ const ReferralResolvers: Resolvers = {
         }
 
         return {
-          claim: updatedClaim,
+          claim: convertClaimDBToGQL(updatedClaim),
         };
       } catch (err) {
         return {
