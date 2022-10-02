@@ -27,6 +27,7 @@ import {
   ReferralType,
   MutationBulkCreateReferralArgs,
   BulkCreateReferralResponse,
+  LootboxStatus,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -47,9 +48,12 @@ import {
   getLootboxByAddress,
   getUser,
   getCompletedClaimsForReferral,
+  getLootbox,
 } from "../../../api/firestore";
 import {
   ClaimID,
+  LootboxID,
+  LootboxStatus_Firestore,
   PartyBasketID,
   ReferralID,
   ReferralSlug,
@@ -454,12 +458,12 @@ const ReferralResolvers: Resolvers = {
         payload.type == undefined ? ReferralType.Viral : payload.type;
 
       try {
-        const [existingReferral, tournament, partyBasket, requestedReferrer] =
+        const [existingReferral, tournament, lootbox, requestedReferrer] =
           await Promise.all([
             getReferralBySlug(slug),
             getTournamentById(payload.tournamentId as TournamentID),
-            !!payload.partyBasketId
-              ? getPartyBasketById(payload.partyBasketId as PartyBasketID)
+            !!payload.lootboxID
+              ? getLootbox(payload.lootboxID as LootboxID)
               : null,
             !!payload.referrerId
               ? getUser(payload.referrerId) // returns undefined if not found
@@ -480,10 +484,6 @@ const ReferralResolvers: Resolvers = {
           // Make sure the tournament exists
           throw new Error("Tournament not found");
         }
-        if (partyBasket === undefined) {
-          // Makesure the party basket exists
-          throw new Error("Party Basket not found");
-        }
         if (
           requestedReferralType === ReferralType.OneTime &&
           (context.userId as unknown as UserID) !== tournament.creatorId
@@ -492,12 +492,37 @@ const ReferralResolvers: Resolvers = {
             "You must own the tournament to make a one time referral"
           );
         }
-        if (
-          partyBasket?.status === PartyBasketStatus.Disabled ||
-          partyBasket?.status === PartyBasketStatus.SoldOut
-        ) {
-          // Make sure the party basket is not disabled
-          throw new Error("Party Basket is disabled or sold out");
+        if (lootbox === undefined) {
+          // If lootbox=null then it was not requested & the request will go through
+          throw new Error("Lootbox not found");
+        }
+
+        const isSeedLootboxEnabled =
+          !!payload.lootboxID &&
+          !!lootbox &&
+          lootbox.status !== LootboxStatus_Firestore.disabled &&
+          lootbox.status !== LootboxStatus_Firestore.soldOut;
+
+        /** @deprecated - todo only use Lootbox */
+        let partyBasket: PartyBasket | undefined = undefined;
+        if (payload.partyBasketId) {
+          /** @deprecated!!!!! */
+          partyBasket = await getPartyBasketById(
+            payload.partyBasketId as PartyBasketID
+          );
+
+          if (partyBasket === undefined) {
+            // Makesure the party basket exists
+            throw new Error("Party Basket not found");
+          }
+
+          if (
+            partyBasket?.status === PartyBasketStatus.Disabled ||
+            partyBasket?.status === PartyBasketStatus.SoldOut
+          ) {
+            // Make sure the party basket is not disabled
+            throw new Error("Party Basket is disabled or sold out");
+          }
         }
 
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
@@ -512,6 +537,11 @@ const ReferralResolvers: Resolvers = {
           campaignName,
           type: convertReferralTypeGQLToDB(requestedReferralType),
           tournamentId: payload.tournamentId as TournamentID,
+          seedLootboxID: isSeedLootboxEnabled
+            ? (payload.lootboxID as LootboxID)
+            : undefined,
+
+          /** @deprecated */
           seedPartyBasketId: payload.partyBasketId
             ? (payload.partyBasketId as PartyBasketID)
             : undefined,

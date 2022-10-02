@@ -7,6 +7,7 @@ import {
 } from "../../graphql/generated/types";
 import {
   ClaimID,
+  LootboxID,
   PartyBasketID,
   ReferralID,
   ReferralSlug,
@@ -79,8 +80,10 @@ interface CreateReferralCall {
   creatorId: UserID;
   campaignName: string;
   tournamentId: TournamentID;
-  seedPartyBasketId?: PartyBasketID;
   type: ReferralType_Firestore;
+  seedLootboxID?: LootboxID;
+  /** @deprecated */
+  seedPartyBasketId?: PartyBasketID;
 }
 export const createReferral = async (
   req: CreateReferralCall
@@ -101,6 +104,10 @@ export const createReferral = async (
     },
     nConversions: 0,
   };
+
+  if (!!req.seedLootboxID) {
+    newReferral.seedLootboxID = req.seedLootboxID;
+  }
 
   if (!!req.seedPartyBasketId) {
     newReferral.seedPartyBasketId = req.seedPartyBasketId;
