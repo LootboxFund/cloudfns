@@ -13,7 +13,7 @@ import {
     TournamentID,
     UserID,
 } from "@wormgraph/helpers";
-import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
+import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
@@ -93,6 +93,7 @@ export const createLootbox = async (payload: CreateLootboxPayload, chain: ChainI
         backgroundImage: payload.backgroundImage,
         themeColor: payload.themeColor,
         symbol: payload.symbol,
+        runningCompletedClaims: 0,
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),
@@ -146,4 +147,18 @@ export const createLootboxTournamentSnapshot = async (
     await doc.set(request);
 
     return request;
+};
+
+export const incrementLootboxRunningClaims = async (lootboxID: LootboxID): Promise<Lootbox_Firestore | undefined> => {
+    const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
+
+    const updateReq: Partial<Lootbox_Firestore> = {
+        runningCompletedClaims: FieldValue.increment(1) as unknown as number,
+    };
+
+    await lootboxRef.update(updateReq);
+
+    const data = await lootboxRef.get();
+
+    return data.data();
 };
