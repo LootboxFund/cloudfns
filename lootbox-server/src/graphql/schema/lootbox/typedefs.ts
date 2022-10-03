@@ -85,6 +85,7 @@ const LootboxTypeDefs = gql`
     themeColor: String!
     baseTokenURI: String!
     # version: String!
+    runningCompletedClaims: Int!
 
     # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
@@ -108,7 +109,7 @@ const LootboxTypeDefs = gql`
     description: String!
 
     name: String!
-    stampImage: String
+    stampImage: String!
     image: String!
     backgroundColor: String!
     backgroundImage: String!

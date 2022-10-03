@@ -4,7 +4,7 @@ import {
   Claim_Firestore,
   ReferralType_Firestore,
   Referral_Firestore,
-} from "../api/firestore/referral.types";
+} from "@wormgraph/helpers";
 import {
   Claim,
   ClaimStatus,
@@ -54,6 +54,7 @@ export const convertReferralDBToGQL = (
     tournamentId: referral.tournamentId,
     campaignName: referral.campaignName,
     nConversions: referral.nConversions,
+    isPostCosmic: !!referral.isPostCosmic,
     timestamps: {
       createdAt: referral.timestamps.createdAt,
       updatedAt: referral.timestamps.updatedAt,
@@ -105,6 +106,7 @@ export const convertClaimDBToGQL = (claim: Claim_Firestore): Claim => {
     status: convertClaimStatusDBToGQL(claim.status),
     type: convertClaimTypeDBToGQL(claim.type),
     referralSlug: claim.referralSlug,
+    isPostCosmic: !!claim.isPostCosmic,
     timestamps: {
       createdAt: claim.timestamps.createdAt,
       completedAt: claim.timestamps.completedAt,

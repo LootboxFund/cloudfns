@@ -44,13 +44,13 @@ const ReferralTypeDefs = gql`
     tournamentName: String
     whitelistId: ID
     originLootboxId: ID
-    chosenLootboxId: ID
-    chosenLootboxAddress: ID
-    chosenLootboxName: String
-    chosenLootboxNFTBountyValue: String
-    chosenLootbox: Lootbox
+    lootboxID: ID
     lootboxAddress: ID
+    isPostCosmic: Boolean
     lootboxName: String
+    lootboxNFTBountyValue: String
+    lootboxMaxTickets: Int
+    chosenLootbox: Lootbox
     rewardFromClaim: ID
     rewardFromFriendReferred: ID
     claimerUserId: ID
@@ -87,6 +87,7 @@ const ReferralTypeDefs = gql`
     claims: [Claim!]
     tournament: Tournament
     type: ReferralType
+    isPostCosmic: Boolean
     seedLootbox: Lootbox
 
     isRewardDisabled: Boolean @deprecated(reason: "Use ReferralType instead")
@@ -117,14 +118,15 @@ const ReferralTypeDefs = gql`
     tournamentId: ID!
     partyBasketId: ID
     lootboxID: ID # Optional
-    isRewardDisabled: Boolean @deprecated(reason: "User referral.type instead")
+    isRewardDisabled: Boolean @deprecated(reason: "Use referral.type instead")
     type: ReferralType # todo: make this required
     referrerId: ID # If null / undefined, uses the caller user id
   }
 
   input CompleteClaimPayload {
     claimId: ID!
-    chosenPartyBasketId: ID!
+    chosenLootboxID: ID
+    chosenPartyBasketId: ID # @deprecated(reason: "Use chosenLootboxId instead")
   }
 
   input CreateClaimPayload {

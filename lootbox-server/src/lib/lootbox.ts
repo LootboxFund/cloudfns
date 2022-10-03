@@ -139,6 +139,7 @@ export const parseLootboxDB = (
       deletedAt: lootbox.timestamps.deletedAt || null,
     },
     metadata: lootbox.metadata, // deprecated, dont use
+    runningCompletedClaims: lootbox.runningCompletedClaims || 0,
   };
 
   return lootboxDB;
@@ -236,6 +237,7 @@ export const convertLootboxGQLToDB = (lootbox: Lootbox): Lootbox_Firestore => {
     themeColor: lootbox.themeColor,
     symbol: lootbox.symbol,
     baseTokenURI: lootbox.baseTokenURI,
+    runningCompletedClaims: lootbox.runningCompletedClaims || 0,
   };
 };
 
@@ -270,6 +272,7 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       // version: lootbox.version,
       symbol: lootbox.symbol || "",
       baseTokenURI: lootbox.baseTokenURI,
+      runningCompletedClaims: lootbox.runningCompletedClaims || 0,
     };
   } else {
     // this should all be removed soon
@@ -307,6 +310,7 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
         deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.backgroundColor,
       symbol: "",
       baseTokenURI: "",
+      runningCompletedClaims: lootbox.runningCompletedClaims || 0,
     };
   }
 };

@@ -5,10 +5,7 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import {
-  Lootbox,
-  LootboxFeedResponseSuccess,
-} from "../../graphql/generated/types";
+import { LootboxFeedResponseSuccess } from "../../graphql/generated/types";
 import {
   Address,
   ClaimID,
