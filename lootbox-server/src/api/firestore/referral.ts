@@ -19,6 +19,7 @@ import {
   ReferralType_Firestore,
   Referral_Firestore,
   Claim_Firestore,
+  LootboxMintWhitelistID,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -769,10 +770,11 @@ export const getUnassignedClaims = async (
   }
 };
 
+/** @deprecated - this is duped in functions */
 export const attachWhitelistIdToClaim = async (
   referralId: ReferralID,
   claimId: ClaimID,
-  whitelistId: WhitelistSignatureID
+  whitelistId: LootboxMintWhitelistID
 ) => {
   const ref = db
     .collection(Collection.Referral)

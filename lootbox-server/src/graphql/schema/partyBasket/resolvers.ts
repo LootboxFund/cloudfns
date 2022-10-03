@@ -40,7 +40,14 @@ import {
   validateSignature,
   whitelistPartyBasketSignature,
 } from "../../../api/ethers";
-import { Address, ClaimID, ReferralID, UserID } from "@wormgraph/helpers";
+import {
+  Address,
+  ClaimID,
+  ReferralID,
+  UserID,
+  Claim_Firestore,
+  LootboxMintWhitelistID,
+} from "@wormgraph/helpers";
 import { generateNonce } from "../../../lib/whitelist";
 import { errors, ethers } from "ethers";
 import { PartyBasketID, WhitelistSignatureID } from "@wormgraph/helpers";
@@ -48,7 +55,6 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { convertLootboxToSnapshot } from "../../../lib/lootbox";
 import { getWhitelisterPrivateKey } from "../../../api/secrets";
-import { Claim_Firestore } from "../../../api/firestore/referral.types";
 
 const PartyBasketResolvers: Resolvers = {
   Query: {
@@ -495,7 +501,7 @@ const PartyBasketResolvers: Resolvers = {
           await attachWhitelistIdToClaim(
             claim.referralId as ReferralID,
             claim.id as ClaimID,
-            signatureDocument.id as WhitelistSignatureID
+            signatureDocument.id as LootboxMintWhitelistID
           );
           signatures.push(
             `${claim.claimerUserId} - ${walletAddress} - ${signature}`

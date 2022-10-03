@@ -8,11 +8,9 @@ import {
   Lootbox_Firestore,
   LootboxVariant_Firestore,
   LootboxStatus_Firestore,
-} from "@wormgraph/helpers";
-import {
   MintWhitelistSignature_Firestore,
-  LootboxDeprecated_Firestore,
-} from "../api/firestore/lootbox.types";
+} from "@wormgraph/helpers";
+import { LootboxDeprecated_Firestore } from "../api/firestore/lootbox.types";
 import {
   Lootbox,
   LootboxSnapshot,

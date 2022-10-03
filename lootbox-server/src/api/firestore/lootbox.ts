@@ -18,6 +18,7 @@ import {
   LootboxTicket_Firestore,
   Lootbox_Firestore,
   LootboxStatus_Firestore,
+  MintWhitelistSignature_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID } from "@wormgraph/helpers";
 import {
@@ -25,7 +26,6 @@ import {
   parseLootboxDB,
   parseMintWhitelistSignature,
 } from "../../lib/lootbox";
-import { MintWhitelistSignature_Firestore } from "./lootbox.types";
 
 export const getLootbox = async (
   id: LootboxID
@@ -221,6 +221,7 @@ interface CreateMintWhitelistSignatureRequest {
   lootboxAddress: Address;
   nonce: LootboxMintSignatureNonce;
 }
+/** @deprecated ALSO duplicated in functions */
 export const createMintWhitelistSignature = async ({
   signature,
   signer,
