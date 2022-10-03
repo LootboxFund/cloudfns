@@ -5,6 +5,7 @@ import {
     Claim_Firestore,
     Collection,
     LootboxID,
+    LootboxMintWhitelistID,
     LootboxStatus_Firestore,
     ReferralID,
     ReferralSlug,
@@ -98,4 +99,25 @@ export const createRewardClaim = async (req: CreateRewardClaimReq): Promise<Clai
     await ref.set(newClaim);
 
     return newClaim;
+};
+
+export const associateWhitelistToClaim = async (
+    referralID: ReferralID,
+    claimID: ClaimID,
+    whitelistID: LootboxMintWhitelistID
+): Promise<void> => {
+    const ref = db
+        .collection(Collection.Referral)
+        .doc(referralID)
+        .collection(Collection.Claim)
+        .doc(claimID) as DocumentReference<Claim_Firestore>;
+
+    const updateRequest: Partial<Claim_Firestore> = {
+        whitelistId: whitelistID,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        "timestamps.updatedAt": Timestamp.now().toMillis(),
+    };
+
+    await ref.update(updateRequest);
 };

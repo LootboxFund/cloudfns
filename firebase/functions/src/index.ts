@@ -12,6 +12,7 @@ import {
     getAdEventsByNonce,
     getFlightById,
     incrementLootboxRunningClaims,
+    getLootbox,
 } from "./api/firestore";
 import { manifest, SecretName } from "./manifest";
 import {
@@ -39,13 +40,19 @@ import { reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
-import { createRewardClaim } from "./api/firestore/referral";
+import { associateWhitelistToClaim, createRewardClaim } from "./api/firestore/referral";
+import { getUserWallets } from "./api/firestore/user";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
+// TODO: Rename this secret to be LOOTBOX
+const whitelisterPrivateKeySecretName: SecretName = "PARTY_BASKET_WHITELISTER_PRIVATE_KEY";
 
-export const onClaimWrite = functions.firestore
-    .document(`/${Collection.Referral}/{referralId}/${Collection.Claim}/{claimId}`)
+export const onClaimWrite = functions
+    .runWith({
+        secrets: [whitelisterPrivateKeySecretName],
+    })
+    .firestore.document(`/${Collection.Referral}/{referralId}/${Collection.Claim}/{claimId}`)
     .onWrite(async (snap) => {
         // Grab the current value of what was written to Firestore.
         const oldClaim = snap.before.data() as Claim_Firestore | undefined;
@@ -63,16 +70,47 @@ export const onClaimWrite = functions.firestore
                     claimID: newClaim.id,
                     lootboxID: newClaim.lootboxID,
                 });
+
                 let lootbox: Lootbox_Firestore | undefined;
+
                 try {
-                    lootbox = await incrementLootboxRunningClaims(newClaim.lootboxID);
+                    lootbox = await getLootbox(newClaim.lootboxID);
+                    if (!lootbox) {
+                        throw new Error("Lootbox not found");
+                    }
+                } catch (err) {
+                    logger.error("error fetching lootbox", { lootboxID: newClaim.lootboxID, err });
+                    return;
+                }
+
+                if (!newClaim.whitelistId && newClaim.claimerUserId) {
+                    try {
+                        // Generate the whitelist only if the user wallet exists
+                        const userWallets = await getUserWallets(newClaim.claimerUserId, 1); // Uses the first wallet
+                        if (userWallets.length > 0) {
+                            const walletToWhitelist = userWallets[0];
+                            // If user has wallet, whitelist it
+                            // If not, this claim will be whitelisted later when the user adds their wallet
+                            const whitelist = await lootboxService.whitelist(walletToWhitelist.address, lootbox);
+
+                            // Need to update this claim with the
+                            await associateWhitelistToClaim(newClaim.referralId, newClaim.id, whitelist.id);
+                        }
+                    } catch (err) {
+                        logger.error("Error onClaimWrite generating whitelist", err);
+                    }
+                }
+
+                try {
+                    await incrementLootboxRunningClaims(newClaim.lootboxID);
                 } catch (err) {
                     logger.error("Error onClaimWrite", err);
                 }
 
                 const currentAmount = lootbox?.runningCompletedClaims || 0;
+                const newCurrentAmount = currentAmount + 1; // Since we just incremented by one
                 const maxAmount = lootbox?.maxTickets || 10000;
-                const isBonusWithinLimit = currentAmount < maxAmount;
+                const isBonusWithinLimit = newCurrentAmount < maxAmount;
 
                 if (
                     lootbox &&
@@ -104,6 +142,7 @@ export const onClaimWrite = functions.firestore
                 }
             }
         } else {
+            // DEPRECATED Cosmic stuff
             /** @NOTE We dont need to write the reward claim for old claims because it gets written from GQL */
             if (newClaim.status === ClaimStatus_Firestore.complete && isStatusChanged && newClaim.chosenPartyBasketId) {
                 logger.log("incrementing party basket completedClaims");
@@ -129,6 +168,14 @@ export const onClaimWrite = functions.firestore
         // }
 
         return;
+    });
+
+export const onWalletCreate = functions.firestore
+    .document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
+    .onCreate(async (snap) => {
+        logger.info(snap);
+        // const _wallet = snap.data() as Wallet_Firestore | undefined;
+        // TODO IMPLEMENTATION
     });
 
 export const onLootboxWrite = functions.firestore

@@ -4,12 +4,15 @@ import {
     ChainInfo,
     Collection,
     LootboxID,
+    LootboxMintSignatureNonce,
+    LootboxMintWhitelistID,
     LootboxStatus_Firestore,
     LootboxTournamentSnapshotID,
     LootboxTournamentSnapshot_Firestore,
     LootboxTournamentStatus_Firestore,
     LootboxVariant_Firestore,
     Lootbox_Firestore,
+    MintWhitelistSignature_Firestore,
     TournamentID,
     UserID,
 } from "@wormgraph/helpers";
@@ -149,7 +152,7 @@ export const createLootboxTournamentSnapshot = async (
     return request;
 };
 
-export const incrementLootboxRunningClaims = async (lootboxID: LootboxID): Promise<Lootbox_Firestore | undefined> => {
+export const incrementLootboxRunningClaims = async (lootboxID: LootboxID): Promise<void> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
 
     const updateReq: Partial<Lootbox_Firestore> = {
@@ -157,8 +160,44 @@ export const incrementLootboxRunningClaims = async (lootboxID: LootboxID): Promi
     };
 
     await lootboxRef.update(updateReq);
+};
 
-    const data = await lootboxRef.get();
+interface CreateMintWhitelistSignatureRequest {
+    signature: string;
+    signer: Address;
+    whitelistedAddress: Address;
+    lootboxId: LootboxID;
+    lootboxAddress: Address;
+    nonce: LootboxMintSignatureNonce;
+}
+export const createMintWhitelistSignature = async ({
+    signature,
+    signer,
+    whitelistedAddress,
+    lootboxId,
+    lootboxAddress,
+    nonce,
+}: CreateMintWhitelistSignatureRequest): Promise<MintWhitelistSignature_Firestore> => {
+    const signatureRef = db
+        .collection(Collection.Lootbox)
+        .doc(lootboxId)
+        .collection(Collection.MintWhiteList)
+        .doc() as DocumentReference<MintWhitelistSignature_Firestore>;
 
-    return data.data();
+    const signatureDocument: MintWhitelistSignature_Firestore = {
+        id: signatureRef.id as LootboxMintWhitelistID,
+        isRedeemed: false,
+        lootboxAddress,
+        whitelistedAddress,
+        signature,
+        signer,
+        nonce,
+        createdAt: Timestamp.now().toMillis(),
+        updatedAt: Timestamp.now().toMillis(),
+        deletedAt: null,
+    };
+
+    await signatureRef.set(signatureDocument);
+
+    return signatureDocument;
 };
