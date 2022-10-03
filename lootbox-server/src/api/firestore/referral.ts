@@ -752,6 +752,7 @@ const convertClaimToCsvRow = (
   };
 };
 
+/** @deprecated - uses deprecated party basket */
 export const getUnassignedClaims = async (
   partyBasketId: PartyBasketID
 ): Promise<Claim_Firestore[]> => {

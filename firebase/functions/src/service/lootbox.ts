@@ -7,6 +7,7 @@ import {
     UserID,
     MintWhitelistSignature_Firestore,
     LootboxID,
+    Claim_Firestore,
 } from "@wormgraph/helpers";
 import { ethers } from "ethers";
 import { logger } from "firebase-functions";
@@ -123,18 +124,23 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
 
 export const whitelist = async (
     whitelistAddress: Address,
-    lootbox: Lootbox_Firestore
+    lootbox: Lootbox_Firestore,
+    claim?: Claim_Firestore
 ): Promise<MintWhitelistSignature_Firestore> => {
+    logger.info("Whitelisting user", { whitelistAddress, lootbox: lootbox.id });
+
     if (!ethers.utils.isAddress(whitelistAddress)) {
         throw new Error("Invalid Address");
     }
     if (!lootbox) {
         throw new Error("Lootbox not found");
     }
+
     const nonce = generateNonce();
     const _whitelisterPrivateKey = process.env.PARTY_BASKET_WHITELISTER_PRIVATE_KEY || "";
     const signer = new ethers.Wallet(_whitelisterPrivateKey);
-    logger.info("Whitelisting user", { whitelistAddress, lootbox: lootbox.id });
+
+    logger.info("generating whitelist", { whitelistAddress, lootbox: lootbox.id, signerAddress: signer.address });
     const signature = await whitelistLootboxMintSignature(
         lootbox.chainIdHex,
         lootbox.address,
@@ -142,7 +148,8 @@ export const whitelist = async (
         _whitelisterPrivateKey,
         nonce
     );
-    logger.info("Adding the signature to DB", { whitelistAddress, lootbox: lootbox.id });
+
+    logger.info("Adding the signature to DB", { whitelistAddress, lootbox: lootbox.id, signerAddress: signer.address });
     const signatureDB = await createMintWhitelistSignature({
         signature,
         signer: signer.address as Address,
@@ -150,6 +157,7 @@ export const whitelist = async (
         lootboxId: lootbox.id as LootboxID,
         lootboxAddress: lootbox.address as Address,
         nonce,
+        claim,
     });
 
     return signatureDB;

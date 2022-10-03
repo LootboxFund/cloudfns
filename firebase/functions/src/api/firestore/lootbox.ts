@@ -2,6 +2,7 @@ import {
     Address,
     ChainIDHex,
     ChainInfo,
+    Claim_Firestore,
     Collection,
     LootboxID,
     LootboxMintSignatureNonce,
@@ -18,6 +19,7 @@ import {
 } from "@wormgraph/helpers";
 import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
+import { ClaimTimestamps } from "../graphql/generated/types";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(id) as DocumentReference<Lootbox_Firestore>;
@@ -169,7 +171,13 @@ interface CreateMintWhitelistSignatureRequest {
     lootboxId: LootboxID;
     lootboxAddress: Address;
     nonce: LootboxMintSignatureNonce;
+    claim?: Claim_Firestore;
 }
+
+/**
+ * Creates whitelist signature database object
+ * Updates claim if provided with whitelistId as DB transaction
+ */
 export const createMintWhitelistSignature = async ({
     signature,
     signer,
@@ -177,15 +185,20 @@ export const createMintWhitelistSignature = async ({
     lootboxId,
     lootboxAddress,
     nonce,
+    claim,
 }: CreateMintWhitelistSignatureRequest): Promise<MintWhitelistSignature_Firestore> => {
+    const batch = db.batch();
+
     const signatureRef = db
         .collection(Collection.Lootbox)
         .doc(lootboxId)
         .collection(Collection.MintWhiteList)
         .doc() as DocumentReference<MintWhitelistSignature_Firestore>;
 
+    const whitelistID: LootboxMintWhitelistID = signatureRef.id as LootboxMintWhitelistID;
+
     const signatureDocument: MintWhitelistSignature_Firestore = {
-        id: signatureRef.id as LootboxMintWhitelistID,
+        id: whitelistID,
         isRedeemed: false,
         lootboxAddress,
         whitelistedAddress,
@@ -197,7 +210,31 @@ export const createMintWhitelistSignature = async ({
         deletedAt: null,
     };
 
-    await signatureRef.set(signatureDocument);
+    batch.set(signatureRef, signatureDocument);
+
+    if (claim) {
+        // Update the claim's whitelistId
+        const claimRef = db
+            .collection(Collection.Referral)
+            .doc(claim.referralId)
+            .collection(Collection.Claim)
+            .doc(claim.id) as DocumentReference<Claim_Firestore>;
+
+        const updateClaimRequest: Partial<Claim_Firestore> = {
+            whitelistId: whitelistID,
+        };
+
+        // Annoying typesafety for nested objects?
+        const timestampName: keyof Claim_Firestore = "timestamps";
+        const updatedAtName: keyof ClaimTimestamps = "updatedAt";
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        updateClaimRequest[`${timestampName}.${updatedAtName}`] = Timestamp.now().toMillis();
+
+        batch.update(claimRef, updateClaimRequest);
+    }
+
+    await batch.commit();
 
     return signatureDocument;
 };

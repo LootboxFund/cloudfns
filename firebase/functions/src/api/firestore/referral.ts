@@ -14,7 +14,7 @@ import {
     TournamentID,
     UserID,
 } from "@wormgraph/helpers";
-import { DocumentReference, DocumentSnapshot, Timestamp } from "firebase-admin/firestore";
+import { CollectionGroup, DocumentReference, DocumentSnapshot, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
 import { getLootbox } from "./lootbox";
 
@@ -120,4 +120,29 @@ export const associateWhitelistToClaim = async (
     };
 
     await ref.update(updateRequest);
+};
+
+export const getUnassignedClaimsForUser = async (
+    claimerUserID: UserID
+    // lootboxID: LootboxID
+): Promise<Claim_Firestore[]> => {
+    // const lootboxIDField: keyof Claim_Firestore = "lootboxID";
+    const lootboxSatusField: keyof Claim_Firestore = "status";
+    const whitelistIDField: keyof Claim_Firestore = "whitelistId";
+    const claimerIDField: keyof Claim_Firestore = "claimerUserId";
+
+    const collectionGroupRef = db
+        .collectionGroup(Collection.Claim)
+        .where(claimerIDField, "==", claimerUserID)
+        // .where(lootboxIDField, "==", lootboxID)
+        .where(lootboxSatusField, "==", ClaimStatus_Firestore.complete)
+        .where(whitelistIDField, "==", null) as CollectionGroup<Claim_Firestore>;
+
+    const snapshot = await collectionGroupRef.get();
+
+    if (!snapshot || snapshot.empty) {
+        return [];
+    } else {
+        return snapshot.docs.map((doc) => doc.data());
+    }
 };
