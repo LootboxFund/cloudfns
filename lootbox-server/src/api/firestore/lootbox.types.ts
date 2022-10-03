@@ -1,6 +1,5 @@
 import {
   Address,
-  LootboxID,
   TournamentID,
   UserID,
   LootboxMintWhitelistID,
@@ -23,24 +22,6 @@ export type MintWhitelistSignature_Firestore = {
   deletedAt: number | null;
   nonce: LootboxMintSignatureNonce;
 };
-
-export enum LootboxStatus_Firestore {
-  active,
-  disabled,
-  soldOut,
-}
-
-export type LootboxTimestamps = {
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
-// export type LootboxSnapshotTimestamps = {
-//   createdAt: number;
-//   updatedAt: number;
-//   deletedAt: number | null;
-// };
 
 export interface LootboxSnapshot {
   address: Address;

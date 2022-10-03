@@ -28,6 +28,7 @@ import {
   MutationBulkCreateReferralArgs,
   BulkCreateReferralResponse,
   LootboxStatus,
+  Lootbox,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -79,6 +80,7 @@ import {
   ClaimType_Firestore,
   ReferralType_Firestore,
 } from "../../../api/firestore/referral.types";
+import { convertLootboxDBToGQL } from "../../../lib/lootbox";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -170,6 +172,23 @@ const ReferralResolvers: Resolvers = {
 
       return null;
     },
+    chosenLootbox: async (claim: Claim): Promise<Lootbox | null> => {
+      if (!claim.chosenLootboxId) {
+        return null;
+      }
+
+      try {
+        const lootbox = await getLootbox(claim.chosenLootboxId as LootboxID);
+        if (!lootbox) {
+          throw new Error("Lootbox not found");
+        }
+
+        return convertLootboxDBToGQL(lootbox);
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    },
     chosenPartyBasket: async (claim: Claim): Promise<PartyBasket | null> => {
       if (!claim.chosenPartyBasketId) {
         return null;
@@ -204,6 +223,23 @@ const ReferralResolvers: Resolvers = {
         referral.tournamentId as TournamentID
       );
       return !tournament ? null : convertTournamentDBToGQL(tournament);
+    },
+    seedLootbox: async (referral: Referral): Promise<Lootbox | null> => {
+      if (!referral.seedLootboxID) {
+        return null;
+      }
+
+      try {
+        const lootbox = await getLootbox(referral.seedLootboxID as LootboxID);
+        if (!lootbox) {
+          throw new Error("Lootbox not found");
+        }
+
+        return convertLootboxDBToGQL(lootbox);
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
     },
     seedPartyBasket: async (
       referral: Referral
