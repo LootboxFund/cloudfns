@@ -55,9 +55,9 @@ const run = async () => {
       `);
 
   // Lists all users
-  const userCollectionRef = db.collection(
-    Collection.User
-  ) as CollectionReference<User>;
+  const userCollectionRef = db
+    .collection(Collection.User)
+    .orderBy("createdAt", "desc") as CollectionReference<User>;
 
   const userdata = await userCollectionRef.get();
 
@@ -70,6 +70,7 @@ const run = async () => {
     return {
       phone: user.phoneNumber || "",
       email: user.email || "",
+      createdAt: new Date(user.createdAt as number),
     };
   });
 
