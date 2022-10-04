@@ -5,6 +5,7 @@ import {
   ReferralType_Firestore,
   Referral_Firestore,
 } from "@wormgraph/helpers";
+import { getPartyBasketById } from "../api/firestore";
 import {
   Claim,
   ClaimStatus,
@@ -17,14 +18,13 @@ export const convertReferralTypeDBToGQL = (
   type: ReferralType_Firestore
 ): ReferralType => {
   switch (type) {
-    case ReferralType_Firestore.genesis:
-      return ReferralType.Genesis;
     case ReferralType_Firestore.one_time:
       return ReferralType.OneTime;
     case ReferralType_Firestore.viral:
       return ReferralType.Viral;
+    case ReferralType_Firestore.genesis:
     default:
-      throw new Error(`Unknown referral type: ${type}`);
+      return ReferralType.Genesis;
   }
 };
 
@@ -32,14 +32,13 @@ export const convertReferralTypeGQLToDB = (
   type: ReferralType
 ): ReferralType_Firestore => {
   switch (type) {
-    case ReferralType.Genesis:
-      return ReferralType_Firestore.genesis;
     case ReferralType.OneTime:
       return ReferralType_Firestore.one_time;
     case ReferralType.Viral:
       return ReferralType_Firestore.viral;
+    case ReferralType.Genesis:
     default:
-      throw new Error(`Unknown referral type: ${type}`);
+      return ReferralType_Firestore.genesis;
   }
 };
 
@@ -101,17 +100,41 @@ export const convertClaimDBToGQL = (claim: Claim_Firestore): Claim => {
   return {
     id: claim.id,
     referrerId: claim.referrerId,
+    referralCampaignName: claim.referralCampaignName,
     referralId: claim.referralId,
+    referralSlug: claim.referralSlug,
+    referralType: convertReferralTypeDBToGQL(claim.referralType),
     tournamentId: claim.tournamentId,
+    tournamentName: claim.tournamentName,
+    whitelistId: claim.whitelistId,
+    originLootboxId: claim.originLootboxId,
+    lootboxID: claim.lootboxID,
+    lootboxAddress: claim.lootboxAddress,
+    isPostCosmic: !!claim.isPostCosmic,
+    lootboxName: claim.lootboxName,
+    lootboxNFTBountyValue: claim.lootboxNFTBountyValue,
+    lootboxMaxTickets: claim.lootboxMaxTickets,
+    rewardFromClaim: claim.rewardFromClaim,
+    rewardFromFriendReferred: claim.rewardFromFriendReferred,
+    claimerUserId: claim.claimerUserId,
     status: convertClaimStatusDBToGQL(claim.status),
     type: convertClaimTypeDBToGQL(claim.type),
-    referralSlug: claim.referralSlug,
-    isPostCosmic: !!claim.isPostCosmic,
     timestamps: {
       createdAt: claim.timestamps.createdAt,
       completedAt: claim.timestamps.completedAt,
       updatedAt: claim.timestamps.updatedAt,
       deletedAt: claim.timestamps.deletedAt,
     },
+
+    /** @deprecated */
+    originPartyBasketId: claim.originPartyBasketId,
+    /** @deprecated */
+    chosenPartyBasketId: claim.chosenPartyBasketId,
+    /** @deprecated */
+    chosenPartyBasketAddress: claim.chosenPartyBasketAddress,
+    /** @deprecated */
+    chosenPartyBasketName: claim.chosenPartyBasketName,
+    /** @deprecated */
+    chosenPartyBasketNFTBountyValue: claim.chosenPartyBasketNFTBountyValue,
   };
 };
