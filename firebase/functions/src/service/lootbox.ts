@@ -1,8 +1,26 @@
-import { Address, ChainInfo, ContractAddress, Lootbox_Firestore, TournamentID, UserID } from "@wormgraph/helpers";
+import {
+    Address,
+    ChainInfo,
+    ContractAddress,
+    Lootbox_Firestore,
+    TournamentID,
+    UserID,
+    MintWhitelistSignature_Firestore,
+    LootboxID,
+    Claim_Firestore,
+} from "@wormgraph/helpers";
+import { ethers } from "ethers";
 import { logger } from "firebase-functions";
-import { createLootbox, createLootboxTournamentSnapshot, getLootboxByChainAddress } from "../api/firestore/lootbox";
+import {
+    createLootbox,
+    createLootboxTournamentSnapshot,
+    createMintWhitelistSignature,
+    // getLootbox,
+    getLootboxByChainAddress,
+} from "../api/firestore/lootbox";
 import { getTournamentByID } from "../api/firestore/tournament";
 import { stampNewLootbox } from "../api/stamp";
+import { generateNonce, whitelistLootboxMintSignature } from "../lib/ethers";
 
 interface CreateLootboxRequest {
     // passed in variables
@@ -77,9 +95,17 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
     );
 
     if (request.tournamentID) {
+        logger.info("Checking to add tournament snapshot", {
+            tournamentID: request.tournamentID,
+            lootboxID: createdLootbox.id,
+        });
         // Make sure tournament exists
         const tournament = await getTournamentByID(request.tournamentID);
         if (tournament != null) {
+            logger.info("creating tournament snapshot", {
+                tournamentID: request.tournamentID,
+                lootboxID: createdLootbox.id,
+            });
             await createLootboxTournamentSnapshot({
                 tournamentID: request.tournamentID,
                 lootboxID: createdLootbox.id,
@@ -94,4 +120,45 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
     }
 
     return createdLootbox;
+};
+
+export const whitelist = async (
+    whitelistAddress: Address,
+    lootbox: Lootbox_Firestore,
+    claim?: Claim_Firestore
+): Promise<MintWhitelistSignature_Firestore> => {
+    logger.info("Whitelisting user", { whitelistAddress, lootbox: lootbox.id });
+
+    if (!ethers.utils.isAddress(whitelistAddress)) {
+        throw new Error("Invalid Address");
+    }
+    if (!lootbox) {
+        throw new Error("Lootbox not found");
+    }
+
+    const nonce = generateNonce();
+    const _whitelisterPrivateKey = process.env.PARTY_BASKET_WHITELISTER_PRIVATE_KEY || "";
+    const signer = new ethers.Wallet(_whitelisterPrivateKey);
+
+    logger.info("generating whitelist", { whitelistAddress, lootbox: lootbox.id, signerAddress: signer.address });
+    const signature = await whitelistLootboxMintSignature(
+        lootbox.chainIdHex,
+        lootbox.address,
+        whitelistAddress,
+        _whitelisterPrivateKey,
+        nonce
+    );
+
+    logger.info("Adding the signature to DB", { whitelistAddress, lootbox: lootbox.id, signerAddress: signer.address });
+    const signatureDB = await createMintWhitelistSignature({
+        signature,
+        signer: signer.address as Address,
+        whitelistedAddress: whitelistAddress as Address,
+        lootboxId: lootbox.id as LootboxID,
+        lootboxAddress: lootbox.address as Address,
+        nonce,
+        claim,
+    });
+
+    return signatureDB;
 };

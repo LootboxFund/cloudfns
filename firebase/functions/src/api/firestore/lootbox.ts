@@ -2,20 +2,24 @@ import {
     Address,
     ChainIDHex,
     ChainInfo,
+    Claim_Firestore,
     Collection,
     LootboxID,
+    LootboxMintSignatureNonce,
+    LootboxMintWhitelistID,
     LootboxStatus_Firestore,
     LootboxTournamentSnapshotID,
     LootboxTournamentSnapshot_Firestore,
     LootboxTournamentStatus_Firestore,
     LootboxVariant_Firestore,
     Lootbox_Firestore,
+    MintWhitelistSignature_Firestore,
     TournamentID,
     UserID,
 } from "@wormgraph/helpers";
-import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
+import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import { LootboxTournamentSnapshot, Tournament } from "../graphql/generated/types";
+import { ClaimTimestamps } from "../graphql/generated/types";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(id) as DocumentReference<Lootbox_Firestore>;
@@ -94,6 +98,7 @@ export const createLootbox = async (payload: CreateLootboxPayload, chain: ChainI
         backgroundImage: payload.backgroundImage,
         themeColor: payload.themeColor,
         symbol: payload.symbol,
+        runningCompletedClaims: 0,
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),
@@ -120,7 +125,7 @@ export const createLootboxTournamentSnapshot = async (
     payload: CreateLootboxTournamentSnapshot
 ): Promise<LootboxTournamentSnapshot_Firestore> => {
     const doc = db
-        .collection(Collection.LootboxTournamentSnapshot)
+        .collection(Collection.Tournament)
         .doc(payload.tournamentID)
         .collection(Collection.LootboxTournamentSnapshot)
         .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;
@@ -135,7 +140,8 @@ export const createLootboxTournamentSnapshot = async (
         description: payload.description,
         name: payload.name,
         stampImage: payload.stampImage,
-        status: LootboxTournamentStatus_Firestore.disabled,
+        impressionPriority: 0,
+        status: LootboxTournamentStatus_Firestore.active,
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),
@@ -146,4 +152,89 @@ export const createLootboxTournamentSnapshot = async (
     await doc.set(request);
 
     return request;
+};
+
+export const incrementLootboxRunningClaims = async (lootboxID: LootboxID): Promise<void> => {
+    const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
+
+    const updateReq: Partial<Lootbox_Firestore> = {
+        runningCompletedClaims: FieldValue.increment(1) as unknown as number,
+    };
+
+    await lootboxRef.update(updateReq);
+};
+
+interface CreateMintWhitelistSignatureRequest {
+    signature: string;
+    signer: Address;
+    whitelistedAddress: Address;
+    lootboxId: LootboxID;
+    lootboxAddress: Address;
+    nonce: LootboxMintSignatureNonce;
+    claim?: Claim_Firestore;
+}
+
+/**
+ * Creates whitelist signature database object
+ * Updates claim if provided with whitelistId as DB transaction
+ */
+export const createMintWhitelistSignature = async ({
+    signature,
+    signer,
+    whitelistedAddress,
+    lootboxId,
+    lootboxAddress,
+    nonce,
+    claim,
+}: CreateMintWhitelistSignatureRequest): Promise<MintWhitelistSignature_Firestore> => {
+    const batch = db.batch();
+
+    const signatureRef = db
+        .collection(Collection.Lootbox)
+        .doc(lootboxId)
+        .collection(Collection.MintWhiteList)
+        .doc() as DocumentReference<MintWhitelistSignature_Firestore>;
+
+    const whitelistID: LootboxMintWhitelistID = signatureRef.id as LootboxMintWhitelistID;
+
+    const signatureDocument: MintWhitelistSignature_Firestore = {
+        id: whitelistID,
+        isRedeemed: false,
+        lootboxAddress,
+        whitelistedAddress,
+        signature,
+        signer,
+        nonce,
+        createdAt: Timestamp.now().toMillis(),
+        updatedAt: Timestamp.now().toMillis(),
+        deletedAt: null,
+    };
+
+    batch.set(signatureRef, signatureDocument);
+
+    if (claim) {
+        // Update the claim's whitelistId
+        const claimRef = db
+            .collection(Collection.Referral)
+            .doc(claim.referralId)
+            .collection(Collection.Claim)
+            .doc(claim.id) as DocumentReference<Claim_Firestore>;
+
+        const updateClaimRequest: Partial<Claim_Firestore> = {
+            whitelistId: whitelistID,
+        };
+
+        // Annoying typesafety for nested objects?
+        const timestampName: keyof Claim_Firestore = "timestamps";
+        const updatedAtName: keyof ClaimTimestamps = "updatedAt";
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        updateClaimRequest[`${timestampName}.${updatedAtName}`] = Timestamp.now().toMillis();
+
+        batch.update(claimRef, updateClaimRequest);
+    }
+
+    await batch.commit();
+
+    return signatureDocument;
 };

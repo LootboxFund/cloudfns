@@ -8,7 +8,7 @@ import {
 import { db } from "../firebase";
 import { LootboxSnapshot, Wallet } from "../../graphql/generated/types";
 import { Address, Collection, Lootbox_Firestore } from "@wormgraph/helpers";
-import { UserID, UserIdpID, WalletID } from "../../lib/types";
+import { UserID, UserIdpID, WalletID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot } from "../../lib/lootbox";
 
 type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;

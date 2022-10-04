@@ -1,4 +1,4 @@
-import { UserIdpID } from "../../lib/types";
+import { UserIdpID } from "@wormgraph/helpers";
 
 export interface IIdpUser {
   id: UserIdpID;

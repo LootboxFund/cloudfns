@@ -15,7 +15,7 @@ import {
   AffiliateID,
   Collection,
   UserIdpID,
-} from "../../lib/types";
+} from "@wormgraph/helpers";
 import { DocumentReference } from "firebase-admin/firestore";
 import { Advertiser_Firestore } from "../firestore/advertiser.type";
 import { Affiliate_Firestore } from "../firestore/affiliate.type";

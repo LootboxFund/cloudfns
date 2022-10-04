@@ -1,6 +1,6 @@
 import { db, fun } from "./api/firebase";
 import * as functions from "firebase-functions";
-import { Ad, AdEventAction, Claim, ClaimStatus, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
+import { Ad, AdEventAction, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
@@ -11,6 +11,8 @@ import {
     updateAdCounts,
     getAdEventsByNonce,
     getFlightById,
+    incrementLootboxRunningClaims,
+    getLootbox,
 } from "./api/firestore";
 import { manifest, SecretName } from "./manifest";
 import {
@@ -25,23 +27,38 @@ import {
     ChainInfo,
     LootboxCreatedNonce,
     EnqueueLootboxOnCreateCallableRequest,
+    TournamentID,
+    Claim_Firestore,
+    ClaimStatus_Firestore,
+    ReferralType_Firestore,
+    ClaimType_Firestore,
+    Lootbox_Firestore,
+    LootboxStatus_Firestore,
+    Wallet_Firestore,
+    LootboxID,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import { reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
+import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
+import { getUserWallets } from "./api/firestore/user";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
+// TODO: Rename this secret to be LOOTBOX
+const whitelisterPrivateKeySecretName: SecretName = "PARTY_BASKET_WHITELISTER_PRIVATE_KEY";
 
-/** @deprecated no longer using party baskets */
-export const onClaimWrite = functions.firestore
-    .document(`/${Collection.Referral}/{referralId}/${Collection.Claim}/{claimId}`)
+export const onClaimWrite = functions
+    .runWith({
+        secrets: [whitelisterPrivateKeySecretName],
+    })
+    .firestore.document(`/${Collection.Referral}/{referralId}/${Collection.Claim}/{claimId}`)
     .onWrite(async (snap) => {
         // Grab the current value of what was written to Firestore.
-        const oldClaim = snap.before.data() as Claim | undefined;
-        const newClaim = snap.after.data() as Claim | undefined;
+        const oldClaim = snap.before.data() as Claim_Firestore | undefined;
+        const newClaim = snap.after.data() as Claim_Firestore | undefined;
 
         if (!newClaim) {
             return;
@@ -49,31 +66,195 @@ export const onClaimWrite = functions.firestore
 
         const isStatusChanged = newClaim.status !== oldClaim?.status;
 
-        if (newClaim.status === ClaimStatus.Complete && isStatusChanged && newClaim.chosenPartyBasketId) {
-            logger.log("incrementing party basket completedClaims");
-            try {
-                const partyBasketRef = db
-                    .collection(Collection.PartyBasket)
-                    .doc(newClaim.chosenPartyBasketId) as DocumentReference<Claim>;
+        if (newClaim.isPostCosmic) {
+            if (newClaim.status === ClaimStatus_Firestore.complete && isStatusChanged && newClaim.lootboxID) {
+                logger.log("incrementing lootbox completedClaims", {
+                    claimID: newClaim.id,
+                    lootboxID: newClaim.lootboxID,
+                });
 
-                const updateReq: Partial<PartyBasket> = {
-                    runningCompletedClaims: FieldValue.increment(1) as unknown as number,
-                };
+                let lootbox: Lootbox_Firestore | undefined;
 
-                await partyBasketRef.update(updateReq);
-            } catch (err) {
-                logger.error("Error onClaimWrite", err);
+                try {
+                    lootbox = await getLootbox(newClaim.lootboxID);
+                    if (!lootbox) {
+                        throw new Error("Lootbox not found");
+                    }
+                } catch (err) {
+                    logger.error("error fetching lootbox", { lootboxID: newClaim.lootboxID, err });
+                    return;
+                }
+
+                incrementLootboxRunningClaims(newClaim.lootboxID).catch((err) => {
+                    logger.error("Error onClaimWrite", err);
+                });
+
+                if (!newClaim.whitelistId && newClaim.claimerUserId) {
+                    try {
+                        // Generate the whitelist only if the user wallet exists
+                        const userWallets = await getUserWallets(newClaim.claimerUserId, 1); // Uses the first wallet
+                        if (userWallets.length > 0) {
+                            const walletToWhitelist = userWallets[0];
+                            // If user has wallet, whitelist it
+                            // If not, this claim will be whitelisted later when the user adds their wallet
+                            await lootboxService.whitelist(walletToWhitelist.address, lootbox, newClaim);
+                        }
+                    } catch (err) {
+                        logger.error("Error onClaimWrite generating whitelist", err);
+                    }
+                }
+
+                const currentAmount = lootbox?.runningCompletedClaims || 0;
+                const newCurrentAmount = currentAmount + 1; // Since we just incremented by one in this function (see "incrementLootboxRunningClaims")
+                const maxAmount = lootbox?.maxTickets || 10000;
+                const isBonusWithinLimit = newCurrentAmount < maxAmount;
+
+                if (
+                    lootbox &&
+                    isBonusWithinLimit &&
+                    newClaim.referralType === ReferralType_Firestore.viral &&
+                    newClaim.type === ClaimType_Firestore.referral &&
+                    newClaim.referrerId
+                ) {
+                    // Create the reward claim
+                    try {
+                        logger.log("Creating reward claim for referral", {
+                            claimID: newClaim.id,
+                            referralID: newClaim.referralId,
+                        });
+                        await createRewardClaim({
+                            lootboxID: newClaim.lootboxID,
+                            referralId: newClaim.referralId,
+                            tournamentId: newClaim.tournamentId,
+                            tournamentName: newClaim.tournamentName,
+                            referralSlug: newClaim.referralSlug,
+                            referralCampaignName: newClaim.referralCampaignName || "",
+                            rewardFromClaim: newClaim.id,
+                            rewardFromFriendReferred: newClaim.claimerUserId,
+                            claimerID: newClaim.referrerId,
+                        });
+                    } catch (err) {
+                        logger.error("Error onClaimWrite creating reward claim", err);
+                    }
+                }
+            }
+        } else {
+            // DEPRECATED Cosmic stuff
+            /** @NOTE We dont need to write the reward claim for old claims because it gets written from GQL */
+            if (newClaim.status === ClaimStatus_Firestore.complete && isStatusChanged && newClaim.chosenPartyBasketId) {
+                logger.log("incrementing party basket completedClaims");
+                try {
+                    const partyBasketRef = db
+                        .collection(Collection.PartyBasket)
+                        .doc(newClaim.chosenPartyBasketId) as DocumentReference<Claim_Firestore>;
+
+                    const updateReq: Partial<PartyBasket> = {
+                        runningCompletedClaims: FieldValue.increment(1) as unknown as number,
+                    };
+
+                    await partyBasketRef.update(updateReq);
+                } catch (err) {
+                    logger.error("Error onClaimWrite", err);
+                }
             }
         }
-
-        // // If it is a viral claim, write the reward claim...
-        // if (newClaim.status === ClaimStatus.Complete && isStatusChanged && newClaim.type === ClaimType.Referral) {
-        //     // write the reward claim TODO
-        // }
 
         return;
     });
 
+export const onWalletCreate = functions.firestore
+    .document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
+    .onCreate(async (snap) => {
+        logger.info(snap);
+
+        const wallet: Wallet_Firestore = snap.data() as Wallet_Firestore;
+
+        try {
+            // Look for un resolved claims
+            const unassignedClaims = await getUnassignedClaimsForUser(wallet.userId);
+            if (unassignedClaims && unassignedClaims.length > 0) {
+                logger.info(`Found claims to whitelist: ${unassignedClaims.length}`, {
+                    numClaims: unassignedClaims.length,
+                    userID: wallet.userId,
+                });
+
+                const lootboxMapping: { [key: LootboxID]: Lootbox_Firestore } = {};
+                for (const claim of unassignedClaims) {
+                    try {
+                        let lootbox: Lootbox_Firestore | undefined;
+                        if (
+                            !claim.lootboxID ||
+                            claim.status !== ClaimStatus_Firestore.complete ||
+                            !!claim.whitelistId
+                        ) {
+                            continue;
+                        }
+                        if (!lootboxMapping[claim.lootboxID]) {
+                            lootbox = await getLootbox(claim.lootboxID);
+                            if (!lootbox) {
+                                continue;
+                            }
+                            lootboxMapping[claim.lootboxID] = lootbox;
+                        } else {
+                            lootbox = lootboxMapping[claim.lootboxID];
+                        }
+                        if (lootbox) {
+                            await lootboxService.whitelist(wallet.address, lootbox, claim);
+                        }
+                    } catch (err) {
+                        logger.error("Error processing unassigned claim", {
+                            err,
+                            claimID: claim.id,
+                            referralID: claim.referralId,
+                        });
+                        continue;
+                    }
+                }
+            }
+        } catch (err) {
+            logger.error("Error onWalletCreate", err);
+        }
+    });
+
+export const onLootboxWrite = functions.firestore
+    .document(`/${Collection.Lootbox}/{lootboxID}`)
+    .onWrite(async (snap) => {
+        const oldLootbox = snap.before.data() as Lootbox_Firestore | undefined;
+        const newLootbox = snap.after.data() as Lootbox_Firestore | undefined;
+
+        if (!newLootbox || !oldLootbox) {
+            return;
+        }
+
+        // TODO: Restamp Lootbox if assets have changed
+
+        // TODO: update all snapshot? SKIP FOR NOW
+
+        // If needed, update Lootbox status to sold out
+        if (
+            !!newLootbox.runningCompletedClaims &&
+            newLootbox.runningCompletedClaims >= newLootbox.maxTickets &&
+            newLootbox.status !== LootboxStatus_Firestore.soldOut &&
+            oldLootbox?.runningCompletedClaims !== newLootbox.runningCompletedClaims
+        ) {
+            logger.log("updating lootbox to sold out", snap.after.id);
+            try {
+                const lootboxRef = db.collection(Collection.Lootbox).doc(snap.after.id);
+
+                const updateReq: Partial<Lootbox_Firestore> = {
+                    status: LootboxStatus_Firestore.soldOut,
+                };
+
+                await lootboxRef.update(updateReq);
+            } catch (err) {
+                logger.error("Error onPartyBasketWrite", err);
+            }
+        }
+
+        return;
+    });
+
+/** @deprecated use onLootboxWrite now */
 export const onPartyBasketWrite = functions.firestore
     .document(`/${Collection.PartyBasket}/{partyBasketId}`)
     .onWrite(async (snap) => {
@@ -131,7 +312,6 @@ export const onPartyBasketWrite = functions.firestore
  * httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"
  * ```
  */
-
 export const pubsubPixelTracking = functions.pubsub
     .topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
@@ -290,11 +470,10 @@ interface IndexLootboxOnCreateTaskRequest {
         joinCommunityUrl?: string;
         symbol: string;
         nonce: LootboxCreatedNonce;
+        tournamentID?: TournamentID;
     };
     filter: {
         fromBlock: number;
-        //     address: Address; // Contract address to listen to
-        //     topics: string[]; // I.e. ethers.utils.solidityKeccak256(['string'], ['LootboxCreated(string,address,address,address,uint256,uint256,string)'])
     };
 }
 
@@ -379,6 +558,7 @@ export const indexLootboxOnCreate = functions
                         // Get the lootbox info
                         await lootboxService.create(
                             {
+                                tournamentID: data.payload.tournamentID,
                                 factory: data.payload.factory,
                                 lootboxDescription: data.payload.lootboxDescription,
                                 backgroundImage: data.payload.backgroundImage,
@@ -446,6 +626,7 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
                 joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
                 symbol: data.payload.symbol,
                 creatorID: context.auth.uid as UserID,
+                tournamentID: data.payload.tournamentID,
             },
             filter: {
                 fromBlock: data.fromBlock,

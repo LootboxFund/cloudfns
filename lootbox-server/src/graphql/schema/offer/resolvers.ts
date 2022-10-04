@@ -2,43 +2,18 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import {
   ActivationID,
   AffiliateID,
-  ConquestID,
   OfferID,
   UserIdpID,
 } from "@wormgraph/helpers";
+import { AdvertiserID } from "@wormgraph/helpers";
 import {
-  advertiserAdminView,
-  advertiserPublicView,
-  createConquest,
-  getConquest,
-  listConquestPreviews,
-  updateAdvertiserDetails,
-  updateConquest,
-  upgradeToAdvertiser,
-} from "../../../api/firestore/advertiser";
-import { AdvertiserID, UserID } from "../../../lib/types";
-import {
-  Advertiser,
-  AdvertiserAdminViewResponse,
-  AdvertiserPublicViewResponse,
-  Conquest,
-  CreateConquestResponse,
   CreateOfferResponse,
   EditOfferResponse,
-  GetConquestResponse,
-  ListConquestPreviewsResponse,
-  MutationCreateConquestArgs,
   MutationCreateOfferArgs,
   MutationEditOfferArgs,
-  MutationUpdateAdvertiserDetailsArgs,
-  MutationUpdateConquestArgs,
-  MutationUpgradeToAdvertiserArgs,
   Offer,
   Resolvers,
   StatusCode,
-  UpdateAdvertiserDetailsResponse,
-  UpdateConquestResponse,
-  UpgradeToAdvertiserResponse,
   EditActivationResponse,
   MutationEditActivationArgs,
   ListCreatedOffersResponse,
@@ -52,12 +27,10 @@ import {
   OfferAffiliateViewActivationsForAffiliateArgs,
   RateQuoteEstimate,
   ViewOfferDetailsAsEventAffiliateResponse,
-  ViewOfferDetailsAsEventAffiliatePayload,
   QueryViewOfferDetailsAsAffiliateArgs,
   AdSetStatus,
 } from "../../generated/types";
 import { Context } from "../../server";
-import { ConquestWithTournaments } from "../../../api/firestore/advertiser.type";
 import {
   QueryListCreatedOffersArgs,
   AdSetPreview,
@@ -73,7 +46,7 @@ import {
   listOffersAvailableForOrganizer,
   viewCreatedOffer,
 } from "../../../api/firestore/offer";
-import { CreateActivationResponse, Affiliate } from "../../generated/types";
+import { CreateActivationResponse } from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import {

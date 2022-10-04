@@ -1,11 +1,5 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import {
-  // getAdById,
-  getClaimById,
-  // getCreativeById,
-  getTournamentById,
-} from "../../../api/firestore";
-import {
   createAd,
   createAdSet,
   editAd,
@@ -16,13 +10,7 @@ import {
   listAdSetsOfAdvertiser,
   listAdsOfAdvertiser,
 } from "../../../api/firestore/ad";
-import {
-  AdID,
-  AdvertiserID,
-  ClaimID,
-  CreativeID,
-  TournamentID,
-} from "../../../lib/types";
+import { AdID, AdvertiserID } from "@wormgraph/helpers";
 import {
   Resolvers,
   StatusCode,
@@ -49,7 +37,6 @@ import {
   ListAdsOfAdvertiserResponse,
   DecisionAdApiBetaV2Response,
 } from "../../generated/types";
-import { AdSet_Firestore } from "../../../api/firestore/ad.types";
 import {
   EditAdResponse,
   CreateAdSetResponse,

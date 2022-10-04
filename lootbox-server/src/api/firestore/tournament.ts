@@ -17,6 +17,7 @@ import {
   EditStreamPayload,
   StreamType,
   LootboxTournamentStatus,
+  PaginateLootboxTournamentSnapshotEdge,
 } from "../../graphql/generated/types";
 import {
   UserID,
@@ -24,11 +25,12 @@ import {
   TournamentID,
   StreamID,
   AffiliateID,
-} from "../../lib/types";
+} from "@wormgraph/helpers";
 import {
   Collection,
   Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
+  LootboxTournamentSnapshotID,
 } from "@wormgraph/helpers";
 import { Stream_Firestore } from "./tournament.types";
 import {
@@ -37,6 +39,7 @@ import {
   convertTournamentDBToGQL,
   parseLootboxTournamentSnapshotDB,
   convertStreamTypeGQLToDB,
+  convertLootboxTournamentSnapshotDBToGQL,
 } from "../../lib/tournament";
 import { LootboxDeprecated_Firestore } from "./lootbox.types";
 
@@ -57,6 +60,61 @@ export const getTournamentById = async (
   }
 };
 
+export const paginateLootboxSnapshotsForTournament = async (
+  tournamentID: TournamentID,
+  limit: number,
+  cursor: LootboxTournamentSnapshotID | null
+): Promise<{
+  totalCount: number;
+  edges: PaginateLootboxTournamentSnapshotEdge[];
+  pageInfo: PageInfo;
+}> => {
+  const lootboxTournamentSnapshotsRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .orderBy("impressionPriority", "desc")
+    .orderBy(
+      "timestamps.createdAt",
+      "desc"
+    ) as Query<LootboxTournamentSnapshot_Firestore>;
+
+  const lootboxTournamentSnapshotsQuery = cursor
+    ? lootboxTournamentSnapshotsRef.startAfter(cursor)
+    : lootboxTournamentSnapshotsRef;
+
+  const lootboxTournamentSnapshots = await lootboxTournamentSnapshotsQuery
+    .limit(limit)
+    .get();
+
+  const edges: PaginateLootboxTournamentSnapshotEdge[] = [];
+  let totalCount = 0;
+
+  for (const lootboxTournamentSnapshot of lootboxTournamentSnapshots.docs) {
+    const data = lootboxTournamentSnapshot.data();
+    if (data) {
+      edges.push({
+        cursor: data.id,
+        node: convertLootboxTournamentSnapshotDBToGQL(data),
+      });
+    }
+  }
+
+  totalCount = edges.length;
+
+  const pageInfo: PageInfo = {
+    hasNextPage: totalCount === limit,
+    // startCursor: edges[0]?.cursor || null,
+    endCursor: edges[edges.length - 1]?.cursor || null,
+  };
+
+  return {
+    totalCount,
+    edges,
+    pageInfo,
+  };
+};
+
 export const getLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID
 ): Promise<LootboxTournamentSnapshot_Firestore[]> => {
@@ -64,6 +122,7 @@ export const getLootboxSnapshotsForTournament = async (
     .collection(Collection.Tournament)
     .doc(tournamentID)
     .collection(Collection.LootboxTournamentSnapshot)
+    .orderBy("impressionPriority", "desc")
     .orderBy(
       "timestamps.createdAt",
       "asc"

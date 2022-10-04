@@ -69,6 +69,10 @@ const TournamentTypeDefs = gql`
     # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
+    paginateLootboxSnapshots(
+      first: Int!
+      after: ID
+    ): PaginateLootboxTournamentSnapshots
     lootboxSnapshots: [LootboxTournamentSnapshot!]
   }
 
@@ -161,13 +165,24 @@ const TournamentTypeDefs = gql`
 
   type BattleFeedEdge {
     node: Tournament!
-    cursor: ID!
+    cursor: ID! # Tournament ID
+  }
+
+  type PaginateLootboxTournamentSnapshotEdge {
+    node: LootboxTournamentSnapshot!
+    cursor: ID! # LootboxTournamentSnapshot ID
   }
 
   type BattleFeedResponseSuccess {
     totalCount: Int!
     pageInfo: PageInfo!
     edges: [BattleFeedEdge!]!
+  }
+
+  type PaginateLootboxTournamentSnapshots {
+    totalCount: Int!
+    pageInfo: PageInfo!
+    edges: [PaginateLootboxTournamentSnapshotEdge!]!
   }
 
   union TournamentResponse = TournamentResponseSuccess | ResponseError

@@ -5,10 +5,7 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import {
-  Lootbox,
-  LootboxFeedResponseSuccess,
-} from "../../graphql/generated/types";
+import { LootboxFeedResponseSuccess } from "../../graphql/generated/types";
 import {
   Address,
   ClaimID,
@@ -21,14 +18,14 @@ import {
   LootboxTicket_Firestore,
   Lootbox_Firestore,
   LootboxStatus_Firestore,
+  MintWhitelistSignature_Firestore,
 } from "@wormgraph/helpers";
-import { LootboxID } from "../../lib/types";
+import { LootboxID } from "@wormgraph/helpers";
 import {
   convertLootboxToSnapshot,
   parseLootboxDB,
   parseMintWhitelistSignature,
 } from "../../lib/lootbox";
-import { MintWhitelistSignature_Firestore } from "./lootbox.types";
 
 export const getLootbox = async (
   id: LootboxID
@@ -224,6 +221,7 @@ interface CreateMintWhitelistSignatureRequest {
   lootboxAddress: Address;
   nonce: LootboxMintSignatureNonce;
 }
+/** @deprecated ALSO duplicated in functions */
 export const createMintWhitelistSignature = async ({
   signature,
   signer,

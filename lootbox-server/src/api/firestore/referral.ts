@@ -1,16 +1,9 @@
 import {
-  Claim,
-  PartyBasket,
-  Referral,
   ClaimStatus,
-  Tournament,
   ClaimType,
-  PageInfo,
   ClaimEdge,
   ClaimPageInfo,
   User,
-  Lootbox,
-  ReferralType,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -21,8 +14,14 @@ import {
   TournamentID,
   UserID,
   UserIdpID,
-  ClaimsCsvRow,
-} from "../../lib/types";
+  ClaimStatus_Firestore,
+  ClaimType_Firestore,
+  ReferralType_Firestore,
+  Referral_Firestore,
+  Claim_Firestore,
+  LootboxMintWhitelistID,
+} from "@wormgraph/helpers";
+import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
 import {
   CollectionGroup,
@@ -36,14 +35,19 @@ import { Address, Collection, WhitelistSignatureID } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 import { getUser } from "./user";
 import { getUserWallets } from "./wallet";
+import {
+  convertClaimDBToGQL,
+  convertClaimStatusDBToGQL,
+  convertClaimTypeDBToGQL,
+} from "../../lib/referral";
 
 export const getReferralBySlug = async (
   slug: ReferralSlug
-): Promise<Referral | undefined> => {
+): Promise<Referral_Firestore | undefined> => {
   const collectionRef = db
     .collection(Collection.Referral)
     .where("slug", "==", slug)
-    .limit(1) as Query<Referral>;
+    .limit(1) as Query<Referral_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
 
@@ -56,11 +60,11 @@ export const getReferralBySlug = async (
 
 export const getReferralById = async (
   id: ReferralID
-): Promise<Referral | undefined> => {
+): Promise<Referral_Firestore | undefined> => {
   const collectionRef = (await db
     .collection(Collection.Referral)
     .doc(id)
-    .get()) as DocumentSnapshot<Referral>;
+    .get()) as DocumentSnapshot<Referral_Firestore>;
 
   if (collectionRef.exists) {
     return collectionRef.data();
@@ -71,25 +75,29 @@ export const getReferralById = async (
 
 interface CreateReferralCall {
   slug: ReferralSlug;
-  referrerId: UserIdpID;
-  creatorId: UserIdpID;
+  referrerId: UserID;
+  creatorId: UserID;
   campaignName: string;
   tournamentId: TournamentID;
+  type: ReferralType_Firestore;
+  seedLootboxID?: LootboxID;
+  /** @deprecated */
   seedPartyBasketId?: PartyBasketID;
-  type: ReferralType;
+  isPostCosmic: boolean;
 }
 export const createReferral = async (
   req: CreateReferralCall
-): Promise<Referral> => {
+): Promise<Referral_Firestore> => {
   const ref = db.collection(Collection.Referral).doc();
-  const newReferral: Referral = {
-    id: ref.id,
+  const newReferral: Referral_Firestore = {
+    id: ref.id as ReferralID,
     slug: req.slug,
     creatorId: req.creatorId,
     referrerId: req.referrerId,
     campaignName: req.campaignName,
     tournamentId: req.tournamentId,
     type: req.type,
+    isPostCosmic: req.isPostCosmic,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -97,6 +105,10 @@ export const createReferral = async (
     },
     nConversions: 0,
   };
+
+  if (!!req.seedLootboxID) {
+    newReferral.seedLootboxID = req.seedLootboxID;
+  }
 
   if (!!req.seedPartyBasketId) {
     newReferral.seedPartyBasketId = req.seedPartyBasketId;
@@ -111,36 +123,48 @@ interface CreateClaimCall {
   referralId: ReferralID;
   tournamentId: TournamentID;
   tournamentName: string;
-  referrerId: UserIdpID | null;
+  referrerId: UserID | null;
   referralCampaignName: string;
   referralSlug: ReferralSlug;
-  chosenPartyBasketId?: PartyBasketID;
-  originPartyBasketId?: PartyBasketID;
   rewardFromClaim?: ClaimID;
-  status: ClaimStatus;
-  type: ClaimType;
-  chosenPartyBasketAddress?: Address;
-  chosenPartyBasketName?: string;
-  chosenPartyBasketNFTBountyValue?: string;
-  lootboxName?: string;
-  lootboxAddress?: string;
+  status: ClaimStatus_Firestore;
+  type: ClaimType_Firestore;
   completed?: boolean;
   claimerUserId?: UserID;
   rewardFromFriendReferred?: UserID;
-  referralType: ReferralType;
+  referralType: ReferralType_Firestore;
+
+  originLootboxId?: LootboxID;
+  lootboxID?: LootboxID;
+  lootboxAddress?: Address;
+  lootboxName?: string;
+  lootboxNFTBountyValue?: string;
+
+  isPostCosmic: boolean;
+
+  /** @deprecated use lootbox */
+  originPartyBasketId?: PartyBasketID;
+  /** @deprecated use lootbox */
+  chosenPartyBasketId?: PartyBasketID;
+  /** @deprecated use lootbox */
+  chosenPartyBasketAddress?: Address;
+  /** @deprecated use lootbox */
+  chosenPartyBasketName?: string;
+  /** @deprecated use lootbox */
+  chosenPartyBasketNFTBountyValue?: string;
 }
-const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
+const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
   const ref = db
     .collection(Collection.Referral)
     .doc(req.referralId)
     .collection(Collection.Claim)
-    .doc();
+    .doc() as DocumentReference<Claim_Firestore>;
 
   const timestamp = Timestamp.now().toMillis();
-  const newClaim: Claim = {
-    id: ref.id,
-    referrerId: req.referrerId,
+  const newClaim: Claim_Firestore = {
+    id: ref.id as ClaimID,
     referralId: req.referralId,
+    referrerId: req.referrerId,
     tournamentId: req.tournamentId,
     tournamentName: req.tournamentName,
     referralSlug: req.referralSlug,
@@ -149,6 +173,7 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     type: req.type,
     referralType: req.referralType,
     whitelistId: null,
+    isPostCosmic: req.isPostCosmic,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -161,12 +186,24 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim> => {
     newClaim.claimerUserId = req.claimerUserId;
   }
 
-  if (!!req.lootboxAddress) {
-    newClaim.lootboxAddress = req.lootboxAddress;
-  }
-
   if (!!req.lootboxName) {
     newClaim.lootboxName = req.lootboxName;
+  }
+
+  if (!!req.lootboxID) {
+    newClaim.lootboxID = req.lootboxID;
+  }
+
+  if (!!req.lootboxNFTBountyValue) {
+    newClaim.lootboxNFTBountyValue = req.lootboxNFTBountyValue;
+  }
+
+  if (!!req.originLootboxId) {
+    newClaim.originLootboxId = req.originLootboxId;
+  }
+
+  if (!!req.lootboxAddress) {
+    newClaim.lootboxAddress = req.lootboxAddress;
   }
 
   if (!!req.chosenPartyBasketId) {
@@ -214,23 +251,30 @@ interface CreateCreateClaimReq {
   referralCampaignName: string;
   referrerId: UserIdpID;
   referralSlug: ReferralSlug;
+  referralType: ReferralType_Firestore;
+  claimType: ClaimType_Firestore;
+  originLootboxID?: LootboxID;
+  /** @deprecated */
   originPartyBasketId?: PartyBasketID;
-  referralType: ReferralType;
-  claimType: ClaimType;
+  isPostCosmic: boolean;
 }
-export const createStartingClaim = async (req: CreateCreateClaimReq) => {
+export const createStartingClaim = async (
+  req: CreateCreateClaimReq
+): Promise<Claim_Firestore> => {
   return await _createClaim({
     referralId: req.referralId,
     tournamentId: req.tournamentId,
-    referrerId: req.referrerId,
+    referrerId: req.referrerId as unknown as UserID,
     referralSlug: req.referralSlug,
     referralCampaignName: req.referralCampaignName,
     tournamentName: req.tournamentName,
-    originPartyBasketId: req.originPartyBasketId,
-    status: ClaimStatus.Pending,
+    status: ClaimStatus_Firestore.pending,
     type: req.claimType,
     referralType: req.referralType,
     completed: false,
+    originLootboxId: req.originLootboxID,
+    originPartyBasketId: req.originPartyBasketId,
+    isPostCosmic: req.isPostCosmic,
   });
 };
 
@@ -247,10 +291,14 @@ interface CreateRewardClaimReq {
   chosenPartyBasketName: string;
   chosenPartyBasketNFTBountyValue?: string;
   lootboxName: string;
-  lootboxAddress: string;
+  lootboxAddress: Address;
   rewardFromFriendReferred: UserID;
+  isPostCosmic: boolean;
 }
-export const createRewardClaim = async (req: CreateRewardClaimReq) => {
+/** @deprecated duplicated in @cloudfns/firebase/functions */
+export const createRewardClaim = async (
+  req: CreateRewardClaimReq
+): Promise<Claim_Firestore> => {
   return await _createClaim({
     referralCampaignName: req.referralCampaignName,
     referralId: req.referralId,
@@ -264,46 +312,73 @@ export const createRewardClaim = async (req: CreateRewardClaimReq) => {
     chosenPartyBasketNFTBountyValue: req.chosenPartyBasketNFTBountyValue,
     lootboxName: req.lootboxName,
     lootboxAddress: req.lootboxAddress,
-    status: ClaimStatus.Complete,
-    type: ClaimType.Reward,
+    status: ClaimStatus_Firestore.complete,
+    type: ClaimType_Firestore.reward,
     claimerUserId: req.claimerId,
     rewardFromFriendReferred: req.rewardFromFriendReferred,
-    referralType: ReferralType.Viral,
+    referralType: ReferralType_Firestore.viral,
     referrerId: null,
     completed: true,
+    isPostCosmic: req.isPostCosmic,
   });
 };
 
 interface CompleteClaimReq {
   claimId: ClaimID;
   referralId: ReferralID;
-  chosenPartyBasketId: PartyBasketID;
-  claimerUserId: UserIdpID;
-  chosenPartyBasketAddress: Address;
-  chosenPartyBasketName: string;
-  chosenPartyBasketNFTBountyValue?: string;
+  claimerUserId: UserID;
+  lootboxID: LootboxID;
   lootboxAddress: Address;
   lootboxName: string;
+  lootboxNFTBountyValue?: string;
+  lootboxMaxTickets?: number;
+  /** @deprecated */
+  chosenPartyBasketId?: PartyBasketID;
+  /** @deprecated */
+  chosenPartyBasketAddress?: Address;
+  /** @deprecated */
+  chosenPartyBasketName?: string;
+  /** @deprecated */
+  chosenPartyBasketNFTBountyValue?: string;
 }
-export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
+export const completeClaim = async (
+  req: CompleteClaimReq
+): Promise<Claim_Firestore> => {
   const referralRef = db.collection(Collection.Referral).doc(req.referralId);
   const claimRef = referralRef
     .collection(Collection.Claim)
-    .doc(req.claimId) as DocumentReference<Claim>;
+    .doc(req.claimId) as DocumentReference<Claim_Firestore>;
 
-  const updateClaimRequest: Partial<Claim> = {
-    status: ClaimStatus.Complete,
-    chosenPartyBasketId: req.chosenPartyBasketId,
+  const updateClaimRequest: Partial<Claim_Firestore> = {
+    status: ClaimStatus_Firestore.complete,
     claimerUserId: req.claimerUserId,
-    chosenPartyBasketAddress: req.chosenPartyBasketAddress,
-    chosenPartyBasketName: req.chosenPartyBasketName,
+    lootboxID: req.lootboxID,
     lootboxAddress: req.lootboxAddress,
     lootboxName: req.lootboxName,
   };
 
+  if (req.lootboxNFTBountyValue) {
+    updateClaimRequest.lootboxNFTBountyValue = req.lootboxNFTBountyValue;
+  }
+
+  if (req.lootboxMaxTickets) {
+    updateClaimRequest.lootboxMaxTickets = req.lootboxMaxTickets;
+  }
+
+  if (req.chosenPartyBasketId) {
+    updateClaimRequest.chosenPartyBasketId = req.chosenPartyBasketId;
+  }
+
   if (req.chosenPartyBasketNFTBountyValue) {
     updateClaimRequest.chosenPartyBasketNFTBountyValue =
       req.chosenPartyBasketNFTBountyValue;
+  }
+
+  if (req.chosenPartyBasketAddress) {
+    updateClaimRequest.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
+  }
+  if (req.chosenPartyBasketName) {
+    updateClaimRequest.chosenPartyBasketName = req.chosenPartyBasketName;
   }
 
   // This is to update nested object in non-destructive way
@@ -331,16 +406,16 @@ export const completeClaim = async (req: CompleteClaimReq): Promise<Claim> => {
 
   const claim = snapshot.data();
 
-  return claim as Claim;
+  return claim as Claim_Firestore;
 };
 
 export const getClaimById = async (
   claimId: ClaimID
-): Promise<Claim | undefined> => {
+): Promise<Claim_Firestore | undefined> => {
   const collectionRef = db
     .collectionGroup(Collection.Claim)
     .where("id", "==", claimId)
-    .limit(1) as Query<Claim>;
+    .limit(1) as Query<Claim_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
 
@@ -355,13 +430,13 @@ export const getCompletedUserReferralClaimsForTournament = async (
   userId: UserIdpID,
   tournamentId: TournamentID,
   limit?: number
-): Promise<Claim[]> => {
+): Promise<Claim_Firestore[]> => {
   let collectionRef = db
     .collectionGroup(Collection.Claim)
     .where("tournamentId", "==", tournamentId)
     .where("claimerUserId", "==", userId)
     .where("type", "==", ClaimType.Referral)
-    .where("status", "==", ClaimStatus.Complete) as Query<Claim>;
+    .where("status", "==", ClaimStatus.Complete) as Query<Claim_Firestore>;
 
   if (limit !== undefined) {
     collectionRef = collectionRef.limit(limit);
@@ -378,11 +453,11 @@ export const getCompletedUserReferralClaimsForTournament = async (
 export const getCompletedClaimsForReferral = async (
   referralId: ReferralID,
   limit?: number
-): Promise<Claim[]> => {
+): Promise<Claim_Firestore[]> => {
   let collectionRef = db
     .collectionGroup(Collection.Claim)
     .where("referralId", "==", referralId)
-    .where("status", "==", ClaimStatus.Complete) as Query<Claim>;
+    .where("status", "==", ClaimStatus.Complete) as Query<Claim_Firestore>;
 
   if (limit !== undefined) {
     collectionRef = collectionRef.limit(limit);
@@ -402,12 +477,12 @@ export const getCompletedClaimsForReferral = async (
 export const getCompletedClaimsForUserReferral = async (
   userId: UserIdpID,
   referralId: ReferralID
-): Promise<Claim[]> => {
+): Promise<Claim_Firestore[]> => {
   const collectionRef = db
     .collectionGroup(Collection.Claim)
     .where("referralId", "==", referralId)
     .where("status", "==", ClaimStatus.Complete)
-    .where("claimerUserId", "==", userId) as Query<Claim>;
+    .where("claimerUserId", "==", userId) as Query<Claim_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
   if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
@@ -419,12 +494,12 @@ export const getCompletedClaimsForUserReferral = async (
 
 export const getAllClaimsForReferral = async (
   referralId: ReferralID
-): Promise<Claim[]> => {
+): Promise<Claim_Firestore[]> => {
   const collectionRef = db
     .collection(Collection.Referral)
     .doc(referralId)
     .collection(Collection.Claim)
-    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
   if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
@@ -446,7 +521,7 @@ export const paginateUserClaims = async (
   let claimQuery = db
     .collectionGroup(Collection.Claim)
     .where("claimerUserId", "==", userId)
-    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim_Firestore>;
 
   if (cursor) {
     claimQuery = claimQuery.startAfter(Number(cursor));
@@ -471,7 +546,7 @@ export const paginateUserClaims = async (
       edges: docs.map((doc) => {
         const data = doc.data();
         return {
-          node: data,
+          node: convertClaimDBToGQL(data),
           cursor: data.timestamps.createdAt,
         };
       }),
@@ -486,11 +561,11 @@ export const paginateUserClaims = async (
 
 export const getAllClaimsForTournament = async (
   tournamentId: TournamentID
-): Promise<Claim[]> => {
+): Promise<Claim_Firestore[]> => {
   let claimQuery = db
     .collectionGroup(Collection.Claim)
     .where("tournamentId", "==", tournamentId)
-    .orderBy("timestamps.createdAt", "desc") as Query<Claim>;
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim_Firestore>;
 
   const claimsSnapshot = await claimQuery.get();
 
@@ -519,8 +594,8 @@ export const getClaimsCsvData = async (
         claimer = await getUser(claim.claimerUserId);
         if (claimer) {
           claimer.wallets = await getUserWallets(claimer.id as UserID);
+          claimerUserMapping[claim.claimerUserId] = claimer;
         }
-        claimerUserMapping[claim.claimerUserId] = claimer;
       } else {
         claimer = claimerUserMapping[claim.claimerUserId];
       }
@@ -531,8 +606,8 @@ export const getClaimsCsvData = async (
         referrer = await getUser(claim.referrerId);
         if (referrer) {
           referrer.wallets = await getUserWallets(referrer.id as UserID);
+          referrerUserMapping[claim.referrerId] = referrer;
         }
-        referrerUserMapping[claim.referrerId] = referrer;
       } else {
         referrer = referrerUserMapping[claim.referrerId];
       }
@@ -545,7 +620,7 @@ export const getClaimsCsvData = async (
 };
 
 const convertClaimToCsvRow = (
-  claim: Claim,
+  claim: Claim_Firestore,
   claimer?: User,
   referrer?: User
 ): ClaimsCsvRow => {
@@ -558,8 +633,8 @@ const convertClaimToCsvRow = (
     referralSlug: claim.referralSlug || "",
     referralLink: `${manifest.microfrontends.webflow.referral}/r?r=${claim.referralSlug}`,
     claimId: claim.id,
-    claimStatus: claim.status,
-    claimType: claim.type,
+    claimStatus: convertClaimStatusDBToGQL(claim.status),
+    claimType: convertClaimTypeDBToGQL(claim.type),
     rewardFromClaim: claim.rewardFromClaim || "",
     rewardFromFriendReferred: claim.rewardFromFriendReferred || "",
     claimerId: claimer?.id || "",
@@ -677,14 +752,15 @@ const convertClaimToCsvRow = (
   };
 };
 
+/** @deprecated - uses deprecated party basket */
 export const getUnassignedClaims = async (
   partyBasketId: PartyBasketID
-): Promise<Claim[]> => {
+): Promise<Claim_Firestore[]> => {
   const collectionGroupRef = db
     .collectionGroup(Collection.Claim)
     .where("chosenPartyBasketId", "==", partyBasketId)
     .where("status", "==", ClaimStatus.Complete)
-    .where("whitelistId", "==", null) as CollectionGroup<Claim>;
+    .where("whitelistId", "==", null) as CollectionGroup<Claim_Firestore>;
 
   const snapshot = await collectionGroupRef.get();
 
@@ -695,10 +771,11 @@ export const getUnassignedClaims = async (
   }
 };
 
+/** @deprecated - this is duped in functions */
 export const attachWhitelistIdToClaim = async (
   referralId: ReferralID,
   claimId: ClaimID,
-  whitelistId: WhitelistSignatureID
+  whitelistId: LootboxMintWhitelistID
 ) => {
   const ref = db
     .collection(Collection.Referral)
@@ -706,7 +783,7 @@ export const attachWhitelistIdToClaim = async (
     .collection(Collection.Claim)
     .doc(claimId);
 
-  const updateRequest: Partial<Claim> = {
+  const updateRequest: Partial<Claim_Firestore> = {
     whitelistId: whitelistId,
     // @ts-ignore
     "timestamps.updatedAt": Timestamp.now().toMillis(),

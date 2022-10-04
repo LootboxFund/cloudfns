@@ -7,7 +7,7 @@ import {
   UpdateConquestPayload,
   Affiliate,
 } from "../../graphql/generated/types";
-import { AdvertiserID, UserID } from "../../lib/types";
+import { AdvertiserID, UserID } from "@wormgraph/helpers";
 import { db } from "../firebase";
 import {
   Advertiser_Firestore,

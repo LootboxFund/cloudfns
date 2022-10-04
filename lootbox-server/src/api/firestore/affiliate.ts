@@ -19,12 +19,10 @@ import {
   OfferInTournamentStatus,
   AdSetID,
   UserIdpID,
-  Placement,
   AdSetInTournamentStatus,
   AdID,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
-import { v4 as uuidv4 } from "uuid";
 import {
   User,
   AddOfferAdSetToTournamentPayload,

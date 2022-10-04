@@ -1,5 +1,5 @@
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { AffiliateID, UserID } from "../../../lib/types";
+import { AffiliateID, UserID } from "@wormgraph/helpers";
 import {
   Affiliate,
   ListWhitelistedAffiliatesToOfferResponse,

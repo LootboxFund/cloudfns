@@ -1,6 +1,6 @@
 import { ApolloServer } from "apollo-server";
 import identityProvider from "../api/identityProvider";
-import { UserIdpID } from "../lib/types";
+import { UserIdpID } from "@wormgraph/helpers";
 import { schema } from "./schema";
 
 export interface Context {

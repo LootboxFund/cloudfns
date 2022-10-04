@@ -1,13 +1,11 @@
-import { AffiliateID, TournamentID, UserID } from "../../lib/types";
 import {
-  ActivationID,
+  AffiliateID,
   AdvertiserID,
-  AffiliateType,
   OfferID,
   OrganizerOfferWhitelistID,
   OrganizerRank,
-  RateQuoteID,
   UserIdpID,
+  UserID,
 } from "@wormgraph/helpers";
 
 export interface Affiliate_Firestore {

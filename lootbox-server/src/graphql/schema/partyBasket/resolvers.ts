@@ -16,7 +16,6 @@ import {
   EditPartyBasketResponse,
   MutationEditPartyBasketArgs,
   MutationWhitelistAllUnassignedClaimsArgs,
-  Claim,
   PartyBasketStatus,
   WhitelistAllUnassignedClaimsResponse,
 } from "../../generated/types";
@@ -41,16 +40,20 @@ import {
   validateSignature,
   whitelistPartyBasketSignature,
 } from "../../../api/ethers";
-import { Address, ClaimID, ReferralID, UserID } from "@wormgraph/helpers";
+import {
+  Address,
+  ClaimID,
+  ReferralID,
+  UserID,
+  Claim_Firestore,
+  LootboxMintWhitelistID,
+} from "@wormgraph/helpers";
 import { generateNonce } from "../../../lib/whitelist";
 import { errors, ethers } from "ethers";
-import { PartyBasketID, WhitelistSignatureID } from "../../../lib/types";
+import { PartyBasketID, WhitelistSignatureID } from "@wormgraph/helpers";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { isAuthenticated } from "../../../lib/permissionGuard";
-import {
-  convertLootboxDBToGQL,
-  convertLootboxToSnapshot,
-} from "../../../lib/lootbox";
+import { convertLootboxToSnapshot } from "../../../lib/lootbox";
 import { getWhitelisterPrivateKey } from "../../../api/secrets";
 
 const PartyBasketResolvers: Resolvers = {
@@ -430,7 +433,7 @@ const PartyBasketResolvers: Resolvers = {
       }
 
       let whitelisterPrivateKey: string;
-      let claimsWithoutWhitelist: Claim[];
+      let claimsWithoutWhitelist: Claim_Firestore[];
       try {
         [whitelisterPrivateKey, claimsWithoutWhitelist] = await Promise.all([
           getWhitelisterPrivateKey(),
@@ -464,7 +467,8 @@ const PartyBasketResolvers: Resolvers = {
             if (!wallet) {
               continue;
             }
-            userWalletAddressMap[claim.claimerUserId] = wallet.address;
+            userWalletAddressMap[claim.claimerUserId] =
+              wallet.address as Address;
           }
 
           const walletAddress = userWalletAddressMap[claim.claimerUserId];
@@ -497,7 +501,7 @@ const PartyBasketResolvers: Resolvers = {
           await attachWhitelistIdToClaim(
             claim.referralId as ReferralID,
             claim.id as ClaimID,
-            signatureDocument.id as WhitelistSignatureID
+            signatureDocument.id as LootboxMintWhitelistID
           );
           signatures.push(
             `${claim.claimerUserId} - ${walletAddress} - ${signature}`

@@ -1,6 +1,5 @@
 import {
   Address,
-  LootboxID,
   TournamentID,
   UserID,
   LootboxMintWhitelistID,
@@ -11,35 +10,17 @@ import {
   LootboxSnapshotTimestamps,
 } from "@wormgraph/helpers";
 
-export type MintWhitelistSignature_Firestore = {
-  id: LootboxMintWhitelistID;
-  signature: string;
-  signer: Address;
-  whitelistedAddress: Address;
-  lootboxAddress: Address;
-  isRedeemed: boolean;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-  nonce: LootboxMintSignatureNonce;
-};
-
-export enum LootboxStatus_Firestore {
-  active,
-  disabled,
-  soldOut,
-}
-
-export type LootboxTimestamps = {
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
-// export type LootboxSnapshotTimestamps = {
+// export type MintWhitelistSignature_Firestore = {
+//   id: LootboxMintWhitelistID;
+//   signature: string;
+//   signer: Address;
+//   whitelistedAddress: Address;
+//   lootboxAddress: Address;
+//   isRedeemed: boolean;
 //   createdAt: number;
 //   updatedAt: number;
 //   deletedAt: number | null;
+//   nonce: LootboxMintSignatureNonce;
 // };
 
 export interface LootboxSnapshot {

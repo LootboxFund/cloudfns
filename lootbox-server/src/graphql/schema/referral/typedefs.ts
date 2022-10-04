@@ -43,22 +43,30 @@ const ReferralTypeDefs = gql`
     tournamentId: ID!
     tournamentName: String
     whitelistId: ID
-    originPartyBasketId: ID
-    chosenPartyBasketId: ID
-    chosenPartyBasketAddress: ID
-    chosenPartyBasketName: String
-    chosenPartyBasketNFTBountyValue: String
+    originLootboxId: ID
+    lootboxID: ID
     lootboxAddress: ID
+    isPostCosmic: Boolean
     lootboxName: String
+    lootboxNFTBountyValue: String
+    lootboxMaxTickets: Int
+    chosenLootbox: Lootbox
     rewardFromClaim: ID
     rewardFromFriendReferred: ID
     claimerUserId: ID
     status: ClaimStatus!
     type: ClaimType!
     timestamps: ClaimTimestamps!
-    chosenPartyBasket: PartyBasket
     tournament: Tournament
     userLink: PublicUser
+
+    chosenPartyBasket: PartyBasket @deprecated(reason: "Use Lootbox instead")
+    originPartyBasketId: ID @deprecated(reason: "Use Lootbox instead")
+    chosenPartyBasketId: ID @deprecated(reason: "Use Lootbox instead")
+    chosenPartyBasketAddress: ID @deprecated(reason: "Use Lootbox instead")
+    chosenPartyBasketName: String @deprecated(reason: "Use Lootbox instead")
+    chosenPartyBasketNFTBountyValue: String
+      @deprecated(reason: "Use Lootbox instead")
   }
 
   type ClaimEdge {
@@ -72,15 +80,21 @@ const ReferralTypeDefs = gql`
     creatorId: ID!
     slug: ID!
     tournamentId: ID!
-    seedPartyBasketId: ID
+    seedLootboxID: ID
     campaignName: String!
     nConversions: Int!
     timestamps: ReferralTimestamps!
     claims: [Claim!]
     tournament: Tournament
-    seedPartyBasket: PartyBasket
-    isRewardDisabled: Boolean @deprecated(reason: "Use ReferralType instead")
     type: ReferralType
+    isPostCosmic: Boolean
+    seedLootbox: Lootbox
+
+    isRewardDisabled: Boolean @deprecated(reason: "Use ReferralType instead")
+    seedPartyBasket: PartyBasket
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
+    seedPartyBasketId: ID
+      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
   }
 
   type ReferralResponseSuccess {
@@ -96,20 +110,23 @@ const ReferralTypeDefs = gql`
     campaignName: String
     referrerId: ID # If null / undefined, uses the caller user id
     partyBasketId: ID # Optional
+    lootboxID: ID # Optional
   }
 
   input CreateReferralPayload {
     campaignName: String
     tournamentId: ID!
     partyBasketId: ID
-    isRewardDisabled: Boolean @deprecated(reason: "User referral.type instead")
+    lootboxID: ID # Optional
+    isRewardDisabled: Boolean @deprecated(reason: "Use referral.type instead")
     type: ReferralType # todo: make this required
     referrerId: ID # If null / undefined, uses the caller user id
   }
 
   input CompleteClaimPayload {
     claimId: ID!
-    chosenPartyBasketId: ID!
+    chosenLootboxID: ID
+    chosenPartyBasketId: ID # @deprecated(reason: "Use chosenLootboxId instead")
   }
 
   input CreateClaimPayload {

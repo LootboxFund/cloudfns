@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { LootboxMintSignatureNonce } from "@wormgraph/helpers";
 
+/** @deprecated duplicated in cloudfns/functions */
 export const generateNonce = (): LootboxMintSignatureNonce => {
   const hexToDec = (s: string) => {
     var i,

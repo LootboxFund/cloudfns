@@ -6,7 +6,7 @@ import {
   EditAdSetPayload,
   EditAdSetResponse,
 } from "../../graphql/generated/types";
-import { AdID, AdvertiserID } from "../../lib/types";
+import { AdID, AdvertiserID } from "@wormgraph/helpers";
 import { db } from "../firebase";
 import {
   AdSetStatus,
