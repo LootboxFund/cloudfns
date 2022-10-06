@@ -1791,10 +1791,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.2.0-afn-alpha83":
-  version "0.2.0-afn-alpha83"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha83.tgz#6b1a73acc1fc63116fee183262db457e42b9d5dd"
-  integrity sha512-cUP31/tKtyK7upjTNTeT6HX5d2HYhBl2E0NyTnJVKrSuXo6crnWqnzX3JWpzdWlB6Svoeg5XkrG9VHx3+jxVsA==
+"@wormgraph/helpers@0.2.0-afn-alpha87":
+  version "0.2.0-afn-alpha87"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha87.tgz#02b2f0567ab86594d054760e7621fcd8bb731fb3"
+  integrity sha512-tkVHgQjWXaRakiKBsNLW1owUnSuCaJhTBrvXWBWOEesFhZF83b+E5QYNhiCSAIuLsF3pX63nrVQqx+q1hGQqiA==
   dependencies:
     "@wormgraph/manifest" "0.4.0-afm-alpha1"
     axios "0.25.0"
@@ -1807,10 +1807,10 @@
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
-"@wormgraph/manifest@0.4.0-afm-alpha10":
-  version "0.4.0-afm-alpha10"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha10.tgz#974263fff72af116b0f7dbaed0619359d4ed4bce"
-  integrity sha512-4Cr7O1jjTOXFEbMHkNrT2jVU2St7QHAkXyg5B07BCmHMUwaqIilAK8Ahl8EOdQsbFkZ/DaJNxPnHsO3+/9PMnQ==
+"@wormgraph/manifest@0.4.0-afm-alpha12":
+  version "0.4.0-afm-alpha12"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha12.tgz#f78fc0cf9c6e3a3ff1fdee780fed041b21f9df0b"
+  integrity sha512-46PFPMmcOUetVm9aBCs+iDriE9d4D8FPpPKk26jsc7fOn+C5jEGq4q3lol/duOFgL7tuLHODEmaKKWNul82zDQ==
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
