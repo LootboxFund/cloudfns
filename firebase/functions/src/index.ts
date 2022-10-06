@@ -609,7 +609,7 @@ export const indexLootboxOnCreate = functions
         });
     });
 
-export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
+export const enqueueLootboxOnCreate = functions.https.onCall(
     async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
@@ -783,7 +783,7 @@ export const indexLootboxOnMint = functions
         });
     });
 
-export const enqueueLootboxOnMintTasks = functions.https.onCall(
+export const enqueueLootboxOnMint = functions.https.onCall(
     async (data: EnqueueLootboxOnMintCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
