@@ -127,7 +127,7 @@ export const whitelistPartyBasketSignature = async (
 /** ALSO DUPLICATED IN FUNCTIONS */
 export const whitelistLootboxMintSignature = async (
   chainId: string, // Decimal chainId
-  contractAddress: string,
+  contractAddress: Address,
   mintingAddress: string,
   whitelisterPrivateKey: string,
   nonce: string // String version of uint 256 number

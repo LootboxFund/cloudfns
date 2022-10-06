@@ -91,10 +91,6 @@ export const onClaimWrite = functions
                     return;
                 }
 
-                incrementLootboxRunningClaims(newClaim.lootboxID).catch((err) => {
-                    logger.error("Error onClaimWrite", err);
-                });
-
                 if (!newClaim.whitelistId && newClaim.claimerUserId) {
                     try {
                         // Generate the whitelist only if the user wallet exists
@@ -109,6 +105,10 @@ export const onClaimWrite = functions
                         logger.error("Error onClaimWrite generating whitelist", err);
                     }
                 }
+
+                incrementLootboxRunningClaims(newClaim.lootboxID).catch((err) => {
+                    logger.error("Error onClaimWrite", err);
+                });
 
                 const currentAmount = lootbox?.runningCompletedClaims || 0;
                 const newCurrentAmount = currentAmount + 1; // Since we just incremented by one in this function (see "incrementLootboxRunningClaims")

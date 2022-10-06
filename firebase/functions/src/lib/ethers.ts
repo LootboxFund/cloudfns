@@ -59,6 +59,7 @@ export const whitelistLootboxMintSignature = async (
     return signature;
 };
 
+// WARN: Also duplicated in lootbox-server
 export const generateLootboxCosmicDomainSignature = (address: Address, chainIDHex: ChainIDHex) => {
     const chain = hexToDecimalString(chainIDHex.replace("0x", ""));
     const domainSeparator = ethers.utils.keccak256(
@@ -80,6 +81,7 @@ export const generateLootboxCosmicDomainSignature = (address: Address, chainIDHe
     return domainSeparator;
 };
 
+// WARN: Also duplicated in lootbox-server
 export const generateTicketDigest = (params: {
     minterAddress: Address;
     lootboxAddress: Address;
