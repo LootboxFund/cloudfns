@@ -89,11 +89,14 @@ const LootboxTypeDefs = gql`
     stampImage: String!
     logo: String!
     backgroundImage: String!
-    # badgeImage: String
     themeColor: String!
     baseTokenURI: String!
-    # version: String!
     runningCompletedClaims: Int!
+
+    # GQL layer
+    userClaims: [Claim!]
+    # mintWhitelistSignatures: [MintWhitelistSignature!]
+    # tournamentSnapshots: [LootboxTournamentSnapshot!]
 
     # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
@@ -103,7 +106,6 @@ const LootboxTypeDefs = gql`
       @deprecated(
         reason: "Use LootboxTournamentSnapshot subcollection instead - will be removed after Cosmic"
       ) # Optional, if lootboxes are associated to a tournament
-    mintWhitelistSignatures: [MintWhitelistSignature!]
   }
 
   type LootboxSnapshotTimestamps {

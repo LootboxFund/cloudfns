@@ -168,8 +168,11 @@ export const onClaimWrite = functions
         return;
     });
 
-export const onWalletCreate = functions.firestore
-    .document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
+export const onWalletCreate = functions
+    .runWith({
+        secrets: [whitelisterPrivateKeySecretName],
+    })
+    .firestore.document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
     .onCreate(async (snap) => {
         logger.info(snap);
 

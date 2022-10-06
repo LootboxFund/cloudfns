@@ -176,7 +176,7 @@ interface CreateMintWhitelistSignatureRequest {
     lootboxAddress: Address;
     nonce: LootboxMintSignatureNonce;
     digest: LootboxTicketDigest;
-    claim?: Claim_Firestore;
+    claim: Claim_Firestore;
 }
 
 /**
@@ -218,6 +218,7 @@ export const createMintWhitelistSignature = async ({
         lootboxTicketID: null,
         lootboxID: lootboxId,
         whitelistedAt: null,
+        userID: claim?.claimerUserId ? claim.claimerUserId : null,
     };
 
     batch.set(signatureRef, signatureDocument);

@@ -189,30 +189,30 @@ export const paginateLootboxFeedQuery = async (
   }
 };
 
-export const getUserMintSignaturesForLootbox = async (
-  lootboxID: LootboxID,
-  userID: string
-): Promise<MintWhitelistSignature_Firestore[]> => {
-  const collectionRef = db
-    .collection(Collection.Lootbox)
-    .doc(lootboxID)
-    .collection(Collection.MintWhiteList)
-    .where("userID", "==", userID)
-    .orderBy(
-      "timestamp",
-      "asc"
-    ) as CollectionReference<MintWhitelistSignature_Firestore>;
+// export const getUserMintSignaturesForLootbox = async (
+//   lootboxID: LootboxID,
+//   userID: string
+// ): Promise<MintWhitelistSignature_Firestore[]> => {
+//   const collectionRef = db
+//     .collection(Collection.Lootbox)
+//     .doc(lootboxID)
+//     .collection(Collection.MintWhiteList)
+//     .where("userID", "==", userID)
+//     .orderBy(
+//       "createdAt",
+//       "asc"
+//     ) as CollectionReference<MintWhitelistSignature_Firestore>;
 
-  const collectionSnapshot = await collectionRef.get();
+//   const collectionSnapshot = await collectionRef.get();
 
-  if (collectionSnapshot.empty) {
-    return [];
-  }
+//   if (collectionSnapshot.empty) {
+//     return [];
+//   }
 
-  return collectionSnapshot.docs.map((doc) =>
-    parseMintWhitelistSignature(doc.data())
-  );
-};
+//   return collectionSnapshot.docs.map((doc) =>
+//     parseMintWhitelistSignature(doc.data())
+//   );
+// };
 
 interface CreateMintWhitelistSignatureRequest {
   signature: string;
@@ -277,4 +277,23 @@ export const getTicket = async (
   }
 
   return ticket.data();
+};
+
+export const getMintWhistlistSignature = async (
+  lootboxID: LootboxID,
+  signatureID: LootboxMintWhitelistID
+): Promise<MintWhitelistSignature_Firestore | undefined> => {
+  const signatureRef = db
+    .collection(Collection.Lootbox)
+    .doc(lootboxID)
+    .collection(Collection.MintWhiteList)
+    .doc(signatureID) as DocumentReference<MintWhitelistSignature_Firestore>;
+
+  const signature = await signatureRef.get();
+
+  if (!signature.exists) {
+    return undefined;
+  }
+
+  return signature.data();
 };

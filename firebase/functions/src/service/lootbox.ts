@@ -135,7 +135,7 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
 export const whitelist = async (
     whitelistAddress: Address,
     lootbox: Lootbox_Firestore,
-    claim?: Claim_Firestore
+    claim: Claim_Firestore
 ): Promise<MintWhitelistSignature_Firestore> => {
     logger.info("Whitelisting user", { whitelistAddress, lootbox: lootbox.id });
 

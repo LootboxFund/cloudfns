@@ -15,16 +15,18 @@ import {
   QueryGetLootboxByIdArgs,
   GetLootboxByIdResponse,
   LootboxTicket,
+  LootboxTournamentSnapshot,
+  Claim,
 } from "../../generated/types";
 import {
   getLootbox,
   getLootboxByAddress,
   getUser,
-  getUserMintSignaturesForLootbox,
   getUserPartyBasketsForLootbox,
   editLootbox,
   paginateLootboxFeedQuery,
   getTicket,
+  getUserClaimsForLootbox,
 } from "../../../api/firestore";
 import {
   Address,
@@ -45,6 +47,7 @@ import { isAuthenticated } from "../../../lib/permissionGuard";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { ethers } from "ethers";
 import * as lootboxService from "../../../service/lootbox";
+import { convertClaimDBToGQL } from "../../../lib/referral";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -321,27 +324,56 @@ const LootboxResolvers: Resolvers = {
   },
 
   Lootbox: {
-    mintWhitelistSignatures: async (
+    userClaims: async (
       lootbox: Lootbox,
       _,
       context: Context
-    ): Promise<MintWhitelistSignature[]> => {
+    ): Promise<Claim[]> => {
       if (!context.userId) {
         return [];
       }
 
       try {
-        const mintSignatures = await getUserMintSignaturesForLootbox(
+        const claims = await getUserClaimsForLootbox(
           lootbox.id as LootboxID,
-          context.userId
+          context.userId as unknown as UserID
         );
 
-        return mintSignatures.map(convertMintWhitelistSignatureDBToGQL);
+        return claims.map(convertClaimDBToGQL);
       } catch (err) {
         console.error(err);
         return [];
       }
     },
+
+    // mintWhitelistSignatures: async (
+    //   lootbox: Lootbox,
+    //   _,
+    //   context: Context
+    // ): Promise<MintWhitelistSignature[]> => {
+    //   if (!context.userId) {
+    //     return [];
+    //   }
+
+    //   try {
+    //     const mintSignatures = await getUserMintSignaturesForLootbox(
+    //       lootbox.id as LootboxID,
+    //       context.userId
+    //     );
+
+    //     return mintSignatures.map(convertMintWhitelistSignatureDBToGQL);
+    //   } catch (err) {
+    //     console.error(err);
+    //     return [];
+    //   }
+    // },
+    // tournamentSnapshots: async (
+    //   lootbox: Lootbox
+    // ): Promise<LootboxTournamentSnapshot[]> => {
+    //   const snapshots = await getTournamentSnapshotsForLootbox(
+    //     lootbox.id as LootboxID
+    //   );
+    // },
     /** @deprecated will be removed and replaced with cosmic lootbox */
     partyBaskets: async (lootbox: Lootbox, _, context: Context) => {
       if (!context.userId) {
