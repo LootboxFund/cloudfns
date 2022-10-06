@@ -49,7 +49,7 @@ import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
 import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
 import { getUserWallets } from "./api/firestore/user";
-import { generateTicketDigest } from "./lib/ethers";
+// import { generateTicketDigest } from "./lib/ethers";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -667,6 +667,7 @@ interface IndexLootboxOnMintTaskRequest {
         lootboxAddress: Address;
         nonce: LootboxMintSignatureNonce;
         userID: UserID;
+        digest: LootboxTicketDigest;
     };
     filter: {
         fromBlock: number;
@@ -700,10 +701,18 @@ export const indexLootboxOnMint = functions
 
         // Start a listener to listen for the event
         const provider = new ethers.providers.JsonRpcProvider(data.chain.rpcUrls[0]);
+
+        logger.info("creating lootbox contract");
+
         const lootbox = new ethers.Contract(data.payload.lootboxAddress, LootboxCosmicABI, provider);
 
+        logger.info("lootbox: ", { lootbox });
+
+        // const lootboxEventFilter = lootbox.filters.MintTicket(null, null, data.payload.nonce, null, null);
         // eslint-disable-next-line
-        const lootboxEventFilter = lootbox.filters.MintTicket(null, null, data.payload.nonce, null, null);
+        const lootboxEventFilter = lootbox.filters.MintTicket(null, null, null, null, null, data.payload.digest);
+
+        logger.info("starting listener...");
 
         await new Promise((res) => {
             // This is the event listener
@@ -746,18 +755,25 @@ export const indexLootboxOnMint = functions
                         return;
                     }
 
-                    // Ok, make sure its the right digest with the DOMAIN_SPERATOR
-                    const expectedDigest = generateTicketDigest({
-                        minterAddress: minter, // This comes from the chain
-                        lootboxAddress: data.payload.lootboxAddress,
-                        nonce: data.payload.nonce, // String version of uint 256 number
-                        chainIDHex: data.chain.chainIdHex, // Pass this in to ensure the correct domain
-                    });
+                    // // Ok, make sure its the right digest with the DOMAIN_SPERATOR
+                    // const expectedDigest = generateTicketDigest({
+                    //     minterAddress: minter, // This comes from the chain
+                    //     lootboxAddress: data.payload.lootboxAddress,
+                    //     nonce: data.payload.nonce, // String version of uint 256 number
+                    //     chainIDHex: data.chain.chainIdHex, // Pass this in to ensure the correct domain
+                    // });
 
-                    if (digest.hash !== expectedDigest) {
+                    // if (digest.hash !== expectedDigest) {
+                    //     logger.info("Digest does not match", {
+                    //         digestHash: digest.hash,
+                    //         expectedDigest,
+                    //     });
+                    //     return;
+                    // }
+                    if (digest.hash !== data.payload.digest) {
                         logger.info("Digest does not match", {
                             digestHash: digest.hash,
-                            expectedDigest,
+                            expectedDigest: data.payload.digest,
                         });
                         return;
                     }
@@ -770,8 +786,8 @@ export const indexLootboxOnMint = functions
                             minterUserID: data.payload.userID,
                             ticketID: ticketID.toString() as LootboxTicketID_Web3,
                             minterAddress: minter,
-                            digest: expectedDigest,
-                            nonce: data.payload.nonce,
+                            digest: digest.hash,
+                            nonce: nonce.hash,
                         });
 
                         provider.removeAllListeners(lootboxEventFilter);
@@ -812,13 +828,14 @@ export const enqueueLootboxOnMint = functions.https.onCall(
                 nonce: data.nonce,
                 lootboxAddress: data.lootboxAddress,
                 userID: context.auth.uid as UserID,
+                digest: data.digest,
             },
             filter: {
                 fromBlock: data.fromBlock,
             },
         };
         logger.debug("Enqueing task", taskData);
-        const queue = fun.taskQueue("indexLootboxOnCreate");
+        const queue = fun.taskQueue("indexLootboxOnMint");
         await queue.enqueue(taskData);
 
         return;
