@@ -36,7 +36,7 @@ export const browseAllAffiliates = async (): Promise<
   }
   const affiliates = affiliateCollectionItems.docs.map((doc) => {
     const data = doc.data();
-    return {
+    const aff = {
       id: data.id,
       name: data.name,
       avatar: data.avatar,
@@ -44,7 +44,8 @@ export const browseAllAffiliates = async (): Promise<
       rank: data.organizerRank,
       website: data.website,
       audienceSize: data.audienceSize,
-    };
+    } as unknown as MarketplacePreviewAffiliate;
+    return aff;
   });
   return affiliates;
 };
