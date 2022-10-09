@@ -8,6 +8,9 @@ import {
     LootboxMintSignatureNonce,
     LootboxMintWhitelistID,
     LootboxStatus_Firestore,
+    LootboxTicketID,
+    LootboxTicketID_Web3,
+    LootboxTicket_Firestore,
     LootboxTournamentSnapshotID,
     LootboxTournamentSnapshot_Firestore,
     LootboxTournamentStatus_Firestore,
@@ -16,6 +19,7 @@ import {
     MintWhitelistSignature_Firestore,
     TournamentID,
     UserID,
+    LootboxTicketDigest,
 } from "@wormgraph/helpers";
 import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -171,7 +175,8 @@ interface CreateMintWhitelistSignatureRequest {
     lootboxId: LootboxID;
     lootboxAddress: Address;
     nonce: LootboxMintSignatureNonce;
-    claim?: Claim_Firestore;
+    digest: LootboxTicketDigest;
+    claim: Claim_Firestore;
 }
 
 /**
@@ -186,6 +191,7 @@ export const createMintWhitelistSignature = async ({
     lootboxAddress,
     nonce,
     claim,
+    digest,
 }: CreateMintWhitelistSignatureRequest): Promise<MintWhitelistSignature_Firestore> => {
     const batch = db.batch();
 
@@ -205,9 +211,14 @@ export const createMintWhitelistSignature = async ({
         signature,
         signer,
         nonce,
+        digest,
         createdAt: Timestamp.now().toMillis(),
         updatedAt: Timestamp.now().toMillis(),
         deletedAt: null,
+        lootboxTicketID: null,
+        lootboxID: lootboxId,
+        whitelistedAt: null,
+        userID: claim?.claimerUserId ? claim.claimerUserId : null,
     };
 
     batch.set(signatureRef, signatureDocument);
@@ -237,4 +248,128 @@ export const createMintWhitelistSignature = async ({
     await batch.commit();
 
     return signatureDocument;
+};
+
+interface CreateTicketRequest {
+    minterUserID: UserID;
+    lootboxID: LootboxID;
+    lootboxAddress: Address;
+    ticketID: LootboxTicketID_Web3;
+    minterAddress: Address;
+    mintWhitelistID: LootboxMintWhitelistID;
+    stampImage: string;
+    metadataURL: string;
+    digest: LootboxTicketDigest;
+    nonce: LootboxMintSignatureNonce;
+    // claimID?: ClaimID;
+}
+
+export const finalizeMint = async (payload: CreateTicketRequest): Promise<LootboxTicket_Firestore> => {
+    // - updates mintWhitelist.redeemed = true
+    // - creates LootboxTicket_Firestore as subcollection under Lootbox
+
+    const batch = db.batch();
+
+    const ticketRef = db
+        .collection(Collection.Lootbox)
+        .doc(payload.lootboxID)
+        .collection(Collection.LootboxTicket)
+        .doc() as DocumentReference<LootboxTicket_Firestore>;
+
+    const ticketDocument: LootboxTicket_Firestore = {
+        lootboxAddress: payload.lootboxAddress,
+        ticketID: payload.ticketID,
+        minterAddress: payload.minterAddress,
+        mintWhitelistID: payload.mintWhitelistID,
+        createdAt: Timestamp.now().toMillis(),
+        stampImage: payload.stampImage,
+        metadataURL: payload.metadataURL,
+        lootboxID: payload.lootboxID,
+        minterUserID: payload.minterUserID,
+        id: ticketRef.id as LootboxTicketID,
+        digest: payload.digest,
+        nonce: payload.nonce,
+        // claimID: payload.claimID || null,
+    };
+
+    const whitelistRef = db
+        .collection(Collection.Lootbox)
+        .doc(payload.lootboxID)
+        .collection(Collection.MintWhiteList)
+        .doc(payload.mintWhitelistID) as DocumentReference<MintWhitelistSignature_Firestore>;
+
+    const updateReq: Partial<MintWhitelistSignature_Firestore> = {
+        isRedeemed: true,
+        lootboxTicketID: ticketRef.id as LootboxTicketID,
+        whitelistedAt: Timestamp.now().toMillis(),
+    };
+
+    batch.create(ticketRef, ticketDocument);
+    batch.update(whitelistRef, updateReq);
+
+    await batch.commit();
+
+    const ticket = await ticketRef.get();
+    return ticket.data()!;
+};
+
+export const getTicketByDigest = async (
+    lootboxID: LootboxID,
+    digest: LootboxTicketDigest
+): Promise<LootboxTicket_Firestore | undefined> => {
+    const ref = db
+        .collection(Collection.Lootbox)
+        .doc(lootboxID)
+        .collection(Collection.LootboxTicket)
+        .where("digest", "==", digest)
+        .limit(1) as Query<LootboxTicket_Firestore>;
+
+    const query = await ref.get();
+
+    if (query.empty) {
+        return undefined;
+    }
+
+    const doc = query.docs[0];
+    return doc.data();
+};
+
+export const getWhitelistByDigest = async (
+    lootboxID: LootboxID,
+    digest: LootboxTicketDigest
+): Promise<MintWhitelistSignature_Firestore | undefined> => {
+    const ref = db
+        .collection(Collection.Lootbox)
+        .doc(lootboxID)
+        .collection(Collection.MintWhiteList)
+        .where("digest", "==", digest)
+        .limit(1) as Query<MintWhitelistSignature_Firestore>;
+
+    const query = await ref.get();
+
+    if (query.empty) {
+        return undefined;
+    } else {
+        return query.docs[0].data();
+    }
+};
+
+export const getTicketByWeb3ID = async (
+    lootboxID: LootboxID,
+    ticketID: LootboxTicketID_Web3
+): Promise<LootboxTicket_Firestore | undefined> => {
+    const ticketRef = db
+        .collection(Collection.Lootbox)
+        .doc(lootboxID)
+        .collection(Collection.LootboxTicket)
+        .where("ticketID", "==", ticketID)
+        .limit(1) as Query<LootboxTicket_Firestore>;
+
+    const ticketSnapshot = await ticketRef.get();
+
+    if (ticketSnapshot.empty) {
+        return undefined;
+    }
+
+    return ticketSnapshot.docs[0].data();
 };

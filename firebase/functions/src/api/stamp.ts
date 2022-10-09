@@ -1,6 +1,6 @@
 import axios from "axios";
 import { manifest } from "../manifest";
-import { ChainIDHex, ContractAddress, Url } from "@wormgraph/helpers";
+import { StampNewTicketProps, StampNewTicketResponse, ChainIDHex, ContractAddress, Url } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
 
 // TODO move to helpers
@@ -47,4 +47,37 @@ export const stampNewLootbox = async (props: StampNewLootboxProps): Promise<stri
 
     const { stamp } = response.data;
     return stamp;
+};
+
+export const stampNewTicket = async (
+    props: StampNewTicketProps
+): Promise<{ stampURL: string; metadataURL: string }> => {
+    const secret = process.env.STAMP_SECRET || "";
+    const { backgroundImage, logoImage, themeColor, name, ticketID, lootboxAddress, chainIdHex, numShares, metadata } =
+        props;
+    const stampConfig = {
+        backgroundImage,
+        logoImage,
+        themeColor,
+        name,
+        ticketID,
+        lootboxAddress,
+        chainIdHex,
+        numShares,
+        metadata,
+    };
+    const response = await axios.post<StampNewTicketResponse>(
+        manifest.cloudRun.containers.stampNewTicket.fullRoute,
+        JSON.stringify(stampConfig),
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                secret,
+            },
+        }
+    );
+    const { stamp, uri } = response.data;
+
+    return { stampURL: stamp, metadataURL: uri };
 };
