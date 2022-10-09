@@ -75,10 +75,8 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
         logoImage: request.logoImage,
         themeColor: request.themeColor,
         name: request.lootboxName,
-        ticketID: "0x",
         lootboxAddress: request.lootboxAddress as unknown as ContractAddress,
         chainIdHex: chain.chainIdHex,
-        numShares: "1000",
     });
 
     const createdLootbox = await createLootbox(
@@ -238,7 +236,6 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
         ticketID: params.ticketID,
         lootboxAddress: lootbox.address as Address,
         chainIdHex: lootbox.chainIdHex,
-        numShares: "1000",
         metadata: convertLootboxToTicketMetadata(params.ticketID, lootbox),
     });
 
@@ -251,7 +248,7 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
         mintWhitelistID: whitelistObject.id as LootboxMintWhitelistID,
         stampImage: stampURL,
         metadataURL: metadataURL,
-        // claimID: whiteListObject?.,
+        // claimID
         digest: params.digest,
         nonce: params.nonce,
     });
