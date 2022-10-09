@@ -708,10 +708,8 @@ export const indexLootboxOnMint = functions
 
         logger.info("lootbox: ", { lootbox });
 
-        // const lootboxEventFilter = lootbox.filters.MintTicket(null, null, data.payload.nonce, null, null);
         // eslint-disable-next-line
-        const lootboxEventFilter = lootbox.filters.MintTicket(null, null, null, null, null, data.payload.digest);
-
+        const lootboxEventFilter = lootbox.filters.MintTicket(null, null, null, null, data.payload.digest);
         logger.info("starting listener...");
 
         await new Promise((res) => {
@@ -721,14 +719,15 @@ export const indexLootboxOnMint = functions
                 async (
                     minter: Address,
                     lootboxAddress: Address,
-                    nonce: { hash: LootboxMintSignatureNonce },
+                    nonce: ethers.BigNumber,
                     ticketID: ethers.BigNumber,
-                    digest: { hash: LootboxTicketDigest }
+                    digest: LootboxTicketDigest
                 ) => {
                     logger.debug("Got log", {
                         minter,
                         lootboxAddress,
                         nonce,
+                        nonceDecimalString: nonce.toString(),
                         ticketId: ticketID.toString(),
                         digest,
                     });
@@ -745,17 +744,16 @@ export const indexLootboxOnMint = functions
 
                     // Make sure its the right event
                     const testNonce = data.payload.nonce;
-                    const hashedTestNonce = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`${testNonce}`));
-                    if (nonce.hash !== hashedTestNonce) {
+                    const eventNonce = nonce.toString() as LootboxMintSignatureNonce;
+                    if (eventNonce !== testNonce) {
                         logger.info("Nonce does not match", {
-                            nonceHash: nonce.hash,
+                            nonceHash: eventNonce,
                             expectedNonce: testNonce,
-                            expectedNonceHash: hashedTestNonce,
                         });
                         return;
                     }
 
-                    // // Ok, make sure its the right digest with the DOMAIN_SPERATOR
+                    // // make sure its the right digest with the DOMAIN_SPERATOR
                     // const expectedDigest = generateTicketDigest({
                     //     minterAddress: minter, // This comes from the chain
                     //     lootboxAddress: data.payload.lootboxAddress,
@@ -770,9 +768,9 @@ export const indexLootboxOnMint = functions
                     //     });
                     //     return;
                     // }
-                    if (digest.hash !== data.payload.digest) {
+                    if (digest !== data.payload.digest) {
                         logger.info("Digest does not match", {
-                            digestHash: digest.hash,
+                            digestHash: digest,
                             expectedDigest: data.payload.digest,
                         });
                         return;
@@ -786,8 +784,8 @@ export const indexLootboxOnMint = functions
                             minterUserID: data.payload.userID,
                             ticketID: ticketID.toString() as LootboxTicketID_Web3,
                             minterAddress: minter,
-                            digest: digest.hash,
-                            nonce: nonce.hash,
+                            digest: digest,
+                            nonce: eventNonce,
                         });
 
                         provider.removeAllListeners(lootboxEventFilter);

@@ -290,6 +290,7 @@ export const convertMintWhitelistSignatureDBToGQL = (
     updatedAt: data.updatedAt,
     deletedAt: data.deletedAt || null,
     nonce: data.nonce,
+    digest: data.digest,
   };
 
   return res;

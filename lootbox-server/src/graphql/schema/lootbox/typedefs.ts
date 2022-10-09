@@ -39,6 +39,7 @@ const LootboxTypeDefs = gql`
     isRedeemed: Boolean!
     lootboxTicketID: ID
     nonce: String!
+    digest: ID!
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
