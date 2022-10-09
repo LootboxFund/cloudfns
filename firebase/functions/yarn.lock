@@ -1791,10 +1791,19 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.2.0-afn-alpha95":
-  version "0.2.0-afn-alpha95"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha95.tgz#2c8ac35e92e197dd9e670b84ab118a617ee25259"
-  integrity sha512-VmFnAzLkMMIEqCjvGPgX+GFfH6hWovGAXU0vrlNp7SgFAyMCfpjnwAdOEBMMNjFiA1wZsCuKR5YsFbc+QB0CrQ==
+"@wormgraph/helpers@0.2.0-afn-alpha89":
+  version "0.2.0-afn-alpha89"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha89.tgz#e0d708ae8225f5f0ce5a3e65e7c3bd493e5a1778"
+  integrity sha512-Kpk0U9Fvg6c0S7FABdxCGaMMaVqSDzctG7/TvpzEGj03f9PM3EZDNaVtmC9qnZTnK9OqDK+iVV1h8WQfbzYqvg==
+  dependencies:
+    "@wormgraph/manifest" "0.4.0-afm-alpha1"
+    axios "0.25.0"
+    lodash "4.17.21"
+
+"@wormgraph/helpers@0.2.0-afn-alpha97":
+  version "0.2.0-afn-alpha97"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha97.tgz#56681613411c4428dbd000319a808d6dd76b35d5"
+  integrity sha512-lB6iUNyuOT6zHxZ7AFeYbB6M+dchAbYgpgfkKwW6G635zK6+/z3Ls8o3ohBKbRDEo0Wi5lu6MsPijpXKuVUHhg==
   dependencies:
     "@wormgraph/manifest" "0.4.0-afm-alpha1"
     axios "0.25.0"
@@ -1807,12 +1816,12 @@
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
-"@wormgraph/manifest@0.4.0-afm-alpha10":
-  version "0.4.0-afm-alpha10"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha10.tgz#974263fff72af116b0f7dbaed0619359d4ed4bce"
-  integrity sha512-4Cr7O1jjTOXFEbMHkNrT2jVU2St7QHAkXyg5B07BCmHMUwaqIilAK8Ahl8EOdQsbFkZ/DaJNxPnHsO3+/9PMnQ==
+"@wormgraph/manifest@0.4.0-afm-alpha16":
+  version "0.4.0-afm-alpha16"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha16.tgz#de7be2006b5b882f3731886b88d1af20fcd3d2d9"
+  integrity sha512-3rRyiMTTIqttX+OhDPYfVEFplSRE2PMlek9JOy9FAG4RDAHiSH5BUgFF1jQvB1yvtuveNZNbK4GODdbN5IW/fA==
   dependencies:
-    "@wormgraph/helpers" "0.1.10"
+    "@wormgraph/helpers" "0.2.0-afn-alpha89"
 
 abort-controller@^3.0.0:
   version "3.0.0"

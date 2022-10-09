@@ -346,21 +346,21 @@ export const pubsubPixelTracking = functions.pubsub
             // organizerID,
             // promoterID,
             // sessionId,
-            flightId,
+            flightID,
             eventAction,
             nonce,
             timeElapsed,
         } = extractURLStatePixelTracking(url);
 
-        logger.log("got the flightId = ", flightId);
-        console.log("console got the flightId = ", flightId);
+        logger.log("got the flightID = ", flightID);
+        console.log("console got the flightID = ", flightID);
 
         // get for existing flight
         let flight: AdFlight_Firestore;
         let createdEvent: AdEvent_Firestore;
 
         try {
-            if (!flightId || !eventAction || !nonce) {
+            if (!flightID || !eventAction || !nonce) {
                 logger.error("Malformed URL", url);
                 return;
             }
@@ -370,7 +370,7 @@ export const pubsubPixelTracking = functions.pubsub
                 return;
             }
 
-            flight = await getFlightById(flightId);
+            flight = await getFlightById(flightID);
 
             logger.log("got the flight = ", flight);
             console.log("console got the flight = ", flight);
@@ -654,3 +654,11 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
         return;
     }
 );
+
+// resource.type="http_load_balancer"
+// resource.labels.project_id="lootbox-fund-staging"
+// logName="projects/lootbox-fund-staging/logs/requests"
+// httpRequest.status=200
+// resource.labels.forwarding_rule_name="lb-tracking-pixel-lootbox-staging-ssl"
+// resource.labels.url_map_name="lb-lootbox-pixel-tracking"
+// httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"

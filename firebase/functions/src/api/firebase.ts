@@ -3,4 +3,5 @@ import { getFunctions } from "firebase-admin/functions";
 
 export const app = admin.initializeApp();
 export const db = admin.firestore(app);
+db.settings({ ignoreUndefinedProperties: true });
 export const fun = getFunctions(app);
