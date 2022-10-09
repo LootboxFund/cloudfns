@@ -12,26 +12,28 @@ import {
   LootboxStatus,
   BulkMintWhitelistResponse,
   MutationBulkMintWhitelistArgs,
-  MintLootboxTicketResponse,
-  MutationMintLootboxTicketArgs,
   QueryGetLootboxByIdArgs,
   GetLootboxByIdResponse,
+  LootboxTicket,
+  LootboxTournamentSnapshot,
+  Claim,
 } from "../../generated/types";
 import {
   getLootbox,
   getLootboxByAddress,
   getUser,
-  getUserMintSignaturesForLootbox,
   getUserPartyBasketsForLootbox,
   editLootbox,
   paginateLootboxFeedQuery,
-  getTicketByWeb3ID,
+  getTicket,
+  getUserClaimsForLootbox,
 } from "../../../api/firestore";
 import {
   Address,
-  ClaimID,
-  LootboxMintWhitelistID,
-  LootboxTicketID_Web3,
+  LootboxStatus_Firestore,
+  LootboxTicketID,
+  Lootbox_Firestore,
+  UserIdpID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
 import { LootboxID, UserID } from "@wormgraph/helpers";
@@ -39,11 +41,13 @@ import {
   convertLootboxDBToGQL,
   convertLootboxStatusGQLToDB,
   convertMintWhitelistSignatureDBToGQL,
+  convertLootboxTicketDBToGQL,
 } from "../../../lib/lootbox";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { ethers } from "ethers";
 import * as lootboxService from "../../../service/lootbox";
+import { convertClaimDBToGQL } from "../../../lib/referral";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -194,77 +198,6 @@ const LootboxResolvers: Resolvers = {
         };
       }
     },
-    mintLootboxTicket: async (
-      _,
-      { payload }: MutationMintLootboxTicketArgs,
-      context: Context
-    ): Promise<MintLootboxTicketResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: "User is not authenticated",
-          },
-        };
-      }
-      try {
-        const [user, lootbox, existingTicket] = await Promise.all([
-          getUser(context.userId),
-          getLootbox(payload.lootboxID as LootboxID),
-          getTicketByWeb3ID(
-            payload.lootboxID as LootboxID,
-            payload.ticketID as LootboxTicketID_Web3
-          ),
-        ]);
-        if (!user || !!user.deletedAt) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "User not found",
-            },
-          };
-        }
-        if (!lootbox || !!lootbox.timestamps.deletedAt) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "Lootbox not found",
-            },
-          };
-        }
-        if (!!existingTicket) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "Ticket already minted!",
-            },
-          };
-        }
-
-        const ticket = await lootboxService.mintNewTicketCallback({
-          lootbox: convertLootboxDBToGQL(lootbox),
-          payload: {
-            minterUserID: context.userId as unknown as UserID,
-            ticketID: payload.ticketID as LootboxTicketID_Web3,
-            minterAddress: payload.minterAddress as Address,
-            mintWhitelistID: payload.mintWhitelistID as LootboxMintWhitelistID,
-            claimID: !!payload.claimID
-              ? (payload.claimID as ClaimID)
-              : undefined,
-          },
-        });
-
-        return { ticket };
-      } catch (err) {
-        console.error(err);
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-    },
     bulkMintWhitelist: async (
       _,
       { payload }: MutationBulkMintWhitelistArgs,
@@ -299,14 +232,16 @@ const LootboxResolvers: Resolvers = {
         };
       }
 
-      let lootbox: Lootbox;
+      let lootbox: Lootbox_Firestore;
 
       try {
-        const lootboxDB = await getLootboxByAddress(lootboxAddress as Address);
-        if (!lootboxDB) {
+        lootbox = (await getLootboxByAddress(
+          lootboxAddress as Address
+        )) as Lootbox_Firestore;
+        if (!lootbox) {
           throw new Error("Lootbox Not Found");
         }
-        lootbox = convertLootboxDBToGQL(lootboxDB);
+        // lootbox = convertLootboxDBToGQL(lootboxDB);
       } catch (err) {
         console.error(err);
         return {
@@ -317,7 +252,7 @@ const LootboxResolvers: Resolvers = {
         };
       }
 
-      if (lootbox.status === LootboxStatus.Disabled) {
+      if (lootbox.status === LootboxStatus_Firestore.disabled) {
         return {
           error: {
             code: StatusCode.BadRequest,
@@ -326,7 +261,7 @@ const LootboxResolvers: Resolvers = {
         };
       }
 
-      if (lootbox.status === LootboxStatus.SoldOut) {
+      if (lootbox.status === LootboxStatus_Firestore.soldOut) {
         return {
           error: {
             code: StatusCode.BadRequest,
@@ -335,7 +270,7 @@ const LootboxResolvers: Resolvers = {
         };
       }
 
-      if (lootbox.creatorID !== context.userId) {
+      if ((lootbox.creatorID as unknown as UserIdpID) !== context.userId) {
         return {
           error: {
             code: StatusCode.Unauthorized,
@@ -367,28 +302,78 @@ const LootboxResolvers: Resolvers = {
     },
   },
 
+  MintWhitelistSignature: {
+    lootboxTicket: async (
+      daddy: MintWhitelistSignature
+    ): Promise<LootboxTicket | null> => {
+      if (!daddy.lootboxTicketID) {
+        return null;
+      }
+
+      const ticket = await getTicket(
+        daddy.lootboxID as LootboxID,
+        daddy.lootboxTicketID as LootboxTicketID
+      );
+
+      if (!ticket) {
+        return null;
+      }
+
+      return convertLootboxTicketDBToGQL(ticket);
+    },
+  },
+
   Lootbox: {
-    mintWhitelistSignatures: async (
+    userClaims: async (
       lootbox: Lootbox,
       _,
       context: Context
-    ): Promise<MintWhitelistSignature[]> => {
+    ): Promise<Claim[]> => {
       if (!context.userId) {
         return [];
       }
 
       try {
-        const mintSignatures = await getUserMintSignaturesForLootbox(
+        const claims = await getUserClaimsForLootbox(
           lootbox.id as LootboxID,
-          context.userId
+          context.userId as unknown as UserID
         );
 
-        return mintSignatures.map(convertMintWhitelistSignatureDBToGQL);
+        return claims.map(convertClaimDBToGQL);
       } catch (err) {
         console.error(err);
         return [];
       }
     },
+
+    // mintWhitelistSignatures: async (
+    //   lootbox: Lootbox,
+    //   _,
+    //   context: Context
+    // ): Promise<MintWhitelistSignature[]> => {
+    //   if (!context.userId) {
+    //     return [];
+    //   }
+
+    //   try {
+    //     const mintSignatures = await getUserMintSignaturesForLootbox(
+    //       lootbox.id as LootboxID,
+    //       context.userId
+    //     );
+
+    //     return mintSignatures.map(convertMintWhitelistSignatureDBToGQL);
+    //   } catch (err) {
+    //     console.error(err);
+    //     return [];
+    //   }
+    // },
+    // tournamentSnapshots: async (
+    //   lootbox: Lootbox
+    // ): Promise<LootboxTournamentSnapshot[]> => {
+    //   const snapshots = await getTournamentSnapshotsForLootbox(
+    //     lootbox.id as LootboxID
+    //   );
+    // },
     /** @deprecated will be removed and replaced with cosmic lootbox */
     partyBaskets: async (lootbox: Lootbox, _, context: Context) => {
       if (!context.userId) {
@@ -463,20 +448,6 @@ const LootboxResolvers: Resolvers = {
     __resolveType: (obj: BulkMintWhitelistResponse) => {
       if ("signatures" in obj) {
         return "BulkMintWhitelistResponseSuccess";
-      }
-
-      if ("error" in obj) {
-        return "ResponseError";
-      }
-
-      return null;
-    },
-  },
-
-  MintLootboxTicketResponse: {
-    __resolveType: (obj: MintLootboxTicketResponse) => {
-      if ("ticket" in obj) {
-        return "MintLootboxTicketResponseSuccess";
       }
 
       if ("error" in obj) {

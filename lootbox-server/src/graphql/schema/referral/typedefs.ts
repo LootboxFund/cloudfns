@@ -50,16 +50,19 @@ const ReferralTypeDefs = gql`
     lootboxName: String
     lootboxNFTBountyValue: String
     lootboxMaxTickets: Int
-    chosenLootbox: Lootbox
     rewardFromClaim: ID
     rewardFromFriendReferred: ID
     claimerUserId: ID
     status: ClaimStatus!
     type: ClaimType!
     timestamps: ClaimTimestamps!
+
+    # GQL
     tournament: Tournament
     userLink: PublicUser
-
+    chosenLootbox: Lootbox
+    whitelist: MintWhitelistSignature # Whitelist when whitelistId is available
+    # DEPRECATED
     chosenPartyBasket: PartyBasket @deprecated(reason: "Use Lootbox instead")
     originPartyBasketId: ID @deprecated(reason: "Use Lootbox instead")
     chosenPartyBasketId: ID @deprecated(reason: "Use Lootbox instead")

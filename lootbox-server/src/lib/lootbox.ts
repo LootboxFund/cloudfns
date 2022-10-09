@@ -2,14 +2,17 @@ import {
   Address,
   LootboxID,
   UserID,
-  LootboxTicketID_Web3,
   LootboxTicket_Firestore,
-  LootboxTicketMetadataV2_Firestore,
   Lootbox_Firestore,
   LootboxVariant_Firestore,
   LootboxStatus_Firestore,
   MintWhitelistSignature_Firestore,
+  convertHexToDecimal,
+  ChainIDHex,
+  LootboxMintSignatureNonce,
+  LootboxTicketDigest,
 } from "@wormgraph/helpers";
+import { ethers } from "ethers";
 import { LootboxDeprecated_Firestore } from "../api/firestore/lootbox.types";
 import {
   Lootbox,
@@ -19,7 +22,6 @@ import {
   LootboxVariant,
   MintWhitelistSignature,
 } from "../graphql/generated/types";
-import { manifest } from "../manifest";
 
 export const parseMintWhitelistSignature = (
   data: MintWhitelistSignature_Firestore
@@ -35,12 +37,15 @@ export const parseMintWhitelistSignature = (
     updatedAt: data.updatedAt,
     deletedAt: data.deletedAt || null,
     nonce: data.nonce,
+    lootboxTicketID: data.lootboxTicketID,
+    lootboxID: data.lootboxID,
+    digest: data.digest,
   };
 
   return res;
 };
 
-export const convertLootboxTicketDBToLootboxTicket = (
+export const convertLootboxTicketDBToGQL = (
   ticketDB: LootboxTicket_Firestore
 ): LootboxTicket => {
   const ticket: LootboxTicket = {
@@ -49,59 +54,16 @@ export const convertLootboxTicketDBToLootboxTicket = (
     lootboxAddress: ticketDB.lootboxAddress,
     minterUserID: ticketDB.minterUserID,
     minterAddress: ticketDB.minterAddress,
-    claimID: ticketDB.claimID,
     createdAt: ticketDB.createdAt,
     metadataURL: ticketDB.metadataURL,
     mintWhitelistID: ticketDB.mintWhitelistID,
     stampImage: ticketDB.stampImage,
     ticketID: ticketDB.ticketID,
+    nonce: ticketDB.nonce,
+    digest: ticketDB.digest,
   };
 
   return ticket;
-};
-
-export const convertLootboxToTicketMetadata = (
-  ticketID: LootboxTicketID_Web3,
-  lootboxFragment: Omit<Lootbox_Firestore, "metadataV2">
-): LootboxTicketMetadataV2_Firestore => {
-  const lootboxExternalURL =
-    lootboxFragment.variant === LootboxVariant_Firestore.cosmic
-      ? `${manifest.microfrontends.webflow.cosmicLootboxPage}?lootbox=${lootboxFragment.address}`
-      : `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxFragment.address}`;
-
-  const res: LootboxTicketMetadataV2_Firestore = {
-    // points to stamp image - opensea compatible
-    image: lootboxFragment.stampImage,
-    // points to lootbox page on lootbox.fund - opensea compatible
-    external_url: lootboxExternalURL,
-    // description of the lootbox - opensea compatible
-    description: lootboxFragment.description || "",
-    // name of the lootbox - opensea compatible
-    name: lootboxFragment.name,
-    // hex color, must be a six-character hexadecimal without a pre-pended # - opensea compatible
-    background_color: lootboxFragment.themeColor,
-    // A URL to a multi-media attachment for the item. The file extensions GLTF, GLB, WEBM, MP4, M4V, OGV, and OGG are supported, along with the audio-only extensions MP3, WAV, and OGA
-    lootboxCustomSchema: {
-      ticketID,
-      version: "",
-      address: lootboxFragment.address,
-      chainIdHex: lootboxFragment.chainIdHex,
-      chainIdDecimal: lootboxFragment.chainIdDecimal,
-      chainName: lootboxFragment.chainName,
-      transactionHash: lootboxFragment.transactionHash,
-      blockNumber: lootboxFragment.blockNumber,
-      name: lootboxFragment.name,
-      description: lootboxFragment.description || "",
-      logo: lootboxFragment.logo || "",
-      backgroundImage: lootboxFragment.backgroundImage,
-      badgeImage: "",
-      createdAt: lootboxFragment.timestamps.createdAt,
-      lootboxThemeColor: lootboxFragment.themeColor,
-      factory: lootboxFragment.factory,
-      themeColor: lootboxFragment.themeColor,
-    },
-  };
-  return res;
 };
 
 export const parseLootboxDB = (
@@ -317,6 +279,7 @@ export const convertMintWhitelistSignatureDBToGQL = (
   data: MintWhitelistSignature_Firestore
 ): MintWhitelistSignature => {
   const res: MintWhitelistSignature = {
+    lootboxID: data.lootboxID,
     id: data.id,
     signature: data.signature,
     signer: data.signer,
@@ -327,6 +290,7 @@ export const convertMintWhitelistSignatureDBToGQL = (
     updatedAt: data.updatedAt,
     deletedAt: data.deletedAt || null,
     nonce: data.nonce,
+    digest: data.digest,
   };
 
   return res;
@@ -381,4 +345,63 @@ const convertLootboxToSnapshotOld = (
     image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
     stampImage: data?.metadata?.image || "",
   };
+};
+
+// WARN: DUPLICATED IN FIREBASE FUNCTIONS
+export const generateLootboxCosmicDomainSignature = (
+  address: Address,
+  chainIDHex: ChainIDHex
+) => {
+  const chain = convertHexToDecimal(chainIDHex);
+  const domainSeparator = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+      [
+        ethers.utils.keccak256(
+          ethers.utils.toUtf8Bytes(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+          )
+        ),
+        ethers.utils.keccak256(ethers.utils.toUtf8Bytes("LootboxCosmic")),
+        ethers.utils.keccak256(ethers.utils.toUtf8Bytes("1")),
+        chain,
+        address,
+      ]
+    )
+  );
+  return domainSeparator;
+};
+
+// WARN: DUPLICATED IN FIREBASE FUNCTIONS
+export const generateTicketDigest = (params: {
+  minterAddress: Address;
+  lootboxAddress: Address;
+  nonce: LootboxMintSignatureNonce; // String version of uint 256 number
+  chainIDHex: ChainIDHex;
+}): LootboxTicketDigest => {
+  const domainSeparator = generateLootboxCosmicDomainSignature(
+    params.lootboxAddress,
+    params.chainIDHex
+  );
+
+  const MINTER_TYPEHASH = ethers.utils.keccak256(
+    ethers.utils.toUtf8Bytes("Minter(address wallet,uint256 nonce)")
+  );
+
+  const structHash = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ["bytes32", "address", "uint256"],
+      [MINTER_TYPEHASH, params.minterAddress, params.nonce]
+    )
+  );
+
+  const expectedDigest = ethers.utils.keccak256(
+    ethers.utils.concat([
+      ethers.utils.toUtf8Bytes("\x19\x01"),
+      ethers.utils.arrayify(domainSeparator),
+      ethers.utils.arrayify(structHash),
+    ])
+  );
+
+  return expectedDigest as LootboxTicketDigest;
 };

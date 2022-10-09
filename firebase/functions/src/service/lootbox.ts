@@ -8,6 +8,12 @@ import {
     MintWhitelistSignature_Firestore,
     LootboxID,
     Claim_Firestore,
+    LootboxTicketID_Web3,
+    LootboxMintWhitelistID,
+    ClaimID,
+    LootboxTicket_Firestore,
+    LootboxTicketDigest,
+    LootboxMintSignatureNonce,
 } from "@wormgraph/helpers";
 import { ethers } from "ethers";
 import { logger } from "firebase-functions";
@@ -15,12 +21,16 @@ import {
     createLootbox,
     createLootboxTournamentSnapshot,
     createMintWhitelistSignature,
-    // getLootbox,
+    finalizeMint,
     getLootboxByChainAddress,
+    getTicketByDigest,
+    getTicketByWeb3ID,
+    getWhitelistByDigest,
 } from "../api/firestore/lootbox";
 import { getTournamentByID } from "../api/firestore/tournament";
-import { stampNewLootbox } from "../api/stamp";
-import { generateNonce, whitelistLootboxMintSignature } from "../lib/ethers";
+import { stampNewLootbox, stampNewTicket } from "../api/stamp";
+import { generateNonce, generateTicketDigest, whitelistLootboxMintSignature } from "../lib/ethers";
+import { convertLootboxToTicketMetadata } from "../lib/lootbox";
 
 interface CreateLootboxRequest {
     // passed in variables
@@ -125,7 +135,7 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
 export const whitelist = async (
     whitelistAddress: Address,
     lootbox: Lootbox_Firestore,
-    claim?: Claim_Firestore
+    claim: Claim_Firestore
 ): Promise<MintWhitelistSignature_Firestore> => {
     logger.info("Whitelisting user", { whitelistAddress, lootbox: lootbox.id });
 
@@ -139,8 +149,26 @@ export const whitelist = async (
     const nonce = generateNonce();
     const _whitelisterPrivateKey = process.env.PARTY_BASKET_WHITELISTER_PRIVATE_KEY || "";
     const signer = new ethers.Wallet(_whitelisterPrivateKey);
+    const digest = generateTicketDigest({
+        minterAddress: whitelistAddress,
+        lootboxAddress: lootbox.address,
+        nonce,
+        chainIDHex: lootbox.chainIdHex,
+    });
 
-    logger.info("generating whitelist", { whitelistAddress, lootbox: lootbox.id, signerAddress: signer.address });
+    // Make sure whitelist with the provided digest does not already exist
+    const existingWhitelist = await getWhitelistByDigest(lootbox.id, digest);
+
+    if (existingWhitelist) {
+        throw new Error("Whitelist already exists!");
+    }
+
+    logger.info("generating whitelist", {
+        whitelistAddress,
+        lootbox: lootbox.id,
+        signerAddress: signer.address,
+        digest,
+    });
     const signature = await whitelistLootboxMintSignature(
         lootbox.chainIdHex,
         lootbox.address,
@@ -149,7 +177,12 @@ export const whitelist = async (
         nonce
     );
 
-    logger.info("Adding the signature to DB", { whitelistAddress, lootbox: lootbox.id, signerAddress: signer.address });
+    logger.info("Adding the signature to DB", {
+        whitelistAddress,
+        lootbox: lootbox.id,
+        signerAddress: signer.address,
+        digest: digest,
+    });
     const signatureDB = await createMintWhitelistSignature({
         signature,
         signer: signer.address as Address,
@@ -158,7 +191,70 @@ export const whitelist = async (
         lootboxAddress: lootbox.address as Address,
         nonce,
         claim,
+        digest,
     });
 
     return signatureDB;
+};
+
+interface MintNewTicketCallbackRequest {
+    lootboxAddress: Address;
+    chainIDHex: string;
+    minterUserID: UserID;
+    ticketID: LootboxTicketID_Web3;
+    minterAddress: Address;
+    digest: LootboxTicketDigest;
+    nonce: LootboxMintSignatureNonce;
+    claimID?: ClaimID;
+}
+export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest): Promise<LootboxTicket_Firestore> => {
+    // const lootbox = await getLootbox(params.lootboxID);
+    const lootbox = await getLootboxByChainAddress(params.lootboxAddress, params.chainIDHex);
+
+    if (!lootbox) {
+        throw new Error("Lootbox not found");
+    }
+
+    const [whitelistObject, existingTicketByDigest, existingTicketByID] = await Promise.all([
+        getWhitelistByDigest(lootbox.id, params.digest),
+        getTicketByDigest(lootbox.id, params.digest),
+        getTicketByWeb3ID(lootbox.id, params.ticketID),
+    ]);
+
+    if (existingTicketByDigest || existingTicketByID) {
+        throw new Error("Ticket already minted");
+    }
+
+    if (!whitelistObject) {
+        throw new Error("Whitelisted document does not exist...");
+    }
+
+    // stamp the new ticket
+    const { stampURL, metadataURL } = await stampNewTicket({
+        backgroundImage: lootbox.backgroundImage,
+        logoImage: lootbox.logo,
+        themeColor: lootbox.themeColor,
+        name: lootbox.name,
+        ticketID: params.ticketID,
+        lootboxAddress: lootbox.address as Address,
+        chainIdHex: lootbox.chainIdHex,
+        numShares: "1000",
+        metadata: convertLootboxToTicketMetadata(params.ticketID, lootbox),
+    });
+
+    const ticketDB = await finalizeMint({
+        minterUserID: params.minterUserID,
+        lootboxID: lootbox.id as LootboxID,
+        lootboxAddress: lootbox.address as Address,
+        ticketID: params.ticketID as LootboxTicketID_Web3,
+        minterAddress: params.minterAddress as Address,
+        mintWhitelistID: whitelistObject.id as LootboxMintWhitelistID,
+        stampImage: stampURL,
+        metadataURL: metadataURL,
+        // claimID: whiteListObject?.,
+        digest: params.digest,
+        nonce: params.nonce,
+    });
+
+    return ticketDB;
 };
