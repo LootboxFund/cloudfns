@@ -1,6 +1,7 @@
 import { db } from "../firebase";
 import { Ad, AdEventAction } from "../graphql/generated/types";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
+import { logger } from "firebase-functions";
 import {
     AdEventID,
     AdEvent_Firestore,
@@ -78,6 +79,9 @@ export const createAdEvent = async ({
     const adEventRef = db.collection(Collection.AdEvent).doc() as DocumentReference<AdEvent_Firestore>;
 
     const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: adEventRef.id as AdEventID };
+
+    logger.log("about to make ad event  ", documentWithId);
+    console.log("console about to make the ad event  ", documentWithId);
 
     await adEventRef.set(documentWithId);
 

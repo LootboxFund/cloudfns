@@ -316,12 +316,13 @@ export const pubsubPixelTracking = functions.pubsub
     .topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
-
+        console.log("----> PUBBY SUBBY", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let jsonData: any;
         try {
             jsonData = message.json;
             logger.log("parsed data", jsonData?.httpRequest);
+            console.log("Parsed data", jsonData?.httpRequest);
         } catch (e) {
             logger.error("PubSub message was not JSON", e);
             return;
@@ -351,6 +352,9 @@ export const pubsubPixelTracking = functions.pubsub
             timeElapsed,
         } = extractURLStatePixelTracking(url);
 
+        logger.log("got the flightId = ", flightId);
+        console.log("console got the flightId = ", flightId);
+
         // get for existing flight
         let flight: AdFlight_Firestore;
         let createdEvent: AdEvent_Firestore;
@@ -368,12 +372,18 @@ export const pubsubPixelTracking = functions.pubsub
 
             flight = await getFlightById(flightId);
 
+            logger.log("got the flight = ", flight);
+            console.log("console got the flight = ", flight);
+
             // check if nonce already used (deduplication of events)
             const eventsByNonce = await getAdEventsByNonce(flight.adID as AdID, nonce, 1);
             if (eventsByNonce.length > 0) {
                 logger.error("Nonce already used", { adId: flight.adID, nonce });
                 return;
             }
+
+            logger.log("creating ad event = ");
+            console.log("console creating the ad event = ");
 
             // Now write the AdEvent subcollection document
             createdEvent = await createAdEvent({
@@ -388,6 +398,9 @@ export const pubsubPixelTracking = functions.pubsub
             logger.error("Pubsub error", err);
             return;
         }
+
+        logger.log("created the ad event  ");
+        console.log("created the ad event  ");
 
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {

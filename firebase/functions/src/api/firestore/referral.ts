@@ -5,7 +5,6 @@ import {
     Claim_Firestore,
     Collection,
     LootboxID,
-    LootboxMintWhitelistID,
     LootboxStatus_Firestore,
     ReferralID,
     ReferralSlug,
