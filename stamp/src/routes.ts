@@ -5,8 +5,9 @@ import {
   StampNewTicketResponse,
   ContractAddress,
   LootboxTicketMetadataV2_Firestore,
+  StampNewLootboxProps,
+  StampNewLootboxResponse,
 } from "@wormgraph/helpers";
-import { TicketProps } from "./lib/components/Ticket";
 import { saveTicketMetadataToGBucket } from "./lib/api/gbucket";
 import { manifest } from "./manifest";
 import { getAuthenticationSecret } from "./lib/api/secrets";
@@ -30,7 +31,6 @@ router.get("/demo", async (req, res, next) => {
     lootboxAddress:
       "0x1c69bcBCb7f860680cDf9D4914Fc850a61888f89" as ContractAddress,
     chainIdHex: "0x38",
-    numShares: "180.02",
   });
   res.json({
     message: "You hit the snap endpoint",
@@ -40,34 +40,35 @@ router.get("/demo", async (req, res, next) => {
 
 router.post(
   "/stamp/new/lootbox",
-  async (req: express.Request, res: express.Response, next) => {
+  async (
+    req: express.Request<unknown, unknown, StampNewLootboxProps>,
+    res: express.Response<StampNewLootboxResponse>,
+    next
+  ) => {
     const { secret } = req.headers;
     const verifiedSecret = await getAuthenticationSecret();
     if (secret !== verifiedSecret) {
       return res.status(401).json({
         message: "Unauthorized",
+        stamp: "",
       });
     }
     const tempLocalPath = `/tmp/image.png`;
     const {
-      ticketID,
       backgroundImage,
       logoImage,
       themeColor,
       name,
       lootboxAddress,
       chainIdHex,
-      numShares,
-    }: TicketProps = req.body;
+    } = req.body;
     const linkToImage = await generateImage(tempLocalPath, {
-      ticketID,
       backgroundImage,
       logoImage,
       themeColor,
       name,
       lootboxAddress,
       chainIdHex,
-      numShares,
     });
     res.json({
       message: "Created stamp!",
@@ -104,7 +105,6 @@ router.post(
       name,
       lootboxAddress,
       chainIdHex,
-      numShares,
       metadata,
     } = req.body;
 
@@ -114,9 +114,8 @@ router.post(
       logoImage,
       themeColor,
       name,
-      lootboxAddress: lootboxAddress as ContractAddress,
+      lootboxAddress,
       chainIdHex,
-      numShares,
     });
 
     const updatedMetadata: LootboxTicketMetadataV2_Firestore = {
