@@ -11,24 +11,8 @@ import {
     TournamentID,
     UserID,
     CampaignID,
+    PixelTrackingParams,
 } from "@wormgraph/helpers";
-
-interface PixelTrackingParams {
-    flightId: FlightID | null;
-    userId: UserID | null;
-    adId: AdID | null;
-    adSetId: AdSetID | null;
-    offerId: OfferID | null;
-    claimId: ClaimID | null;
-    campaignId: CampaignID | null;
-    tournamentId: TournamentID | null;
-    organizerID: AffiliateID | null;
-    promoterID: AffiliateID | null;
-    sessionId: SessionID | null;
-    eventAction: AdEventAction | null;
-    nonce: AdEventNonce | null;
-    timeElapsed: number | null;
-}
 
 export const extractURLStatePixelTracking = (urlString: string) => {
     const url = new URL(urlString);
@@ -48,6 +32,5 @@ export const extractURLStatePixelTracking = (urlString: string) => {
         nonce: url.searchParams.get("nonce") as AdEventNonce | null,
         timeElapsed: url.searchParams.get("timeElapsed") as number | null,
     };
-
     return { ...params };
 };
