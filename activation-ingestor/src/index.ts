@@ -41,10 +41,9 @@ app.post("/lootbox-app/website-visit", async (req, res) => {
   //   mmpAlias: string
   //   activationID: ActivationID
   // }
-  console.log(`--- /lootbox-app/website-visit ---`);
+
   const trackedEvent = await trackLootboxAppWebsiteVisitActivation(req.body);
   if (trackedEvent) {
-    console.log(`--- tracked the event! ${trackedEvent.id} ---`);
     res.json({
       message: `Successfully received activation event of Lootbox App Website Visit with flightID=${trackedEvent.flightID} and AdEventID=${trackedEvent.id}`,
     });

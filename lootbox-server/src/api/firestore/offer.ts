@@ -173,7 +173,7 @@ export const createActivation = async (
       `Unauthorized. User do not have permissions for this advertiser`
     );
   }
-  console.log(`Creating activation for offer ${id}`);
+
   const activationRef = db
     .collection(Collection.Activation)
     .doc() as DocumentReference<Activation_Firestore>;
@@ -192,7 +192,7 @@ export const createActivation = async (
 
   try {
     await activationRef.set(obj);
-    console.log("Activation created");
+
     return obj;
   } catch (e) {
     console.log(e);
@@ -209,7 +209,7 @@ export const editActivation = async (
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
   }
-  console.log(payload);
+
   const activationRef = db
     .collection(Collection.Activation)
     .doc(id) as DocumentReference<Activation_Firestore>;
@@ -252,7 +252,7 @@ export const editActivation = async (
   if (actInput && actInput.order) {
     updatePayload.order = actInput.order;
   }
-  console.log(updatePayload);
+
   await activationRef.update(updatePayload);
 
   const updatedActivationSnap = await activationRef.get();

@@ -615,8 +615,7 @@ const ReferralResolvers: Resolvers = {
           isPostCosmic: !!tournament.isPostCosmic,
         });
         const rf = convertReferralDBToGQL(referral);
-        console.log(`rf ==== `);
-        console.log(rf);
+
         return { referral: rf };
       } catch (err) {
         return {

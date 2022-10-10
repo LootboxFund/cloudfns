@@ -320,13 +320,11 @@ export const pubsubPixelTracking = functions.pubsub
     .topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
-        console.log("----> PUBBY SUBBY", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let jsonData: any;
         try {
             jsonData = message.json;
-            logger.log("parsed data", jsonData?.httpRequest);
-            console.log("Parsed data", jsonData?.httpRequest);
         } catch (e) {
             logger.error("PubSub message was not JSON", e);
             return;
@@ -356,9 +354,6 @@ export const pubsubPixelTracking = functions.pubsub
             timeElapsed,
         } = extractURLStatePixelTracking(url);
 
-        logger.log("got the flightID = ", flightID);
-        console.log("console got the flightID = ", flightID);
-
         // get for existing flight
         let flight: AdFlight_Firestore;
         let createdEvent: AdEvent_Firestore;
@@ -376,18 +371,12 @@ export const pubsubPixelTracking = functions.pubsub
 
             flight = await getFlightById(flightID);
 
-            logger.log("got the flight = ", flight);
-            console.log("console got the flight = ", flight);
-
             // check if nonce already used (deduplication of events)
             const eventsByNonce = await getAdEventsByNonce(flight.adID as AdID, nonce, 1);
             if (eventsByNonce.length > 0) {
                 logger.error("Nonce already used", { adId: flight.adID, nonce });
                 return;
             }
-
-            logger.log("creating ad event = ");
-            console.log("console creating the ad event = ");
 
             // Now write the AdEvent subcollection document
             createdEvent = await createAdEvent({
@@ -401,9 +390,6 @@ export const pubsubPixelTracking = functions.pubsub
             logger.error("Pubsub error", err);
             return;
         }
-
-        logger.log("created the ad event  ");
-        console.log("created the ad event  ");
 
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {
@@ -431,7 +417,6 @@ export const pubsubPixelTracking = functions.pubsub
                 // Check if any of the activations are type of "ClickToWebsite"
                 const { id, mmpAlias } = await checkIfOfferIncludesLootboxAppWebsiteVisit(flight.offerID);
                 if (id && mmpAlias) {
-                    console.log(`Offer ${flight.offerID} has a Lootbox App Website Visit MMP`);
                     const info: ActivationIngestorRoute_LootboxAppWebsiteVisit_Body = {
                         flightID: flight.id,
                         activationID: id,
@@ -472,11 +457,9 @@ export const pubsubBillableActivationEvent = functions.pubsub
             topic: manifest.cloudFunctions.pubsubBillableActivationEvent.topic,
             message,
         });
-        console.log("Message = ", message);
-        console.log("Message.data = ", message.data);
         // Get the AdEvent from firestore
         const AdEventID = Buffer.from(message.data, "base64").toString().trim();
-        console.log(`---- AdEventID = ${AdEventID}`);
+
         const adEventRef = db.collection(Collection.AdEvent).doc(AdEventID) as DocumentReference<AdEvent_Firestore>;
         const adEventSnapshot = await adEventRef.get();
         if (!adEventSnapshot.exists) {
@@ -486,11 +469,10 @@ export const pubsubBillableActivationEvent = functions.pubsub
         if (!adEvent) {
             throw Error(`AdEvent with id ${AdEventID} was undefined`);
         }
-        console.log("Got the ad event! ", adEvent);
+
         // Generate the Memos
         const memos = await generateMemoBills(adEvent);
-        console.log("---- ALL MEMO MADE");
-        console.log(memos);
+
         // end
         return;
     });

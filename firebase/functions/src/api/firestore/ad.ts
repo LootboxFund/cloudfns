@@ -83,7 +83,6 @@ export const createAdEvent = async ({
     const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: adEventRef.id as AdEventID };
 
     logger.log("about to make ad event  ", documentWithId);
-    console.log("console about to make the ad event  ", documentWithId);
 
     await adEventRef.set(documentWithId);
 

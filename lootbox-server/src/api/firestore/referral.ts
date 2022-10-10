@@ -120,13 +120,6 @@ export const createReferral = async (
     newReferral.seedPartyBasketId = req.seedPartyBasketId;
   }
 
-  console.log(`
-
-  Creating newReferral: 
-  
-  `);
-  console.log(newReferral);
-
   await ref.set(newReferral);
 
   return newReferral;

@@ -27,7 +27,6 @@ export const reportViewToAppsflyer = async (flight: AdFlight_Firestore, adEvent:
 };
 
 export const checkIfOfferIncludesLootboxAppWebsiteVisit = async (offerID: OfferID) => {
-    console.log(`Checking if OfferID=${offerID} includes mmp lootbox app website visit`);
     const activations = await listActivationsForOffer(offerID);
     const firstLootboxAppWebsiteVisitMmp = activations.find(
         (activation) => activation.mmp === MeasurementPartnerType.LootboxAppWebsiteVisit

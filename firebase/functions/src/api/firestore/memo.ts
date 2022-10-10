@@ -25,19 +25,17 @@ import { db } from "../firebase";
 import { AdFlight_Firestore } from "@wormgraph/helpers";
 
 export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Memo_Firestore[]> => {
-    console.log(`adEvent.activationID = ${adEvent.activationID}`);
     if (adEvent.activationID) {
         const activationRef = db
             .collection(Collection.Activation)
             .doc(adEvent.activationID) as DocumentReference<Activation_Firestore>;
         const activationSnapshot = await activationRef.get();
 
-        console.log(`activationSnapshot.exists = ${activationSnapshot.exists}`);
         if (!activationSnapshot.exists) {
             return [];
         }
         const activation = activationSnapshot.data();
-        console.log("Got activation! ", activation);
+
         if (!activation) {
             return [];
         }
@@ -499,7 +497,6 @@ interface CreateMemoBillArgs {
     note: string;
 }
 export const createMemoBill = async (payload: CreateMemoBillArgs): Promise<Memo_Firestore> => {
-    console.log(`Creating memo bills! ${payload.affiliateID}`);
     const memoRef = db.collection(Collection.Memo).doc() as DocumentReference<Memo_Firestore>;
     const memoObj: Memo_Firestore = {
         ...payload,

@@ -13,13 +13,6 @@ import { notifyPubSubOfBillableActivation } from "../../api/pubsub/notify";
 export const trackLootboxAppWebsiteVisitActivation = async (
   body: ActivationIngestorRoute_LootboxAppWebsiteVisit_Body
 ): Promise<AdEvent_Firestore | undefined> => {
-  console.log(`
-  
-    Tracked:
-
-    ${JSON.stringify(body, null, 2)}
-  
-  `);
   // get the standard params from manual entry
   let flightID = body.flightID;
   const activationID = body.activationID;
@@ -29,15 +22,14 @@ export const trackLootboxAppWebsiteVisitActivation = async (
     .doc() as DocumentReference<AdEvent_Firestore>;
   // best case scenario, we have a flight
 
-  console.log(`Grabbing flight ref...`);
   const flightRef = db
     .collection(Collection.Flight)
     .doc(flightID) as DocumentReference<AdFlight_Firestore>;
   const flightSnapshot = await flightRef.get();
-  console.log(`flightSnapshot.exists = ${flightSnapshot.exists}`);
+
   if (flightSnapshot.exists) {
     const f = flightSnapshot.data();
-    console.log(`flight = `, f);
+
     if (f) {
       const flight = f;
       const adEventSchema: AdEvent_Firestore = {
@@ -65,12 +57,7 @@ export const trackLootboxAppWebsiteVisitActivation = async (
           tournamentID: flight.tournamentID,
         },
       };
-      console.log(`--- Creating AdEvent schema`);
-      console.log(JSON.stringify(adEventSchema, null, 2));
       await adEventRef.set(adEventSchema);
-      console.log(
-        `--- Notifying PubSub of billable activation with event ${adEventRef.id}`
-      );
       await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);
       return adEventSchema;
     }
