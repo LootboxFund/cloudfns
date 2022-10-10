@@ -88,7 +88,9 @@ const OfferTypeDefs = gql`
 
   enum MeasurementPartnerType {
     Appsflyer
-    LootboxPixel
+    GoogleTagManager
+    ServerToServer
+    LootboxAppWebsiteVisit
     Manual
   }
 
@@ -97,6 +99,7 @@ const OfferTypeDefs = gql`
     description: String
     pricing: Float!
     status: ActivationStatus!
+    mmp: MeasurementPartnerType!
     mmpAlias: String!
     offerID: ID!
     order: Int
@@ -107,7 +110,6 @@ const OfferTypeDefs = gql`
     description: String
     pricing: Float
     status: ActivationStatus
-    mmpAlias: String
     order: Int
   }
 
@@ -117,6 +119,7 @@ const OfferTypeDefs = gql`
     description: String
     pricing: Float!
     status: ActivationStatus!
+    mmp: MeasurementPartnerType!
     mmpAlias: String!
     offerID: ID!
     order: Int!

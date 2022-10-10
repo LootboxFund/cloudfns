@@ -1,4 +1,5 @@
-import { AdFlight_Firestore, AdEvent_Firestore, MeasurementPartnerType } from "@wormgraph/helpers";
+import { AdFlight_Firestore, AdEvent_Firestore, MeasurementPartnerType, OfferID } from "@wormgraph/helpers";
+import { listActivationsForOffer } from "../firestore";
 
 /**
  *
@@ -22,5 +23,13 @@ export const reportViewToMMP = async (flight: AdFlight_Firestore, adEvent: AdEve
 };
 
 export const reportViewToAppsflyer = async (flight: AdFlight_Firestore, adEvent: AdEvent_Firestore) => {
-    return `Successfully reported view to MMP=${MeasurementPartnerType.Appsflyer} for OfferID=${flight.offerID} on FlightID=${flight.id}`;
+    return `Successfully reported view to MMP=${MeasurementPartnerType.Appsflyer} for OfferID=${flight.offerID} on FlightID=${flight.id} for ad event = ${adEvent.id}`;
+};
+
+export const checkIfOfferIncludesLootboxAppWebsiteVisit = async (offerID: OfferID) => {
+    const activations = await listActivationsForOffer(offerID);
+    const firstLootboxAppWebsiteVisitMmp = activations.find(
+        (activation) => activation.mmp === MeasurementPartnerType.LootboxAppWebsiteVisit
+    );
+    return firstLootboxAppWebsiteVisitMmp || { id: null, mmpAlias: null };
 };

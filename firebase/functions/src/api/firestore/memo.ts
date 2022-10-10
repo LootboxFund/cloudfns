@@ -18,6 +18,7 @@ import {
     MemoID,
     Tournament_Firestore,
     UserID,
+    RateQuoteStatus,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -34,6 +35,7 @@ export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Mem
             return [];
         }
         const activation = activationSnapshot.data();
+
         if (!activation) {
             return [];
         }
@@ -154,8 +156,8 @@ export const handleWithFlightId = async (
         rateQuotes.forEach((rq) => organizerRateQuotes.push(rq));
     }
     const masterPricing = activation.pricing;
-    const promoterPricing = promoterRateQuotes[0].pricing || 0;
-    const organizerPricing = organizerRateQuotes[0].pricing || 0;
+    const promoterPricing = promoterRateQuotes[0] ? promoterRateQuotes[0].pricing : 0;
+    const organizerPricing = organizerRateQuotes[0] ? organizerRateQuotes[0].pricing : 0;
     if (promoterPricing > masterPricing) {
         throw Error("Promoter pricing cannot be greater than master pricing");
     }
@@ -171,7 +173,7 @@ export const handleWithFlightId = async (
         adEventID: adEventID,
         activationID: activation.id,
         mmpAlias: activation.mmpAlias,
-        mmp: offer.mmp,
+        mmp: activation.mmp,
         userID: flight.userID,
         flightID: flight.id,
         tournamentID: flight.tournamentID,
@@ -272,8 +274,8 @@ export const handleWithTournamentAffiliateActivation = async (
         rateQuotes.forEach((rq) => organizerRateQuotes.push(rq));
     }
     const masterPricing = activation.pricing;
-    const promoterPricing = promoterRateQuotes[0].pricing || 0;
-    const organizerPricing = organizerRateQuotes[0].pricing || 0;
+    const promoterPricing = promoterRateQuotes[0] ? promoterRateQuotes[0].pricing : 0;
+    const organizerPricing = organizerRateQuotes[0] ? organizerRateQuotes[0].pricing : 0;
     if (promoterPricing > masterPricing) {
         throw Error("Promoter pricing cannot be greater than master pricing");
     }
@@ -290,7 +292,7 @@ export const handleWithTournamentAffiliateActivation = async (
         activationID: activation.id,
         userID: userID,
         mmpAlias: activation.mmpAlias,
-        mmp: offer.mmp,
+        mmp: activation.mmp,
         tournamentID: tournamentID,
         note: `${activation.name} in Offer "${offer.title}" in TournamentID=${tournamentID}`,
     };
@@ -377,7 +379,7 @@ export const handleWithTournamentActivation = async (
         rateQuotes.forEach((rq) => organizerRateQuotes.push(rq));
     }
     const masterPricing = activation.pricing;
-    const organizerPricing = organizerRateQuotes[0].pricing || 0;
+    const organizerPricing = organizerRateQuotes[0] ? organizerRateQuotes[0].pricing : 0;
     if (organizerPricing > masterPricing) {
         throw Error("Organizer pricing cannot be greater than master pricing");
     }
@@ -388,7 +390,7 @@ export const handleWithTournamentActivation = async (
         activationID: activation.id,
         userID: userID,
         mmpAlias: activation.mmpAlias,
-        mmp: offer.mmp,
+        mmp: activation.mmp,
         tournamentID: tournamentID,
         note: `${activation.name} in Offer "${offer.title}" in TournamentID=${tournamentID}`,
     };
@@ -441,7 +443,7 @@ export const handleWithOnlyActivationId = async (
         activationID: activation.id,
         userID: userID,
         mmpAlias: activation.mmpAlias,
-        mmp: offer.mmp,
+        mmp: activation.mmp,
         note: `${activation.name} in Offer "${offer.title}" in no known tournament`,
     };
     const memo = await createMemoBill({
@@ -466,15 +468,16 @@ export const getMatchingRateQuotesWithFullAttribution = async ({
         .collection(Collection.RateQuote)
         .where("tournamentID", "==", tournamentID)
         .where("affiliateID", "==", affiliateID)
-        .where("activationID", "==", activationID)
-        .where("status", "==", status) as Query<RateQuote_Firestore>;
+        .where("activationID", "==", activationID) as Query<RateQuote_Firestore>;
     const rateQuoteCollectionItems = await rateQuoteRef.get();
     if (rateQuoteCollectionItems.empty) {
         return [];
     }
-    const matchingRateQuotes = rateQuoteCollectionItems.docs.map((doc) => {
-        return doc.data();
-    });
+    const matchingRateQuotes = rateQuoteCollectionItems.docs
+        .map((doc) => {
+            return doc.data();
+        })
+        .filter((rq) => rq.status === RateQuoteStatus.Active);
     return matchingRateQuotes;
 };
 
