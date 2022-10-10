@@ -27,17 +27,25 @@ const LootboxTypeDefs = gql`
     deletedAt: Timestamp
   }
 
+  # Subcollection under the Lootbox
+  # should be a 1:1 relationship with the LootboxTicket
   type MintWhitelistSignature {
     id: ID!
     signature: String!
     signer: ID! # Address of the signer
     whitelistedAddress: ID! # Address of the user being whitelisted
+    lootboxID: ID!
     lootboxAddress: ID!
     isRedeemed: Boolean!
+    lootboxTicketID: ID
     nonce: String!
+    digest: ID!
     createdAt: Timestamp!
     updatedAt: Timestamp!
     deletedAt: Timestamp
+
+    # GQL layer
+    lootboxTicket: LootboxTicket
   }
 
   # Subcollection under the Lootbox
@@ -52,7 +60,8 @@ const LootboxTypeDefs = gql`
     createdAt: Timestamp!
     stampImage: String!
     metadataURL: String!
-    claimID: ID
+    nonce: ID!
+    digest: ID!
   }
 
   type Lootbox {
@@ -81,11 +90,14 @@ const LootboxTypeDefs = gql`
     stampImage: String!
     logo: String!
     backgroundImage: String!
-    # badgeImage: String
     themeColor: String!
     baseTokenURI: String!
-    # version: String!
     runningCompletedClaims: Int!
+
+    # GQL layer
+    userClaims: [Claim!]
+    # mintWhitelistSignatures: [MintWhitelistSignature!]
+    # tournamentSnapshots: [LootboxTournamentSnapshot!]
 
     # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
@@ -95,7 +107,6 @@ const LootboxTypeDefs = gql`
       @deprecated(
         reason: "Use LootboxTournamentSnapshot subcollection instead - will be removed after Cosmic"
       ) # Optional, if lootboxes are associated to a tournament
-    mintWhitelistSignatures: [MintWhitelistSignature!]
   }
 
   type LootboxSnapshotTimestamps {
@@ -149,11 +160,6 @@ const LootboxTypeDefs = gql`
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
   }
 
-  # input CreateLootboxPayload {
-  #   address: ID!
-  #   name: String!
-  # }
-
   input EditLootboxPayload {
     lootboxID: ID!
     name: String
@@ -173,24 +179,6 @@ const LootboxTypeDefs = gql`
     lootboxAddress: ID!
   }
 
-  input MintLootboxTicketPayload {
-    mintWhitelistID: ID!
-    message: String!
-    signedMessage: String!
-    lootboxID: ID!
-    ticketID: ID!
-    minterAddress: ID!
-    claimID: ID
-  }
-
-  # type CreateLootboxResponseSuccess {
-  #   lootbox: Lootbox!
-  # }
-
-  type MintLootboxTicketResponseSuccess {
-    ticket: LootboxTicket!
-  }
-
   type EditLootboxResponseSuccess {
     lootbox: Lootbox!
   }
@@ -208,19 +196,12 @@ const LootboxTypeDefs = gql`
   union BulkMintWhitelistResponse =
       BulkMintWhitelistResponseSuccess
     | ResponseError
-  union MintLootboxTicketResponse =
-      MintLootboxTicketResponseSuccess
-    | ResponseError
 
   extend type Mutation {
-    # createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
     bulkMintWhitelist(
       payload: BulkMintWhitelistPayload!
     ): BulkMintWhitelistResponse!
-    mintLootboxTicket(
-      payload: MintLootboxTicketPayload!
-    ): MintLootboxTicketResponse!
   }
 
   # -------------- DEPRECATED SHIT --------------

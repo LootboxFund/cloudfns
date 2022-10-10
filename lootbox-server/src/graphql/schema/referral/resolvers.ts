@@ -27,6 +27,7 @@ import {
   MutationBulkCreateReferralArgs,
   BulkCreateReferralResponse,
   Lootbox,
+  MintWhitelistSignature,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -49,11 +50,13 @@ import {
   getCompletedClaimsForReferral,
   getLootbox,
   getAffiliate,
+  getMintWhistlistSignature,
 } from "../../../api/firestore";
 import {
   AffiliateID,
   ClaimID,
   LootboxID,
+  LootboxMintWhitelistID,
   LootboxStatus_Firestore,
   PartyBasketID,
   ReferralID,
@@ -80,7 +83,10 @@ import {
   convertReferralDBToGQL,
   convertReferralTypeGQLToDB,
 } from "../../../lib/referral";
-import { convertLootboxDBToGQL } from "../../../lib/lootbox";
+import {
+  convertLootboxDBToGQL,
+  convertMintWhitelistSignatureDBToGQL,
+} from "../../../lib/lootbox";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -139,6 +145,18 @@ const ReferralResolvers: Resolvers = {
   },
 
   Claim: {
+    whitelist: async (claim: Claim): Promise<MintWhitelistSignature | null> => {
+      if (!claim.whitelistId || !claim.lootboxID) {
+        return null;
+      }
+
+      const whitelist = await getMintWhistlistSignature(
+        claim.lootboxID as LootboxID,
+        claim.whitelistId as LootboxMintWhitelistID
+      );
+
+      return whitelist ? convertMintWhitelistSignatureDBToGQL(whitelist) : null;
+    },
     userLink: async (claim: Claim): Promise<PublicUser | null> => {
       if (claim.type === ClaimType.Referral) {
         if (!claim.referrerId) {

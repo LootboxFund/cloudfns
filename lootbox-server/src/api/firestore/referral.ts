@@ -806,3 +806,22 @@ export const attachWhitelistIdToClaim = async (
 
   await ref.update(updateRequest);
 };
+
+export const getUserClaimsForLootbox = async (
+  lootboxID: LootboxID,
+  userId: UserID
+): Promise<Claim_Firestore[]> => {
+  const collectionRef = db
+    .collectionGroup(Collection.Claim)
+    .where("status", "==", ClaimStatus_Firestore.complete)
+    .where("claimerUserId", "==", userId)
+    .where("lootboxID", "==", lootboxID) as CollectionGroup<Claim_Firestore>;
+
+  const snapshot = await collectionRef.get();
+
+  if (!snapshot || snapshot.empty) {
+    return [];
+  } else {
+    return snapshot.docs.map((doc) => doc.data());
+  }
+};

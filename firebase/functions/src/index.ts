@@ -39,15 +39,21 @@ import {
     MeasurementPartnerType,
     tableActivationIngestorRoutes,
     ActivationIngestorRoute_LootboxAppWebsiteVisit_Body,
+    LootboxTicketID_Web3,
+    LootboxTicketDigest,
+    LootboxMintSignatureNonce,
+    EnqueueLootboxOnMintCallableRequest,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import { checkIfOfferIncludesLootboxAppWebsiteVisit, reportViewToMMP } from "./api/mmp/mmp";
+import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
 import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
 import { getUserWallets } from "./api/firestore/user";
 import axios from "axios";
+// import { generateTicketDigest } from "./lib/ethers";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -89,10 +95,6 @@ export const onClaimWrite = functions
                     return;
                 }
 
-                incrementLootboxRunningClaims(newClaim.lootboxID).catch((err) => {
-                    logger.error("Error onClaimWrite", err);
-                });
-
                 if (!newClaim.whitelistId && newClaim.claimerUserId) {
                     try {
                         // Generate the whitelist only if the user wallet exists
@@ -107,6 +109,10 @@ export const onClaimWrite = functions
                         logger.error("Error onClaimWrite generating whitelist", err);
                     }
                 }
+
+                incrementLootboxRunningClaims(newClaim.lootboxID).catch((err) => {
+                    logger.error("Error onClaimWrite", err);
+                });
 
                 const currentAmount = lootbox?.runningCompletedClaims || 0;
                 const newCurrentAmount = currentAmount + 1; // Since we just incremented by one in this function (see "incrementLootboxRunningClaims")
@@ -166,8 +172,11 @@ export const onClaimWrite = functions
         return;
     });
 
-export const onWalletCreate = functions.firestore
-    .document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
+export const onWalletCreate = functions
+    .runWith({
+        secrets: [whitelisterPrivateKeySecretName],
+    })
+    .firestore.document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
     .onCreate(async (snap) => {
         logger.info(snap);
 
@@ -507,6 +516,16 @@ export const indexLootboxOnCreate = functions
     .tasks.taskQueue({
         retryConfig: {
             maxAttempts: 5,
+            /**
+             * The maximum number of times to double the backoff between
+             * retries. If left unspecified will default to 16.
+             */
+            maxDoublings: 1,
+            /**
+             * The minimum time to wait between attempts. If left unspecified
+             * will default to 100ms.
+             */
+            minBackoffSeconds: 60 * 5 /* 5 minutes */,
         },
     })
     .onDispatch(async (data: IndexLootboxOnCreateTaskRequest) => {
@@ -614,7 +633,7 @@ export const indexLootboxOnCreate = functions
         });
     });
 
-export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
+export const enqueueLootboxOnCreate = functions.https.onCall(
     async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
@@ -663,10 +682,181 @@ export const enqueueIndexLootboxOnCreateTasks = functions.https.onCall(
     }
 );
 
-// resource.type="http_load_balancer"
-// resource.labels.project_id="lootbox-fund-staging"
-// logName="projects/lootbox-fund-staging/logs/requests"
-// httpRequest.status=200
-// resource.labels.forwarding_rule_name="lb-tracking-pixel-lootbox-staging-ssl"
-// resource.labels.url_map_name="lb-lootbox-pixel-tracking"
-// httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"
+interface IndexLootboxOnMintTaskRequest {
+    chain: ChainInfo;
+    payload: {
+        lootboxAddress: Address;
+        nonce: LootboxMintSignatureNonce;
+        userID: UserID;
+        digest: LootboxTicketDigest;
+    };
+    filter: {
+        fromBlock: number;
+    };
+}
+
+export const indexLootboxOnMint = functions
+    .runWith({
+        timeoutSeconds: 540,
+        failurePolicy: true,
+        secrets: [stampSecretName],
+    })
+    .tasks.taskQueue({
+        retryConfig: {
+            maxAttempts: 5,
+            /**
+             * The maximum number of times to double the backoff between
+             * retries. If left unspecified will default to 16.
+             */
+            maxDoublings: 1,
+            /**
+             * The minimum time to wait between attempts. If left unspecified
+             * will default to 100ms.
+             */
+            minBackoffSeconds: 60 * 5 /* 5 minutes */,
+        },
+    })
+    .onDispatch(async (data: IndexLootboxOnMintTaskRequest) => {
+        logger.info("indexLootboxOnMint", { data });
+        // Any errors thrown or timeouts will trigger a retry
+
+        // Start a listener to listen for the event
+        const provider = new ethers.providers.JsonRpcProvider(data.chain.rpcUrls[0]);
+
+        logger.info("creating lootbox contract");
+
+        const lootbox = new ethers.Contract(data.payload.lootboxAddress, LootboxCosmicABI, provider);
+
+        logger.info("lootbox: ", { lootbox });
+
+        // eslint-disable-next-line
+        const lootboxEventFilter = lootbox.filters.MintTicket(null, null, null, null, data.payload.digest);
+        logger.info("starting listener...");
+
+        await new Promise((res) => {
+            // This is the event listener
+            lootbox.on(
+                lootboxEventFilter,
+                async (
+                    minter: Address,
+                    lootboxAddress: Address,
+                    nonce: ethers.BigNumber,
+                    ticketID: ethers.BigNumber,
+                    digest: LootboxTicketDigest
+                ) => {
+                    logger.debug("Got log", {
+                        minter,
+                        lootboxAddress,
+                        nonce,
+                        nonceDecimalString: nonce.toString(),
+                        ticketId: ticketID.toString(),
+                        digest,
+                    });
+
+                    if (
+                        minter === undefined ||
+                        lootboxAddress === undefined ||
+                        nonce === undefined ||
+                        ticketID === undefined ||
+                        digest === undefined
+                    ) {
+                        return;
+                    }
+
+                    // Make sure its the right event
+                    const testNonce = data.payload.nonce;
+                    const eventNonce = nonce.toString() as LootboxMintSignatureNonce;
+                    if (eventNonce !== testNonce) {
+                        logger.info("Nonce does not match", {
+                            nonceHash: eventNonce,
+                            expectedNonce: testNonce,
+                        });
+                        return;
+                    }
+
+                    // // make sure its the right digest with the DOMAIN_SPERATOR
+                    // const expectedDigest = generateTicketDigest({
+                    //     minterAddress: minter, // This comes from the chain
+                    //     lootboxAddress: data.payload.lootboxAddress,
+                    //     nonce: data.payload.nonce, // String version of uint 256 number
+                    //     chainIDHex: data.chain.chainIdHex, // Pass this in to ensure the correct domain
+                    // });
+
+                    // if (digest.hash !== expectedDigest) {
+                    //     logger.info("Digest does not match", {
+                    //         digestHash: digest.hash,
+                    //         expectedDigest,
+                    //     });
+                    //     return;
+                    // }
+                    if (digest !== data.payload.digest) {
+                        logger.info("Digest does not match", {
+                            digestHash: digest,
+                            expectedDigest: data.payload.digest,
+                        });
+                        return;
+                    }
+
+                    try {
+                        // Get the lootbox info
+                        await lootboxService.mintNewTicketCallback({
+                            lootboxAddress: lootboxAddress,
+                            chainIDHex: data.chain.chainIdHex,
+                            minterUserID: data.payload.userID,
+                            ticketID: ticketID.toString() as LootboxTicketID_Web3,
+                            minterAddress: minter,
+                            digest: digest,
+                            nonce: eventNonce,
+                        });
+
+                        provider.removeAllListeners(lootboxEventFilter);
+                        res(null);
+                        return;
+                    } catch (err) {
+                        logger.error("Error creating lootbox", err);
+                        return;
+                    }
+                }
+            );
+        });
+    });
+
+export const enqueueLootboxOnMint = functions.https.onCall(
+    async (data: EnqueueLootboxOnMintCallableRequest, context) => {
+        if (!context.auth?.uid) {
+            // Unauthenticated
+            logger.error("Unauthenticated");
+            return;
+        }
+
+        if (!ethers.utils.isAddress(data.lootboxAddress)) {
+            logger.error("Address not valid", { listenAddress: data.lootboxAddress });
+            return;
+        }
+
+        const chainSlug = chainIdHexToSlug(data.chainIDHex);
+        if (!chainSlug) {
+            logger.warn("Could not match chain", { chainIdHex: data.chainIDHex });
+            return;
+        }
+        const chain = BLOCKCHAINS[chainSlug];
+
+        const taskData: IndexLootboxOnMintTaskRequest = {
+            chain,
+            payload: {
+                nonce: data.nonce,
+                lootboxAddress: data.lootboxAddress,
+                userID: context.auth.uid as UserID,
+                digest: data.digest,
+            },
+            filter: {
+                fromBlock: data.fromBlock,
+            },
+        };
+        logger.debug("Enqueing task", taskData);
+        const queue = fun.taskQueue("indexLootboxOnMint");
+        await queue.enqueue(taskData);
+
+        return;
+    }
+);
