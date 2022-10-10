@@ -174,34 +174,34 @@ const LootboxTypeDefs = gql`
     themeColor: String
   }
 
-  input BulkMintWhitelistPayload {
-    whitelistAddresses: [ID!]! # Address of the user being whitelisted
-    lootboxAddress: ID!
-  }
+  # input BulkMintWhitelistPayload {
+  #   whitelistAddresses: [ID!]! # Address of the user being whitelisted
+  #   lootboxAddress: ID!
+  # }
 
   type EditLootboxResponseSuccess {
     lootbox: Lootbox!
   }
 
-  type BulkMintWhitelistResponseSuccess {
-    signatures: [String]!
-    errors: [String] # For partial errors
-  }
+  # type BulkMintWhitelistResponseSuccess {
+  #   signatures: [String]!
+  #   errors: [String] # For partial errors
+  # }
 
   # union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
   union EditLootboxResponse = EditLootboxResponseSuccess | ResponseError
   union GetWhitelistSignaturesResponse =
       GetWhitelistSignaturesResponseSuccess
     | ResponseError
-  union BulkMintWhitelistResponse =
-      BulkMintWhitelistResponseSuccess
-    | ResponseError
+  # union BulkMintWhitelistResponse =
+  #     BulkMintWhitelistResponseSuccess
+  #   | ResponseError
 
   extend type Mutation {
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
-    bulkMintWhitelist(
-      payload: BulkMintWhitelistPayload!
-    ): BulkMintWhitelistResponse!
+    # bulkMintWhitelist(
+    #   payload: BulkMintWhitelistPayload!
+    # ): BulkMintWhitelistResponse!
   }
 
   # -------------- DEPRECATED SHIT --------------

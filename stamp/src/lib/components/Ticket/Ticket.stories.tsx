@@ -29,7 +29,6 @@ const Template = () => {
         name="Steppe Industry Faction"
         lootboxAddress={lootboxAddress}
         chainIdHex="0x38"
-        numShares="180.02"
       />
     </$CardViewport>
   );

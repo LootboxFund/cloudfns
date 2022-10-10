@@ -9,6 +9,7 @@ import {
   chainIdHexToSlug,
   chainIdHexToName,
   ChainSlugs,
+  Address,
 } from "@wormgraph/helpers";
 import { $Horizontal } from "../Generics";
 import ReactDOMServer from "react-dom/server";
@@ -18,10 +19,9 @@ export interface TicketProps {
   logoImage: Url;
   themeColor: string;
   name: string;
-  ticketID: string;
-  lootboxAddress: ContractAddress;
+  lootboxAddress: Address;
   chainIdHex: ChainIDHex;
-  numShares: string;
+  ticketID?: string;
 }
 export const Ticket = (props: TicketProps) => {
   const {
@@ -31,7 +31,6 @@ export const Ticket = (props: TicketProps) => {
     ticketID,
     lootboxAddress,
     chainIdHex,
-    numShares,
     themeColor,
   } = props;
   const networkLogo =
@@ -39,23 +38,30 @@ export const Ticket = (props: TicketProps) => {
   const networkName = chainIdHexToName(chainIdHex);
   return (
     <section style={StyleTicketContainer({ backgroundImage })}>
+      <div style={StyleTagHeader()}>
+        <$Horizontal verticalCenter style={{ textAlign: "center" }}>
+          Fan rewards powered by LOOTBOX 🎁
+        </$Horizontal>
+      </div>
       <div
         style={StyleTicketLogo({
           backgroundImage: logoImage,
           backgroundShadowColor: themeColor,
         })}
       ></div>
-
-      <div style={StyleTicketTag()}>
-        <span style={StyleTagText()}>{name}</span>
-        <div style={StyleDivider()} />
-        <div style={StyleTicketInfo()}>
-          <span style={StyleTicketIDText()}>{`#${ticketID}`}</span>
-          <span
-            style={StyleTagInfoText()}
-          >{`Profit Sharing NFT with ${numShares} shares`}</span>
+      {ticketID ? (
+        <div style={StyleTicketTag()}>
+          <span style={StyleTagText()}>{name}</span>
+          <div style={StyleDivider()} />
+          <div style={StyleTicketInfo()}>
+            <span style={StyleTicketIDText()}>{`#${ticketID}`}</span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={StyleTicketTag()}>
+          <span style={StyleTagText()}>{name}</span>
+        </div>
+      )}
       <div style={StyleTagAddressFooter()}>
         <$Horizontal verticalCenter style={{ textAlign: "center" }}>
           {`Redeem at www.lootbox.fund (${networkName})`}
@@ -179,6 +185,21 @@ const StyleTagInfoText = () => ({
   position: "relative" as "relative",
   color: "#ffffff",
   width: "100%",
+});
+
+const StyleTagHeader = () => ({
+  fontFamily: "sans-serif",
+  fontStyle: "normal",
+  fontWeight: 600,
+  fontSize: "1rem",
+  color: "rgba(256, 256, 256, 0.6)",
+  height: "auto",
+  display: "flex",
+  flexDirection: "column" as "column",
+  justifyContent: "space-evenly" as "space-evenly",
+  alignItems: "center" as "center",
+  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  padding: "5px",
 });
 
 const StyleTagAddressFooter = () => ({

@@ -7,12 +7,7 @@ import {
   LootboxVariant_Firestore,
   LootboxStatus_Firestore,
   MintWhitelistSignature_Firestore,
-  convertHexToDecimal,
-  ChainIDHex,
-  LootboxMintSignatureNonce,
-  LootboxTicketDigest,
 } from "@wormgraph/helpers";
-import { ethers } from "ethers";
 import { LootboxDeprecated_Firestore } from "../api/firestore/lootbox.types";
 import {
   Lootbox,
@@ -40,6 +35,7 @@ export const parseMintWhitelistSignature = (
     lootboxTicketID: data.lootboxTicketID,
     lootboxID: data.lootboxID,
     digest: data.digest,
+    userID: data.userID,
   };
 
   return res;
@@ -291,6 +287,7 @@ export const convertMintWhitelistSignatureDBToGQL = (
     deletedAt: data.deletedAt || null,
     nonce: data.nonce,
     digest: data.digest,
+    lootboxTicketID: data.lootboxTicketID,
   };
 
   return res;
@@ -347,61 +344,61 @@ const convertLootboxToSnapshotOld = (
   };
 };
 
-// WARN: DUPLICATED IN FIREBASE FUNCTIONS
-export const generateLootboxCosmicDomainSignature = (
-  address: Address,
-  chainIDHex: ChainIDHex
-) => {
-  const chain = convertHexToDecimal(chainIDHex);
-  const domainSeparator = ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "bytes32", "bytes32", "uint256", "address"],
-      [
-        ethers.utils.keccak256(
-          ethers.utils.toUtf8Bytes(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-          )
-        ),
-        ethers.utils.keccak256(ethers.utils.toUtf8Bytes("LootboxCosmic")),
-        ethers.utils.keccak256(ethers.utils.toUtf8Bytes("1")),
-        chain,
-        address,
-      ]
-    )
-  );
-  return domainSeparator;
-};
+// // WARN: DUPLICATED IN FIREBASE FUNCTIONS
+// export const generateLootboxCosmicDomainSignature = (
+//   address: Address,
+//   chainIDHex: ChainIDHex
+// ) => {
+//   const chain = convertHexToDecimal(chainIDHex);
+//   const domainSeparator = ethers.utils.keccak256(
+//     ethers.utils.defaultAbiCoder.encode(
+//       ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+//       [
+//         ethers.utils.keccak256(
+//           ethers.utils.toUtf8Bytes(
+//             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+//           )
+//         ),
+//         ethers.utils.keccak256(ethers.utils.toUtf8Bytes("LootboxCosmic")),
+//         ethers.utils.keccak256(ethers.utils.toUtf8Bytes("1")),
+//         chain,
+//         address,
+//       ]
+//     )
+//   );
+//   return domainSeparator;
+// };
 
-// WARN: DUPLICATED IN FIREBASE FUNCTIONS
-export const generateTicketDigest = (params: {
-  minterAddress: Address;
-  lootboxAddress: Address;
-  nonce: LootboxMintSignatureNonce; // String version of uint 256 number
-  chainIDHex: ChainIDHex;
-}): LootboxTicketDigest => {
-  const domainSeparator = generateLootboxCosmicDomainSignature(
-    params.lootboxAddress,
-    params.chainIDHex
-  );
+// // WARN: DUPLICATED IN FIREBASE FUNCTIONS
+// export const generateTicketDigest = (params: {
+//   minterAddress: Address;
+//   lootboxAddress: Address;
+//   nonce: LootboxMintSignatureNonce; // String version of uint 256 number
+//   chainIDHex: ChainIDHex;
+// }): LootboxTicketDigest => {
+//   const domainSeparator = generateLootboxCosmicDomainSignature(
+//     params.lootboxAddress,
+//     params.chainIDHex
+//   );
 
-  const MINTER_TYPEHASH = ethers.utils.keccak256(
-    ethers.utils.toUtf8Bytes("Minter(address wallet,uint256 nonce)")
-  );
+//   const MINTER_TYPEHASH = ethers.utils.keccak256(
+//     ethers.utils.toUtf8Bytes("Minter(address wallet,uint256 nonce)")
+//   );
 
-  const structHash = ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
-      ["bytes32", "address", "uint256"],
-      [MINTER_TYPEHASH, params.minterAddress, params.nonce]
-    )
-  );
+//   const structHash = ethers.utils.keccak256(
+//     ethers.utils.defaultAbiCoder.encode(
+//       ["bytes32", "address", "uint256"],
+//       [MINTER_TYPEHASH, params.minterAddress, params.nonce]
+//     )
+//   );
 
-  const expectedDigest = ethers.utils.keccak256(
-    ethers.utils.concat([
-      ethers.utils.toUtf8Bytes("\x19\x01"),
-      ethers.utils.arrayify(domainSeparator),
-      ethers.utils.arrayify(structHash),
-    ])
-  );
+//   const expectedDigest = ethers.utils.keccak256(
+//     ethers.utils.concat([
+//       ethers.utils.toUtf8Bytes("\x19\x01"),
+//       ethers.utils.arrayify(domainSeparator),
+//       ethers.utils.arrayify(structHash),
+//     ])
+//   );
 
-  return expectedDigest as LootboxTicketDigest;
-};
+//   return expectedDigest as LootboxTicketDigest;
+// };

@@ -214,51 +214,54 @@ export const paginateLootboxFeedQuery = async (
 //   );
 // };
 
-interface CreateMintWhitelistSignatureRequest {
-  signature: string;
-  signer: Address;
-  whitelistedAddress: Address;
-  lootboxId: LootboxID;
-  lootboxAddress: Address;
-  nonce: LootboxMintSignatureNonce;
-  digest: LootboxTicketDigest;
-}
-/** @WARNING ALSO duplicated in functions */
-export const createMintWhitelistSignature = async ({
-  signature,
-  signer,
-  whitelistedAddress,
-  lootboxId,
-  lootboxAddress,
-  nonce,
-  digest,
-}: CreateMintWhitelistSignatureRequest): Promise<MintWhitelistSignature_Firestore> => {
-  const signatureRef = db
-    .collection(Collection.Lootbox)
-    .doc(lootboxId)
-    .collection(Collection.MintWhiteList)
-    .doc() as DocumentReference<MintWhitelistSignature_Firestore>;
+// interface CreateMintWhitelistSignatureRequest {
+//   signature: string;
+//   signer: Address;
+//   whitelistedAddress: Address;
+//   lootboxId: LootboxID;
+//   lootboxAddress: Address;
+//   nonce: LootboxMintSignatureNonce;
+//   digest: LootboxTicketDigest;
+//   userID: UserID | null;
+// }
+// /** @WARNING ALSO duplicated in functions */
+// export const createMintWhitelistSignature = async ({
+//   signature,
+//   signer,
+//   whitelistedAddress,
+//   lootboxId,
+//   lootboxAddress,
+//   nonce,
+//   digest,
+//   userID,
+// }: CreateMintWhitelistSignatureRequest): Promise<MintWhitelistSignature_Firestore> => {
+//   const signatureRef = db
+//     .collection(Collection.Lootbox)
+//     .doc(lootboxId)
+//     .collection(Collection.MintWhiteList)
+//     .doc() as DocumentReference<MintWhitelistSignature_Firestore>;
 
-  const signatureDocument: MintWhitelistSignature_Firestore = {
-    id: signatureRef.id as LootboxMintWhitelistID,
-    isRedeemed: false,
-    lootboxAddress,
-    whitelistedAddress,
-    signature,
-    signer,
-    nonce,
-    createdAt: Timestamp.now().toMillis(),
-    updatedAt: Timestamp.now().toMillis(),
-    deletedAt: null,
-    lootboxID: lootboxId,
-    digest,
-    lootboxTicketID: null,
-  };
+//   const signatureDocument: MintWhitelistSignature_Firestore = {
+//     id: signatureRef.id as LootboxMintWhitelistID,
+//     isRedeemed: false,
+//     lootboxAddress,
+//     whitelistedAddress,
+//     signature,
+//     signer,
+//     nonce,
+//     createdAt: Timestamp.now().toMillis(),
+//     updatedAt: Timestamp.now().toMillis(),
+//     deletedAt: null,
+//     lootboxID: lootboxId,
+//     digest,
+//     lootboxTicketID: null,
+//     userID,
+//   };
 
-  await signatureRef.set(signatureDocument);
+//   await signatureRef.set(signatureDocument);
 
-  return signatureDocument;
-};
+//   return signatureDocument;
+// };
 
 export const getTicket = async (
   lootboxID: LootboxID,

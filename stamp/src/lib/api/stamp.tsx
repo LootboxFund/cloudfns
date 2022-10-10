@@ -17,7 +17,6 @@ export const generateStaticElement = (props: TicketProps) =>
       name={props.name}
       lootboxAddress={props.lootboxAddress}
       chainIdHex={props.chainIdHex}
-      numShares={props.numShares}
     />
   );
 

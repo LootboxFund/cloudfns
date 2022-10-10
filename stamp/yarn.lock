@@ -3037,30 +3037,23 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.1.14-afn-alpha4":
-  version "0.1.14-afn-alpha4"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.14-afn-alpha4.tgz#d21256e54e2068418668dfc2a2ed63af6fd26973"
-  integrity sha512-h9Tv6tZ3lG8POy2GiZFH1qKwatoOjUGBCXLwjkfR4HiKkxB7JlOl3bgP75/xEXdVHSbcvj12dm93uQjsF2fCzw==
+"@wormgraph/helpers@0.2.0-afn-alpha89":
+  version "0.2.0-afn-alpha89"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha89.tgz#e0d708ae8225f5f0ce5a3e65e7c3bd493e5a1778"
+  integrity sha512-Kpk0U9Fvg6c0S7FABdxCGaMMaVqSDzctG7/TvpzEGj03f9PM3EZDNaVtmC9qnZTnK9OqDK+iVV1h8WQfbzYqvg==
   dependencies:
-    axios "0.25.0"
-    lodash "4.17.21"
-
-"@wormgraph/helpers@0.2.0-afn-alpha40":
-  version "0.2.0-afn-alpha40"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha40.tgz#14fec4e4bed5e7d97569c75e09422d1c81bdedd4"
-  integrity sha512-3Nln4kcfVonbGlqu7uNspFcs6mib2UZbJbyeNxlRWLBBX/E5+14Jka3S1cVu1bY9NelkcgI7KWvsJC9y+FQjFw==
-  dependencies:
-    "@wormgraph/helpers" "0.1.14-afn-alpha4"
     "@wormgraph/manifest" "0.4.0-afm-alpha1"
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/manifest@0.3.114":
-  version "0.3.114"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.3.114.tgz#9d7f4e50791e762df2f97f6a6eca021e1f66106c"
-  integrity sha512-YR189xedbhhy5CmO/sTOX6Dq28b5A76RvNRSbP5Vn2AQgBDSuuBoyfkzvbMHsYfOAOKwi1kOEvcfUacfSac1/Q==
+"@wormgraph/helpers@0.2.0-afn-alpha98":
+  version "0.2.0-afn-alpha98"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha98.tgz#6c0308c0b6603e32c3e79af39ff44bdb5a3940ed"
+  integrity sha512-RvI+32apIXqq8m/5DWTEanYSDYhbm7CoStKhAzIDdmTS2pv2zmPmJH+0CVqpyt0Yki19c4i4o45tJG5UtgR37w==
   dependencies:
-    "@wormgraph/helpers" "0.1.10"
+    "@wormgraph/manifest" "0.4.0-afm-alpha1"
+    axios "0.25.0"
+    lodash "4.17.21"
 
 "@wormgraph/manifest@0.4.0-afm-alpha1":
   version "0.4.0-afm-alpha1"
@@ -3068,6 +3061,13 @@
   integrity sha512-+ki1chfkdI3pgNWnh4yN0TBPpac9spKVZtNYv6hp8yQwwH8SpSEPPaRrocfjLksY2y6uxNfeBFZLMoWmV8T1Eg==
   dependencies:
     "@wormgraph/helpers" "0.1.10"
+
+"@wormgraph/manifest@0.4.0-afm-alpha17":
+  version "0.4.0-afm-alpha17"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha17.tgz#4846b4db6ae3d7e6fd473b343a474084a59232e3"
+  integrity sha512-yTxQDB6LCbINEe3q6xKFE79XuZvu6qSDhUNQ/IMO/7hAV/OxVjEVo+m9h1uDoxqrfO9d2E6PFbC6PZ0mrbJVLg==
+  dependencies:
+    "@wormgraph/helpers" "0.2.0-afn-alpha89"
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"

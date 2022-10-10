@@ -14,7 +14,6 @@ const demo = async () => {
     lootboxAddress:
       "0x1c69bcBCb7f860680cDf9D4914Fc850a61888f89" as ContractAddress,
     chainIdHex: "0x38",
-    numShares: "180.02",
   });
   console.log(`linkToImage = ${linkToImage}`);
 };
