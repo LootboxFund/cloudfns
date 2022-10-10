@@ -499,7 +499,7 @@ const adComposition = {
   "Mutation.editAdSet": [isAuthenticated()],
   "Query.listAdsOfAdvertiser": [isAuthenticated()],
   "Query.listAdSetsOfAdvertiser": [isAuthenticated()],
-  "Query.decisionAdApiBetaV2": [isAuthenticated()],
+  "Query.decisionAdApiBetaV2": [],
   "Query.viewAdSet": [isAuthenticated()],
   "Query.viewAd": [isAuthenticated()],
 };

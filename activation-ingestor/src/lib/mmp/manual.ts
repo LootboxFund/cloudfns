@@ -16,7 +16,10 @@ import {
 import { db } from "../../api/firebase";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 import { getUserByEmail } from "../../api/firestore/users";
-import { Activation_Firestore } from "@wormgraph/helpers";
+import {
+  Activation_Firestore,
+  ActivationIngestorRoute_Manual_Body,
+} from "@wormgraph/helpers";
 
 import { notifyPubSubOfBillableActivation } from "../../api/pubsub/notify";
 import { getOfferByID } from "../../api/firestore/activation";
@@ -26,16 +29,16 @@ import { getOfferByID } from "../../api/firestore/activation";
 //  *
 //  *
 export const trackManualActivation = async (
-  req: Request
+  body: ActivationIngestorRoute_Manual_Body
 ): Promise<AdEvent_Firestore> => {
   // get the standard params from manual entry
-  let userID = req.query.userID;
-  const userEmail = req.query.userEmail;
-  const userPhone = req.query.userPhone;
-  const offerID = req.query.offerID;
-  const tournamentID = req.query.tournamentID;
-  const activationID = req.query.activationID;
-  let activationEventMmpAlias = req.query.mmpActivationAlias;
+  let userID = body.userID;
+  const userEmail = body.userEmail;
+  const userPhone = body.userPhone;
+  const offerID = body.offerID;
+  const tournamentID = body.tournamentID;
+  const activationID = body.activationID;
+  let activationEventMmpAlias = body.activationEventMmpAlias;
   let advertiserID;
 
   if (userEmail) {

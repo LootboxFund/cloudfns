@@ -36,19 +36,23 @@ import {
     LootboxStatus_Firestore,
     Wallet_Firestore,
     LootboxID,
+    MeasurementPartnerType,
+    tableActivationIngestorRoutes,
+    ActivationIngestorRoute_LootboxAppWebsiteVisit_Body,
     LootboxTicketID_Web3,
     LootboxTicketDigest,
     LootboxMintSignatureNonce,
     EnqueueLootboxOnMintCallableRequest,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
+import { checkIfOfferIncludesLootboxAppWebsiteVisit, reportViewToMMP } from "./api/mmp/mmp";
 import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
-import { reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
 import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
 import { getUserWallets } from "./api/firestore/user";
+import axios from "axios";
 // import { generateTicketDigest } from "./lib/ethers";
 
 const DEFAULT_MAX_CLAIMS = 10000;
@@ -330,7 +334,6 @@ export const pubsubPixelTracking = functions.pubsub
         let jsonData: any;
         try {
             jsonData = message.json;
-            logger.log("parsed data", jsonData?.httpRequest);
         } catch (e) {
             logger.error("PubSub message was not JSON", e);
             return;
@@ -354,7 +357,7 @@ export const pubsubPixelTracking = functions.pubsub
             // organizerID,
             // promoterID,
             // sessionId,
-            flightId,
+            flightID,
             eventAction,
             nonce,
             timeElapsed,
@@ -365,7 +368,7 @@ export const pubsubPixelTracking = functions.pubsub
         let createdEvent: AdEvent_Firestore;
 
         try {
-            if (!flightId || !eventAction || !nonce) {
+            if (!flightID || !eventAction || !nonce) {
                 logger.error("Malformed URL", url);
                 return;
             }
@@ -375,7 +378,7 @@ export const pubsubPixelTracking = functions.pubsub
                 return;
             }
 
-            flight = await getFlightById(flightId);
+            flight = await getFlightById(flightID);
 
             // check if nonce already used (deduplication of events)
             const eventsByNonce = await getAdEventsByNonce(flight.adID as AdID, nonce, 1);
@@ -391,7 +394,6 @@ export const pubsubPixelTracking = functions.pubsub
                 nonce,
                 timeElapsed,
             });
-
             logger.info("Successfully created ad event", { id: createdEvent.id, ad: flight.adID });
         } catch (err) {
             logger.error("Pubsub error", err);
@@ -419,6 +421,23 @@ export const pubsubPixelTracking = functions.pubsub
                 if (sessionAdEvents.length === 1) {
                     // Recall, we previously just made an ad event so there should be one
                     updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
+                }
+
+                // Check if any of the activations are type of "ClickToWebsite"
+                const { id, mmpAlias } = await checkIfOfferIncludesLootboxAppWebsiteVisit(flight.offerID);
+                if (id && mmpAlias) {
+                    const info: ActivationIngestorRoute_LootboxAppWebsiteVisit_Body = {
+                        flightID: flight.id,
+                        activationID: id,
+                        mmpAlias,
+                    };
+                    await axios({
+                        method: "post",
+                        url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+                            tableActivationIngestorRoutes[MeasurementPartnerType.LootboxAppWebsiteVisit].path
+                        }`,
+                        data: info,
+                    });
                 }
             } catch (err) {
                 logger.error(err);
@@ -448,7 +467,8 @@ export const pubsubBillableActivationEvent = functions.pubsub
             message,
         });
         // Get the AdEvent from firestore
-        const AdEventID = message.data;
+        const AdEventID = Buffer.from(message.data, "base64").toString().trim();
+
         const adEventRef = db.collection(Collection.AdEvent).doc(AdEventID) as DocumentReference<AdEvent_Firestore>;
         const adEventSnapshot = await adEventRef.get();
         if (!adEventSnapshot.exists) {
@@ -458,9 +478,10 @@ export const pubsubBillableActivationEvent = functions.pubsub
         if (!adEvent) {
             throw Error(`AdEvent with id ${AdEventID} was undefined`);
         }
+
         // Generate the Memos
-        const memos = await generateMemoBills(adEvent);
-        console.log(memos);
+        await generateMemoBills(adEvent);
+
         // end
         return;
     });

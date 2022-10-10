@@ -14,12 +14,13 @@
         "logs": "firebase functions:log"
     },
     "engines": {
-        "node": "16"
+        "node": "14"
     },
     "main": "lib/index.js",
     "dependencies": {
-        "@wormgraph/helpers": "0.2.0-afn-alpha90",
-        "@wormgraph/manifest": "0.4.0-afm-alpha15",
+        "@wormgraph/helpers": "0.2.0-afn-alpha108",
+        "@wormgraph/manifest": "0.4.0-afm-alpha20",
+        "axios": "^1.1.2",
         "ethers": "^5.7.1",
         "firebase-admin": "^10.0.2",
         "firebase-functions": "^3.23.0"

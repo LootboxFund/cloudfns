@@ -28,6 +28,8 @@ import {
 import { AdSet_Firestore, Ad_Firestore } from "./ad.types";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { craftAffiliateAttributionUrl } from "../mmp/mmp";
+import { getOffer } from "./offer";
+import { manifest } from "../../manifest";
 
 const env = process.env.NODE_ENV || "development";
 
@@ -121,7 +123,7 @@ export const decideAdToServe = async ({
     flightID: flight.id,
     placement: matchingAdSet.placement,
     pixelUrl: flight.pixelUrl,
-    clickDestination: flight.pixelUrl,
+    clickDestination: flight.clickUrl,
     creative: {
       adID: ad.creative.adID,
       advertiserID: ad.creative.advertiserID,
@@ -177,7 +179,7 @@ export const createFlight = async (
     adSetID: payload.adSetID,
     offerID: payload.offerID,
     placement: payload.placement,
-    campaignID: payload.campaignID,
+    // campaignID: payload.campaignID,
     advertiserID: offer.advertiserID,
     tournamentID: payload.tournamentID,
     sessionID: payload.sessionId,
@@ -200,7 +202,7 @@ export const createFlight = async (
 };
 
 export const generatePixelUrl = (flightID: FlightID): string => {
-  const clickUrl = `https://${env}.track.lootbox.fund/pixel.png?flightID=${flightID}`;
+  const clickUrl = `${manifest.storage.buckets.pixel.accessUrl}/${manifest.storage.buckets.pixel.files.adTrackingPixel}?flightID=${flightID}`;
   return clickUrl;
 };
 
@@ -211,9 +213,11 @@ export const generateClickUrl = (
   destinationUrl: string;
 } => {
   const destinationUrl = craftAffiliateAttributionUrl(flight);
-  const clickUrl = `https://${env}.redirect.lootbox.fund/redirect.html?flightID=${
-    flight.id
-  }&destination=${encodeURIComponent(destinationUrl)}`;
+
+  const clickUrl = `${manifest.storage.buckets.redirectPage.accessUrl}/${
+    manifest.storage.buckets.redirectPage.files.page
+  }?flightID=${flight.id}&destination=${encodeURIComponent(destinationUrl)}`;
+
   return {
     clickUrl,
     destinationUrl,
@@ -296,7 +300,10 @@ export const matchUserToOfferAndAdSetBasedOnTargetingParams = async ({
   userID: UserID;
   offerIDs: OfferID[];
   adSets: AdSet_Firestore[];
-}): Promise<{ offerID: OfferID; adSet: AdSet_Firestore }> => {
+}): Promise<{
+  offerID: OfferID;
+  adSet: AdSet_Firestore;
+}> => {
   let matchingOfferID: OfferID | undefined;
   const matchingAdSet =
     adSets.find((adSet) => {

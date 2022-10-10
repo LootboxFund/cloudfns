@@ -1,6 +1,7 @@
 import { db } from "../firebase";
 import { Ad, AdEventAction } from "../graphql/generated/types";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
+import { logger } from "firebase-functions";
 import {
     AdEventID,
     AdEvent_Firestore,
@@ -10,6 +11,8 @@ import {
     Collection,
     SessionID,
     AdEventNonce,
+    OfferID,
+    Activation_Firestore,
 } from "@wormgraph/helpers";
 
 export const getAdById = async (id: AdID): Promise<Ad | undefined> => {
@@ -79,6 +82,8 @@ export const createAdEvent = async ({
 
     const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: adEventRef.id as AdEventID };
 
+    logger.log("about to make ad event  ", documentWithId);
+
     await adEventRef.set(documentWithId);
 
     return documentWithId;
@@ -143,4 +148,22 @@ export const getAdEventsByNonce = async (
     } else {
         return snapshot.docs.map((doc) => doc.data());
     }
+};
+
+export const listActivationsForOffer = async (offerID: OfferID): Promise<Activation_Firestore[]> => {
+    const activationsRef = db
+        .collection(Collection.Activation)
+        .where("offerID", "==", offerID) as Query<Activation_Firestore>;
+
+    const activationItems = await activationsRef.get();
+
+    if (activationItems.empty) {
+        return [];
+    }
+
+    const activeActivations = activationItems.docs.map((doc) => {
+        const data = doc.data();
+        return data;
+    });
+    return activeActivations;
 };

@@ -49,6 +49,7 @@ export const convertReferralDBToGQL = (
     id: referral.id,
     referrerId: referral.referrerId,
     creatorId: referral.creatorId,
+    promoterId: referral.promoterId,
     slug: referral.slug,
     tournamentId: referral.tournamentId,
     campaignName: referral.campaignName,
