@@ -183,6 +183,7 @@ export const createActivation = async (
     description: payload.description || "",
     pricing: payload.pricing,
     status: payload.status,
+    mmp: payload.mmp,
     mmpAlias: payload.mmpAlias,
     offerID: payload.offerID as OfferID,
     order: payload.order || 9,
@@ -247,9 +248,6 @@ export const editActivation = async (
   }
   if (actInput && actInput.status) {
     updatePayload.status = actInput.status as ActivationStatus;
-  }
-  if (actInput && actInput.mmpAlias) {
-    updatePayload.mmpAlias = actInput.mmpAlias;
   }
   if (actInput && actInput.order) {
     updatePayload.order = actInput.order;

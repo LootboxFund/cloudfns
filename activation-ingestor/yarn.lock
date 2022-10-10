@@ -1916,20 +1916,20 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.1.14-afn-alpha4":
-  version "0.1.14-afn-alpha4"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.1.14-afn-alpha4.tgz#d21256e54e2068418668dfc2a2ed63af6fd26973"
-  integrity sha512-h9Tv6tZ3lG8POy2GiZFH1qKwatoOjUGBCXLwjkfR4HiKkxB7JlOl3bgP75/xEXdVHSbcvj12dm93uQjsF2fCzw==
+"@wormgraph/helpers@0.2.0-afn-alpha106":
+  version "0.2.0-afn-alpha106"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha106.tgz#f2f0aed628f5c42dd38f2cc412b512b0dd657521"
+  integrity sha512-iNJraM+oxwbgLT2QJUMRam2dslQXWFD5rrnb/DkZstkt7UueX0BFoOIMR47YLVOCMFgM06wYB2vCVU0fIPot/Q==
   dependencies:
+    "@wormgraph/manifest" "0.4.0-afm-alpha1"
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.2.0-afn-alpha29":
-  version "0.2.0-afn-alpha29"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha29.tgz#638d2dbcc69944bf9d19deb50d9b8964f2cac281"
-  integrity sha512-yPe0vIzOVX8a60mraOG6cZVP4OHyqcYheA4EPpkwzf/jkzeXeKq4AQirWEAhXtqK71lra9y3g92qxlBjSwqzUA==
+"@wormgraph/helpers@0.2.0-afn-alpha89":
+  version "0.2.0-afn-alpha89"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha89.tgz#e0d708ae8225f5f0ce5a3e65e7c3bd493e5a1778"
+  integrity sha512-Kpk0U9Fvg6c0S7FABdxCGaMMaVqSDzctG7/TvpzEGj03f9PM3EZDNaVtmC9qnZTnK9OqDK+iVV1h8WQfbzYqvg==
   dependencies:
-    "@wormgraph/helpers" "0.1.14-afn-alpha4"
     "@wormgraph/manifest" "0.4.0-afm-alpha1"
     axios "0.25.0"
     lodash "4.17.21"
@@ -1941,12 +1941,12 @@
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
-"@wormgraph/manifest@0.4.0-afm-alpha5":
-  version "0.4.0-afm-alpha5"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha5.tgz#150e70e7a9e02e0cb27ad6f493e615e3970beb81"
-  integrity sha512-V5xdhH/5p8qkVqjDXB6Zwj+BamN1beTfZdE+v0li2FDdrrqTw6KmCOpQsTP4Ahk2bJbpIeU2uVDilkXbZ34pww==
+"@wormgraph/manifest@0.4.0-afm-alpha19":
+  version "0.4.0-afm-alpha19"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha19.tgz#593e30d390e7102ad753b0179850377e850578d6"
+  integrity sha512-r42nfZDiki3RFPxax5xammUVRGk3tK1XmNuCSI082CXjBNwUyMQakf0ICl2ikXDfwMYpOqnz6MX8fAut+1jtSw==
   dependencies:
-    "@wormgraph/helpers" "0.1.10"
+    "@wormgraph/helpers" "0.2.0-afn-alpha89"
 
 abort-controller@^3.0.0:
   version "3.0.0"

@@ -11,6 +11,8 @@ import {
     Collection,
     SessionID,
     AdEventNonce,
+    OfferID,
+    Activation_Firestore,
 } from "@wormgraph/helpers";
 
 export const getAdById = async (id: AdID): Promise<Ad | undefined> => {
@@ -147,4 +149,22 @@ export const getAdEventsByNonce = async (
     } else {
         return snapshot.docs.map((doc) => doc.data());
     }
+};
+
+export const listActivationsForOffer = async (offerID: OfferID): Promise<Activation_Firestore[]> => {
+    const activationsRef = db
+        .collection(Collection.Activation)
+        .where("offerID", "==", offerID) as Query<Activation_Firestore>;
+
+    const activationItems = await activationsRef.get();
+
+    if (activationItems.empty) {
+        return [];
+    }
+
+    const activeActivations = activationItems.docs.map((doc) => {
+        const data = doc.data();
+        return data;
+    });
+    return activeActivations;
 };

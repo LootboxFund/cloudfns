@@ -48,8 +48,10 @@ import {
   getUser,
   getCompletedClaimsForReferral,
   getLootbox,
+  getAffiliate,
 } from "../../../api/firestore";
 import {
+  AffiliateID,
   ClaimID,
   LootboxID,
   LootboxStatus_Firestore,
@@ -382,11 +384,22 @@ const ReferralResolvers: Resolvers = {
       }
 
       try {
+        let userIdFromPromoter;
+        let promoterIdToSet;
+        if (payload.promoterId) {
+          const affiliate = await getAffiliate(
+            payload.promoterId as AffiliateID
+          );
+          if (affiliate) {
+            userIdFromPromoter = affiliate.userID;
+            promoterIdToSet = affiliate.id;
+          }
+        }
         const referrals = await Promise.allSettled(
           Array.from(Array(payload.numReferrals).keys()).map(async () => {
-            const referrer = (payload.referrerId || context.userId) as
-              | UserID
-              | undefined;
+            const referrer = (userIdFromPromoter ||
+              payload.referrerId ||
+              context.userId) as UserID | undefined;
             const creator = context.userId as UserIdpID | undefined;
             if (!referrer) {
               console.error("Requested referrer not found", referrer);
@@ -414,6 +427,7 @@ const ReferralResolvers: Resolvers = {
             const res = await createReferral({
               slug,
               referrerId: referrer,
+              promoterId: promoterIdToSet,
               creatorId: creator as unknown as UserID,
               campaignName,
               type: convertReferralTypeGQLToDB(payload.type),
@@ -568,13 +582,24 @@ const ReferralResolvers: Resolvers = {
         }
 
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
-        const referrerIdToSet = payload.referrerId
+        let referrerIdToSet = payload.referrerId
           ? (payload.referrerId as UserID)
           : (context.userId as unknown as UserID);
+        let promoterIdToSet;
+        if (payload.promoterId) {
+          const affiliate = await getAffiliate(
+            payload.promoterId as AffiliateID
+          );
+          if (affiliate) {
+            referrerIdToSet = affiliate.userID;
+            promoterIdToSet = affiliate.id;
+          }
+        }
 
         const referral = await createReferral({
           slug,
           referrerId: referrerIdToSet,
+          promoterId: promoterIdToSet,
           creatorId: context.userId as unknown as UserID,
           campaignName,
           type: convertReferralTypeGQLToDB(requestedReferralType),
@@ -652,6 +677,7 @@ const ReferralResolvers: Resolvers = {
           claimType,
           referralCampaignName: referral.campaignName,
           referralId: referral.id as ReferralID,
+          promoterId: referral.promoterId,
           tournamentId: referral.tournamentId as TournamentID,
           referrerId: referral.referrerId as unknown as UserIdpID,
           referralSlug: payload.referralSlug as ReferralSlug,

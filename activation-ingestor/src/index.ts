@@ -1,6 +1,7 @@
 import * as express from "express";
 import { trackAppsFlyerActivation } from "./lib/mmp/appsflyer";
 import { trackManualActivation } from "./lib/mmp/manual";
+import { trackLootboxAppWebsiteVisitActivation } from "./lib/mmp/lootbox-app";
 const app = express();
 const bodyParser = require("body-parser");
 const url = require("url");
@@ -33,6 +34,27 @@ app.get("/", (req, res) => {
   res.send("LOOTBOX Activation Event Ingestor");
 });
 
+app.post("/lootbox-app/website-visit", async (req, res) => {
+  // import { ActivationIngestorRoute_Manual_Body } from "@wormgraph/helpers"
+  // interface ActivationIngestorRoute_LootboxAppWebsiteVisit_Body {
+  //   flightID: FlightID
+  //   mmpAlias: string
+  //   activationID: ActivationID
+  // }
+  console.log(`--- /lootbox-app/website-visit ---`);
+  const trackedEvent = await trackLootboxAppWebsiteVisitActivation(req.body);
+  if (trackedEvent) {
+    console.log(`--- tracked the event! ${trackedEvent.id} ---`);
+    res.json({
+      message: `Successfully received activation event of Lootbox App Website Visit with flightID=${trackedEvent.flightID} and AdEventID=${trackedEvent.id}`,
+    });
+  } else {
+    res.json({
+      message: `Failed to track activation event for flight ${req.body.flightID}`,
+    });
+  }
+});
+
 app.get("/appsflyer", async (req, res) => {
   const trackedEvent = await trackAppsFlyerActivation(req);
   res.json({
@@ -40,16 +62,18 @@ app.get("/appsflyer", async (req, res) => {
   });
 });
 
-app.get("/manual", async (req, res) => {
-  // interface manualActivationPostbackPayload {
-  //   userID?: UserID;
-  //   userEmail?: string;
-  //   userPhone?: string;
-  //   offerID?: OfferID;
-  //   activationID?: ActivationID;
-  //   activationEventMmpAlias?: MMPAlias;
+app.post("/manual", async (req, res) => {
+  // import { ActivationIngestorRoute_Manual_Body } from "@wormgraph/helpers"
+  // interface ActivationIngestorRoute_Manual_Body {
+  //   activationID: ActivationID
+  //   userID?: UserID
+  //   userEmail?: string
+  //   userPhone?: string
+  //   offerID?: OfferID
+  //   tournamentID?: TournamentID
+  //   activationEventMmpAlias?: string
   // }
-  const trackedEvent = await trackManualActivation(req);
+  const trackedEvent = await trackManualActivation(req.body);
   res.json({
     message: `Successfully received activation event from manual entry with AdEventID=${trackedEvent.id}`,
   });

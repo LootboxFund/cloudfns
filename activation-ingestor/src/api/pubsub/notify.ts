@@ -5,6 +5,9 @@ import { manifest } from "../../manifest";
 export const notifyPubSubOfBillableActivation = async (
   adEventID: AdEventID
 ) => {
+  console.log(
+    `--- Notifying PubSub called ${manifest.cloudFunctions.pubsubBillableActivationEvent.topic} from project ${manifest.firebase.projectId}`
+  );
   const pubsub = new PubSub({ projectId: manifest.firebase.projectId });
   const topic = pubsub.topic(
     manifest.cloudFunctions.pubsubBillableActivationEvent.topic

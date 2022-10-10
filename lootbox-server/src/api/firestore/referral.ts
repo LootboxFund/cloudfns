@@ -20,6 +20,7 @@ import {
   Referral_Firestore,
   Claim_Firestore,
   LootboxMintWhitelistID,
+  AffiliateID,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -76,6 +77,7 @@ export const getReferralById = async (
 interface CreateReferralCall {
   slug: ReferralSlug;
   referrerId: UserID;
+  promoterId?: AffiliateID;
   creatorId: UserID;
   campaignName: string;
   tournamentId: TournamentID;
@@ -106,6 +108,10 @@ export const createReferral = async (
     nConversions: 0,
   };
 
+  if (!!req.promoterId) {
+    newReferral.promoterId = req.promoterId;
+  }
+
   if (!!req.seedLootboxID) {
     newReferral.seedLootboxID = req.seedLootboxID;
   }
@@ -124,6 +130,7 @@ interface CreateClaimCall {
   tournamentId: TournamentID;
   tournamentName: string;
   referrerId: UserID | null;
+  promoterId?: AffiliateID | null;
   referralCampaignName: string;
   referralSlug: ReferralSlug;
   rewardFromClaim?: ClaimID;
@@ -184,6 +191,10 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
 
   if (!!req.claimerUserId) {
     newClaim.claimerUserId = req.claimerUserId;
+  }
+
+  if (!!req.promoterId) {
+    newClaim.promoterId = req.promoterId;
   }
 
   if (!!req.lootboxName) {
@@ -250,6 +261,7 @@ interface CreateCreateClaimReq {
   tournamentName: string;
   referralCampaignName: string;
   referrerId: UserIdpID;
+  promoterId?: AffiliateID;
   referralSlug: ReferralSlug;
   referralType: ReferralType_Firestore;
   claimType: ClaimType_Firestore;
@@ -265,6 +277,7 @@ export const createStartingClaim = async (
     referralId: req.referralId,
     tournamentId: req.tournamentId,
     referrerId: req.referrerId as unknown as UserID,
+    promoterId: req.promoterId,
     referralSlug: req.referralSlug,
     referralCampaignName: req.referralCampaignName,
     tournamentName: req.tournamentName,
@@ -281,6 +294,7 @@ export const createStartingClaim = async (
 interface CreateRewardClaimReq {
   referralId: ReferralID;
   claimerId: UserID;
+  promoterId?: AffiliateID;
   referralCampaignName: string;
   tournamentId: TournamentID;
   tournamentName: string;
@@ -302,6 +316,7 @@ export const createRewardClaim = async (
   return await _createClaim({
     referralCampaignName: req.referralCampaignName,
     referralId: req.referralId,
+    promoterId: req.promoterId,
     tournamentId: req.tournamentId,
     referralSlug: req.referralSlug,
     rewardFromClaim: req.rewardFromClaim,

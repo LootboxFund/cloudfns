@@ -40,6 +40,7 @@ const ReferralTypeDefs = gql`
     referralId: ID!
     referralSlug: ID!
     referralType: ReferralType
+    promoterId: ID
     tournamentId: ID!
     tournamentName: String
     whitelistId: ID
@@ -77,6 +78,7 @@ const ReferralTypeDefs = gql`
   type Referral {
     id: ID!
     referrerId: ID!
+    promoterId: ID
     creatorId: ID!
     slug: ID!
     tournamentId: ID!
@@ -109,6 +111,7 @@ const ReferralTypeDefs = gql`
     numReferrals: Int!
     campaignName: String
     referrerId: ID # If null / undefined, uses the caller user id
+    promoterId: ID # used for billing
     partyBasketId: ID # Optional
     lootboxID: ID # Optional
   }
@@ -121,6 +124,7 @@ const ReferralTypeDefs = gql`
     isRewardDisabled: Boolean @deprecated(reason: "Use referral.type instead")
     type: ReferralType # todo: make this required
     referrerId: ID # If null / undefined, uses the caller user id
+    promoterId: ID # used for billing
   }
 
   input CompleteClaimPayload {

@@ -36,14 +36,18 @@ import {
     LootboxStatus_Firestore,
     Wallet_Firestore,
     LootboxID,
+    MeasurementPartnerType,
+    tableActivationIngestorRoutes,
+    ActivationIngestorRoute_LootboxAppWebsiteVisit_Body,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
-import { reportViewToMMP } from "./api/mmp/mmp";
+import { checkIfOfferIncludesLootboxAppWebsiteVisit, reportViewToMMP } from "./api/mmp/mmp";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
 import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
 import { getUserWallets } from "./api/firestore/user";
+import axios from "axios";
 
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -392,7 +396,6 @@ export const pubsubPixelTracking = functions.pubsub
                 nonce,
                 timeElapsed,
             });
-
             logger.info("Successfully created ad event", { id: createdEvent.id, ad: flight.adID });
         } catch (err) {
             logger.error("Pubsub error", err);
@@ -424,6 +427,24 @@ export const pubsubPixelTracking = functions.pubsub
                     // Recall, we previously just made an ad event so there should be one
                     updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
                 }
+
+                // Check if any of the activations are type of "ClickToWebsite"
+                const { id, mmpAlias } = await checkIfOfferIncludesLootboxAppWebsiteVisit(flight.offerID);
+                if (id && mmpAlias) {
+                    console.log(`Offer ${flight.offerID} has a Lootbox App Website Visit MMP`);
+                    const info: ActivationIngestorRoute_LootboxAppWebsiteVisit_Body = {
+                        flightID: flight.id,
+                        activationID: id,
+                        mmpAlias,
+                    };
+                    await axios({
+                        method: "post",
+                        url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+                            tableActivationIngestorRoutes[MeasurementPartnerType.LootboxAppWebsiteVisit].path
+                        }`,
+                        data: info,
+                    });
+                }
             } catch (err) {
                 logger.error(err);
                 // Just fail silently
@@ -451,8 +472,11 @@ export const pubsubBillableActivationEvent = functions.pubsub
             topic: manifest.cloudFunctions.pubsubBillableActivationEvent.topic,
             message,
         });
+        console.log("Message = ", message);
+        console.log("Message.data = ", message.data);
         // Get the AdEvent from firestore
-        const AdEventID = message.data;
+        const AdEventID = Buffer.from(message.data, "base64").toString().trim();
+        console.log(`---- AdEventID = ${AdEventID}`);
         const adEventRef = db.collection(Collection.AdEvent).doc(AdEventID) as DocumentReference<AdEvent_Firestore>;
         const adEventSnapshot = await adEventRef.get();
         if (!adEventSnapshot.exists) {
@@ -462,8 +486,10 @@ export const pubsubBillableActivationEvent = functions.pubsub
         if (!adEvent) {
             throw Error(`AdEvent with id ${AdEventID} was undefined`);
         }
+        console.log("Got the ad event! ", adEvent);
         // Generate the Memos
         const memos = await generateMemoBills(adEvent);
+        console.log("---- ALL MEMO MADE");
         console.log(memos);
         // end
         return;
