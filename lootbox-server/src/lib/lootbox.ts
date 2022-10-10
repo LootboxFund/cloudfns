@@ -291,6 +291,7 @@ export const convertMintWhitelistSignatureDBToGQL = (
     deletedAt: data.deletedAt || null,
     nonce: data.nonce,
     digest: data.digest,
+    lootboxTicketID: data.lootboxTicketID,
   };
 
   return res;
