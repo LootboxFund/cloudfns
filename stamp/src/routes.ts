@@ -45,35 +45,44 @@ router.post(
     res: express.Response<StampNewLootboxResponse>,
     next
   ) => {
-    const { secret } = req.headers;
-    const verifiedSecret = await getAuthenticationSecret();
-    if (secret !== verifiedSecret) {
-      return res.status(401).json({
-        message: "Unauthorized",
+    try {
+      const { secret } = req.headers;
+      const verifiedSecret = await getAuthenticationSecret();
+      if (secret !== verifiedSecret) {
+        return res.status(401).json({
+          message: "Unauthorized",
+          stamp: "",
+        });
+      }
+      const tempLocalPath = `/tmp/image.png`;
+      const {
+        backgroundImage,
+        logoImage,
+        themeColor,
+        name,
+        lootboxAddress,
+        chainIdHex,
+      } = req.body;
+      const linkToImage = await generateImage(tempLocalPath, {
+        backgroundImage,
+        logoImage,
+        themeColor,
+        name,
+        lootboxAddress,
+        chainIdHex,
+      });
+      res.json({
+        message: "Created stamp!",
+        stamp: linkToImage,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Internal Server Error",
         stamp: "",
       });
     }
-    const tempLocalPath = `/tmp/image.png`;
-    const {
-      backgroundImage,
-      logoImage,
-      themeColor,
-      name,
-      lootboxAddress,
-      chainIdHex,
-    } = req.body;
-    const linkToImage = await generateImage(tempLocalPath, {
-      backgroundImage,
-      logoImage,
-      themeColor,
-      name,
-      lootboxAddress,
-      chainIdHex,
-    });
-    res.json({
-      message: "Created stamp!",
-      stamp: linkToImage,
-    });
+    return;
   }
 );
 
@@ -84,57 +93,67 @@ router.post(
     res: express.Response<StampNewTicketResponse>,
     next
   ) => {
-    const { secret } = req.headers;
-    const verifiedSecret = await getAuthenticationSecret();
-    if (secret !== verifiedSecret) {
-      return res.status(401).json({
-        message: "Unauthorized",
+    try {
+      const { secret } = req.headers;
+      const verifiedSecret = await getAuthenticationSecret();
+      if (secret !== verifiedSecret) {
+        return res.status(401).json({
+          message: "Unauthorized",
+          stamp: "",
+          uri: "",
+        });
+      }
+
+      // TODO Validate that the ticket has been minted according to the smart contract
+
+      const tempLocalPath = `/tmp/image.png`;
+      const {
+        ticketID,
+        backgroundImage,
+        logoImage,
+        themeColor,
+        name,
+        lootboxAddress,
+        chainIdHex,
+        metadata,
+      } = req.body;
+
+      const linkToImage = await generateTicketImage(tempLocalPath, {
+        ticketID,
+        backgroundImage,
+        logoImage,
+        themeColor,
+        name,
+        lootboxAddress,
+        chainIdHex,
+      });
+
+      const updatedMetadata: LootboxTicketMetadataV2_Firestore = {
+        ...metadata,
+        image: linkToImage,
+      };
+
+      const linkToURI = await saveTicketMetadataToGBucket({
+        alias: `${lootboxAddress}-${ticketID}`,
+        fileName: `${lootboxAddress.toLowerCase()}/${ticketID}.json`,
+        data: JSON.stringify(updatedMetadata),
+        bucket: manifest.storage.buckets.data.id,
+      });
+
+      res.json({
+        message: "Created stamp!",
+        stamp: linkToImage,
+        uri: linkToURI,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Internal Server Error",
         stamp: "",
         uri: "",
       });
     }
-
-    // TODO Validate that the ticket has been minted according to the smart contract
-
-    const tempLocalPath = `/tmp/image.png`;
-    const {
-      ticketID,
-      backgroundImage,
-      logoImage,
-      themeColor,
-      name,
-      lootboxAddress,
-      chainIdHex,
-      metadata,
-    } = req.body;
-
-    const linkToImage = await generateTicketImage(tempLocalPath, {
-      ticketID,
-      backgroundImage,
-      logoImage,
-      themeColor,
-      name,
-      lootboxAddress,
-      chainIdHex,
-    });
-
-    const updatedMetadata: LootboxTicketMetadataV2_Firestore = {
-      ...metadata,
-      image: linkToImage,
-    };
-
-    const linkToURI = await saveTicketMetadataToGBucket({
-      alias: `${lootboxAddress}-${ticketID}`,
-      fileName: `${lootboxAddress.toLowerCase()}/${ticketID}.json`,
-      data: JSON.stringify(updatedMetadata),
-      bucket: manifest.storage.buckets.data.id,
-    });
-
-    res.json({
-      message: "Created stamp!",
-      stamp: linkToImage,
-      uri: linkToURI,
-    });
+    return;
   }
 );
 
