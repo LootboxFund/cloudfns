@@ -38,7 +38,7 @@ export const Ticket = (props: TicketProps) => {
   const networkName = chainIdHexToName(chainIdHex);
   return (
     <section style={StyleTicketContainer({ backgroundImage })}>
-      <div style={StyleTicketTag()}>
+      <div style={StyleTagHeader()}>
         <$Horizontal verticalCenter style={{ textAlign: "center" }}>
           Fan rewards powered by LOOTBOX 🎁
         </$Horizontal>
