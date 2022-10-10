@@ -614,8 +614,10 @@ const ReferralResolvers: Resolvers = {
             : undefined,
           isPostCosmic: !!tournament.isPostCosmic,
         });
-
-        return { referral: convertReferralDBToGQL(referral) };
+        const rf = convertReferralDBToGQL(referral);
+        console.log(`rf ==== `);
+        console.log(rf);
+        return { referral: rf };
       } catch (err) {
         return {
           error: {
