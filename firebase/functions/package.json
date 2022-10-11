@@ -14,16 +14,24 @@
         "logs": "firebase functions:log"
     },
     "engines": {
-        "node": "14"
+        "node": "16"
     },
     "main": "lib/index.js",
     "dependencies": {
+        "@ffmpeg-installer/ffmpeg": "^1.1.0",
+        "@google-cloud/video-transcoder": "^2.2.2",
+        "@types/fluent-ffmpeg": "^2.1.20",
+        "@types/mkdirp": "^1.0.2",
         "@wormgraph/helpers": "0.2.0-afn-alpha108",
-        "@wormgraph/manifest": "0.4.0-afm-alpha20",
+        "@wormgraph/manifest": "0.4.0-afm-alpha21",
         "axios": "^1.1.2",
         "ethers": "^5.7.1",
+        "ffmpeg-static": "^5.1.0",
         "firebase-admin": "^10.0.2",
-        "firebase-functions": "^3.23.0"
+        "firebase-functions": "^3.23.0",
+        "fluent-ffmpeg": "^2.1.2",
+        "mkdirp": "^1.0.4",
+        "mkdirp-promise": "^5.0.1"
     },
     "devDependencies": {
         "@graphql-codegen/cli": "^2.6.2",
