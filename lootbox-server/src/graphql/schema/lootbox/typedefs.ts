@@ -64,6 +64,23 @@ const LootboxTypeDefs = gql`
     digest: ID!
   }
 
+  type LootboxUserClaimPageInfo {
+    endCursor: Timestamp # Time of last claim timestamps.createdAt
+    hasNextPage: Boolean!
+  }
+
+  type LootboxUserClaimPageInfoResponse {
+    _lootboxID: ID!
+    totalCount: Int
+    pageInfo: ClaimPageInfo!
+    edges: [ClaimEdge!]!
+  }
+
+  input UserClaimsCursor {
+    startAfter: Timestamp
+    endBefore: Timestamp
+  }
+
   type Lootbox {
     # Immutable stuff
     id: ID!
@@ -95,10 +112,10 @@ const LootboxTypeDefs = gql`
     runningCompletedClaims: Int!
 
     # GQL layer
-    userClaims: [Claim!]
-    # mintWhitelistSignatures: [MintWhitelistSignature!]
-    # tournamentSnapshots: [LootboxTournamentSnapshot!]
-
+    userClaims(
+      first: Int!
+      cursor: UserClaimsCursor
+    ): LootboxUserClaimPageInfoResponse
     # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
     partyBaskets: [PartyBasket!]

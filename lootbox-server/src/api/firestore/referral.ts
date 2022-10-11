@@ -4,6 +4,7 @@ import {
   ClaimEdge,
   ClaimPageInfo,
   User,
+  PageInfo,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -21,6 +22,7 @@ import {
   Claim_Firestore,
   LootboxMintWhitelistID,
   AffiliateID,
+  LootboxTicketID_Web3,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -32,7 +34,7 @@ import {
   Query,
   Timestamp,
 } from "firebase-admin/firestore";
-import { Address, Collection, WhitelistSignatureID } from "@wormgraph/helpers";
+import { Address, Collection } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 import { getUser } from "./user";
 import { getUserWallets } from "./wallet";
@@ -824,4 +826,75 @@ export const getUserClaimsForLootbox = async (
   } else {
     return snapshot.docs.map((doc) => doc.data());
   }
+};
+
+const buildBaseLootboxUserClaimQuery = (
+  lootboxID: LootboxID,
+  userID: UserID
+) => {
+  return db
+    .collectionGroup(Collection.Claim)
+    .where("status", "==", ClaimStatus_Firestore.complete)
+    .where("claimerUserId", "==", userID)
+    .where("lootboxID", "==", lootboxID)
+    .orderBy("timestamps.createdAt", "desc") as Query<Claim_Firestore>;
+};
+
+export const getUserClaimCountForLootbox = async (
+  lootboxID: LootboxID,
+  userID: UserID
+): Promise<number> => {
+  const snapshot = buildBaseLootboxUserClaimQuery(lootboxID, userID);
+  const res = await snapshot.get();
+  return res.size;
+};
+
+export const paginateLootboxUserClaims = async (
+  lootboxID: LootboxID,
+  userID: UserID,
+  limit: number,
+  cursor?: {
+    endBefore?: number | null; // timestamps.createdAt
+    startAfter?: number | null; // timestamps.createdAt
+  }
+): Promise<{
+  totalCount: null;
+  edges: ClaimEdge[];
+  pageInfo: ClaimPageInfo;
+}> => {
+  let lootboxClaimQuery = buildBaseLootboxUserClaimQuery(lootboxID, userID);
+
+  if (cursor?.startAfter) {
+    // Going forward 1 page
+    lootboxClaimQuery = lootboxClaimQuery
+      .startAfter(Number(cursor.startAfter))
+      .limit(limit);
+  } else if (cursor?.endBefore) {
+    // Going back 1 page
+    lootboxClaimQuery = lootboxClaimQuery
+      .endBefore(Number(cursor.endBefore))
+      .limitToLast(limit);
+  }
+  const claimsSnapshot = await lootboxClaimQuery.get();
+
+  const edges: ClaimEdge[] = [];
+  for (const claimEdge of claimsSnapshot.docs) {
+    const data = claimEdge.data();
+    if (data) {
+      edges.push({
+        cursor: data.timestamps.createdAt,
+        node: convertClaimDBToGQL(data),
+      });
+    }
+  }
+  const pageInfo: ClaimPageInfo = {
+    hasNextPage: true,
+    endCursor: edges[edges.length - 1]?.cursor || null,
+  };
+
+  return {
+    totalCount: null,
+    edges,
+    pageInfo,
+  };
 };
