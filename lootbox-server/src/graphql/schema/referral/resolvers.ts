@@ -58,6 +58,7 @@ import {
   LootboxID,
   LootboxMintWhitelistID,
   LootboxStatus_Firestore,
+  Lootbox_Firestore,
   PartyBasketID,
   ReferralID,
   ReferralSlug,
@@ -316,7 +317,7 @@ const ReferralResolvers: Resolvers = {
       const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
 
       let tournament: Tournament_Firestore | undefined;
-      let partyBasket: PartyBasket | undefined;
+      let lootbox: Lootbox_Firestore | undefined;
 
       // Tournament checks
       try {
@@ -353,6 +354,29 @@ const ReferralResolvers: Resolvers = {
         };
       }
 
+      if (!!payload.lootboxID) {
+        try {
+          lootbox = await getLootbox(payload.lootboxID as LootboxID);
+        } catch (err) {
+          console.log("error fetching lootbox", err);
+        }
+      }
+      if (
+        !!lootbox &&
+        (lootbox.status === LootboxStatus_Firestore.disabled ||
+          lootbox.status === LootboxStatus_Firestore.soldOut)
+      ) {
+        // Make sure the Lootbox is not disabled
+        return {
+          error: {
+            code: StatusCode.InvalidOperation,
+            message: "Lootbox is disabled or sold out",
+          },
+        };
+      }
+
+      // ################ DEPRECATED ################
+      let partyBasket: PartyBasket | undefined;
       // Party Basket checks
       if (!!payload.partyBasketId) {
         try {
@@ -378,6 +402,8 @@ const ReferralResolvers: Resolvers = {
           },
         };
       }
+
+      // ################################
 
       if (!!payload.referrerId) {
         try {
@@ -450,6 +476,7 @@ const ReferralResolvers: Resolvers = {
               campaignName,
               type: convertReferralTypeGQLToDB(payload.type),
               tournamentId: payload.tournamentId as TournamentID,
+              seedLootboxID: lootbox ? lootbox.id : undefined,
               seedPartyBasketId: payload.partyBasketId
                 ? (payload.partyBasketId as PartyBasketID)
                 : undefined,
