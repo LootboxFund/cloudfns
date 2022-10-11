@@ -13,6 +13,9 @@ import {
   GetLootboxByIdResponse,
   LootboxTicket,
   Claim,
+  LootboxUserClaimPageInfoResponse,
+  QueryUserClaimsArgs,
+  LootboxUserClaimsArgs,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -23,6 +26,8 @@ import {
   paginateLootboxFeedQuery,
   getTicket,
   getUserClaimsForLootbox,
+  paginateLootboxUserClaims,
+  getUserClaimCountForLootbox,
 } from "../../../api/firestore";
 import { Address, LootboxTicketID } from "@wormgraph/helpers";
 import { Context } from "../../server";
@@ -310,27 +315,56 @@ const LootboxResolvers: Resolvers = {
     },
   },
 
+  LootboxUserClaimPageInfoResponse: {
+    totalCount: async (
+      parent: LootboxUserClaimPageInfoResponse,
+      _,
+      context: Context
+    ): Promise<number | null> => {
+      if (!parent._lootboxID || !context.userId) {
+        return null;
+      }
+
+      return await getUserClaimCountForLootbox(
+        parent._lootboxID as LootboxID,
+        context.userId as unknown as UserID
+      );
+    },
+  },
+
   Lootbox: {
     userClaims: async (
       lootbox: Lootbox,
-      _,
+      { first, cursor }: LootboxUserClaimsArgs,
       context: Context
-    ): Promise<Claim[]> => {
-      if (!context.userId) {
-        return [];
+    ): Promise<LootboxUserClaimPageInfoResponse> => {
+      if (!context.userId || !lootbox.id) {
+        return {
+          _lootboxID: lootbox.id,
+          totalCount: null, // This gets filled by the resolver. We leave it out of this call to avoid an extra query
+          pageInfo: {
+            endCursor: null,
+            hasNextPage: false,
+          },
+          edges: [],
+        };
       }
+      const response = await paginateLootboxUserClaims(
+        lootbox.id as LootboxID,
+        context.userId as unknown as UserID,
+        first,
+        {
+          startAfter: cursor?.startAfter,
+          endBefore: cursor?.endBefore,
+        }
+      );
 
-      try {
-        const claims = await getUserClaimsForLootbox(
-          lootbox.id as LootboxID,
-          context.userId as unknown as UserID
-        );
-
-        return claims.map(convertClaimDBToGQL);
-      } catch (err) {
-        console.error(err);
-        return [];
-      }
+      return {
+        _lootboxID: lootbox.id,
+        totalCount: null, // This gets filled by the resolver. We leave it out of this call to avoid an extra query
+        pageInfo: response.pageInfo,
+        edges: response.edges,
+      };
     },
 
     // mintWhitelistSignatures: async (
@@ -430,20 +464,6 @@ const LootboxResolvers: Resolvers = {
       return null;
     },
   },
-
-  // BulkMintWhitelistResponse: {
-  //   __resolveType: (obj: BulkMintWhitelistResponse) => {
-  //     if ("signatures" in obj) {
-  //       return "BulkMintWhitelistResponseSuccess";
-  //     }
-
-  //     if ("error" in obj) {
-  //       return "ResponseError";
-  //     }
-
-  //     return null;
-  //   },
-  // },
 };
 
 const lootboxResolverComposition = {
@@ -452,7 +472,6 @@ const lootboxResolverComposition = {
   "Mutation.editPartyBasket": [isAuthenticated()],
   "Mutation.whitelistAllUnassignedClaims": [isAuthenticated()],
   "Mutation.editLootbox": [isAuthenticated()],
-  // "Mutation.bulkMintWhitelist": [isAuthenticated()],
   "Mutation.mintLootboxTicket": [isAuthenticated()],
 };
 
