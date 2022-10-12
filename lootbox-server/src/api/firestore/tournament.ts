@@ -43,6 +43,9 @@ import {
 } from "../../lib/tournament";
 import { LootboxDeprecated_Firestore } from "./lootbox.types";
 
+const placeholderImageOffer =
+  "https://media.istockphoto.com/vectors/thumbnail-image-vector-graphic-vector-id1147544807?k=20&m=1147544807&s=612x612&w=0&h=pBhz1dkwsCMq37Udtp9sfxbjaMl27JUapoyYpQm0anc=";
+
 export const getTournamentById = async (
   id: TournamentID
 ): Promise<Tournament_Firestore | undefined> => {
@@ -313,6 +316,7 @@ export const createTournament = async ({
     description: description || "",
     creatorId: creatorId as UserID,
     isPostCosmic: true,
+    coverPhoto: coverPhoto || placeholderImageOffer,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -322,10 +326,6 @@ export const createTournament = async ({
 
   if (!!prize) {
     tournament.prize = prize;
-  }
-
-  if (!!coverPhoto) {
-    tournament.coverPhoto = coverPhoto;
   }
 
   if (!!tournamentLink) {
