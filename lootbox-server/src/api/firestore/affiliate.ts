@@ -64,7 +64,14 @@ import {
 export const upgradeToAffiliate = async (
   userIdpID: UserIdpID
 ): Promise<Affiliate_Firestore> => {
-  console.log(`userIdpID: ${userIdpID}`);
+  const existingAffiliateRef = db
+    .collection(Collection.Affiliate)
+    .where("userID", "==", userIdpID);
+  const existingAffiliates = await existingAffiliateRef.get();
+  if (!existingAffiliates.empty) {
+    const exad = existingAffiliates.docs.map((doc) => doc.data())[0];
+    throw Error(`User is already an affiliate ${exad.id}`);
+  }
   const userRef = db
     .collection(Collection.User)
     .doc(userIdpID) as DocumentReference<User>;

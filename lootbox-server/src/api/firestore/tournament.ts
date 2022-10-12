@@ -310,7 +310,7 @@ export const createTournament = async ({
   const tournament: Tournament_Firestore = {
     id: tournamentRef.id as TournamentID,
     title,
-    description,
+    description: description || "",
     creatorId: creatorId as UserID,
     isPostCosmic: true,
     timestamps: {
@@ -334,6 +334,8 @@ export const createTournament = async ({
 
   if (!!tournamentDate) {
     tournament.tournamentDate = Number(tournamentDate);
+  } else {
+    tournament.tournamentDate = Number(new Date().getTime());
   }
 
   if (!!communityURL) {

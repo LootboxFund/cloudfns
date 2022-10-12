@@ -6,7 +6,6 @@ import {
   MutationEditWhitelistAffiliateToOfferArgs,
 
   // MutationRemoveWhitelistAffiliateToOfferArgs,
-  MutationUpgradeToAffiliateArgs,
   MutationWhitelistAffiliateToOfferArgs,
   // MutationWhitelistAffiliateToOfferArgs,
   QueryAffiliatePublicViewArgs,
@@ -213,7 +212,6 @@ const AffiliateResolvers: Resolvers = {
       args,
       context: Context
     ): Promise<UpgradeToAffiliateResponse> => {
-      console.log(context);
       if (!context.userId) {
         return {
           error: {

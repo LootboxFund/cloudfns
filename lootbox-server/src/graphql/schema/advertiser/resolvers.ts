@@ -24,7 +24,6 @@ import {
   MutationCreateConquestArgs,
   MutationUpdateAdvertiserDetailsArgs,
   MutationUpdateConquestArgs,
-  MutationUpgradeToAdvertiserArgs,
   QueryAdvertiserPublicViewArgs,
   QueryGetConquestArgs,
   QueryListConquestPreviewsArgs,
@@ -284,19 +283,24 @@ const AdvertiserResolvers: Resolvers = {
   Mutation: {
     upgradeToAdvertiser: async (
       _,
-      { payload }: MutationUpgradeToAdvertiserArgs,
+      args,
       context: Context
     ): Promise<UpgradeToAdvertiserResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You are not authenticated!",
+          },
+        };
+      }
       try {
-        const advertiser = await upgradeToAdvertiser(
-          payload.userID as UserID,
-          context.userId || (payload.userID as UserIdpID)
-        );
+        const advertiser = await upgradeToAdvertiser(context.userId);
         if (!advertiser) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No advertiser created for user ${payload.userID}`,
+              message: `No advertiser created for user ${context.userId}`,
             },
           };
         }

@@ -30,12 +30,12 @@ import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { TournamentPreview } from "../../graphql/generated/types";
 
 export const upgradeToAdvertiser = async (
-  userID: UserID,
   userIdpID: UserIdpID
 ): Promise<Advertiser_Firestore | undefined> => {
+  console.log(`userIdpID: ${userIdpID}`);
   const existingAdvertiserRef = db
     .collection(Collection.Advertiser)
-    .where("userID", "==", userID);
+    .where("userID", "==", userIdpID);
   const existingAdvertisers = await existingAdvertiserRef.get();
   if (!existingAdvertisers.empty) {
     const exad = existingAdvertisers.docs.map((doc) => doc.data())[0];
@@ -44,7 +44,7 @@ export const upgradeToAdvertiser = async (
 
   const userRef = db
     .collection(Collection.User)
-    .doc(userID) as DocumentReference<User>;
+    .doc(userIdpID) as DocumentReference<User>;
   const userSnapshot = await userRef.get();
   const user = userSnapshot.data() as User;
   const advertiserRef = db
@@ -52,7 +52,7 @@ export const upgradeToAdvertiser = async (
     .doc() as DocumentReference<Advertiser_Firestore>;
   const advertiser: Advertiser_Firestore = {
     id: advertiserRef.id as AdvertiserID,
-    userID: userID,
+    userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
     name: user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,

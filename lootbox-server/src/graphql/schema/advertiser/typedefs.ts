@@ -116,11 +116,8 @@ const AdvertiserTypeDefs = gql`
   }
 
   # ------ UpgradeToAdvertiser ------
-  input UpgradeToAdvertiserPayload {
-    userID: ID!
-  }
   type UpgradeToAdvertiserResponseSuccess {
-    advertiser: Advertiser
+    advertiser: Advertiser!
   }
   union UpgradeToAdvertiserResponse =
       UpgradeToAdvertiserResponseSuccess
@@ -135,7 +132,7 @@ const AdvertiserTypeDefs = gql`
     website: String
   }
   type UpdateAdvertiserDetailsResponseSuccess {
-    advertiser: Advertiser
+    advertiser: Advertiser!
   }
   union UpdateAdvertiserDetailsResponse =
       UpdateAdvertiserDetailsResponseSuccess
@@ -168,9 +165,7 @@ const AdvertiserTypeDefs = gql`
 
   extend type Mutation {
     # Upgrade a regular user and give them an advertiser account
-    upgradeToAdvertiser(
-      payload: UpgradeToAdvertiserPayload!
-    ): UpgradeToAdvertiserResponse!
+    upgradeToAdvertiser: UpgradeToAdvertiserResponse!
     # Update advertiser details
     updateAdvertiserDetails(
       advertiserID: ID!

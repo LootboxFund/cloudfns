@@ -231,11 +231,11 @@ const TournamentTypeDefs = gql`
 
   input CreateTournamentPayload {
     title: String!
-    description: String!
+    description: String
     tournamentLink: String
     coverPhoto: String
     prize: String
-    tournamentDate: Timestamp!
+    tournamentDate: Timestamp
     communityURL: String
     streams: [StreamInput!]
     organizer: ID
