@@ -3037,19 +3037,19 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.2.0-afn-alpha89":
-  version "0.2.0-afn-alpha89"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha89.tgz#e0d708ae8225f5f0ce5a3e65e7c3bd493e5a1778"
-  integrity sha512-Kpk0U9Fvg6c0S7FABdxCGaMMaVqSDzctG7/TvpzEGj03f9PM3EZDNaVtmC9qnZTnK9OqDK+iVV1h8WQfbzYqvg==
+"@wormgraph/helpers@0.2.0-afn-alpha109":
+  version "0.2.0-afn-alpha109"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha109.tgz#2dffe6d0fbcc34d8bdb0daa75594fb9664aeda67"
+  integrity sha512-1WwYOgooDv5m5SLp0pkpj00egsldpdOL2PFwzYsltwrbWKjgMLvr2y6C2nW+WyyqFGrsKASas2qX0H74njCISw==
   dependencies:
     "@wormgraph/manifest" "0.4.0-afm-alpha1"
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.2.0-afn-alpha98":
-  version "0.2.0-afn-alpha98"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha98.tgz#6c0308c0b6603e32c3e79af39ff44bdb5a3940ed"
-  integrity sha512-RvI+32apIXqq8m/5DWTEanYSDYhbm7CoStKhAzIDdmTS2pv2zmPmJH+0CVqpyt0Yki19c4i4o45tJG5UtgR37w==
+"@wormgraph/helpers@0.2.0-afn-alpha89":
+  version "0.2.0-afn-alpha89"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.2.0-afn-alpha89.tgz#e0d708ae8225f5f0ce5a3e65e7c3bd493e5a1778"
+  integrity sha512-Kpk0U9Fvg6c0S7FABdxCGaMMaVqSDzctG7/TvpzEGj03f9PM3EZDNaVtmC9qnZTnK9OqDK+iVV1h8WQfbzYqvg==
   dependencies:
     "@wormgraph/manifest" "0.4.0-afm-alpha1"
     axios "0.25.0"
@@ -3062,10 +3062,10 @@
   dependencies:
     "@wormgraph/helpers" "0.1.10"
 
-"@wormgraph/manifest@0.4.0-afm-alpha17":
-  version "0.4.0-afm-alpha17"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha17.tgz#4846b4db6ae3d7e6fd473b343a474084a59232e3"
-  integrity sha512-yTxQDB6LCbINEe3q6xKFE79XuZvu6qSDhUNQ/IMO/7hAV/OxVjEVo+m9h1uDoxqrfO9d2E6PFbC6PZ0mrbJVLg==
+"@wormgraph/manifest@0.4.0-afm-alpha22":
+  version "0.4.0-afm-alpha22"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.4.0-afm-alpha22.tgz#13ad7683f5d5863a76d487c371c25c9148200d14"
+  integrity sha512-0tL4dBJZUzUxGbSjmw1F1Waxu33J3jDaxIq49F0SHyLITCPSqOOn12Cc31Wz9BxcKMMAQ+PnECjTY9AujyQh6Q==
   dependencies:
     "@wormgraph/helpers" "0.2.0-afn-alpha89"
 
