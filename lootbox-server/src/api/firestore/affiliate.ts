@@ -62,12 +62,12 @@ import {
 } from "../identityProvider/firebase";
 
 export const upgradeToAffiliate = async (
-  userID: UserID,
   userIdpID: UserIdpID
 ): Promise<Affiliate_Firestore> => {
+  console.log(`userIdpID: ${userIdpID}`);
   const userRef = db
     .collection(Collection.User)
-    .doc(userID) as DocumentReference<User>;
+    .doc(userIdpID) as DocumentReference<User>;
   const userSnapshot = await userRef.get();
   const user = userSnapshot.data() as User;
   const affiliateRef = db
@@ -75,7 +75,7 @@ export const upgradeToAffiliate = async (
     .doc() as DocumentReference<Affiliate_Firestore>;
   const affiliate: Affiliate_Firestore = {
     id: affiliateRef.id as AffiliateID,
-    userID: userID,
+    userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
     name: user.username || `New Affiliate ${affiliateRef.id}`,
     description: "",

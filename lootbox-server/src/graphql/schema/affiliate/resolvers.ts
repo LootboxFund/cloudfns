@@ -210,20 +210,25 @@ const AffiliateResolvers: Resolvers = {
   Mutation: {
     upgradeToAffiliate: async (
       _,
-      { userID }: MutationUpgradeToAffiliateArgs,
+      args,
       context: Context
     ): Promise<UpgradeToAffiliateResponse> => {
       console.log(context);
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You are not authenticated!",
+          },
+        };
+      }
       try {
-        const affiliate = await upgradeToAffiliate(
-          userID as UserID,
-          context.userId || (userID as UserIdpID)
-        );
+        const affiliate = await upgradeToAffiliate(context.userId);
         if (!affiliate) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No affiliate created for user ${userID}`,
+              message: `No affiliate created for user ${context.userId}`,
             },
           };
         }

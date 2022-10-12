@@ -174,7 +174,7 @@ const AffiliateTypeDefs = gql`
 
   extend type Mutation {
     # Upgrade a regular user and give them an affiliate account
-    upgradeToAffiliate(userID: ID!): UpgradeToAffiliateResponse!
+    upgradeToAffiliate: UpgradeToAffiliateResponse!
     # Update an affiliate's profile
     updateAffiliateDetails(
       affiliateID: ID!
