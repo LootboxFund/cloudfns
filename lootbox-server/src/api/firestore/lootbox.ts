@@ -8,25 +8,18 @@ import { db } from "../firebase";
 import { LootboxFeedResponseSuccess } from "../../graphql/generated/types";
 import {
   Address,
-  ClaimID,
   Collection,
   UserID,
   LootboxMintWhitelistID,
   LootboxMintSignatureNonce,
-  LootboxTicketID_Web3,
   LootboxTicketID,
   LootboxTicket_Firestore,
   Lootbox_Firestore,
   LootboxStatus_Firestore,
   MintWhitelistSignature_Firestore,
-  LootboxTicketDigest,
 } from "@wormgraph/helpers";
 import { LootboxID } from "@wormgraph/helpers";
-import {
-  convertLootboxToSnapshot,
-  parseLootboxDB,
-  parseMintWhitelistSignature,
-} from "../../lib/lootbox";
+import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
 
 export const getLootbox = async (
   id: LootboxID
@@ -299,4 +292,23 @@ export const getMintWhistlistSignature = async (
   }
 
   return signature.data();
+};
+
+export const getLootboxByUserIDAndNonce = async (
+  userID: UserID,
+  nonce: LootboxMintSignatureNonce
+): Promise<Lootbox_Firestore | undefined> => {
+  const collectionRef = db
+    .collection(Collection.Lootbox)
+    .where("userID", "==", userID)
+    .where("nonce", "==", nonce)
+    .limit(1) as Query<Lootbox_Firestore>;
+
+  const collectionSnapshot = await collectionRef.get();
+
+  if (collectionSnapshot.empty) {
+    return undefined;
+  }
+
+  return collectionSnapshot.docs[0].data();
 };
