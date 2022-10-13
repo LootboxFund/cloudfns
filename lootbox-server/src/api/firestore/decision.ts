@@ -89,6 +89,12 @@ export const decideAdToServe = async ({
       adSets: matchingAdSetsForPlacement,
     });
 
+  if (!matchingAdSet.adIDs || matchingAdSet.adIDs.length === 0) {
+    throw Error(
+      `No ads found for adSet ${matchingAdSet.id} in tournament ${tournamentID}`
+    );
+  }
+
   // retrieve the right ad from this AdSet based on how we want to serve it
   // this is where we might look at frequency capping, etc.
   const { ad, advertiser } = await decideAdFromAdSetForUser({
@@ -277,6 +283,7 @@ export const getMatchingAdSetsForPlacement = async ({
   placement: Placement;
   adSetIDs: AdSetID[];
 }) => {
+  if (adSetIDs.length === 0) return [];
   const adSetsRef = db
     .collection(Collection.AdSet)
     .where("id", "in", adSetIDs) as Query<AdSet_Firestore>;
