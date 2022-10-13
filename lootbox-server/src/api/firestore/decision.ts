@@ -6,7 +6,6 @@ import {
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
-  AdFlight_Firestore,
   AdID,
   AdSetID,
   AdSetInTournamentStatus,
@@ -30,6 +29,7 @@ import { Advertiser_Firestore } from "./advertiser.type";
 import { craftAffiliateAttributionUrl } from "../mmp/mmp";
 import { getOffer } from "./offer";
 import { manifest } from "../../manifest";
+import { AdFlight_Firestore } from "@wormgraph/helpers";
 
 const env = process.env.NODE_ENV || "development";
 
@@ -99,19 +99,27 @@ export const decideAdToServe = async ({
     advertiserID: matchingAdSet.advertiserID,
   });
 
-  // create a flight to track this unique serving of this ad to this person at this time & place in the universe
-  const flight = await createFlight({
-    userID: userID as UserID,
-    adID: ad.id,
-    adSetID: matchingAdSet.id,
-    offerID: matchingOfferID,
-    placement: matchingAdSet.placement,
-    tournamentID: tournament.id,
-    organizerID: tournament.organizer,
-    promoterID: promoterID as AffiliateID,
-    claimID: claimID as ClaimID,
-    sessionId: sessionID as SessionID,
-  });
+  let flight: AdFlight_Firestore | undefined;
+  const existingFlightsForSession = await getExistingFlightsForSession(
+    sessionID as SessionID
+  );
+  if (existingFlightsForSession.length === 0) {
+    // create a flight to track this unique serving of this ad to this person at this time & place in the universe
+    flight = await createFlight({
+      userID: userID as UserID,
+      adID: ad.id,
+      adSetID: matchingAdSet.id,
+      offerID: matchingOfferID,
+      placement: matchingAdSet.placement,
+      tournamentID: tournament.id,
+      organizerID: tournament.organizer,
+      promoterID: promoterID as AffiliateID,
+      claimID: claimID as ClaimID,
+      sessionId: sessionID as SessionID,
+    });
+  } else {
+    flight = existingFlightsForSession[0];
+  }
 
   // return the ad to serve
   return {
@@ -369,4 +377,22 @@ export const decideAdFromAdSetForUser = async ({
 
   const ad = adCollectionItems.docs[0].data();
   return { ad, advertiser };
+};
+
+export const getExistingFlightsForSession = async (
+  sessionID: SessionID
+): Promise<AdFlight_Firestore[]> => {
+  const flightRef = db
+    .collection(Collection.Flight)
+    .where("sessionID", "==", sessionID) as Query<AdFlight_Firestore>;
+
+  const flightCollectionItems = await flightRef.get();
+
+  if (flightCollectionItems.empty) {
+    return [];
+  } else {
+    return flightCollectionItems.docs.map((doc) => {
+      return doc.data();
+    });
+  }
 };
