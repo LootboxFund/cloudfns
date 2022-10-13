@@ -22,7 +22,7 @@
         "@google-cloud/video-transcoder": "^2.2.2",
         "@types/fluent-ffmpeg": "^2.1.20",
         "@types/mkdirp": "^1.0.2",
-        "@wormgraph/helpers": "0.2.0-afn-alpha109",
+        "@wormgraph/helpers": "0.2.0-afn-alpha110",
         "@wormgraph/manifest": "0.4.0-afm-alpha22",
         "axios": "^1.1.2",
         "ethers": "^5.7.1",
