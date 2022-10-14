@@ -34,7 +34,9 @@ export const getLootbox = async (
     return undefined;
   } else {
     const data = lootboxSnapshot.data();
-    return data ? parseLootboxDB(data) : undefined;
+    return data
+      ? { ...parseLootboxDB(data), id: lootboxSnapshot.id as LootboxID }
+      : undefined;
   }
 };
 
@@ -51,7 +53,7 @@ export const getLootboxByAddress = async (
     return undefined;
   } else {
     const doc = lootboxSnapshot.docs[0];
-    return parseLootboxDB(doc.data());
+    return { ...parseLootboxDB(doc.data()), id: lootboxRef.id as LootboxID };
   }
 };
 
