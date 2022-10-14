@@ -53,7 +53,7 @@ export const getLootboxByAddress = async (
     return undefined;
   } else {
     const doc = lootboxSnapshot.docs[0];
-    return { ...parseLootboxDB(doc.data()), id: lootboxRef.id as LootboxID };
+    return { ...parseLootboxDB(doc.data()), id: doc.id as LootboxID };
   }
 };
 
