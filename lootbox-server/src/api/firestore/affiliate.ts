@@ -21,6 +21,7 @@ import {
   UserIdpID,
   AdSetInTournamentStatus,
   AdID,
+  Memo_Firestore,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
@@ -1315,6 +1316,37 @@ export const getActivation = async (activationID: ActivationID) => {
     return undefined;
   }
   return activationSnapshot.data();
+};
+
+export const reportTotalEarningsForAffiliate = async (userIdpID: UserIdpID) => {
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .where("userIdpID", "==", userIdpID) as Query<Affiliate_Firestore>;
+
+  const affiliateCollectionItems = await affiliateRef.get();
+
+  if (affiliateCollectionItems.empty) {
+    throw Error(`Affiliate with userIdpID ${userIdpID} does not exist`);
+  }
+  const affiliate = affiliateCollectionItems.docs[0].data();
+  const memoRef = db
+    .collection(Collection.Memo)
+    .where("affiliateID", "==", affiliate.id) as Query<Memo_Firestore>;
+
+  const memoCollectionItems = await memoRef.get();
+
+  if (memoCollectionItems.empty) {
+    return 0;
+  } else {
+    return memoCollectionItems.docs
+      .map((doc) => {
+        const data = doc.data();
+        return data;
+      })
+      .reduce((acc, curr) => {
+        return acc + curr.amount;
+      }, 0);
+  }
 };
 
 export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {
