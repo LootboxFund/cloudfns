@@ -298,10 +298,12 @@ export const getLootboxByUserIDAndNonce = async (
   userID: UserID,
   nonce: LootboxMintSignatureNonce
 ): Promise<Lootbox_Firestore | undefined> => {
+  const creatorIDFieldName: keyof Lootbox_Firestore = "creatorID";
+  const creationNonceFieldName: keyof Lootbox_Firestore = "creationNonce";
   const collectionRef = db
     .collection(Collection.Lootbox)
-    .where("userID", "==", userID)
-    .where("creationNonce", "==", nonce)
+    .where(creatorIDFieldName, "==", userID)
+    .where(creationNonceFieldName, "==", nonce)
     .limit(1) as Query<Lootbox_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
