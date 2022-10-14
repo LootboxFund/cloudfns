@@ -2,9 +2,9 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { AffiliateID, UserID } from "@wormgraph/helpers";
 import {
   Affiliate,
+  ReportTotalEarningsForAffiliateResponse,
   ListWhitelistedAffiliatesToOfferResponse,
   MutationEditWhitelistAffiliateToOfferArgs,
-
   // MutationRemoveWhitelistAffiliateToOfferArgs,
   MutationWhitelistAffiliateToOfferArgs,
   // MutationWhitelistAffiliateToOfferArgs,
@@ -27,6 +27,7 @@ import {
   affiliateAdminView,
   affiliatePublicView,
   editWhitelistAffiliateToOffer,
+  reportTotalEarningsForAffiliate,
   upgradeToAffiliate,
   viewMyTournamentsAsOrganizer,
   viewTournamentAsOrganizer,
@@ -195,6 +196,29 @@ const AffiliateResolvers: Resolvers = {
         );
         return {
           whitelists,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    reportTotalEarningsForAffiliate: async (_, args, context: Context) => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      try {
+        const sum = await reportTotalEarningsForAffiliate(context.userId);
+        return {
+          sum,
         };
       } catch (err) {
         return {
@@ -440,6 +464,18 @@ const AffiliateResolvers: Resolvers = {
       return null;
     },
   },
+  ReportTotalEarningsForAffiliateResponse: {
+    __resolveType: (obj: ReportTotalEarningsForAffiliateResponse) => {
+      if ("sum" in obj) {
+        return "ReportTotalEarningsForAffiliateResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const AffiliateComposition = {
@@ -447,6 +483,7 @@ const AffiliateComposition = {
   "Query.affiliatePublicView": [isAuthenticated()],
   "Query.viewMyTournamentsAsOrganizer": [isAuthenticated()],
   "Query.listWhitelistedAffiliatesToOffer": [isAuthenticated()],
+  "Query.reportTotalEarningsForAffiliate": [isAuthenticated()],
   "Mutation.upgradeToAffiliate": [isAuthenticated()],
   "Mutation.updateAffiliateDetails": [isAuthenticated()],
   "Mutation.whitelistAffiliateToOffer": [isAuthenticated()],
