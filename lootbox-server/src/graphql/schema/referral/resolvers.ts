@@ -361,19 +361,24 @@ const ReferralResolvers: Resolvers = {
           console.log("error fetching lootbox", err);
         }
       }
-      if (
+      // if (
+      //   !!lootbox &&
+      //   (lootbox.status === LootboxStatus_Firestore.disabled ||
+      //     lootbox.status === LootboxStatus_Firestore.soldOut)
+      // ) {
+      //   // Make sure the Lootbox is not disabled
+      //   return {
+      //     error: {
+      //       code: StatusCode.InvalidOperation,
+      //       message: "Lootbox is disabled or sold out",
+      //     },
+      //   };
+      // }
+      const isSeedLootboxEnabled =
+        !!payload.lootboxID &&
         !!lootbox &&
-        (lootbox.status === LootboxStatus_Firestore.disabled ||
-          lootbox.status === LootboxStatus_Firestore.soldOut)
-      ) {
-        // Make sure the Lootbox is not disabled
-        return {
-          error: {
-            code: StatusCode.InvalidOperation,
-            message: "Lootbox is disabled or sold out",
-          },
-        };
-      }
+        lootbox.status !== LootboxStatus_Firestore.disabled &&
+        lootbox.status !== LootboxStatus_Firestore.soldOut;
 
       // ################ DEPRECATED ################
       let partyBasket: PartyBasket | undefined;
@@ -476,7 +481,8 @@ const ReferralResolvers: Resolvers = {
               campaignName,
               type: convertReferralTypeGQLToDB(payload.type),
               tournamentId: payload.tournamentId as TournamentID,
-              seedLootboxID: lootbox ? lootbox.id : undefined,
+              seedLootboxID:
+                lootbox && isSeedLootboxEnabled ? lootbox.id : undefined,
               seedPartyBasketId: payload.partyBasketId
                 ? (payload.partyBasketId as PartyBasketID)
                 : undefined,

@@ -12,10 +12,10 @@ import {
   QueryGetLootboxByIdArgs,
   GetLootboxByIdResponse,
   LootboxTicket,
-  Claim,
   LootboxUserClaimPageInfoResponse,
-  QueryUserClaimsArgs,
   LootboxUserClaimsArgs,
+  QueryMyLootboxByNonceArgs,
+  MyLootboxByNonceResponse,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -25,11 +25,15 @@ import {
   editLootbox,
   paginateLootboxFeedQuery,
   getTicket,
-  getUserClaimsForLootbox,
   paginateLootboxUserClaims,
   getUserClaimCountForLootbox,
+  getLootboxByUserIDAndNonce,
 } from "../../../api/firestore";
-import { Address, LootboxTicketID } from "@wormgraph/helpers";
+import {
+  Address,
+  LootboxMintSignatureNonce,
+  LootboxTicketID,
+} from "@wormgraph/helpers";
 import { Context } from "../../server";
 import { LootboxID, UserID } from "@wormgraph/helpers";
 import {
@@ -39,7 +43,6 @@ import {
 } from "../../../lib/lootbox";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import { convertClaimDBToGQL } from "../../../lib/referral";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -106,6 +109,38 @@ const LootboxResolvers: Resolvers = {
         after as LootboxID | null | undefined
       );
       return response;
+    },
+    myLootboxByNonce: async (
+      _,
+      { nonce }: QueryMyLootboxByNonceArgs,
+      context: Context
+    ): Promise<MyLootboxByNonceResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      const lootbox = await getLootboxByUserIDAndNonce(
+        context.userId as unknown as UserID,
+        nonce as LootboxMintSignatureNonce
+      );
+
+      if (!lootbox) {
+        return {
+          error: {
+            code: StatusCode.NotFound,
+            message: "Lootbox not found",
+          },
+        };
+      }
+
+      return {
+        lootbox: convertLootboxDBToGQL(lootbox),
+      };
     },
   },
 
@@ -456,6 +491,19 @@ const LootboxResolvers: Resolvers = {
     __resolveType: (obj: EditLootboxResponse) => {
       if ("lootbox" in obj) {
         return "EditLootboxResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  MyLootboxByNonceResponse: {
+    __resolveType: (obj: MyLootboxByNonceResponse) => {
+      if ("lootbox" in obj) {
+        return "MyLootboxByNonceResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

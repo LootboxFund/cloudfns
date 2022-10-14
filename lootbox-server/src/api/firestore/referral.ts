@@ -183,11 +183,15 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
     referralType: req.referralType,
     whitelistId: null,
     isPostCosmic: req.isPostCosmic,
+    ticketID: null,
+    ticketWeb3ID: null,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
       deletedAt: null,
       completedAt: !!req.completed ? timestamp : null,
+      whitelistedAt: null,
+      mintedAt: null,
     },
   };
 

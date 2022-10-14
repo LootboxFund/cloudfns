@@ -624,6 +624,7 @@ export const indexLootboxOnCreate = functions
                                 creatorID: data.payload.creatorID,
                                 baseTokenURI: baseTokenURI,
                                 symbol: data.payload.symbol, // Todo move this to onchain event
+                                creationNonce: data.payload.nonce,
                             },
                             data.chain
                         );

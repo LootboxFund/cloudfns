@@ -21,6 +21,7 @@ import {
   UserIdpID,
   AdSetInTournamentStatus,
   AdID,
+  Memo_Firestore,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
@@ -62,12 +63,19 @@ import {
 } from "../identityProvider/firebase";
 
 export const upgradeToAffiliate = async (
-  userID: UserID,
   userIdpID: UserIdpID
 ): Promise<Affiliate_Firestore> => {
+  const existingAffiliateRef = db
+    .collection(Collection.Affiliate)
+    .where("userID", "==", userIdpID);
+  const existingAffiliates = await existingAffiliateRef.get();
+  if (!existingAffiliates.empty) {
+    const exad = existingAffiliates.docs.map((doc) => doc.data())[0];
+    throw Error(`User is already an affiliate ${exad.id}`);
+  }
   const userRef = db
     .collection(Collection.User)
-    .doc(userID) as DocumentReference<User>;
+    .doc(userIdpID) as DocumentReference<User>;
   const userSnapshot = await userRef.get();
   const user = userSnapshot.data() as User;
   const affiliateRef = db
@@ -75,7 +83,7 @@ export const upgradeToAffiliate = async (
     .doc() as DocumentReference<Affiliate_Firestore>;
   const affiliate: Affiliate_Firestore = {
     id: affiliateRef.id as AffiliateID,
-    userID: userID,
+    userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
     name: user.username || `New Affiliate ${affiliateRef.id}`,
     description: "",
@@ -1308,6 +1316,37 @@ export const getActivation = async (activationID: ActivationID) => {
     return undefined;
   }
   return activationSnapshot.data();
+};
+
+export const reportTotalEarningsForAffiliate = async (userIdpID: UserIdpID) => {
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .where("userIdpID", "==", userIdpID) as Query<Affiliate_Firestore>;
+
+  const affiliateCollectionItems = await affiliateRef.get();
+
+  if (affiliateCollectionItems.empty) {
+    throw Error(`Affiliate with userIdpID ${userIdpID} does not exist`);
+  }
+  const affiliate = affiliateCollectionItems.docs[0].data();
+  const memoRef = db
+    .collection(Collection.Memo)
+    .where("affiliateID", "==", affiliate.id) as Query<Memo_Firestore>;
+
+  const memoCollectionItems = await memoRef.get();
+
+  if (memoCollectionItems.empty) {
+    return 0;
+  } else {
+    return memoCollectionItems.docs
+      .map((doc) => {
+        const data = doc.data();
+        return data;
+      })
+      .reduce((acc, curr) => {
+        return acc + curr.amount;
+      }, 0);
+  }
 };
 
 export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {

@@ -1,7 +1,4 @@
 import {
-  Address,
-  LootboxID,
-  UserID,
   LootboxTicket_Firestore,
   Lootbox_Firestore,
   LootboxVariant_Firestore,
@@ -36,6 +33,8 @@ export const parseMintWhitelistSignature = (
     lootboxID: data.lootboxID,
     digest: data.digest,
     userID: data.userID,
+    claimID: data.claimID,
+    referralID: data.referralID,
   };
 
   return res;
@@ -89,6 +88,7 @@ export const parseLootboxDB = (
     themeColor: lootbox.themeColor,
     symbol: lootbox.symbol,
     baseTokenURI: lootbox.baseTokenURI,
+    creationNonce: lootbox.creationNonce || null,
     timestamps: {
       createdAt: lootbox.timestamps.createdAt,
       updatedAt: lootbox.timestamps.updatedAt,
@@ -155,46 +155,6 @@ export const convertLootboxStatusGQLToDB = (
     default:
       return LootboxStatus_Firestore.disabled;
   }
-};
-
-export const convertLootboxGQLToDB = (lootbox: Lootbox): Lootbox_Firestore => {
-  return {
-    id: lootbox.id as LootboxID,
-    address: lootbox.address as Address,
-    factory: lootbox.factory as Address,
-    creatorAddress: lootbox.creatorAddress as Address,
-    chainIdHex: lootbox.chainIdHex,
-    variant: convertLootboxVariantGQLToDB(lootbox.variant),
-    creatorID: lootbox.creatorID as UserID,
-    timestamps: {
-      createdAt: lootbox.timestamps.createdAt,
-      updatedAt: lootbox.timestamps.updatedAt,
-      deletedAt: lootbox.timestamps.deletedAt || null,
-    },
-    chainIdDecimal: lootbox.chainIdDecimal,
-    chainName: lootbox.chainName,
-    transactionHash: lootbox.transactionHash,
-    blockNumber: lootbox.blockNumber,
-    name: lootbox.name,
-    description: lootbox.description,
-    status: lootbox.status
-      ? convertLootboxStatusGQLToDB(lootbox.status)
-      : LootboxStatus_Firestore.disabled,
-    nftBountyValue: !!lootbox.nftBountyValue
-      ? lootbox.nftBountyValue
-      : undefined,
-    joinCommunityUrl: !!lootbox.joinCommunityUrl
-      ? lootbox.joinCommunityUrl
-      : undefined,
-    maxTickets: lootbox.maxTickets,
-    stampImage: lootbox.stampImage,
-    logo: lootbox.logo,
-    backgroundImage: lootbox.backgroundImage,
-    themeColor: lootbox.themeColor,
-    symbol: lootbox.symbol,
-    baseTokenURI: lootbox.baseTokenURI,
-    runningCompletedClaims: lootbox.runningCompletedClaims || 0,
-  };
 };
 
 export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {

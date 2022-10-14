@@ -150,6 +150,14 @@ const LootboxTypeDefs = gql`
     lootbox: Lootbox!
   }
 
+  type MyLootboxByNonceResponseSuccess {
+    lootbox: Lootbox!
+  }
+
+  union MyLootboxByNonceResponse =
+      MyLootboxByNonceResponseSuccess
+    | ResponseError
+
   union GetLootboxByIDResponse = LootboxResponseSuccess | ResponseError
 
   union GetLootboxByAddressResponse = LootboxResponseSuccess | ResponseError
@@ -172,6 +180,7 @@ const LootboxTypeDefs = gql`
   union LootboxFeedResponse = LootboxFeedResponseSuccess | ResponseError
 
   extend type Query {
+    myLootboxByNonce(nonce: ID!): MyLootboxByNonceResponse!
     getLootboxByID(id: ID!): GetLootboxByIDResponse!
     getLootboxByAddress(address: ID!): GetLootboxByAddressResponse!
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!

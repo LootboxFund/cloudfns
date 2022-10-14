@@ -30,12 +30,12 @@ import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { TournamentPreview } from "../../graphql/generated/types";
 
 export const upgradeToAdvertiser = async (
-  userID: UserID,
   userIdpID: UserIdpID
 ): Promise<Advertiser_Firestore | undefined> => {
+  console.log(`userIdpID: ${userIdpID}`);
   const existingAdvertiserRef = db
     .collection(Collection.Advertiser)
-    .where("userID", "==", userID);
+    .where("userID", "==", userIdpID);
   const existingAdvertisers = await existingAdvertiserRef.get();
   if (!existingAdvertisers.empty) {
     const exad = existingAdvertisers.docs.map((doc) => doc.data())[0];
@@ -44,7 +44,7 @@ export const upgradeToAdvertiser = async (
 
   const userRef = db
     .collection(Collection.User)
-    .doc(userID) as DocumentReference<User>;
+    .doc(userIdpID) as DocumentReference<User>;
   const userSnapshot = await userRef.get();
   const user = userSnapshot.data() as User;
   const advertiserRef = db
@@ -52,7 +52,7 @@ export const upgradeToAdvertiser = async (
     .doc() as DocumentReference<Advertiser_Firestore>;
   const advertiser: Advertiser_Firestore = {
     id: advertiserRef.id as AdvertiserID,
-    userID: userID,
+    userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
     name: user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
@@ -118,7 +118,7 @@ export const createConquest = async (
   advertiserID: AdvertiserID
 ) => {
   const placeholderImageConquest =
-    "https://media.istockphoto.com/vectors/thumbnail-image-vector-graphic-vector-id1147544807?k=20&m=1147544807&s=612x612&w=0&h=pBhz1dkwsCMq37Udtp9sfxbjaMl27JUapoyYpQm0anc=";
+    "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/shared-company-assets%2Forange.jpeg?alt=media&token=86a2367a-3fc3-461f-a185-34d6bd0ba31e";
   const conquestRef = db
     .collection(Collection.Advertiser)
     .doc(advertiserID)

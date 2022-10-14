@@ -68,7 +68,6 @@ export const createRewardClaim = async (req: CreateRewardClaimReq): Promise<Clai
         referralCampaignName: req.referralCampaignName,
         rewardFromClaim: req.rewardFromClaim,
         claimerUserId: req.claimerID,
-
         referrerId: null,
         whitelistId: null,
         isPostCosmic: true,
@@ -79,11 +78,15 @@ export const createRewardClaim = async (req: CreateRewardClaimReq): Promise<Clai
         lootboxAddress: lootbox.address,
         lootboxName: lootbox.name,
         lootboxMaxTickets: lootbox.maxTickets,
+        ticketWeb3ID: null, // this will be filled out later in indexLootboxOnMint
+        ticketID: null, // this will be filled out later in indexLootboxOnMint
         timestamps: {
             createdAt: timestamp,
             updatedAt: timestamp,
             deletedAt: null,
             completedAt: timestamp,
+            whitelistedAt: null,
+            mintedAt: null,
         },
     };
 

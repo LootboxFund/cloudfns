@@ -20,10 +20,11 @@ import {
     TournamentID,
     UserID,
     LootboxTicketDigest,
+    LootboxCreatedNonce,
+    ClaimTimestamps_Firestore,
 } from "@wormgraph/helpers";
 import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import { ClaimTimestamps } from "../graphql/generated/types";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(id) as DocumentReference<Lootbox_Firestore>;
@@ -74,6 +75,7 @@ interface CreateLootboxPayload {
     nftBountyValue: string;
     themeColor: string;
     joinCommunityUrl?: string;
+    nonce: LootboxCreatedNonce;
 }
 export const createLootbox = async (payload: CreateLootboxPayload, chain: ChainInfo): Promise<Lootbox_Firestore> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc() as DocumentReference<Lootbox_Firestore>;
@@ -103,6 +105,7 @@ export const createLootbox = async (payload: CreateLootboxPayload, chain: ChainI
         themeColor: payload.themeColor,
         symbol: payload.symbol,
         runningCompletedClaims: 0,
+        creationNonce: payload.nonce,
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),
@@ -219,6 +222,8 @@ export const createMintWhitelistSignature = async ({
         lootboxID: lootboxId,
         whitelistedAt: null,
         userID: claim?.claimerUserId ? claim.claimerUserId : null,
+        claimID: claim.id,
+        referralID: claim.referralId,
     };
 
     batch.set(signatureRef, signatureDocument);
@@ -231,16 +236,15 @@ export const createMintWhitelistSignature = async ({
             .collection(Collection.Claim)
             .doc(claim.id) as DocumentReference<Claim_Firestore>;
 
+        // Annoying typesafety for nested objects
+        const timestampName: keyof Claim_Firestore = "timestamps";
+        const updatedAtName: keyof ClaimTimestamps_Firestore = "updatedAt";
+        const whitelistedAtName: keyof ClaimTimestamps_Firestore = "whitelistedAt";
         const updateClaimRequest: Partial<Claim_Firestore> = {
             whitelistId: whitelistID,
+            [`${timestampName}.${updatedAtName}`]: Timestamp.now().toMillis(),
+            [`${timestampName}.${whitelistedAtName}`]: Timestamp.now().toMillis(),
         };
-
-        // Annoying typesafety for nested objects?
-        const timestampName: keyof Claim_Firestore = "timestamps";
-        const updatedAtName: keyof ClaimTimestamps = "updatedAt";
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        updateClaimRequest[`${timestampName}.${updatedAtName}`] = Timestamp.now().toMillis();
 
         batch.update(claimRef, updateClaimRequest);
     }
@@ -261,7 +265,7 @@ interface CreateTicketRequest {
     metadataURL: string;
     digest: LootboxTicketDigest;
     nonce: LootboxMintSignatureNonce;
-    // claimID?: ClaimID;
+    whitelist: MintWhitelistSignature_Firestore;
 }
 
 export const finalizeMint = async (payload: CreateTicketRequest): Promise<LootboxTicket_Firestore> => {
@@ -289,7 +293,6 @@ export const finalizeMint = async (payload: CreateTicketRequest): Promise<Lootbo
         id: ticketRef.id as LootboxTicketID,
         digest: payload.digest,
         nonce: payload.nonce,
-        // claimID: payload.claimID || null,
     };
 
     const whitelistRef = db
@@ -298,14 +301,33 @@ export const finalizeMint = async (payload: CreateTicketRequest): Promise<Lootbo
         .collection(Collection.MintWhiteList)
         .doc(payload.mintWhitelistID) as DocumentReference<MintWhitelistSignature_Firestore>;
 
-    const updateReq: Partial<MintWhitelistSignature_Firestore> = {
+    const whitelistUpdateReq: Partial<MintWhitelistSignature_Firestore> = {
         isRedeemed: true,
         lootboxTicketID: ticketRef.id as LootboxTicketID,
         whitelistedAt: Timestamp.now().toMillis(),
     };
 
+    // We need to update the claim with ticketID & web3TicketID
+    const claimRef = db
+        .collection(Collection.Referral)
+        .doc(payload.whitelist.referralID)
+        .collection(Collection.Claim)
+        .doc(payload.whitelist.claimID);
+
+    const timestampName: keyof Claim_Firestore = "timestamps";
+    const updatedAtName: keyof ClaimTimestamps_Firestore = "updatedAt";
+    const mintedAtName: keyof ClaimTimestamps_Firestore = "mintedAt";
+
+    const claimUpdateReq: Partial<Claim_Firestore> = {
+        ticketID: ticketRef.id as LootboxTicketID,
+        ticketWeb3ID: payload.ticketID,
+        [`${timestampName}.${updatedAtName}`]: Timestamp.now().toMillis(),
+        [`${timestampName}.${mintedAtName}`]: Timestamp.now().toMillis(),
+    };
+
     batch.create(ticketRef, ticketDocument);
-    batch.update(whitelistRef, updateReq);
+    batch.update(whitelistRef, whitelistUpdateReq);
+    batch.update(claimRef, claimUpdateReq);
 
     await batch.commit();
 

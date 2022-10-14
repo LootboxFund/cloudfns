@@ -78,6 +78,14 @@ const AffiliateTypeDefs = gql`
       ListWhitelistedAffiliatesToOfferResponseSuccess
     | ResponseError
 
+  # ------ View Total Earnings of Affiliate ------
+  type ReportTotalEarningsForAffiliateResponseSuccess {
+    sum: Float!
+  }
+  union ReportTotalEarningsForAffiliateResponse =
+      ReportTotalEarningsForAffiliateResponseSuccess
+    | ResponseError
+
   extend type Query {
     # For an affiliate to see their own private profile
     affiliateAdminView: AffiliateAdminViewResponse!
@@ -91,6 +99,8 @@ const AffiliateTypeDefs = gql`
     listWhitelistedAffiliatesToOffer(
       payload: ListWhitelistedAffiliatesToOfferPayload!
     ): ListWhitelistedAffiliatesToOfferResponse!
+    #
+    reportTotalEarningsForAffiliate: ReportTotalEarningsForAffiliateResponse!
     # For an affiliate to list the other affiliates they are working with
     # listAffiliatePartners(advertiserID: ID!): ListAffiliatePartnersResponse!
     # For an advertiser to see the relationship stats between them and another affiliate
@@ -174,7 +184,7 @@ const AffiliateTypeDefs = gql`
 
   extend type Mutation {
     # Upgrade a regular user and give them an affiliate account
-    upgradeToAffiliate(userID: ID!): UpgradeToAffiliateResponse!
+    upgradeToAffiliate: UpgradeToAffiliateResponse!
     # Update an affiliate's profile
     updateAffiliateDetails(
       affiliateID: ID!

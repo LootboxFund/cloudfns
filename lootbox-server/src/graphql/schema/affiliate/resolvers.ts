@@ -2,11 +2,10 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import { AffiliateID, UserID } from "@wormgraph/helpers";
 import {
   Affiliate,
+  ReportTotalEarningsForAffiliateResponse,
   ListWhitelistedAffiliatesToOfferResponse,
   MutationEditWhitelistAffiliateToOfferArgs,
-
   // MutationRemoveWhitelistAffiliateToOfferArgs,
-  MutationUpgradeToAffiliateArgs,
   MutationWhitelistAffiliateToOfferArgs,
   // MutationWhitelistAffiliateToOfferArgs,
   QueryAffiliatePublicViewArgs,
@@ -28,6 +27,7 @@ import {
   affiliateAdminView,
   affiliatePublicView,
   editWhitelistAffiliateToOffer,
+  reportTotalEarningsForAffiliate,
   upgradeToAffiliate,
   viewMyTournamentsAsOrganizer,
   viewTournamentAsOrganizer,
@@ -206,24 +206,51 @@ const AffiliateResolvers: Resolvers = {
         };
       }
     },
+    reportTotalEarningsForAffiliate: async (_, args, context: Context) => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      try {
+        const sum = await reportTotalEarningsForAffiliate(context.userId);
+        return {
+          sum,
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
   Mutation: {
     upgradeToAffiliate: async (
       _,
-      { userID }: MutationUpgradeToAffiliateArgs,
+      args,
       context: Context
     ): Promise<UpgradeToAffiliateResponse> => {
-      console.log(context);
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "You are not authenticated!",
+          },
+        };
+      }
       try {
-        const affiliate = await upgradeToAffiliate(
-          userID as UserID,
-          context.userId || (userID as UserIdpID)
-        );
+        const affiliate = await upgradeToAffiliate(context.userId);
         if (!affiliate) {
           return {
             error: {
               code: StatusCode.ServerError,
-              message: `No affiliate created for user ${userID}`,
+              message: `No affiliate created for user ${context.userId}`,
             },
           };
         }
@@ -437,6 +464,18 @@ const AffiliateResolvers: Resolvers = {
       return null;
     },
   },
+  ReportTotalEarningsForAffiliateResponse: {
+    __resolveType: (obj: ReportTotalEarningsForAffiliateResponse) => {
+      if ("sum" in obj) {
+        return "ReportTotalEarningsForAffiliateResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const AffiliateComposition = {
@@ -444,6 +483,7 @@ const AffiliateComposition = {
   "Query.affiliatePublicView": [isAuthenticated()],
   "Query.viewMyTournamentsAsOrganizer": [isAuthenticated()],
   "Query.listWhitelistedAffiliatesToOffer": [isAuthenticated()],
+  "Query.reportTotalEarningsForAffiliate": [isAuthenticated()],
   "Mutation.upgradeToAffiliate": [isAuthenticated()],
   "Mutation.updateAffiliateDetails": [isAuthenticated()],
   "Mutation.whitelistAffiliateToOffer": [isAuthenticated()],

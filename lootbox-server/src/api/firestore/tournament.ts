@@ -43,6 +43,9 @@ import {
 } from "../../lib/tournament";
 import { LootboxDeprecated_Firestore } from "./lootbox.types";
 
+const placeholderImageTournament =
+  "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/shared-company-assets%2Fgreen.jpeg?alt=media&token=cbba1393-e7e4-48e5-b418-75e43b348983";
+
 export const getTournamentById = async (
   id: TournamentID
 ): Promise<Tournament_Firestore | undefined> => {
@@ -310,9 +313,10 @@ export const createTournament = async ({
   const tournament: Tournament_Firestore = {
     id: tournamentRef.id as TournamentID,
     title,
-    description,
+    description: description || "",
     creatorId: creatorId as UserID,
     isPostCosmic: true,
+    coverPhoto: coverPhoto || placeholderImageTournament,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -324,16 +328,14 @@ export const createTournament = async ({
     tournament.prize = prize;
   }
 
-  if (!!coverPhoto) {
-    tournament.coverPhoto = coverPhoto;
-  }
-
   if (!!tournamentLink) {
     tournament.tournamentLink = tournamentLink;
   }
 
   if (!!tournamentDate) {
     tournament.tournamentDate = Number(tournamentDate);
+  } else {
+    tournament.tournamentDate = Number(new Date().getTime());
   }
 
   if (!!communityURL) {

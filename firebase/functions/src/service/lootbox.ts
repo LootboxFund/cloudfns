@@ -14,6 +14,7 @@ import {
     LootboxTicket_Firestore,
     LootboxTicketDigest,
     LootboxMintSignatureNonce,
+    LootboxCreatedNonce,
 } from "@wormgraph/helpers";
 import { ethers } from "ethers";
 import { logger } from "firebase-functions";
@@ -45,13 +46,11 @@ interface CreateLootboxRequest {
     joinCommunityUrl?: string;
     baseTokenURI: string;
     symbol: string;
-
     // implicitly passed in
     creatorID: UserID;
-
     // from decoded event log
     lootboxAddress: Address;
-
+    creationNonce: LootboxCreatedNonce;
     // from blockchain
     blockNumber: string;
     lootboxName: string;
@@ -98,6 +97,7 @@ export const create = async (request: CreateLootboxRequest, chain: ChainInfo): P
             backgroundImage: request.backgroundImage,
             themeColor: request.themeColor,
             joinCommunityUrl: request.joinCommunityUrl,
+            nonce: request.creationNonce,
         },
         chain
     );
@@ -248,9 +248,9 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
         mintWhitelistID: whitelistObject.id as LootboxMintWhitelistID,
         stampImage: stampURL,
         metadataURL: metadataURL,
-        // claimID
         digest: params.digest,
         nonce: params.nonce,
+        whitelist: whitelistObject,
     });
 
     return ticketDB;

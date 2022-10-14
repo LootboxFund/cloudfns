@@ -267,7 +267,7 @@ const TournamentResolvers = {
       try {
         const tournamentDB = await createTournament({
           title: payload.title,
-          description: payload.description,
+          description: payload.description || "",
           tournamentLink: payload.tournamentLink,
           creatorId: context.userId as unknown as UserID,
           coverPhoto: payload.coverPhoto,
