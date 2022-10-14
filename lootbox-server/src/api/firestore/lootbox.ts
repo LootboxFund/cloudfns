@@ -301,7 +301,7 @@ export const getLootboxByUserIDAndNonce = async (
   const collectionRef = db
     .collection(Collection.Lootbox)
     .where("userID", "==", userID)
-    .where("nonce", "==", nonce)
+    .where("creationNonce", "==", nonce)
     .limit(1) as Query<Lootbox_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
