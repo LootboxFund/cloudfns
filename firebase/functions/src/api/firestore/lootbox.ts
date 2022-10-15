@@ -106,6 +106,7 @@ export const createLootbox = async (payload: CreateLootboxPayload, chain: ChainI
         symbol: payload.symbol,
         runningCompletedClaims: 0,
         creationNonce: payload.nonce,
+        members: [],
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),
