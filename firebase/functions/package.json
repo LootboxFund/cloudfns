@@ -9,8 +9,8 @@
         "shell": "yarn run build && firebase functions:shell",
         "start": "yarn run shell",
         "deploy:demo": "yarn run build && firebase deploy --only functions:enqueueIndexLootboxOnCreateTasks,functions:indexLootboxOnCreate --project lootbox-fund-staging",
-        "deploy:staging": "yarn run build && firebase deploy --only functions --project lootbox-fund-staging",
-        "deploy:prod": "yarn run build && firebase deploy --only functions --project lootbox-fund-prod",
+        "deploy:staging": "yarn install && yarn codegen && yarn run build && firebase deploy --only functions --project lootbox-fund-staging",
+        "deploy:prod": "yarn install && yarn codegen && yarn run build && firebase deploy --only functions --project lootbox-fund-prod",
         "logs": "firebase functions:log"
     },
     "engines": {
