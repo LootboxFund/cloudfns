@@ -3037,6 +3037,14 @@
     axios "0.25.0"
     lodash "4.17.21"
 
+"@wormgraph/helpers@0.7.0-demo-0.2":
+  version "0.7.0-demo-0.2"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.0-demo-0.2.tgz#8b48fbf9c191bb47e61de470e4917c1818990f05"
+  integrity sha512-7ev9yYENbu2lru6L5RtS7SbW8U7ueDG1JN0BrUxRguNN9R/p/j5/Q0A8NEXeVv1leBw/PLnZHmAT3hs5pb3mVw==
+  dependencies:
+    axios "0.25.0"
+    lodash "4.17.21"
+
 "@wormgraph/manifest@0.7.0-demo":
   version "0.7.0-demo"
   resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.7.0-demo.tgz#5648359e1059b157dd94fcc044e74f87a8bbb677"
@@ -6301,6 +6309,11 @@ hmac-drbg@^1.0.1:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.1"
 
+hoist-non-react-statics@^2.5.5:
+  version "2.5.5"
+  resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-2.5.5.tgz#c5903cf409c0dfd908f388e619d86b9c1174cb47"
+  integrity sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw==
+
 hoist-non-react-statics@^3.0.0, hoist-non-react-statics@^3.3.0:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz#ece0acaf71d62c2969c2ec59feff42a4b1a85b45"
@@ -7356,7 +7369,7 @@ lodash.uniq@4.5.0:
   resolved "https://registry.yarnpkg.com/lodash.uniq/-/lodash.uniq-4.5.0.tgz#d0225373aeb652adc1bc82e4945339a842754773"
   integrity sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
 
-lodash@4.17.21, lodash@^4.17.11, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21:
+lodash@4.17.21, lodash@^4.16.6, lodash@^4.17.11, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -8049,6 +8062,11 @@ object-keys@^1.0.12, object-keys@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/object-keys/-/object-keys-1.1.1.tgz#1c47f272df277f3b1daf061677d9c82e2322c60e"
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
+
+object-unfreeze@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/object-unfreeze/-/object-unfreeze-1.1.0.tgz#69628bea1f3c9d29f4eb0ba63b38002d70ea3ce9"
+  integrity sha512-i88jeCu+7+LvCvBVt+6YnIaRG4lK0mOtpTXDwgfb+twcBO2cLKdJqVl3hkbe8pLqIXBzKZ616poAZwsQeIMyMw==
 
 object-visit@^1.0.0:
   version "1.0.1"
@@ -8957,6 +8975,15 @@ react-colorful@^5.1.2:
   version "5.5.1"
   resolved "https://registry.yarnpkg.com/react-colorful/-/react-colorful-5.5.1.tgz#29d9c4e496f2ca784dd2bb5053a3a4340cfaf784"
   integrity sha512-M1TJH2X3RXEt12sWkpa6hLc/bbYS0H6F4rIqjQZ+RxNBstpY67d9TrFXtqdZwhpmBXcCwEi7stKqFue3ZRkiOg==
+
+react-css-modules@^4.7.11:
+  version "4.7.11"
+  resolved "https://registry.yarnpkg.com/react-css-modules/-/react-css-modules-4.7.11.tgz#e9bc7ac6e3dd7e71c8e46e9d22c1d0abb2110682"
+  integrity sha512-ke/zMcBKQyq7x4I5CREzeA/cZSg7MW/Kx23L1OICd+PXKNq++fMdAJDeDLFYkDY28TwuAHpwsKxDYEVjpEMkmQ==
+  dependencies:
+    hoist-non-react-statics "^2.5.5"
+    lodash "^4.16.6"
+    object-unfreeze "^1.1.0"
 
 react-docgen-typescript@^2.0.0:
   version "2.2.2"

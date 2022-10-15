@@ -1,0 +1,454 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:wght@800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;0,900;1,300&display=swap");
+body {
+  margin: 0;
+  min-width: 1533px;
+  min-height: 900px;
+}
+
+.rectangle-div,
+.rectangle-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 900px;
+}
+.rectangle-icon {
+  width: 644px;
+  object-fit: cover;
+}
+.rectangle-div {
+  background-color: #0b1115;
+  width: 1533px;
+  opacity: 0.9;
+}
+.group-286-2-1,
+.rectangle-icon1,
+.sponsor-icon {
+  position: absolute;
+  top: 10px;
+  left: 17px;
+  width: 228px;
+  height: 68px;
+  object-fit: cover;
+}
+.group-286-2-1,
+.rectangle-icon1 {
+  top: 2px;
+  left: 0;
+  width: 900px;
+  height: 900px;
+}
+.group-286-2-1 {
+  top: 2.46px;
+  width: 891.61px;
+  height: 899.54px;
+}
+.rectangle-div1 {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  width: 894px;
+  height: 900px;
+}
+.cabanatuan-tournament-div,
+.lootbox-div {
+  position: absolute;
+  font-weight: 800;
+  display: inline-block;
+}
+.lootbox-div {
+  top: 14px;
+  left: 685px;
+  font-family: "Fira Sans";
+  color: rgba(255, 255, 255, 0.52);
+  text-align: center;
+  width: 192px;
+}
+.cabanatuan-tournament-div {
+  top: 816px;
+  left: 461px;
+  font-size: 25px;
+  letter-spacing: 0.04em;
+  width: 428px;
+}
+.fan-prize {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+.php-span {
+  line-height: 103.68%;
+}
+.php {
+  margin: 0;
+  font-size: 85px;
+}
+.fan-prize-500-container {
+  line-break: anywhere;
+  width: 100%;
+}
+.fan-lootbox-ticket,
+.fan-prize-500-php {
+  position: absolute;
+  left: 460px;
+  display: flex;
+  align-items: center;
+}
+.fan-prize-500-php {
+  top: 108px;
+  font-weight: 800;
+  width: 419px;
+  height: 159px;
+  font-size: 42px;
+}
+.fan-lootbox-ticket {
+  top: 299px;
+  font-size: 36px;
+  color: rgba(255, 255, 255, 0.57);
+  width: 390px;
+  height: 41px;
+}
+.at-12-nn {
+  margin: 0;
+}
+.game-axie-infinity-date-octo {
+  position: absolute;
+  top: 659px;
+  left: 460px;
+  font-size: 29px;
+  color: rgba(255, 255, 255, 0.57);
+  display: flex;
+  align-items: flex-end;
+  width: 390px;
+  height: 117px;
+}
+.members-can-win {
+  color: #fff;
+}
+.audience-members-can-win-a-por {
+  position: absolute;
+  top: 372px;
+  left: 458px;
+  font-size: 38px;
+  display: inline-block;
+  width: 396px;
+  height: 247px;
+  color: #2bd800;
+}
+.group-div2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 902.46px;
+}
+.event-b {
+  font-family: "Open Sans";
+}
+.event-3pg-mlbb-tournament-dat {
+  position: absolute;
+  top: 1098px;
+  left: 0;
+  font-size: 26px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  width: 720px;
+  height: 102px;
+}
+.group-div1 {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 900px;
+  height: 1200px;
+}
+.game-date-span,
+.mask-group-div {
+  position: absolute;
+  top: 0;
+  left: 639px;
+  width: 894px;
+  height: 900px;
+}
+.game-date-span {
+  top: 698px;
+  left: 460px;
+  display: flex;
+  align-items: flex-end;
+  width: 390px;
+  height: 78px;
+}
+.lootbox-div1,
+.subtitle-span {
+  position: absolute;
+  font-weight: 800;
+  display: inline-block;
+}
+.lootbox-div1 {
+  top: 14px;
+  left: 685px;
+  font-size: 45px;
+  font-family: "Fira Sans";
+  color: rgba(255, 255, 255, 0.52);
+  text-align: center;
+  width: 192px;
+}
+.subtitle-span {
+  top: 816px;
+  left: 456px;
+  font-size: 25px;
+  letter-spacing: 0.04em;
+  color: #fff;
+  width: 428px;
+}
+.span {
+  font-size: 85px;
+}
+.fan-prize-div {
+  position: absolute;
+  top: 90px;
+  left: 460px;
+  font-weight: 800;
+  color: #fff;
+  display: inline-block;
+  width: 419px;
+  height: 90px;
+  font-size: 42px;
+}
+.fan-lootbox-ticket1,
+.game-name-span {
+  position: absolute;
+  left: 460px;
+  width: 390px;
+}
+.fan-lootbox-ticket1 {
+  top: 299px;
+  font-size: 36px;
+  display: flex;
+  align-items: center;
+  height: 41px;
+}
+.game-name-span {
+  top: 659px;
+  display: inline-block;
+  height: 44px;
+}
+.event-3pg-mlbb-tournament-dat1 {
+  position: absolute;
+  top: 1098px;
+  left: 0;
+  font-size: 26px;
+  color: #fff;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  width: 720px;
+  height: 102px;
+}
+.mask-group-div1 {
+  position: absolute;
+  top: 0;
+  left: 639px;
+  width: 894px;
+  height: 900px;
+  font-size: 29px;
+  color: rgba(255, 255, 255, 0.57);
+}
+.axie-logo-1,
+.be9b80-4957-4612-bda8-7d391c40-icon {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  width: 413px;
+  height: 244px;
+  object-fit: cover;
+}
+.be9b80-4957-4612-bda8-7d391c40-icon {
+  top: 247px;
+  width: 469px;
+  height: 246px;
+}
+.rectangle-div3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+  width: 319.94px;
+  height: 320.89px;
+}
+.qr-code-icon {
+  position: absolute;
+  top: 3px;
+  left: 1px;
+  width: 316px;
+  height: 316px;
+  object-fit: cover;
+}
+.group-div6,
+.rectangle-div4 {
+  position: absolute;
+  top: 27px;
+  left: 0;
+  width: 319.94px;
+  height: 320.89px;
+}
+.rectangle-div4 {
+  top: 0;
+  background-color: #fff;
+  width: 320px;
+  height: 27.25px;
+}
+.golootboxfundrrmm23qp4lyo {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 311px;
+  height: 33px;
+}
+.group-a,
+.link-div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 36px;
+}
+.group-a {
+  text-decoration: none;
+  color: inherit;
+}
+.group-div5,
+.rectangle-div5 {
+  position: absolute;
+  top: 450px;
+  left: 44px;
+  width: 320px;
+  height: 347.89px;
+}
+.rectangle-div5 {
+  top: 0;
+  left: 0;
+  background-color: #000;
+  height: 101.84px;
+}
+.scan-or-screenshot-to-open-qr {
+  position: absolute;
+  top: 6.87px;
+  left: 39.13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 247.03px;
+  height: 82.44px;
+}
+.group-div7,
+.mask-group-div2 {
+  position: absolute;
+  top: 798.16px;
+  left: 44px;
+  width: 320px;
+  height: 101.84px;
+  font-size: 24px;
+  color: #fff;
+}
+.mask-group-div2 {
+  top: 0;
+  left: 654px;
+  width: 479px;
+  height: 900px;
+  text-align: center;
+  font-size: 16px;
+  color: #00ac1c;
+}
+.shares-the-tournament-cash-pri {
+  position: absolute;
+  top: 91px;
+  left: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 535px;
+  height: 41px;
+}
+.team-nam-e {
+  margin: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 60px;
+  font-weight: 700;
+  font-family: Inter;
+  display: inline-block;
+}
+.group-div8 {
+  position: absolute;
+  top: 721px;
+  left: 39px;
+  width: 572px;
+  height: 132px;
+  text-align: center;
+  font-size: 28px;
+}
+.group-div,
+.vector-icon {
+  position: absolute;
+  top: 0;
+  left: 649px;
+  width: 10px;
+  height: 900px;
+}
+.group-div {
+  left: 0;
+  width: 1533px;
+}
+.lootbox-image-icon {
+  position: absolute;
+  top: 35px;
+  left: 44px;
+  width: 572px;
+  height: 741px;
+  object-fit: cover;
+}
+.headshot-icon,
+.the-logo-solo-perfected-1 {
+  position: absolute;
+  top: 26px;
+  left: 13px;
+  width: 61px;
+  height: 61px;
+}
+.headshot-icon {
+  top: 263px;
+  left: 302px;
+  width: 330px;
+  height: 435px;
+  object-fit: cover;
+}
+.prize-amount-h1 {
+  margin: 0;
+  position: absolute;
+  top: 142px;
+  left: 1096px;
+  font-size: 85px;
+  font-weight: 800;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  width: 419px;
+  height: 159px;
+}
+.bcs-rrgms-rayster-g {
+  position: relative;
+  min-width: 1533px;
+  min-height: 900px;
+  text-align: left;
+  font-size: 45px;
+  color: #fff;
+  font-family: "Open Sans";
+}
