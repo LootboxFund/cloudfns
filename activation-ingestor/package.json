@@ -9,7 +9,7 @@
     "start": "NODE_ENV=production npx ts-node ./src",
     "start:dev": "NODE_ENV=dev npx ts-node ./src",
     "deploy:staging": "yarn install && yarn build && gcloud run deploy activation-ingestor --memory 1024Mi --service-account firebase-adminsdk-7izc8@lootbox-fund-staging.iam.gserviceaccount.com  --impersonate-service-account cloudrun-activation-ingestor@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging --update-env-vars NODE_ENV=staging",
-    "deploy:prod": "yarn install && yarn build && gcloud run deploy activation-ingestor --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account _______________@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod --update-env-vars NODE_ENV=prod"
+    "deploy:prod": "yarn install && yarn build && gcloud run deploy activation-ingestor --memory 1024Mi --service-account firebase-adminsdk-2b3ho@lootbox-fund-prod.iam.gserviceaccount.com  --impersonate-service-account cloudrun-activation-ingestor@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod --update-env-vars NODE_ENV=prod"
   },
   "dependencies": {
     "@google-cloud/pubsub": "^3.1.1",
