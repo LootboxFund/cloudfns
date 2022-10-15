@@ -67,6 +67,7 @@ const stampSecretName: SecretName = "STAMP_SECRET";
 const whitelisterPrivateKeySecretName: SecretName = "PARTY_BASKET_WHITELISTER_PRIVATE_KEY";
 
 export const onClaimWrite = functions
+    .region("asia-southeast1")
     .runWith({
         secrets: [whitelisterPrivateKeySecretName],
     })
@@ -179,6 +180,7 @@ export const onClaimWrite = functions
     });
 
 export const onWalletCreate = functions
+    .region("asia-southeast1")
     .runWith({
         secrets: [whitelisterPrivateKeySecretName],
     })
@@ -235,8 +237,9 @@ export const onWalletCreate = functions
         }
     });
 
-export const onLootboxWrite = functions.firestore
-    .document(`/${Collection.Lootbox}/{lootboxID}`)
+export const onLootboxWrite = functions
+    .region("asia-southeast1")
+    .firestore.document(`/${Collection.Lootbox}/{lootboxID}`)
     .onWrite(async (snap) => {
         const oldLootbox = snap.before.data() as Lootbox_Firestore | undefined;
         const newLootbox = snap.after.data() as Lootbox_Firestore | undefined;
@@ -274,8 +277,9 @@ export const onLootboxWrite = functions.firestore
     });
 
 /** @deprecated use onLootboxWrite now */
-export const onPartyBasketWrite = functions.firestore
-    .document(`/${Collection.PartyBasket}/{partyBasketId}`)
+export const onPartyBasketWrite = functions
+    .region("asia-southeast1")
+    .firestore.document(`/${Collection.PartyBasket}/{partyBasketId}`)
     .onWrite(async (snap) => {
         const newPartyBasket = snap.after.data() as PartyBasket | undefined;
 
@@ -331,8 +335,9 @@ export const onPartyBasketWrite = functions.firestore
  * httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"
  * ```
  */
-export const pubsubPixelTracking = functions.pubsub
-    .topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
+export const pubsubPixelTracking = functions
+    .region("asia-southeast1")
+    .pubsub.topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
 
@@ -465,8 +470,9 @@ export const pubsubPixelTracking = functions.pubsub
         return;
     });
 
-export const pubsubBillableActivationEvent = functions.pubsub
-    .topic(manifest.cloudFunctions.pubsubBillableActivationEvent.topic)
+export const pubsubBillableActivationEvent = functions
+    .region("asia-southeast1")
+    .pubsub.topic(manifest.cloudFunctions.pubsubBillableActivationEvent.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", {
             topic: manifest.cloudFunctions.pubsubBillableActivationEvent.topic,
@@ -514,6 +520,7 @@ interface IndexLootboxOnCreateTaskRequest {
 }
 
 export const indexLootboxOnCreate = functions
+    .region("asia-southeast1")
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
@@ -640,8 +647,9 @@ export const indexLootboxOnCreate = functions
         });
     });
 
-export const enqueueLootboxOnCreate = functions.https.onCall(
-    async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
+export const enqueueLootboxOnCreate = functions
+    .region("asia-southeast1")
+    .https.onCall(async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
             logger.error("Unauthenticated");
@@ -686,8 +694,7 @@ export const enqueueLootboxOnCreate = functions.https.onCall(
         await queue.enqueue(taskData);
 
         return;
-    }
-);
+    });
 
 interface IndexLootboxOnMintTaskRequest {
     chain: ChainInfo;
@@ -703,6 +710,7 @@ interface IndexLootboxOnMintTaskRequest {
 }
 
 export const indexLootboxOnMint = functions
+    .region("asia-southeast1")
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
@@ -828,8 +836,9 @@ export const indexLootboxOnMint = functions
         });
     });
 
-export const enqueueLootboxOnMint = functions.https.onCall(
-    async (data: EnqueueLootboxOnMintCallableRequest, context) => {
+export const enqueueLootboxOnMint = functions
+    .region("asia-southeast1")
+    .https.onCall(async (data: EnqueueLootboxOnMintCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
             logger.error("Unauthenticated");
@@ -865,12 +874,12 @@ export const enqueueLootboxOnMint = functions.https.onCall(
         await queue.enqueue(taskData);
 
         return;
-    }
-);
+    });
 
 // Conversion function for changing mp4 to webm
 // originally from https://github.com/Scew5145/FirebaseVideoConvertDemo
 export const mp4_to_webm = functions
+    .region("asia-southeast1")
     .runWith({
         // Ensure the function has enough memory and time
         // to process large files
