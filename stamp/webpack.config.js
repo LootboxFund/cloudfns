@@ -14,6 +14,17 @@ const serverConfig = {
           configFile: "tsconfig.json",
         },
       },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: "file-loader",
+          },
+          {
+            loader: "css-loader",
+          },
+        ],
+      },
     ],
   },
   resolve: {

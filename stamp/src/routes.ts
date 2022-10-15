@@ -1,5 +1,9 @@
 import * as express from "express";
-import { generateImage, generateTicketImage } from "./lib/api/stamp";
+import {
+  generateImage,
+  generateStampImage,
+  generateTicketImage,
+} from "./lib/api/stamp";
 import {
   StampNewTicketProps,
   StampNewTicketResponse,
@@ -11,6 +15,11 @@ import {
 import { saveTicketMetadataToGBucket } from "./lib/api/gbucket";
 import { manifest } from "./manifest";
 import { getAuthenticationSecret } from "./lib/api/secrets";
+import { v4 as uuidv4 } from "uuid";
+import {
+  StampNewInviteProps,
+  StampNewInviteResponse,
+} from "./lib/types/stamp.types";
 
 const router = express.Router();
 
@@ -151,6 +160,47 @@ router.post(
         message: "Internal Server Error",
         stamp: "",
         uri: "",
+      });
+    }
+    return;
+  }
+);
+
+router.post(
+  "/stamp/new/player/invite",
+  async (
+    req: express.Request<unknown, unknown, StampNewInviteProps>,
+    res: express.Response<StampNewInviteResponse>,
+    next
+  ) => {
+    try {
+      // const { secret } = req.headers;
+      // const verifiedSecret = await getAuthenticationSecret();
+      // if (secret !== verifiedSecret) {
+      //   return res.status(401).json({
+      //     message: "Unauthorized",
+      //     stamp: "",
+      //   });
+      // }
+
+      const tempLocalPath = `/tmp/image.png`;
+      const { teamName, userID } = req.body;
+
+      const linkToImage = await generateStampImage(tempLocalPath, {
+        teamName,
+        userID,
+        stampID: uuidv4(),
+      });
+
+      res.json({
+        message: "Created stamp!",
+        stamp: linkToImage,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Internal Server Error",
+        stamp: "",
       });
     }
     return;

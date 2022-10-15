@@ -6,8 +6,10 @@ import nodeHtmlToImage from "node-html-to-image";
 import Ticket, { TicketProps } from "../components/Ticket";
 import { saveLocalFileToGBucket } from "./gbucket";
 import { manifest } from "../../manifest";
+import { StampProps } from "../types/stamp.types";
+import InviteStamp from "../components/InviteStamp";
 
-export const generateStaticElement = (props: TicketProps) =>
+export const generateStaticElementTicket = (props: TicketProps) =>
   ReactDOMServer.renderToStaticMarkup(
     <Ticket
       ticketID={props.ticketID}
@@ -36,7 +38,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
           </style>
         </head>
         <body>
-            ${generateStaticElement(props)}
+            ${generateStaticElementTicket(props)}
         </body>
       </html>
       `,
@@ -75,7 +77,7 @@ export const generateTicketImage = async (path: string, props: TicketProps) => {
           </style>
         </head>
         <body>
-            ${generateStaticElement(props)}
+            ${generateStaticElementTicket(props)}
         </body>
       </html>
       `,
@@ -88,6 +90,45 @@ export const generateTicketImage = async (path: string, props: TicketProps) => {
       alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
       fileName: `${props.lootboxAddress}/${props.ticketID}.png`,
+      bucket: manifest.storage.buckets.stamp.id,
+    });
+    return imagePath;
+  } catch (e) {
+    console.log(`--- BIG ERROR ---`);
+    console.log(e);
+    return;
+  }
+};
+
+export const generateStaticElementStamp = (props: StampProps) =>
+  ReactDOMServer.renderToStaticMarkup(<InviteStamp />);
+
+/** Generates ticket stamp image */
+export const generateStampImage = async (path: string, props: StampProps) => {
+  console.log(`Generating Stamp Image...`);
+  console.log(generateStaticElementStamp(props));
+  try {
+    await nodeHtmlToImage({
+      output: path,
+      html: `<html>
+        <head>
+          
+<link rel="stylesheet" href="https://storage.googleapis.com/lootbox-stamp-staging/invite-stamp/index.css">
+        </head>
+        <body>
+            ${generateStaticElementStamp(props)}
+        </body>
+      </html>
+      `,
+      transparent: true,
+      puppeteerArgs: {
+        args: ["--no-sandbox"],
+      },
+    });
+    const imagePath = await saveLocalFileToGBucket({
+      alias: `Image invite stamp ${props.stampID}`,
+      localFilePath: path,
+      fileName: `invite-stamp/${props.stampID}.png`,
       bucket: manifest.storage.buckets.stamp.id,
     });
     return imagePath;
