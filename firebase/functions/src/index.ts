@@ -61,13 +61,18 @@ import fs from "fs";
 // import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 // import { generateTicketDigest } from "./lib/ethers";
 
+// TODO: move REGION into helpers?
+const REGION = "asia-southeast1";
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
 // TODO: Rename this secret to be LOOTBOX
 const whitelisterPrivateKeySecretName: SecretName = "PARTY_BASKET_WHITELISTER_PRIVATE_KEY";
 
+type taskQueueID = "indexLootboxOnCreate" | "indexLootboxOnMint";
+const buildTaskQueuePath = (taskQueueID: taskQueueID) => `locations/${REGION}/functions/${taskQueueID}`;
+
 export const onClaimWrite = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .runWith({
         secrets: [whitelisterPrivateKeySecretName],
     })
@@ -180,7 +185,7 @@ export const onClaimWrite = functions
     });
 
 export const onWalletCreate = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .runWith({
         secrets: [whitelisterPrivateKeySecretName],
     })
@@ -238,7 +243,7 @@ export const onWalletCreate = functions
     });
 
 export const onLootboxWrite = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .firestore.document(`/${Collection.Lootbox}/{lootboxID}`)
     .onWrite(async (snap) => {
         const oldLootbox = snap.before.data() as Lootbox_Firestore | undefined;
@@ -278,7 +283,7 @@ export const onLootboxWrite = functions
 
 /** @deprecated use onLootboxWrite now */
 export const onPartyBasketWrite = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .firestore.document(`/${Collection.PartyBasket}/{partyBasketId}`)
     .onWrite(async (snap) => {
         const newPartyBasket = snap.after.data() as PartyBasket | undefined;
@@ -336,7 +341,7 @@ export const onPartyBasketWrite = functions
  * ```
  */
 export const pubsubPixelTracking = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .pubsub.topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
@@ -471,7 +476,7 @@ export const pubsubPixelTracking = functions
     });
 
 export const pubsubBillableActivationEvent = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .pubsub.topic(manifest.cloudFunctions.pubsubBillableActivationEvent.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", {
@@ -520,7 +525,7 @@ interface IndexLootboxOnCreateTaskRequest {
 }
 
 export const indexLootboxOnCreate = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
@@ -648,7 +653,7 @@ export const indexLootboxOnCreate = functions
     });
 
 export const enqueueLootboxOnCreate = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .https.onCall(async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
@@ -690,7 +695,7 @@ export const enqueueLootboxOnCreate = functions
             },
         };
         logger.debug("Enqueing task", taskData);
-        const queue = fun.taskQueue("indexLootboxOnCreate");
+        const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnCreate"));
         await queue.enqueue(taskData);
 
         return;
@@ -710,7 +715,7 @@ interface IndexLootboxOnMintTaskRequest {
 }
 
 export const indexLootboxOnMint = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
@@ -837,7 +842,7 @@ export const indexLootboxOnMint = functions
     });
 
 export const enqueueLootboxOnMint = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .https.onCall(async (data: EnqueueLootboxOnMintCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
@@ -870,7 +875,7 @@ export const enqueueLootboxOnMint = functions
             },
         };
         logger.debug("Enqueing task", taskData);
-        const queue = fun.taskQueue("indexLootboxOnMint");
+        const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnMint"));
         await queue.enqueue(taskData);
 
         return;
@@ -879,7 +884,7 @@ export const enqueueLootboxOnMint = functions
 // Conversion function for changing mp4 to webm
 // originally from https://github.com/Scew5145/FirebaseVideoConvertDemo
 export const mp4_to_webm = functions
-    .region("asia-southeast1")
+    .region(REGION)
     .runWith({
         // Ensure the function has enough memory and time
         // to process large files
