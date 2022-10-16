@@ -32,6 +32,8 @@ const server = new ApolloServer({
             "https://lootbox.fund",
             "https://www.lootbox.fund",
             "https://go.lootbox.fund", // Viral onboarding
+            "https://marketing.lootbox.fund",
+            "https://host.lootbox.fund",
           ],
   },
   context: async ({ req }): Promise<Context> => {
