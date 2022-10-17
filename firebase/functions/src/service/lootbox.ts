@@ -15,14 +15,21 @@ import {
     LootboxTicketDigest,
     LootboxMintSignatureNonce,
     LootboxCreatedNonce,
+    ChainIDHex,
+    Collection,
+    LootboxTournamentSnapshot_Firestore,
+    LootboxSnapshotTimestamps,
+    LootboxTimestamps,
 } from "@wormgraph/helpers";
 import { ethers } from "ethers";
 import { logger } from "firebase-functions";
+import { db } from "../api/firebase";
 import {
     createLootbox,
     createLootboxTournamentSnapshot,
     createMintWhitelistSignature,
     finalizeMint,
+    getAllLootboxTournamentSnapshotRefs,
     getLootboxByChainAddress,
     getTicketByDigest,
     getTicketByWeb3ID,
@@ -32,6 +39,8 @@ import { getTournamentByID } from "../api/firestore/tournament";
 import { stampNewLootbox, stampNewTicket } from "../api/stamp";
 import { generateNonce, generateTicketDigest, whitelistLootboxMintSignature } from "../lib/ethers";
 import { convertLootboxToTicketMetadata } from "../lib/lootbox";
+import { v4 as uuidV4 } from "uuid";
+import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 
 interface CreateLootboxRequest {
     // passed in variables
@@ -254,4 +263,62 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
     });
 
     return ticketDB;
+};
+
+interface UpdateCallbackRequest {
+    backgroundImage: string;
+    logoImage: string;
+    themeColor: string;
+    name: string;
+    lootboxAddress: Address;
+    chainIdHex: ChainIDHex;
+    description: string;
+}
+export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallbackRequest): Promise<void> => {
+    // This has to update a bunch of potentially duplciated data...
+    // - Lootbox tournament snapshots
+    // - Lootbox tickets
+
+    const lootboxTournamentSnaphotRefs = await getAllLootboxTournamentSnapshotRefs(lootboxID);
+
+    // Restamp the lootbox
+    const _stampImageUrl = await stampNewLootbox({
+        backgroundImage: request.backgroundImage,
+        logoImage: request.logoImage,
+        themeColor: request.themeColor,
+        name: request.name,
+        lootboxAddress: request.lootboxAddress,
+        chainIdHex: request.chainIdHex,
+    });
+    // Ghetto cache bust:
+    const nonce = uuidV4();
+    const url = new URL(_stampImageUrl);
+    url.searchParams.append("n", nonce);
+    const newStampURL = url.href;
+
+    const batch = db.batch();
+    const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
+    const lootboxTimestampFieldName: keyof Lootbox_Firestore = "timestamps";
+    const lootboxUpdatedAtFieldName: keyof LootboxTimestamps = "updatedAt";
+    const lootboxUpdateReq: Partial<Lootbox_Firestore> = {
+        stampImage: newStampURL,
+        [`${lootboxTimestampFieldName}.${lootboxUpdatedAtFieldName}`]: Timestamp.now().toMillis(),
+    };
+    const snapshotTimestampFieldName: keyof LootboxTournamentSnapshot_Firestore = "timestamps";
+    const snapshotUpdatedAtFieldName: keyof LootboxSnapshotTimestamps = "updatedAt";
+    const updateLootboxTournamentSnapshotReq: Partial<LootboxTournamentSnapshot_Firestore> = {
+        description: request.description,
+        name: request.name,
+        stampImage: newStampURL,
+        [`${snapshotTimestampFieldName}.${snapshotUpdatedAtFieldName}`]: Timestamp.now().toMillis(),
+    };
+    batch.update(lootboxRef, lootboxUpdateReq);
+    for (const ref of lootboxTournamentSnaphotRefs) {
+        batch.update(ref, updateLootboxTournamentSnapshotReq);
+    }
+    await batch.commit();
+
+    // // TODO Now we have to do the same for all of the NFT stamp images ... :( Note: Firestore has a 500 document limit for batch.commit, so we will have to batch this if needed
+    // const lootboxTicketRefs = await getAllLootboxTicketRefs(lootboxID);
+    // const lootboxTicketBatch = db.batch()
 };
