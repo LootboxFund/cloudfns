@@ -129,7 +129,6 @@ export const editLootbox = async (
   await docRef.update(updateRequest);
   const updatedData = await docRef.get();
 
-  // return (await getLootbox(lootboxID)) as Lootbox_Firestore;
   return updatedData.data()!;
 };
 

@@ -204,7 +204,7 @@ const LootboxResolvers: Resolvers = {
           description: payload.description || undefined,
           maxTickets: payload.maxTickets || undefined,
           nftBountyValue: payload.nftBountyValue || undefined,
-          symbol: payload.symbol || undefined,
+          // symbol: payload.symbol || undefined,
           joinCommunityUrl: payload.joinCommunityUrl || undefined,
           status: payload.status
             ? convertLootboxStatusGQLToDB(payload.status)
