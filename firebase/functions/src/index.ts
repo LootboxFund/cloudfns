@@ -57,6 +57,7 @@ import mkdirp from "mkdirp";
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
 import { stampNewLootbox } from "./api/stamp";
+import { v4 as uuidV4 } from "uuid";
 // import TranscoderServiceClientV1 from "@google-cloud/video-transcoder";
 // const { TranscoderServiceClient } = TranscoderServiceClientV1;
 // import ffmpegPath from "@ffmpeg-installer/ffmpeg";
@@ -265,8 +266,8 @@ export const onLootboxWrite = functions
             newLootbox.themeColor !== oldLootbox.themeColor;
 
         if (shouldUpdateStamp) {
-            // Restamp the lootbox
-            const stampImageUrl = await stampNewLootbox({
+            logger.info("Updating stamp", {
+                lootboxID: newLootbox.id,
                 backgroundImage: newLootbox.backgroundImage,
                 logoImage: newLootbox.logo,
                 themeColor: newLootbox.themeColor,
@@ -274,13 +275,33 @@ export const onLootboxWrite = functions
                 lootboxAddress: newLootbox.address,
                 chainIdHex: newLootbox.chainIdHex,
             });
-            const lootboxRef = db.collection(Collection.Lootbox).doc(snap.after.id);
+            try {
+                // Restamp the lootbox
+                const stampImageUrl = await stampNewLootbox({
+                    backgroundImage: newLootbox.backgroundImage,
+                    logoImage: newLootbox.logo,
+                    themeColor: newLootbox.themeColor,
+                    name: newLootbox.name,
+                    lootboxAddress: newLootbox.address,
+                    chainIdHex: newLootbox.chainIdHex,
+                });
+                const lootboxRef = db.collection(Collection.Lootbox).doc(snap.after.id);
 
-            const updateReq: Partial<Lootbox_Firestore> = {
-                stampImage: stampImageUrl,
-            };
+                // Ghetto cache bust:
+                const nonce = uuidV4();
+                const url = new URL(stampImageUrl);
+                url.searchParams.append("n", nonce);
 
-            await lootboxRef.update(updateReq);
+                const updateReq: Partial<Lootbox_Firestore> = {
+                    stampImage: url.href,
+                };
+
+                await lootboxRef.update(updateReq);
+            } catch (err) {
+                logger.error(err, {
+                    lootboxID: newLootbox.id,
+                });
+            }
         }
 
         // TODO: update all snapshot? SKIP FOR NOW
