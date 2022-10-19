@@ -12,8 +12,10 @@
  *
  * CAVEATS
  * - we skip reward claims, because those will automatically be created in the onClaimWrite function
- * - the onClaimWrite function will increment the claim counts on the lootbox AND create whitelists for the user
- *   if they have a wallet (see @cloudfns/firestore/functions/index.ts > onClaimWrite)
+ * - the onClaimWrite function (called automatically in the backend) will increment the claim counts on the lootbox
+ *   and create whitelists for the user if they have a wallet (see @cloudfns/firestore/functions/index.ts > onClaimWrite)
+ * - we extend the Claim_Firestore & Referral_Firestore interfaces to include new migration backfill fields.
+ *   for ex. claim documents will store extra field __originalClaimID
  *
  * You'll have to authenticate with before running the script:
  * > $ gcloud auth application-default-login
@@ -47,12 +49,16 @@ interface Config {
   mappings: { partyBasketID: PartyBasketID; lootboxID: LootboxID }[];
 }
 
+// Create new referral of this type, these extra fields are ONLY meant to be used by this script.
+// DO NOT RELY ON THESE FIELDS IN THE APP
 interface ReferralBackfilled_Firestore extends Referral_Firestore {
   __isBackfilled: true;
   __backfilledAt: number;
   __originalReferralID: ReferralID;
 }
 
+// Create new claim of this type, these extra fields are ONLY meant to be used by this script.
+// DO NOT RELY ON THESE FIELDS IN THE APP
 interface ClaimBackfilled_Firestore extends Claim_Firestore {
   __isBackfilled: true;
   __backfilledAt: number;
