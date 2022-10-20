@@ -1,7 +1,9 @@
 /**
  * Migration script to copy claims from old party baskets to new cosmic lootboxes
  * BEFORE RUNNING THIS SCRIPT:
- * 1. Add the party basket IDs with their corresponding lootbox IDs in the _scriptData object below
+ * 1. Create a new post cosmic tournament VIA antd host repo
+ * 2. Create new lootboxes for each winning party basket in the new tournament
+ * 3. Add the tournamentID & the lootbox IDs from the previous steps into _scriptData object below
  *
  * What it does:
  * - Gets all claims for a party basket
@@ -11,20 +13,23 @@
  * - Repeats for all party basket <> lootbox pairs
  *
  * CAVEATS
- * - we skip reward claims, because those will automatically be created in the onClaimWrite function
- * - the onClaimWrite function (called automatically in the backend) will increment the claim counts on the lootbox
- *   and create whitelists for the user if they have a wallet (see @cloudfns/firestore/functions/index.ts > onClaimWrite)
+ * - You need to manually create a new tournament + lootboxes before running the script
+ *      - Also, you have to add this info in the _scriptData object below
+ * - we SKIP "reward claims", because those will automatically be created in the onClaimWrite function in firebase functions
+ *      - the onClaimWrite function (called automatically in the backend) will increment the claim counts on the lootbox
+ *        and create whitelists for the user if they have a wallet (see @cloudfns/firestore/functions/index.ts > onClaimWrite)
  * - we extend the Claim_Firestore & Referral_Firestore interfaces to include new migration backfill fields.
  *   for ex. claim documents will store extra field __originalClaimID
  *
- * You'll have to authenticate with before running the script:
+ 
+* You'll have to authenticate with before running the script:
+ * You might need to temporarily grant your account firestore write permission.
+ * 
  * > $ gcloud auth application-default-login
  * > $ gcloud config set project lootbox-fund-staging
  *
- * You might need to temporarily grant your account firestore write permission.
- *
  * to run:
- * npx ts-node --script-mode ./src/migrations/cabanatuanCityMigrationScript.ts staging
+ * > npx ts-node --script-mode ./src/migrations/cabanatuanCityMigrationScript.ts staging
  *
  * [env]    `prod` | `staging`
  */
@@ -40,12 +45,22 @@ import {
   ReferralID,
   ReferralSlug,
   Referral_Firestore,
+  TournamentID,
 } from "@wormgraph/helpers";
-import { getLootbox, getPartyBasketById } from "../api/firestore";
+import {
+  getLootbox,
+  getPartyBasketById,
+  getTournamentById,
+} from "../api/firestore";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { nanoid } from "nanoid";
 
+// CONFIG:
+// We add pairs of {partyBasketID, lootboxID}, where
+// - partyBasketID === the OLD party basket we need to duplicate claims for
+// - lootboxID     === the NEW cosmic lootbox we need to create the claims for from the old party basket
 interface Config {
+  tournamentID: TournamentID;
   mappings: { partyBasketID: PartyBasketID; lootboxID: LootboxID }[];
 }
 
@@ -67,12 +82,20 @@ interface ClaimBackfilled_Firestore extends Claim_Firestore {
 }
 
 const _scriptData: { prod: Config; staging: Config } = {
+  // FILL THIS IN
   prod: {
-    // FILL THIS IN
+    tournamentID: "_________" as TournamentID,
     mappings: [],
   },
   staging: {
-    mappings: [],
+    tournamentID: "AVkMS8PZAJ6uiTgVp1wP" as TournamentID,
+    mappings: [
+      {
+        // Test DEATH party basket / lootbox
+        partyBasketID: "KBj26PwCjEWBpU7Qa9pp" as PartyBasketID,
+        lootboxID: "36sumZXYBkirQI0JmEb7" as LootboxID,
+      },
+    ],
   },
 };
 
@@ -97,6 +120,10 @@ const run = async () => {
     throw new Error(`No config for env: ${env}`);
   }
 
+  if (!config.tournamentID) {
+    throw new Error(`No tournamentID specified for env: ${env}`);
+  }
+
   console.log(`
    
        Running migration script...
@@ -104,6 +131,17 @@ const run = async () => {
            Processing: ${config.mappings.length} mappings
 
     `);
+
+  await sleep();
+
+  console.log('fetching tournament for ID "' + config.tournamentID + '"');
+  const tournament = await getTournamentById(config.tournamentID);
+
+  if (!tournament) {
+    throw new Error(`No tournament found for ID: ${config.tournamentID}`);
+  }
+
+  console.log('found tournament "' + tournament.title + '"');
 
   await sleep();
 
@@ -166,8 +204,21 @@ const run = async () => {
       ) as Query<Claim_Firestore>;
 
     const claimsSnaps = await collectionGroupRef.get();
-    const claims = claimsSnaps.docs.map((doc) => doc.data());
-    for (let originalClaim of claims) {
+    // const claims = claimsSnaps.docs.map((doc) => doc.data());
+    const nonRewardClaims = claimsSnaps.docs
+      .map((doc) => doc.data())
+      .filter((claimData) => {
+        const willSkip = claimData.type !== ClaimType_Firestore.reward;
+        if (willSkip) {
+          console.log('Skipping "reward claim" for claim ID: ', claimData.id);
+        }
+        return willSkip;
+      });
+    console.log(
+      "Found Claims to Process (non-reward): ",
+      nonRewardClaims.length
+    );
+    for (let originalClaim of nonRewardClaims) {
       if (originalClaim.type === ClaimType_Firestore.reward) {
         // SKIP REWARD CLAIMS because they get created async in the onClaimWrite function
         console.log("Skipping reward claim: ", originalClaim.id);
@@ -243,12 +294,13 @@ const run = async () => {
           // - isPostCosmic -> true
           // - seedPartyBasketId will be ommited because it is not required in cosmic flow
           // - seedLootboxID will be ommited also because it is not really relavent
+          // - tournamentId will be the NEW tournament that has been manually created
           const newReferralDocument: ReferralBackfilled_Firestore = {
             id: newReferralRef.id as ReferralID,
             referrerId: originalReferral.referrerId,
             creatorId: originalReferral.creatorId,
             slug: newSlug,
-            tournamentId: originalReferral.tournamentId,
+            tournamentId: tournament.id,
             campaignName: originalReferral.campaignName,
             nConversions: originalReferral.nConversions,
             type: originalReferral.type,
@@ -324,6 +376,8 @@ const run = async () => {
         // - rewardFromFriendReferred ommited same reason as above
         // - isPostCosmic -> true
         // - all party basket things will be ommited
+        // - tournamentId -> will be the NEW tournament ID
+        // - tournamentName -> will be the NEW tournament name
         const newClaimBody: ClaimBackfilled_Firestore = {
           id: newClaimRef.id as ClaimID,
           referralId: newReferral.id, // NEW
@@ -331,8 +385,8 @@ const run = async () => {
           referralCampaignName: originalClaim.referralCampaignName,
           referralSlug: newReferral.slug, // NEW
           referralType: originalClaim.referralType,
-          tournamentId: originalClaim.tournamentId,
-          tournamentName: originalClaim.tournamentName,
+          tournamentId: tournament.id,
+          tournamentName: tournament.title,
           lootboxID: lootbox.id,
           lootboxAddress: lootbox.address,
           lootboxName: lootbox.name,
