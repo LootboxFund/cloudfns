@@ -20,12 +20,14 @@
  *        and create whitelists for the user if they have a wallet (see @cloudfns/firestore/functions/index.ts > onClaimWrite)
  * - we extend the Claim_Firestore & Referral_Firestore interfaces to include new migration backfill fields.
  *   for ex. claim documents will store extra field __originalClaimID
+ * - reward claims DO NOT HAVE backfilled fields [WARNING!!!!] - if we need to delete all of our claims we made,
+ *   we will just have to delete everything inside of a backfilled referral without relying on claim.__originalClaimID since reward claims dont have it
  *
- 
-* You'll have to authenticate with before running the script:
+ *
+ * You'll have to authenticate with before running the script:
  * You might need to temporarily grant your account firestore write permission.
- * 
- * > $ gcloud auth application-default-login
+ *
+ * > $ gcloud auth application-default login
  * > $ gcloud config set project lootbox-fund-staging
  *
  * to run:
@@ -208,15 +210,19 @@ const run = async () => {
     const nonRewardClaims = claimsSnaps.docs
       .map((doc) => doc.data())
       .filter((claimData) => {
-        const willSkip = claimData.type !== ClaimType_Firestore.reward;
+        const willSkip = claimData.type === ClaimType_Firestore.reward;
         if (willSkip) {
-          console.log('Skipping "reward claim" for claim ID: ', claimData.id);
+          console.log(
+            'Skipping "reward claim" for claim: ',
+            `/referral/${claimData.referralId}/claim/${claimData.id}`
+          );
         }
-        return willSkip;
+        return !willSkip;
       });
     console.log(
-      "Found Claims to Process (non-reward): ",
-      nonRewardClaims.length
+      "\nFound Claims to Process (non-reward): ",
+      nonRewardClaims.length,
+      "\n"
     );
     for (let originalClaim of nonRewardClaims) {
       if (originalClaim.type === ClaimType_Firestore.reward) {
@@ -224,215 +230,248 @@ const run = async () => {
         console.log("Skipping reward claim: ", originalClaim.id);
         continue;
       }
-
-      // Create a duplicated referral for the new lootbox
-      if (!createdReferrals[originalClaim.referralId]) {
-        // Make sure there is not already a duped referral. Here we use the migration type ReferralBackfilled_Firestore
-        console.log("Checking for existing duplicated referral...");
-        const existingDuplicatedReferralRef = admin
-          .firestore()
-          .collection(Collection.Referral)
-          .where(
-            "__originalReferralID",
-            "==",
-            originalClaim.referralId
-          ) as Query<ReferralBackfilled_Firestore>;
-        const existingDuplicatedReferralSnaps =
-          await existingDuplicatedReferralRef.get();
-        const existingDuplicatedReferral =
-          existingDuplicatedReferralSnaps.docs[0]?.data();
-
-        if (!existingDuplicatedReferral) {
-          // Create the new referral...
-
-          // We need to look up the old referral first
-          if (!originalReferrals[originalClaim.referralId]) {
-            console.log(
-              "fetching original referral for... Referal ID: ",
-              originalClaim.referralId
-            );
-
-            // Get original Referral
-            const originalReferralRef = admin
-              .firestore()
-              .collection(Collection.Referral)
-              .doc(
-                originalClaim.referralId
-              ) as DocumentReference<Referral_Firestore>;
-
-            const originalReferralSnap = await originalReferralRef.get();
-            const originalReferral = originalReferralSnap.data();
-            if (!originalReferral) {
-              console.log(`
-
-                        No original referral found
-
-                        Referral ID: ${originalClaim.referralId}
-                        Claim ID: ${originalClaim.id}
-
-                    `);
-              throw new Error("Referral NOT FOUND");
-            }
-            originalReferrals[originalClaim.referralId] = originalReferral;
-          }
-
-          const originalReferral = originalReferrals[originalClaim.referralId];
-
-          // ######## CREATE THE NEW REFERRAL ########
-
-          const newReferralRef = admin
+      try {
+        // Create a duplicated referral for the new lootbox
+        if (!createdReferrals[originalClaim.referralId]) {
+          // Make sure there is not already a duped referral. Here we use the migration type ReferralBackfilled_Firestore
+          console.log("Checking for existing duplicated referral...");
+          const existingDuplicatedReferralRef = admin
             .firestore()
             .collection(Collection.Referral)
-            .doc() as DocumentReference<ReferralBackfilled_Firestore>;
+            .where(
+              "__originalReferralID",
+              "==",
+              originalClaim.referralId
+            ) as Query<ReferralBackfilled_Firestore>;
+          const existingDuplicatedReferralSnaps =
+            await existingDuplicatedReferralRef.get();
+          const existingDuplicatedReferral =
+            existingDuplicatedReferralSnaps.docs[0]?.data();
 
-          const newSlug = nanoid(10) as ReferralSlug;
+          if (!existingDuplicatedReferral) {
+            // Create the new referral...
 
-          // Duplicate the referral in the database
-          // FIELDS THAT WILL CHANGE:
-          // - id
-          // - slug
-          // - isPostCosmic -> true
-          // - seedPartyBasketId will be ommited because it is not required in cosmic flow
-          // - seedLootboxID will be ommited also because it is not really relavent
-          // - tournamentId will be the NEW tournament that has been manually created
-          const newReferralDocument: ReferralBackfilled_Firestore = {
-            id: newReferralRef.id as ReferralID,
-            referrerId: originalReferral.referrerId,
-            creatorId: originalReferral.creatorId,
-            slug: newSlug,
-            tournamentId: tournament.id,
-            campaignName: originalReferral.campaignName,
-            nConversions: originalReferral.nConversions,
-            type: originalReferral.type,
-            isPostCosmic: true,
-            timestamps: originalReferral.timestamps,
+            // We need to look up the old referral first
+            if (!originalReferrals[originalClaim.referralId]) {
+              console.log(
+                "fetching original referral for... Referal ID: ",
+                originalClaim.referralId
+              );
 
-            // Backfill fields
-            __isBackfilled: true,
-            __backfilledAt: Timestamp.now().toMillis(),
-            __originalReferralID: originalReferral.id,
-          };
+              // Get original Referral
+              const originalReferralRef = admin
+                .firestore()
+                .collection(Collection.Referral)
+                .doc(
+                  originalClaim.referralId
+                ) as DocumentReference<Referral_Firestore>;
 
-          await newReferralRef.set(newReferralDocument);
-          // RECALL: new referrals are still indexed VIA old referral ID in memory
-          createdReferrals[originalReferral.id as unknown as OldReferralID] =
-            newReferralDocument;
-        } else {
-          createdReferrals[
-            originalClaim.referralId as unknown as OldReferralID
-          ] = existingDuplicatedReferral;
+              const originalReferralSnap = await originalReferralRef.get();
+              const originalReferral = originalReferralSnap.data();
+              if (!originalReferral) {
+                console.log(`
+        
+                                No original referral found
+        
+                                Referral ID: ${originalClaim.referralId}
+                                Claim ID: ${originalClaim.id}
+        
+                            `);
+                throw new Error("Referral NOT FOUND");
+              }
+              originalReferrals[originalClaim.referralId] = originalReferral;
+            }
+
+            const originalReferral =
+              originalReferrals[originalClaim.referralId];
+
+            // ######## CREATE THE NEW REFERRAL ########
+
+            const newReferralRef = admin
+              .firestore()
+              .collection(Collection.Referral)
+              .doc() as DocumentReference<ReferralBackfilled_Firestore>;
+
+            const newSlug = nanoid(10) as ReferralSlug;
+
+            // Duplicate the referral in the database
+            // FIELDS THAT WILL CHANGE:
+            // - id
+            // - slug
+            // - isPostCosmic -> true
+            // - seedPartyBasketId will be ommited because it is not required in cosmic flow
+            // - seedLootboxID will be ommited also because it is not really relavent
+            // - tournamentId will be the NEW tournament that has been manually created
+            const newReferralDocument: ReferralBackfilled_Firestore = {
+              id: newReferralRef.id as ReferralID,
+              referrerId: originalReferral.referrerId,
+              creatorId: originalReferral.creatorId,
+              slug: newSlug,
+              tournamentId: tournament.id,
+              campaignName: originalReferral.campaignName,
+              nConversions: originalReferral.nConversions,
+              type: originalReferral.type,
+              isPostCosmic: true,
+              timestamps: originalReferral.timestamps,
+
+              // Backfill fields
+              __isBackfilled: true,
+              __backfilledAt: Timestamp.now().toMillis(),
+              __originalReferralID: originalReferral.id,
+            };
+
+            console.log(`
+        
+                    Creating new referral...
+        
+                    Original Referral ID: ${originalReferral.id}
+                    New Referral ID:      ${newReferralRef.id}
+                            
+                  
+                  `);
+
+            await newReferralRef.set(newReferralDocument);
+
+            console.log(
+              "\ncreated referral: ",
+              `/referral/${newReferralRef.id}\n`
+            );
+            // RECALL: new referrals are still indexed VIA old referral ID in memory
+            createdReferrals[originalReferral.id as unknown as OldReferralID] =
+              newReferralDocument;
+          } else {
+            console.log(
+              `Referral has already been made...  ${existingDuplicatedReferral.id} Skipping referral creation...`
+            );
+            createdReferrals[
+              originalClaim.referralId as unknown as OldReferralID
+            ] = existingDuplicatedReferral;
+          }
         }
-      }
 
-      const newReferral = createdReferrals[originalClaim.referralId];
+        const newReferral = createdReferrals[originalClaim.referralId];
 
-      // NOW WE CAN DUPLICATE THE CLAIM
+        // NOW WE CAN DUPLICATE THE CLAIM
 
-      // First, make sure we havent already made this claim via the backfilled property __originalClaimID
-      console.log(
-        "looking up duplicated claim for old claimID ",
-        originalClaim.id
-      );
-      const existingDuplicatedClaimRef = admin
-        .firestore()
-        .collection(Collection.Referral)
-        .doc(newReferral.id)
-        .collection(Collection.Claim)
-        .where(
-          "__originalClaimID",
-          "==",
+        // First, make sure we havent already made this claim via the backfilled property __originalClaimID
+        console.log(
+          "looking up duplicated claim for old claimID ",
           originalClaim.id
-        ) as Query<ClaimBackfilled_Firestore>;
-
-      const existingDuplicatedClaimSnaps =
-        await existingDuplicatedClaimRef.get();
-      const existingDuplicatedClaim =
-        existingDuplicatedClaimSnaps.docs[0]?.data();
-
-      if (!existingDuplicatedClaim) {
-        // Create the new claim...
-
-        // ######## CREATE THE NEW CLAIM ########
-
-        const newClaimRef = admin
+        );
+        const existingDuplicatedClaimRef = admin
           .firestore()
           .collection(Collection.Referral)
           .doc(newReferral.id)
           .collection(Collection.Claim)
-          .doc();
+          .where(
+            "__originalClaimID",
+            "==",
+            originalClaim.id
+          ) as Query<ClaimBackfilled_Firestore>;
 
-        // THINGS THAT CHANGE IN THE NEW CLAIM
-        // - id
-        // - referralId  ->  will become the new referral ID
-        // - referralSlug -> will become the new referral slug
-        // - originLootboxId -> will be ommited
-        // - lootboxID -> will be the NEW lootbox ID
-        // - lootboxAddress -> will be the NEW lootbox address
-        // - lootboxName -> will be the NEW lootbox name
-        // - lootboxNFTBountyValue -> will be the NEW lootbox bounty value
-        // - lootboxMaxTickets -> will be the NEW lootbox max tickets
-        // - whitelistID -> null because these are fresh babes
-        // - rewardFromClaim is ommited because we are not creating reward claims...
-        // - rewardFromFriendReferred ommited same reason as above
-        // - isPostCosmic -> true
-        // - all party basket things will be ommited
-        // - tournamentId -> will be the NEW tournament ID
-        // - tournamentName -> will be the NEW tournament name
-        const newClaimBody: ClaimBackfilled_Firestore = {
-          id: newClaimRef.id as ClaimID,
-          referralId: newReferral.id, // NEW
-          referrerId: originalClaim.referrerId, // NEW
-          referralCampaignName: originalClaim.referralCampaignName,
-          referralSlug: newReferral.slug, // NEW
-          referralType: originalClaim.referralType,
-          tournamentId: tournament.id,
-          tournamentName: tournament.title,
-          lootboxID: lootbox.id,
-          lootboxAddress: lootbox.address,
-          lootboxName: lootbox.name,
-          whitelistId: null,
-          ticketWeb3ID: null,
-          ticketID: null,
-          isPostCosmic: true,
-          claimerUserId: originalClaim.claimerUserId,
-          status: originalClaim.status,
-          type: originalClaim.type,
-          timestamps: originalClaim.timestamps,
-          // Add the backfill fields
-          __isBackfilled: true,
-          __backfilledAt: Timestamp.now().toMillis(),
-          __originalClaimID: originalClaim.id,
-          __originalReferralID: originalClaim.referralId,
-        };
+        const existingDuplicatedClaimSnaps =
+          await existingDuplicatedClaimRef.get();
+        const existingDuplicatedClaim =
+          existingDuplicatedClaimSnaps.docs[0]?.data();
 
-        // Add optional fields
-        if (lootbox.nftBountyValue) {
-          newClaimBody.lootboxNFTBountyValue = lootbox.nftBountyValue;
+        if (!existingDuplicatedClaim) {
+          // Create the new claim...
+
+          // ######## CREATE THE NEW CLAIM ########
+
+          const newClaimRef = admin
+            .firestore()
+            .collection(Collection.Referral)
+            .doc(newReferral.id)
+            .collection(Collection.Claim)
+            .doc();
+
+          // THINGS THAT CHANGE IN THE NEW CLAIM
+          // - id
+          // - referralId  ->  will become the new referral ID
+          // - referralSlug -> will become the new referral slug
+          // - originLootboxId -> will be ommited
+          // - lootboxID -> will be the NEW lootbox ID
+          // - lootboxAddress -> will be the NEW lootbox address
+          // - lootboxName -> will be the NEW lootbox name
+          // - lootboxNFTBountyValue -> will be the NEW lootbox bounty value
+          // - lootboxMaxTickets -> will be the NEW lootbox max tickets
+          // - whitelistID -> null because these are fresh babes
+          // - rewardFromClaim is ommited because we are not creating reward claims...
+          // - rewardFromFriendReferred ommited same reason as above
+          // - isPostCosmic -> true
+          // - all party basket things will be ommited
+          // - tournamentId -> will be the NEW tournament ID
+          // - tournamentName -> will be the NEW tournament name
+          const newClaimBody: ClaimBackfilled_Firestore = {
+            id: newClaimRef.id as ClaimID,
+            referralId: newReferral.id, // NEW
+            referrerId: originalClaim.referrerId, // NEW
+            referralCampaignName: originalClaim.referralCampaignName,
+            referralSlug: newReferral.slug, // NEW
+            referralType: originalClaim.referralType,
+            tournamentId: tournament.id,
+            tournamentName: tournament.title,
+            lootboxID: lootbox.id,
+            lootboxAddress: lootbox.address,
+            lootboxName: lootbox.name,
+            whitelistId: null,
+            ticketWeb3ID: null,
+            ticketID: null,
+            isPostCosmic: true,
+            claimerUserId: originalClaim.claimerUserId,
+            status: originalClaim.status,
+            type: originalClaim.type,
+            timestamps: originalClaim.timestamps,
+            // Add the backfill fields
+            __isBackfilled: true,
+            __backfilledAt: Timestamp.now().toMillis(),
+            __originalClaimID: originalClaim.id,
+            __originalReferralID: originalClaim.referralId,
+          };
+
+          // Add optional fields
+          if (lootbox.nftBountyValue) {
+            newClaimBody.lootboxNFTBountyValue = lootbox.nftBountyValue;
+          }
+          if (lootbox.maxTickets) {
+            newClaimBody.lootboxMaxTickets = lootbox.maxTickets;
+          }
+
+          console.log(`
+        
+                    Creating the new claim
+        
+                    New Claim ID: ${newClaimBody.id}
+                    New Referral ID: ${newReferral.id}
+        
+                    Old Claim ID: ${originalClaim.id}
+                    Old Referral ID: ${originalClaim.referralId}
+        
+                `);
+
+          await newClaimRef.set(newClaimBody);
+
+          console.log(
+            "\ncreated claim: ",
+            `/referral/${newClaimBody.referralId}/claim/${newClaimBody.id}\n`
+          );
+        } else {
+          // We've already made this claim...
+          console.log(
+            "Claim has already been made... ",
+            existingDuplicatedClaim.id,
+            "Skipping..."
+          );
+          continue;
         }
-        if (lootbox.maxTickets) {
-          newClaimBody.lootboxMaxTickets = lootbox.maxTickets;
-        }
-
-        console.log(`
-
-            Creating the new claim
-
-            New Claim ID: ${newClaimBody.id}
-            New Referral ID: ${newReferral.id}
-
-            Old Claim ID: ${originalClaim.id}
-            Old Referral ID: ${originalClaim.referralId}
-
-        `);
-
-        await newClaimRef.set(newClaimBody);
-      } else {
-        // We've already made this claim...
+      } catch (err) {
         console.log(
-          "Claim has already been made... ",
-          existingDuplicatedClaim.id,
-          "Skipping..."
+          "AN ERROR OCCURED PROCESSING CLAIM: ",
+          `/referral/${originalClaim.referralId}/claim/${originalClaim.id}`,
+          err
         );
+        console.error(err);
         continue;
       }
     }
