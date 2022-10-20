@@ -43,6 +43,7 @@ import {
     LootboxTicketDigest,
     LootboxMintSignatureNonce,
     EnqueueLootboxOnMintCallableRequest,
+    Tournament_Firestore,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import { checkIfOfferIncludesLootboxAppWebsiteVisit, reportViewToMMP } from "./api/mmp/mmp";
@@ -56,6 +57,7 @@ import axios from "axios";
 import mkdirp from "mkdirp";
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
+import { getTournamentByID, incrementTournamentRunningClaims } from "./api/firestore/tournament";
 // import TranscoderServiceClientV1 from "@google-cloud/video-transcoder";
 // const { TranscoderServiceClient } = TranscoderServiceClientV1;
 // import ffmpegPath from "@ffmpeg-installer/ffmpeg";
@@ -96,11 +98,18 @@ export const onClaimWrite = functions
                 });
 
                 let lootbox: Lootbox_Firestore | undefined;
+                let tournament: Tournament_Firestore | undefined;
 
                 try {
-                    lootbox = await getLootbox(newClaim.lootboxID);
+                    [lootbox, tournament] = await Promise.all([
+                        getLootbox(newClaim.lootboxID),
+                        getTournamentByID(newClaim.tournamentId),
+                    ]);
                     if (!lootbox) {
                         throw new Error("Lootbox not found");
+                    }
+                    if (!tournament) {
+                        throw new Error("Tournament not found");
                     }
                 } catch (err) {
                     logger.error("error fetching lootbox", { lootboxID: newClaim.lootboxID, err });
@@ -122,9 +131,15 @@ export const onClaimWrite = functions
                     }
                 }
 
-                incrementLootboxRunningClaims(newClaim.lootboxID).catch((err) => {
-                    logger.error("Error onClaimWrite", err);
-                });
+                try {
+                    // Increment counts on lootbox & tournament
+                    await Promise.all([
+                        incrementLootboxRunningClaims(newClaim.lootboxID),
+                        incrementTournamentRunningClaims(newClaim.tournamentId),
+                    ]);
+                } catch (err) {
+                    logger.error("Error onClaimWrite incrementing counts", err);
+                }
 
                 const currentAmount = lootbox?.runningCompletedClaims || 0;
                 const newCurrentAmount = currentAmount + 1; // Since we just incremented by one in this function (see "incrementLootboxRunningClaims")

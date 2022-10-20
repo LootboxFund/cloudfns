@@ -67,6 +67,7 @@ const TournamentTypeDefs = gql`
     organizerProfile: OrganizerProfile
     promoters: [ID!]
     dealConfigs: [DealConfigTournament!]!
+    runningCompletedClaims: Int!
     # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
