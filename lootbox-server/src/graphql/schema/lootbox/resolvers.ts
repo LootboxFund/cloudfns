@@ -180,10 +180,7 @@ const LootboxResolvers: Resolvers = {
             },
           };
         }
-        if (
-          !!lootbox?.timestamps.deletedAt ||
-          (context.userId as unknown as UserID) !== lootbox.creatorID
-        ) {
+        if ((context.userId as unknown as UserID) !== lootbox.creatorID) {
           return {
             error: {
               code: StatusCode.Unauthorized,

@@ -202,6 +202,7 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
   snapshot: LootboxTournamentSnapshot_Firestore
 ) => {
   const res: LootboxTournamentSnapshot = {
+    id: snapshot.id,
     address: snapshot.address,
     lootboxID: snapshot.lootboxID,
     creatorID: snapshot.creatorID,

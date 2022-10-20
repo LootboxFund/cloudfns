@@ -518,6 +518,7 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
     return collectionSnapshot.docs.map((doc) => {
       const data = doc.data();
       return {
+        id: doc.id,
         address: data.address,
         // creatorID: data?.creatorID || "",
         creatorID: "",
