@@ -18,6 +18,8 @@ import {
   StreamType,
   LootboxTournamentStatus,
   PaginateLootboxTournamentSnapshotEdge,
+  PaginatedLootboxTournamentSnapshotPageInfo,
+  LootboxTournamentSnapshotCursor,
 } from "../../graphql/generated/types";
 import {
   UserID,
@@ -66,11 +68,11 @@ export const getTournamentById = async (
 export const paginateLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID,
   limit: number,
-  cursor: LootboxTournamentSnapshotID | null
+  cursor?: LootboxTournamentSnapshotCursor // Created at timestamp
 ): Promise<{
   totalCount: number;
   edges: PaginateLootboxTournamentSnapshotEdge[];
-  pageInfo: PageInfo;
+  pageInfo: PaginatedLootboxTournamentSnapshotPageInfo;
 }> => {
   const lootboxTournamentSnapshotsRef = db
     .collection(Collection.Tournament)
@@ -83,7 +85,10 @@ export const paginateLootboxSnapshotsForTournament = async (
     ) as Query<LootboxTournamentSnapshot_Firestore>;
 
   const lootboxTournamentSnapshotsQuery = cursor
-    ? lootboxTournamentSnapshotsRef.startAfter(cursor)
+    ? lootboxTournamentSnapshotsRef.startAfter(
+        Number(cursor.impression),
+        Number(cursor.createdAt)
+      )
     : lootboxTournamentSnapshotsRef;
 
   const lootboxTournamentSnapshots = await lootboxTournamentSnapshotsQuery
@@ -97,7 +102,11 @@ export const paginateLootboxSnapshotsForTournament = async (
     const data = lootboxTournamentSnapshot.data();
     if (data) {
       edges.push({
-        cursor: data.id,
+        // cursor: data.id,
+        cursor: {
+          impression: data.impressionPriority,
+          createdAt: data.timestamps.createdAt,
+        },
         node: convertLootboxTournamentSnapshotDBToGQL(data),
       });
     }
@@ -105,10 +114,12 @@ export const paginateLootboxSnapshotsForTournament = async (
 
   totalCount = edges.length;
 
-  const pageInfo: PageInfo = {
+  const lastNode = edges[edges.length - 1];
+
+  const pageInfo: PaginatedLootboxTournamentSnapshotPageInfo = {
     hasNextPage: totalCount === limit,
     // startCursor: edges[0]?.cursor || null,
-    endCursor: edges[edges.length - 1]?.cursor || null,
+    endCursor: lastNode?.cursor || null,
   };
 
   return {

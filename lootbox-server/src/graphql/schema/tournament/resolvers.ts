@@ -176,7 +176,7 @@ const TournamentResolvers = {
       const response = await paginateLootboxSnapshotsForTournament(
         tournament.id as TournamentID,
         first,
-        after as LootboxTournamentSnapshotID | null
+        after || undefined
       );
       return response;
     },

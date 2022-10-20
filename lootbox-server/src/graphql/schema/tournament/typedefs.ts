@@ -72,7 +72,7 @@ const TournamentTypeDefs = gql`
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
     paginateLootboxSnapshots(
       first: Int!
-      after: ID
+      after: InputCursor
     ): PaginateLootboxTournamentSnapshots
     lootboxSnapshots: [LootboxTournamentSnapshot!]
   }
@@ -169,9 +169,15 @@ const TournamentTypeDefs = gql`
     cursor: ID! # Tournament ID
   }
 
+  type LootboxTournamentSnapshotCursor {
+    impression: Int!
+    createdAt: Timestamp! # LootboxTournamentSnapshot createdAt
+  }
+
   type PaginateLootboxTournamentSnapshotEdge {
     node: LootboxTournamentSnapshot!
-    cursor: ID! # LootboxTournamentSnapshot ID
+    # cursor: ID! # LootboxTournamentSnapshot ID
+    cursor: LootboxTournamentSnapshotCursor!
   }
 
   type BattleFeedResponseSuccess {
@@ -180,9 +186,19 @@ const TournamentTypeDefs = gql`
     edges: [BattleFeedEdge!]!
   }
 
+  type PaginatedLootboxTournamentSnapshotPageInfo {
+    endCursor: LootboxTournamentSnapshotCursor
+    hasNextPage: Boolean!
+  }
+
+  input InputCursor {
+    impression: Int!
+    createdAt: Timestamp! # LootboxTournamentSnapshot createdAt
+  }
+
   type PaginateLootboxTournamentSnapshots {
     totalCount: Int!
-    pageInfo: PageInfo!
+    pageInfo: PaginatedLootboxTournamentSnapshotPageInfo!
     edges: [PaginateLootboxTournamentSnapshotEdge!]!
   }
 
