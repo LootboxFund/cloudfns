@@ -3,7 +3,7 @@
  * BEFORE RUNNING THIS SCRIPT:
  * 1. Create a new post cosmic tournament VIA antd host repo
  * 2. Create new lootboxes for each winning party basket in the new tournament
- * 3. Add the tournamentID & the lootbox IDs from the previous steps into _scriptData object below
+ * 3. Add the newTournamentID & the lootbox IDs from the previous steps into _scriptData object below
  *
  * What it does:
  * - Gets all claims for a party basket
@@ -58,12 +58,12 @@ import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { nanoid } from "nanoid";
 
 // CONFIG:
-// We add pairs of {partyBasketID, lootboxID}, where
+// We add pairs of {partyBasketID, newLootboxID}, where
 // - partyBasketID === the OLD party basket we need to duplicate claims for
-// - lootboxID     === the NEW cosmic lootbox we need to create the claims for from the old party basket
+// - newLootboxID     === the NEW cosmic lootbox we need to create the claims for from the old party basket
 interface Config {
-  tournamentID: TournamentID;
-  mappings: { partyBasketID: PartyBasketID; lootboxID: LootboxID }[];
+  newTournamentID: TournamentID;
+  mappings: { partyBasketID: PartyBasketID; newLootboxID: LootboxID }[];
 }
 
 // Create new referral of this type, these extra fields are ONLY meant to be used by this script.
@@ -86,16 +86,16 @@ interface ClaimBackfilled_Firestore extends Claim_Firestore {
 const _scriptData: { prod: Config; staging: Config } = {
   // FILL THIS IN
   prod: {
-    tournamentID: "_________" as TournamentID,
+    newTournamentID: "_________" as TournamentID,
     mappings: [],
   },
   staging: {
-    tournamentID: "AVkMS8PZAJ6uiTgVp1wP" as TournamentID,
+    newTournamentID: "AVkMS8PZAJ6uiTgVp1wP" as TournamentID,
     mappings: [
       {
         // Test DEATH party basket / lootbox
         partyBasketID: "KBj26PwCjEWBpU7Qa9pp" as PartyBasketID,
-        lootboxID: "36sumZXYBkirQI0JmEb7" as LootboxID,
+        newLootboxID: "36sumZXYBkirQI0JmEb7" as LootboxID,
       },
     ],
   },
@@ -122,8 +122,8 @@ const run = async () => {
     throw new Error(`No config for env: ${env}`);
   }
 
-  if (!config.tournamentID) {
-    throw new Error(`No tournamentID specified for env: ${env}`);
+  if (!config.newTournamentID) {
+    throw new Error(`No newTournamentID specified for env: ${env}`);
   }
 
   console.log(`
@@ -136,31 +136,31 @@ const run = async () => {
 
   await sleep();
 
-  console.log('fetching tournament for ID "' + config.tournamentID + '"');
-  const tournament = await getTournamentById(config.tournamentID);
+  console.log('fetching tournament for ID "' + config.newTournamentID + '"');
+  const tournament = await getTournamentById(config.newTournamentID);
 
   if (!tournament) {
-    throw new Error(`No tournament found for ID: ${config.tournamentID}`);
+    throw new Error(`No tournament found for ID: ${config.newTournamentID}`);
   }
 
   console.log('found tournament "' + tournament.title + '"');
 
   await sleep();
-
-  for (let { partyBasketID, lootboxID } of config.mappings) {
+  let cumSum = 0;
+  for (let { partyBasketID, newLootboxID } of config.mappings) {
     console.log(
       "\n\nMigrating Claims for Party Basket: ",
       partyBasketID,
       " to Lootbox: ",
-      lootboxID,
+      newLootboxID,
       "\n\n"
     );
 
-    const lootbox = await getLootbox(lootboxID);
+    const lootbox = await getLootbox(newLootboxID);
     const partyBasket = await getPartyBasketById(partyBasketID);
 
     if (!lootbox) {
-      throw new Error(`No lootbox found for ID: ${lootboxID}`);
+      throw new Error(`No lootbox found for ID: ${newLootboxID}`);
     }
     if (!partyBasket) {
       throw new Error(`No party basket found for ID: ${partyBasketID}`);
@@ -171,7 +171,7 @@ const run = async () => {
         Processing...
 
         Lootbox:     
-        - ID        ${lootboxID}
+        - ID        ${newLootboxID}
         - Address   ${lootbox.address}
 
         PartyBasket: 
@@ -222,14 +222,25 @@ const run = async () => {
     console.log(
       "\nFound Claims to Process (non-reward): ",
       nonRewardClaims.length,
+      ". For Party Basket: ",
+      partyBasket.name,
       "\n"
     );
+
+    await sleep();
+
     for (let originalClaim of nonRewardClaims) {
       if (originalClaim.type === ClaimType_Firestore.reward) {
         // SKIP REWARD CLAIMS because they get created async in the onClaimWrite function
         console.log("Skipping reward claim: ", originalClaim.id);
         continue;
       }
+      cumSum++;
+      console.log(`
+
+            Processing claim #${cumSum} for Party Basket: ${partyBasket.name}
+        
+        `);
       try {
         // Create a duplicated referral for the new lootbox
         if (!createdReferrals[originalClaim.referralId]) {
@@ -391,7 +402,7 @@ const run = async () => {
           // - referralId  ->  will become the new referral ID
           // - referralSlug -> will become the new referral slug
           // - originLootboxId -> will be ommited
-          // - lootboxID -> will be the NEW lootbox ID
+          // - newLootboxID -> will be the NEW lootbox ID
           // - lootboxAddress -> will be the NEW lootbox address
           // - lootboxName -> will be the NEW lootbox name
           // - lootboxNFTBountyValue -> will be the NEW lootbox bounty value
