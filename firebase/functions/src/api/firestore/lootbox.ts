@@ -396,3 +396,16 @@ export const getTicketByWeb3ID = async (
 
     return ticketSnapshot.docs[0].data();
 };
+
+export const getAllLootboxTournamentSnapshotRefs = async (
+    lootboxID: LootboxID
+): Promise<DocumentReference<LootboxTournamentSnapshot_Firestore>[]> => {
+    const lootboxIDFieldName: keyof LootboxTournamentSnapshot_Firestore = "lootboxID";
+    const collectionRef = db
+        .collectionGroup(Collection.LootboxTournamentSnapshot)
+        .where(lootboxIDFieldName, "==", lootboxID) as Query<LootboxTournamentSnapshot_Firestore>;
+
+    const snapshot = await collectionRef.get();
+
+    return snapshot.docs.map((doc) => doc.ref);
+};

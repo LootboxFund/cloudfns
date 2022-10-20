@@ -61,12 +61,18 @@ import fs from "fs";
 // import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 // import { generateTicketDigest } from "./lib/ethers";
 
+// TODO: move REGION into helpers?
+const REGION = "asia-southeast1";
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
 // TODO: Rename this secret to be LOOTBOX
 const whitelisterPrivateKeySecretName: SecretName = "PARTY_BASKET_WHITELISTER_PRIVATE_KEY";
 
+type taskQueueID = "indexLootboxOnCreate" | "indexLootboxOnMint";
+const buildTaskQueuePath = (taskQueueID: taskQueueID) => `locations/${REGION}/functions/${taskQueueID}`;
+
 export const onClaimWrite = functions
+    .region(REGION)
     .runWith({
         secrets: [whitelisterPrivateKeySecretName],
     })
@@ -179,6 +185,7 @@ export const onClaimWrite = functions
     });
 
 export const onWalletCreate = functions
+    .region(REGION)
     .runWith({
         secrets: [whitelisterPrivateKeySecretName],
     })
@@ -235,8 +242,12 @@ export const onWalletCreate = functions
         }
     });
 
-export const onLootboxWrite = functions.firestore
-    .document(`/${Collection.Lootbox}/{lootboxID}`)
+export const onLootboxWrite = functions
+    .region(REGION)
+    .runWith({
+        secrets: [stampSecretName],
+    })
+    .firestore.document(`/${Collection.Lootbox}/{lootboxID}`)
     .onWrite(async (snap) => {
         const oldLootbox = snap.before.data() as Lootbox_Firestore | undefined;
         const newLootbox = snap.after.data() as Lootbox_Firestore | undefined;
@@ -245,9 +256,38 @@ export const onLootboxWrite = functions.firestore
             return;
         }
 
-        // TODO: Restamp Lootbox if assets have changed
+        const shouldUpdateStamp =
+            newLootbox.name !== oldLootbox.name ||
+            newLootbox.logo !== oldLootbox.logo ||
+            newLootbox.backgroundImage !== oldLootbox.backgroundImage ||
+            newLootbox.themeColor !== oldLootbox.themeColor;
 
-        // TODO: update all snapshot? SKIP FOR NOW
+        if (shouldUpdateStamp) {
+            logger.info("Updating stamp", {
+                lootboxID: newLootbox.id,
+                backgroundImage: newLootbox.backgroundImage,
+                logoImage: newLootbox.logo,
+                themeColor: newLootbox.themeColor,
+                name: newLootbox.name,
+                lootboxAddress: newLootbox.address,
+                chainIdHex: newLootbox.chainIdHex,
+            });
+            try {
+                await lootboxService.updateCallback(newLootbox.id, {
+                    backgroundImage: newLootbox.backgroundImage,
+                    logoImage: newLootbox.logo,
+                    themeColor: newLootbox.themeColor,
+                    name: newLootbox.name,
+                    lootboxAddress: newLootbox.address,
+                    chainIdHex: newLootbox.chainIdHex,
+                    description: newLootbox.description,
+                });
+            } catch (err) {
+                logger.error(err, {
+                    lootboxID: newLootbox.id,
+                });
+            }
+        }
 
         // If needed, update Lootbox status to sold out
         if (
@@ -274,8 +314,9 @@ export const onLootboxWrite = functions.firestore
     });
 
 /** @deprecated use onLootboxWrite now */
-export const onPartyBasketWrite = functions.firestore
-    .document(`/${Collection.PartyBasket}/{partyBasketId}`)
+export const onPartyBasketWrite = functions
+    .region(REGION)
+    .firestore.document(`/${Collection.PartyBasket}/{partyBasketId}`)
     .onWrite(async (snap) => {
         const newPartyBasket = snap.after.data() as PartyBasket | undefined;
 
@@ -331,8 +372,9 @@ export const onPartyBasketWrite = functions.firestore
  * httpRequest.requestUrl : "https://staging.track.lootbox.fund/pixel.png"
  * ```
  */
-export const pubsubPixelTracking = functions.pubsub
-    .topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
+export const pubsubPixelTracking = functions
+    .region(REGION)
+    .pubsub.topic(manifest.cloudFunctions.pubsubPixelTracking.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubPixelTracking.topic, message });
 
@@ -465,8 +507,9 @@ export const pubsubPixelTracking = functions.pubsub
         return;
     });
 
-export const pubsubBillableActivationEvent = functions.pubsub
-    .topic(manifest.cloudFunctions.pubsubBillableActivationEvent.topic)
+export const pubsubBillableActivationEvent = functions
+    .region(REGION)
+    .pubsub.topic(manifest.cloudFunctions.pubsubBillableActivationEvent.topic)
     .onPublish(async (message: Message) => {
         logger.log("PUB SUB TRIGGERED", {
             topic: manifest.cloudFunctions.pubsubBillableActivationEvent.topic,
@@ -514,6 +557,7 @@ interface IndexLootboxOnCreateTaskRequest {
 }
 
 export const indexLootboxOnCreate = functions
+    .region(REGION)
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
@@ -640,8 +684,9 @@ export const indexLootboxOnCreate = functions
         });
     });
 
-export const enqueueLootboxOnCreate = functions.https.onCall(
-    async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
+export const enqueueLootboxOnCreate = functions
+    .region(REGION)
+    .https.onCall(async (data: EnqueueLootboxOnCreateCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
             logger.error("Unauthenticated");
@@ -682,12 +727,11 @@ export const enqueueLootboxOnCreate = functions.https.onCall(
             },
         };
         logger.debug("Enqueing task", taskData);
-        const queue = fun.taskQueue("indexLootboxOnCreate");
+        const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnCreate"));
         await queue.enqueue(taskData);
 
         return;
-    }
-);
+    });
 
 interface IndexLootboxOnMintTaskRequest {
     chain: ChainInfo;
@@ -703,6 +747,7 @@ interface IndexLootboxOnMintTaskRequest {
 }
 
 export const indexLootboxOnMint = functions
+    .region(REGION)
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
@@ -828,8 +873,9 @@ export const indexLootboxOnMint = functions
         });
     });
 
-export const enqueueLootboxOnMint = functions.https.onCall(
-    async (data: EnqueueLootboxOnMintCallableRequest, context) => {
+export const enqueueLootboxOnMint = functions
+    .region(REGION)
+    .https.onCall(async (data: EnqueueLootboxOnMintCallableRequest, context) => {
         if (!context.auth?.uid) {
             // Unauthenticated
             logger.error("Unauthenticated");
@@ -861,16 +907,16 @@ export const enqueueLootboxOnMint = functions.https.onCall(
             },
         };
         logger.debug("Enqueing task", taskData);
-        const queue = fun.taskQueue("indexLootboxOnMint");
+        const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnMint"));
         await queue.enqueue(taskData);
 
         return;
-    }
-);
+    });
 
 // Conversion function for changing mp4 to webm
 // originally from https://github.com/Scew5145/FirebaseVideoConvertDemo
 export const mp4_to_webm = functions
+    .region(REGION)
     .runWith({
         // Ensure the function has enough memory and time
         // to process large files

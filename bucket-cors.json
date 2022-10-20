@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://lootbox.fund","https://www.lootbox.fund","https://go.lootbox.fund","https://host.lootbox.fund","https://marketing.lootbox.fund"],
+    "method": ["GET"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]

@@ -17,6 +17,7 @@ export const trackLootboxAppWebsiteVisitActivation = async (
   let flightID = body.flightID;
   const activationID = body.activationID;
   const mmpAlias = body.mmpAlias;
+
   const adEventRef = db
     .collection(Collection.AdEvent)
     .doc() as DocumentReference<AdEvent_Firestore>;
@@ -25,6 +26,7 @@ export const trackLootboxAppWebsiteVisitActivation = async (
   const flightRef = db
     .collection(Collection.Flight)
     .doc(flightID) as DocumentReference<AdFlight_Firestore>;
+
   const flightSnapshot = await flightRef.get();
 
   if (flightSnapshot.exists) {
@@ -57,8 +59,11 @@ export const trackLootboxAppWebsiteVisitActivation = async (
           tournamentID: flight.tournamentID,
         },
       };
+
       await adEventRef.set(adEventSchema);
+
       await notifyPubSubOfBillableActivation(adEventRef.id as AdEventID);
+
       return adEventSchema;
     }
   }
