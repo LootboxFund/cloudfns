@@ -312,6 +312,14 @@ const TournamentTypeDefs = gql`
     #): ListMonetizedTournamentsResponse!
   }
 
+  type BulkEditLootboxTournamentSnapshotsResponseSuccess {
+    lootboxTournamentSnapshotIDs: [ID!]! # just returns the same IDs of the Lootbox Tournament Snapshots
+  }
+
+  union BulkEditLootboxTournamentSnapshotsResponse =
+      BulkEditLootboxTournamentSnapshotsResponseSuccess
+    | ResponseError
+
   # ------------------- Add Offer AdSet To Tournament -------------------
   input AddOfferAdSetToTournamentPayload {
     tournamentID: ID!
@@ -367,6 +375,13 @@ const TournamentTypeDefs = gql`
     tournamentID: ID!
     promoterID: ID!
   }
+  input BulkEditLootboxTournamentSnapshotsPayload {
+    tournamentID: ID!
+    lootboxSnapshotIDs: [ID!]!
+    status: LootboxTournamentStatus # Changes the snapshot status
+    impressionPriority: Int # Changes the impression priority
+    delete: Boolean # Informs to delete the snapshot
+  }
   type RemovePromoterFromTournamentResponseSuccess {
     tournament: Tournament!
   }
@@ -381,6 +396,9 @@ const TournamentTypeDefs = gql`
     ): CreateTournamentResponse!
     # edit an existing tournament
     editTournament(payload: EditTournamentPayload!): EditTournamentResponse!
+    bulkEditLootboxTournamentSnapshots(
+      payload: BulkEditLootboxTournamentSnapshotsPayload!
+    ): BulkEditLootboxTournamentSnapshotsResponse!
     # delete an existing tournament
     deleteTournament(id: ID!): DeleteTournamentResponse!
     # add a stream to a tournament

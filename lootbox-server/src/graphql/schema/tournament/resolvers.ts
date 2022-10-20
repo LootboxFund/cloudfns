@@ -4,7 +4,9 @@ import {
   AffiliateID,
   LootboxID,
   LootboxTournamentSnapshotID,
+  LootboxTournamentSnapshot_Firestore,
   Lootbox_Firestore,
+  Tournament_Firestore,
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
@@ -25,6 +27,9 @@ import {
   getLootbox,
   paginateLootboxSnapshotsForTournament,
   getLootboxByAddress,
+  getLootboxTournamentSnapshot,
+  bulkEditLootboxTournamentSnapshots,
+  bulkDeleteLootboxTournamentSnapshots,
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
@@ -72,6 +77,8 @@ import {
   Lootbox,
   TournamentPaginateLootboxSnapshotsArgs,
   PaginateLootboxTournamentSnapshots,
+  MutationBulkEditLootboxTournamentSnapshotsArgs,
+  BulkEditLootboxTournamentSnapshotsResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
@@ -82,6 +89,8 @@ import {
 } from "../../generated/types";
 import {
   convertLootboxTournamentSnapshotDBToGQL,
+  convertLootboxTournamentSnapshotStatusDBToGQL,
+  convertLootboxTournamentSnapshotStatusGQLToDB,
   convertStreamDBToGQL,
   convertTournamentDBToGQL,
 } from "../../../lib/tournament";
@@ -391,6 +400,144 @@ const TournamentResolvers = {
           error: {
             code: StatusCode.ServerError,
             message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    bulkEditLootboxTournamentSnapshots: async (
+      _,
+      { payload }: MutationBulkEditLootboxTournamentSnapshotsArgs,
+      context: Context
+    ): Promise<BulkEditLootboxTournamentSnapshotsResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+
+      // VALIDATION
+      // Payload
+      if (
+        (payload?.impressionPriority == null &&
+          payload.status == null &&
+          payload.delete == null) ||
+        payload.lootboxSnapshotIDs.length === 0
+      ) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `Nothing to update`,
+          },
+        };
+      }
+
+      if (payload.lootboxSnapshotIDs.length > 50) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: `Can only edit 50 Lootboxes at a time`,
+          },
+        };
+      }
+
+      let tournament: Tournament_Firestore | undefined;
+      try {
+        tournament = await getTournamentById(
+          payload.tournamentID as TournamentID
+        );
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament not found`,
+            },
+          };
+        } else if (
+          (context.userId as unknown as UserID) !== tournament.creatorId
+        ) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: `You do not own this tournament`,
+            },
+          };
+        }
+      } catch (err) {
+        console.error("error getting tournament", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
+          },
+        };
+      }
+
+      let snapshots: LootboxTournamentSnapshot_Firestore[];
+
+      try {
+        // Make sure user has permission for each snapshot
+        snapshots = await Promise.all(
+          (payload.lootboxSnapshotIDs as LootboxTournamentSnapshotID[]).map(
+            (id) =>
+              getLootboxTournamentSnapshot(
+                payload.tournamentID as TournamentID,
+                id
+              )
+          )
+        );
+
+        if (
+          snapshots.some((snap) => snap.tournamentID !== payload.tournamentID)
+        ) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: `Some snapshots do not belong to this tournament`,
+            },
+          };
+        }
+      } catch (err) {
+        console.error("error getting snapshots", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
+          },
+        };
+      }
+
+      // Update the snapshots...
+      try {
+        if (payload.delete) {
+          await bulkDeleteLootboxTournamentSnapshots(
+            payload.tournamentID as TournamentID,
+            payload.lootboxSnapshotIDs as LootboxTournamentSnapshotID[]
+          );
+        } else {
+          await bulkEditLootboxTournamentSnapshots(
+            payload.tournamentID as TournamentID,
+            payload.lootboxSnapshotIDs as LootboxTournamentSnapshotID[],
+            {
+              status: payload.status
+                ? convertLootboxTournamentSnapshotStatusGQLToDB(payload.status)
+                : undefined,
+              impressionPriority: payload.impressionPriority,
+            }
+          );
+        }
+
+        return {
+          lootboxTournamentSnapshotIDs: payload.lootboxSnapshotIDs,
+        };
+      } catch (err) {
+        console.error("error updating snapshots", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
           },
         };
       }
@@ -857,6 +1004,20 @@ const TournamentResolvers = {
       return null;
     },
   },
+
+  BulkEditLootboxTournamentSnapshotsResponse: {
+    __resolveType: (obj: BulkEditLootboxTournamentSnapshotsResponse) => {
+      if ("lootboxTournamentSnapshotIDs" in obj) {
+        return "BulkEditLootboxTournamentSnapshotsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const tournamentResolverComposition = {
@@ -870,6 +1031,7 @@ const tournamentResolverComposition = {
   "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Mutation.addUpdatePromoterRateQuoteInTournament": [isAuthenticated()],
   "Mutation.removePromoterFromTournament": [isAuthenticated()],
+  "Mutation.bulkEditLootboxTournamentSnapshots": [isAuthenticated()],
   // "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
 };

@@ -27,6 +27,8 @@ import {
   TournamentID,
   StreamID,
   AffiliateID,
+  LootboxID,
+  LootboxTournamentStatus_Firestore,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -509,6 +511,25 @@ export const paginateBattleFeedQuery = async (
   }
 };
 
+export const getLootboxTournamentSnapshot = async (
+  tournamentID: TournamentID,
+  snapshotID: LootboxTournamentSnapshotID
+): Promise<LootboxTournamentSnapshot_Firestore> => {
+  const lootboxRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .doc(snapshotID) as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+  const lootboxSnapshot = await lootboxRef.get();
+
+  if (!lootboxSnapshot.exists) {
+    throw new Error("Lootbox does not exist");
+  }
+
+  return lootboxSnapshot.data() as LootboxTournamentSnapshot_Firestore;
+};
+
 /** @deprecated please use getLootboxSnapshotsForTournament */
 export const getLootboxSnapshotsForTournamentDeprecated = async (
   tournamentID: TournamentID
@@ -549,4 +570,62 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
       };
     });
   }
+};
+
+export const bulkDeleteLootboxTournamentSnapshots = async (
+  tournamentID: TournamentID,
+  lootboxSnapshotIDs: LootboxTournamentSnapshotID[]
+): Promise<void> => {
+  const batch = db.batch();
+
+  for (const lootboxSnapshotID of lootboxSnapshotIDs) {
+    const lootboxRef = db
+      .collection(Collection.Tournament)
+      .doc(tournamentID)
+      .collection(Collection.LootboxTournamentSnapshot)
+      .doc(
+        lootboxSnapshotID
+      ) as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+    batch.delete(lootboxRef);
+  }
+
+  await batch.commit();
+};
+
+export const bulkEditLootboxTournamentSnapshots = async (
+  tournamentID: TournamentID,
+  lootboxSnapshotIDs: LootboxTournamentSnapshotID[],
+  payload: {
+    status?: LootboxTournamentStatus_Firestore | null;
+    impressionPriority?: number | null;
+  }
+): Promise<void> => {
+  const updateRequest: Partial<LootboxTournamentSnapshot_Firestore> = {};
+  if (payload.status != null) {
+    updateRequest.status = payload.status;
+  }
+  if (payload.impressionPriority != null) {
+    updateRequest.impressionPriority = payload.impressionPriority;
+  }
+
+  if (Object.values(updateRequest).length === 0) {
+    throw new Error("Nothing to update");
+  }
+
+  const batch = db.batch();
+
+  for (const lootboxSnapshotID of lootboxSnapshotIDs) {
+    const lootboxSnapshotRef = db
+      .collection(Collection.Tournament)
+      .doc(tournamentID)
+      .collection(Collection.LootboxTournamentSnapshot)
+      .doc(
+        lootboxSnapshotID
+      ) as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+    batch.update(lootboxSnapshotRef, updateRequest);
+  }
+
+  await batch.commit();
 };

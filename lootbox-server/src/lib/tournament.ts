@@ -95,6 +95,18 @@ export const parseTournamentStreamDB = (
   return stream;
 };
 
+export const convertLootboxTournamentSnapshotStatusGQLToDB = (
+  status: LootboxTournamentStatus
+): LootboxTournamentStatus_Firestore => {
+  switch (status) {
+    case LootboxTournamentStatus.Active:
+      return LootboxTournamentStatus_Firestore.active;
+    case LootboxTournamentStatus.Disabled:
+    default:
+      return LootboxTournamentStatus_Firestore.disabled;
+  }
+};
+
 export const convertLootboxTournamentSnapshotStatusDBToGQL = (
   type: LootboxTournamentStatus_Firestore
 ): LootboxTournamentStatus => {
