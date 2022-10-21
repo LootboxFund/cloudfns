@@ -38,6 +38,7 @@ const TournamentTypeDefs = gql`
     status: LootboxTournamentStatus!
     timestamps: LootboxSnapshotTimestamps!
     lootbox: Lootbox # Extra Firestore lookup
+    impressionPriority: Int!
     # -- BREAKING CHANGE --
     # image: String!
     # backgroundColor: String!

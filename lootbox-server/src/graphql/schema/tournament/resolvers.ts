@@ -1004,7 +1004,6 @@ const TournamentResolvers = {
       return null;
     },
   },
-
   BulkEditLootboxTournamentSnapshotsResponse: {
     __resolveType: (obj: BulkEditLootboxTournamentSnapshotsResponse) => {
       if ("lootboxTournamentSnapshotIDs" in obj) {

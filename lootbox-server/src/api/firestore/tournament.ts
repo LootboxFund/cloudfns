@@ -567,6 +567,7 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
         },
         stampImage: data.metadata?.image || "",
         status: LootboxTournamentStatus.Active,
+        impressionPriority: 0,
       };
     });
   }

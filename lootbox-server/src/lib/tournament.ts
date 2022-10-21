@@ -223,6 +223,7 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
     description: snapshot.description,
     name: snapshot.name,
     stampImage: snapshot.stampImage,
+    impressionPriority: snapshot.impressionPriority || 0,
     // image: snapshot.image,
     // backgroundColor: snapshot.backgroundColor,
     // backgroundImage: snapshot.backgroundImage,
