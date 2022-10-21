@@ -181,8 +181,9 @@ const TournamentTypeDefs = gql`
 
   type PaginateLootboxTournamentSnapshotEdge {
     node: LootboxTournamentSnapshot!
-    # cursor: ID! # LootboxTournamentSnapshot ID
-    cursor: LootboxTournamentSnapshotCursor!
+    cursor: ID! # LootboxTournamentSnapshot ID
+    # TODO: REPLACE with this line: (this is temporary for backwards compatibility)
+    # cursor: LootboxTournamentSnapshotCursor!
   }
 
   type BattleFeedResponseSuccess {
