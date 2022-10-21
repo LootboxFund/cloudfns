@@ -157,23 +157,28 @@ export const getLootboxTournamentSnapshotByLootboxID = async (
 };
 
 export const getLootboxSnapshotsForTournament = async (
-  tournamentID: TournamentID
+  tournamentID: TournamentID,
+  status: LootboxTournamentStatus_Firestore | null
 ): Promise<LootboxTournamentSnapshot_Firestore[]> => {
   const impressionPriorityFieldName: keyof LootboxTournamentSnapshot_Firestore =
     "impressionPriority";
   const statusFieldName: keyof LootboxTournamentSnapshot_Firestore = "status";
-  const collectionRef = db
+
+  let query: Query<LootboxTournamentSnapshot_Firestore> = db
     .collection(Collection.Tournament)
     .doc(tournamentID)
     .collection(Collection.LootboxTournamentSnapshot)
-    .where(statusFieldName, "==", LootboxTournamentStatus_Firestore.active)
     .orderBy(impressionPriorityFieldName, "desc")
     .orderBy(
       "timestamps.createdAt",
       "desc"
     ) as Query<LootboxTournamentSnapshot_Firestore>;
 
-  const collectionSnapshot = await collectionRef.get();
+  if (status) {
+    query = query.where(statusFieldName, "==", status);
+  }
+
+  const collectionSnapshot = await query.get();
 
   if (collectionSnapshot.empty) {
     return [];

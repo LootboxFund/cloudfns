@@ -76,7 +76,9 @@ const TournamentTypeDefs = gql`
       first: Int!
       after: InputCursor
     ): PaginateLootboxTournamentSnapshots
-    lootboxSnapshots: [LootboxTournamentSnapshot!]
+    lootboxSnapshots(
+      status: LootboxTournamentStatus
+    ): [LootboxTournamentSnapshot!]
   }
 
   type OrganizerProfile {

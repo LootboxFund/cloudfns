@@ -76,6 +76,7 @@ import {
   MutationAddUpdatePromoterRateQuoteInTournamentArgs,
   Lootbox,
   TournamentPaginateLootboxSnapshotsArgs,
+  TournamentLootboxSnapshotsArgs,
   PaginateLootboxTournamentSnapshots,
   MutationBulkEditLootboxTournamentSnapshotsArgs,
   BulkEditLootboxTournamentSnapshotsResponse,
@@ -190,11 +191,13 @@ const TournamentResolvers = {
       return response;
     },
     lootboxSnapshots: async (
-      tournament: Tournament
+      tournament: Tournament,
+      { status }: TournamentLootboxSnapshotsArgs
     ): Promise<LootboxTournamentSnapshot[]> => {
       if (!!tournament.isPostCosmic) {
         const snapshots = await getLootboxSnapshotsForTournament(
-          tournament.id as TournamentID
+          tournament.id as TournamentID,
+          status ? convertLootboxTournamentSnapshotStatusGQLToDB(status) : null
         );
         return snapshots.map(convertLootboxTournamentSnapshotDBToGQL);
       } else {
