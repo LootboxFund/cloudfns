@@ -185,8 +185,9 @@ const TournamentResolvers = {
     ): Promise<PaginateLootboxTournamentSnapshots> => {
       const response = await paginateLootboxSnapshotsForTournament(
         tournament.id as TournamentID,
-        first,
-        after || undefined
+        first
+        // TODO: only use this when we change the typedefs to InputCursor (see ./typedefs.ts)
+        // after || undefined
       );
       return response;
     },

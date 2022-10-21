@@ -74,7 +74,8 @@ const TournamentTypeDefs = gql`
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
     paginateLootboxSnapshots(
       first: Int!
-      after: InputCursor
+      # after: InputCursor
+      after: ID # TODO: change it to InputCursor as seen above ^
     ): PaginateLootboxTournamentSnapshots
     lootboxSnapshots(
       status: LootboxTournamentStatus
