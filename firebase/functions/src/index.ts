@@ -63,8 +63,7 @@ import { getTournamentByID, incrementTournamentRunningClaims } from "./api/fires
 // import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 // import { generateTicketDigest } from "./lib/ethers";
 
-// TODO: move REGION into helpers?
-const REGION = "asia-southeast1";
+const REGION = manifest.cloudFunctions.region;
 const DEFAULT_MAX_CLAIMS = 10000;
 const stampSecretName: SecretName = "STAMP_SECRET";
 // TODO: Rename this secret to be LOOTBOX

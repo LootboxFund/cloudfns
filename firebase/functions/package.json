@@ -8,7 +8,6 @@
         "serve": "yarn run build && firebase emulators:start --only functions",
         "shell": "yarn run build && firebase functions:shell",
         "start": "yarn run shell",
-        "deploy:demo": "yarn run build && firebase deploy --only functions:enqueueIndexLootboxOnCreateTasks,functions:indexLootboxOnCreate --project lootbox-fund-staging",
         "deploy:staging": "yarn install && yarn codegen && yarn run build && firebase deploy --only functions --project lootbox-fund-staging",
         "deploy:prod": "yarn install && yarn codegen && yarn run build && firebase deploy --only functions --project lootbox-fund-prod",
         "logs": "firebase functions:log"
@@ -23,7 +22,7 @@
         "@types/fluent-ffmpeg": "^2.1.20",
         "@types/mkdirp": "^1.0.2",
         "@wormgraph/helpers": "0.7.0-prod-1",
-        "@wormgraph/manifest": "0.7.0-prod-5",
+        "@wormgraph/manifest": "0.7.0-prod-6",
         "axios": "^1.1.2",
         "ethers": "^5.7.1",
         "ffmpeg-static": "^5.1.0",
