@@ -131,17 +131,46 @@ export const paginateLootboxSnapshotsForTournament = async (
   };
 };
 
+export const getLootboxTournamentSnapshotByLootboxID = async (
+  tournamentID: TournamentID,
+  lootboxID: LootboxID
+): Promise<LootboxTournamentSnapshot_Firestore | undefined> => {
+  const lootboxIDFieldName: keyof LootboxTournamentSnapshot_Firestore =
+    "lootboxID";
+  const lootboxTournamentSnapshotRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .where(lootboxIDFieldName, "==", lootboxID)
+    .limit(1) as Query<LootboxTournamentSnapshot_Firestore>;
+
+  const lootboxTournamentSnapshot = await lootboxTournamentSnapshotRef.get();
+
+  if (lootboxTournamentSnapshot.empty) {
+    return undefined;
+  } else {
+    const data = lootboxTournamentSnapshot.docs[0].data();
+    return data === undefined
+      ? undefined
+      : parseLootboxTournamentSnapshotDB(data);
+  }
+};
+
 export const getLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID
 ): Promise<LootboxTournamentSnapshot_Firestore[]> => {
+  const impressionPriorityFieldName: keyof LootboxTournamentSnapshot_Firestore =
+    "impressionPriority";
+  const statusFieldName: keyof LootboxTournamentSnapshot_Firestore = "status";
   const collectionRef = db
     .collection(Collection.Tournament)
     .doc(tournamentID)
     .collection(Collection.LootboxTournamentSnapshot)
-    .orderBy("impressionPriority", "desc")
+    .where(statusFieldName, "==", LootboxTournamentStatus_Firestore.active)
+    .orderBy(impressionPriorityFieldName, "desc")
     .orderBy(
       "timestamps.createdAt",
-      "asc"
+      "desc"
     ) as Query<LootboxTournamentSnapshot_Firestore>;
 
   const collectionSnapshot = await collectionRef.get();
