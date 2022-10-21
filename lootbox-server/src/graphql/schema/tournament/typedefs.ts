@@ -27,6 +27,7 @@ const TournamentTypeDefs = gql`
 
   # this will live as a subcollection under the lootbox
   type LootboxTournamentSnapshot {
+    id: ID!
     address: ID!
     lootboxID: ID!
     lootboxCreatorID: ID!
@@ -37,6 +38,7 @@ const TournamentTypeDefs = gql`
     status: LootboxTournamentStatus!
     timestamps: LootboxSnapshotTimestamps!
     lootbox: Lootbox # Extra Firestore lookup
+    impressionPriority: Int!
     # -- BREAKING CHANGE --
     # image: String!
     # backgroundColor: String!
@@ -66,14 +68,18 @@ const TournamentTypeDefs = gql`
     organizerProfile: OrganizerProfile
     promoters: [ID!]
     dealConfigs: [DealConfigTournament!]!
+    runningCompletedClaims: Int!
     # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
     paginateLootboxSnapshots(
       first: Int!
-      after: ID
+      # after: InputCursor
+      after: ID # TODO: change it to InputCursor as seen above ^
     ): PaginateLootboxTournamentSnapshots
-    lootboxSnapshots: [LootboxTournamentSnapshot!]
+    lootboxSnapshots(
+      status: LootboxTournamentStatus
+    ): [LootboxTournamentSnapshot!]
   }
 
   type OrganizerProfile {
@@ -168,9 +174,15 @@ const TournamentTypeDefs = gql`
     cursor: ID! # Tournament ID
   }
 
+  type LootboxTournamentSnapshotCursor {
+    impression: Int!
+    createdAt: Timestamp! # LootboxTournamentSnapshot createdAt
+  }
+
   type PaginateLootboxTournamentSnapshotEdge {
     node: LootboxTournamentSnapshot!
-    cursor: ID! # LootboxTournamentSnapshot ID
+    # cursor: ID! # LootboxTournamentSnapshot ID
+    cursor: LootboxTournamentSnapshotCursor!
   }
 
   type BattleFeedResponseSuccess {
@@ -179,9 +191,19 @@ const TournamentTypeDefs = gql`
     edges: [BattleFeedEdge!]!
   }
 
+  type PaginatedLootboxTournamentSnapshotPageInfo {
+    endCursor: LootboxTournamentSnapshotCursor
+    hasNextPage: Boolean!
+  }
+
+  input InputCursor {
+    impression: Int!
+    createdAt: Timestamp! # LootboxTournamentSnapshot createdAt
+  }
+
   type PaginateLootboxTournamentSnapshots {
     totalCount: Int!
-    pageInfo: PageInfo!
+    pageInfo: PaginatedLootboxTournamentSnapshotPageInfo!
     edges: [PaginateLootboxTournamentSnapshotEdge!]!
   }
 
@@ -294,6 +316,14 @@ const TournamentTypeDefs = gql`
     #): ListMonetizedTournamentsResponse!
   }
 
+  type BulkEditLootboxTournamentSnapshotsResponseSuccess {
+    lootboxTournamentSnapshotIDs: [ID!]! # just returns the same IDs of the Lootbox Tournament Snapshots
+  }
+
+  union BulkEditLootboxTournamentSnapshotsResponse =
+      BulkEditLootboxTournamentSnapshotsResponseSuccess
+    | ResponseError
+
   # ------------------- Add Offer AdSet To Tournament -------------------
   input AddOfferAdSetToTournamentPayload {
     tournamentID: ID!
@@ -349,6 +379,13 @@ const TournamentTypeDefs = gql`
     tournamentID: ID!
     promoterID: ID!
   }
+  input BulkEditLootboxTournamentSnapshotsPayload {
+    tournamentID: ID!
+    lootboxSnapshotIDs: [ID!]!
+    status: LootboxTournamentStatus # Changes the snapshot status
+    impressionPriority: Int # Changes the impression priority
+    delete: Boolean # Informs to delete the snapshot
+  }
   type RemovePromoterFromTournamentResponseSuccess {
     tournament: Tournament!
   }
@@ -363,6 +400,9 @@ const TournamentTypeDefs = gql`
     ): CreateTournamentResponse!
     # edit an existing tournament
     editTournament(payload: EditTournamentPayload!): EditTournamentResponse!
+    bulkEditLootboxTournamentSnapshots(
+      payload: BulkEditLootboxTournamentSnapshotsPayload!
+    ): BulkEditLootboxTournamentSnapshotsResponse!
     # delete an existing tournament
     deleteTournament(id: ID!): DeleteTournamentResponse!
     # add a stream to a tournament

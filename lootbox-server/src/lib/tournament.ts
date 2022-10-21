@@ -55,6 +55,7 @@ export const parseTournamentDB = (
     description: data.description,
     creatorId: data.creatorId,
     isPostCosmic: data.isPostCosmic || false,
+    runningCompletedClaims: data.runningCompletedClaims || 0,
     timestamps: {
       createdAt: data.timestamps.createdAt,
       updatedAt: data.timestamps.updatedAt,
@@ -93,6 +94,18 @@ export const parseTournamentStreamDB = (
   };
 
   return stream;
+};
+
+export const convertLootboxTournamentSnapshotStatusGQLToDB = (
+  status: LootboxTournamentStatus
+): LootboxTournamentStatus_Firestore => {
+  switch (status) {
+    case LootboxTournamentStatus.Active:
+      return LootboxTournamentStatus_Firestore.active;
+    case LootboxTournamentStatus.Disabled:
+    default:
+      return LootboxTournamentStatus_Firestore.disabled;
+  }
 };
 
 export const convertLootboxTournamentSnapshotStatusDBToGQL = (
@@ -164,6 +177,7 @@ export const convertTournamentDBToGQL = (
     description: tournament.description,
     creatorId: tournament.creatorId,
     isPostCosmic: tournament.isPostCosmic || false,
+    runningCompletedClaims: tournament?.runningCompletedClaims || 0,
     timestamps: {
       createdAt: tournament.timestamps.createdAt,
       updatedAt: tournament.timestamps.updatedAt,
@@ -202,6 +216,7 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
   snapshot: LootboxTournamentSnapshot_Firestore
 ) => {
   const res: LootboxTournamentSnapshot = {
+    id: snapshot.id,
     address: snapshot.address,
     lootboxID: snapshot.lootboxID,
     creatorID: snapshot.creatorID,
@@ -209,6 +224,7 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
     description: snapshot.description,
     name: snapshot.name,
     stampImage: snapshot.stampImage,
+    impressionPriority: snapshot.impressionPriority || 0,
     // image: snapshot.image,
     // backgroundColor: snapshot.backgroundColor,
     // backgroundImage: snapshot.backgroundImage,

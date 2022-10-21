@@ -51,6 +51,8 @@ import {
   getLootbox,
   getAffiliate,
   getMintWhistlistSignature,
+  getLootboxTournamentSnapshot,
+  getLootboxTournamentSnapshotByLootboxID,
 } from "../../../api/firestore";
 import {
   AffiliateID,
@@ -58,6 +60,8 @@ import {
   LootboxID,
   LootboxMintWhitelistID,
   LootboxStatus_Firestore,
+  LootboxTournamentSnapshot_Firestore,
+  LootboxTournamentStatus_Firestore,
   Lootbox_Firestore,
   PartyBasketID,
   ReferralID,
@@ -318,8 +322,10 @@ const ReferralResolvers: Resolvers = {
 
       let tournament: Tournament_Firestore | undefined;
       let lootbox: Lootbox_Firestore | undefined;
+      let lootboxTournamentSnapshot:
+        | LootboxTournamentSnapshot_Firestore
+        | undefined;
 
-      // Tournament checks
       try {
         tournament = await getTournamentById(
           payload.tournamentId as TournamentID
@@ -361,54 +367,60 @@ const ReferralResolvers: Resolvers = {
           console.log("error fetching lootbox", err);
         }
       }
-      // if (
-      //   !!lootbox &&
-      //   (lootbox.status === LootboxStatus_Firestore.disabled ||
-      //     lootbox.status === LootboxStatus_Firestore.soldOut)
-      // ) {
-      //   // Make sure the Lootbox is not disabled
-      //   return {
-      //     error: {
-      //       code: StatusCode.InvalidOperation,
-      //       message: "Lootbox is disabled or sold out",
-      //     },
-      //   };
-      // }
-      const isSeedLootboxEnabled =
+
+      let isSeedLootboxEnabled =
         !!payload.lootboxID &&
         !!lootbox &&
         lootbox.status !== LootboxStatus_Firestore.disabled &&
         lootbox.status !== LootboxStatus_Firestore.soldOut;
 
-      // ################ DEPRECATED ################
-      let partyBasket: PartyBasket | undefined;
-      // Party Basket checks
-      if (!!payload.partyBasketId) {
-        try {
-          partyBasket = await getPartyBasketById(
-            payload.partyBasketId as PartyBasketID
-          );
-        } catch (err) {
-          // Swallow error, proceed without party basket
-          console.log("error fetching party basket", err);
+      if (tournament.isPostCosmic) {
+        // we get the lootbox tournament snapshot
+        if (!!isSeedLootboxEnabled && !!lootbox) {
+          const lootboxTournamentSnapshot =
+            await getLootboxTournamentSnapshotByLootboxID(
+              tournament.id,
+              lootbox.id
+            );
+          // Only allow the seed lootbox if it is enabled for the tournament
+          isSeedLootboxEnabled =
+            isSeedLootboxEnabled &&
+            !!lootboxTournamentSnapshot &&
+            !lootboxTournamentSnapshot.timestamps.deletedAt &&
+            lootboxTournamentSnapshot.status ===
+              LootboxTournamentStatus_Firestore.active;
         }
-      }
+      } else {
+        // ################ DEPRECATED ################
+        let partyBasket: PartyBasket | undefined;
+        // Party Basket checks
+        if (!!payload.partyBasketId) {
+          try {
+            partyBasket = await getPartyBasketById(
+              payload.partyBasketId as PartyBasketID
+            );
+          } catch (err) {
+            // Swallow error, proceed without party basket
+            console.log("error fetching party basket", err);
+          }
+        }
 
-      if (
-        !!partyBasket &&
-        (partyBasket?.status === PartyBasketStatus.Disabled ||
-          partyBasket?.status === PartyBasketStatus.SoldOut)
-      ) {
-        // Make sure the party basket is not disabled
-        return {
-          error: {
-            code: StatusCode.InvalidOperation,
-            message: "Party Basket is disabled or sold out",
-          },
-        };
-      }
+        if (
+          !!partyBasket &&
+          (partyBasket?.status === PartyBasketStatus.Disabled ||
+            partyBasket?.status === PartyBasketStatus.SoldOut)
+        ) {
+          // Make sure the party basket is not disabled
+          return {
+            error: {
+              code: StatusCode.InvalidOperation,
+              message: "Party Basket is disabled or sold out",
+            },
+          };
+        }
 
-      // ################################
+        // ################################
+      }
 
       if (!!payload.referrerId) {
         try {
@@ -604,31 +616,49 @@ const ReferralResolvers: Resolvers = {
           throw new Error("Lootbox not found");
         }
 
-        const isSeedLootboxEnabled =
+        let isSeedLootboxEnabled =
           !!payload.lootboxID &&
           !!lootbox &&
           lootbox.status !== LootboxStatus_Firestore.disabled &&
           lootbox.status !== LootboxStatus_Firestore.soldOut;
 
-        /** @deprecated - todo only use Lootbox */
-        let partyBasket: PartyBasket | undefined = undefined;
-        if (payload.partyBasketId) {
-          /** @deprecated!!!!! */
-          partyBasket = await getPartyBasketById(
-            payload.partyBasketId as PartyBasketID
-          );
-
-          if (partyBasket === undefined) {
-            // Makesure the party basket exists
-            throw new Error("Party Basket not found");
+        if (tournament.isPostCosmic) {
+          // we get the lootbox tournament snapshot
+          if (!!isSeedLootboxEnabled && !!lootbox) {
+            const lootboxTournamentSnapshot =
+              await getLootboxTournamentSnapshotByLootboxID(
+                tournament.id,
+                lootbox.id
+              );
+            // Only allow the seed lootbox if it is enabled for the tournament
+            isSeedLootboxEnabled =
+              isSeedLootboxEnabled &&
+              !!lootboxTournamentSnapshot &&
+              !lootboxTournamentSnapshot.timestamps.deletedAt &&
+              lootboxTournamentSnapshot.status ===
+                LootboxTournamentStatus_Firestore.active;
           }
+        } else {
+          /** @deprecated - todo only use Lootbox */
+          let partyBasket: PartyBasket | undefined = undefined;
+          if (payload.partyBasketId) {
+            /** @deprecated!!!!! */
+            partyBasket = await getPartyBasketById(
+              payload.partyBasketId as PartyBasketID
+            );
 
-          if (
-            partyBasket?.status === PartyBasketStatus.Disabled ||
-            partyBasket?.status === PartyBasketStatus.SoldOut
-          ) {
-            // Make sure the party basket is not disabled
-            throw new Error("Party Basket is disabled or sold out");
+            if (partyBasket === undefined) {
+              // Makesure the party basket exists
+              throw new Error("Party Basket not found");
+            }
+
+            if (
+              partyBasket?.status === PartyBasketStatus.Disabled ||
+              partyBasket?.status === PartyBasketStatus.SoldOut
+            ) {
+              // Make sure the party basket is not disabled
+              throw new Error("Party Basket is disabled or sold out");
+            }
           }
         }
 
@@ -828,17 +858,26 @@ const ReferralResolvers: Resolvers = {
           }
 
           // Make sure the user has not accepted a claim for a tournament before
-          const [previousClaims, tournament, referral, lootbox] =
-            await Promise.all([
-              getCompletedUserReferralClaimsForTournament(
-                context.userId,
-                claim.tournamentId as TournamentID,
-                1
-              ),
-              getTournamentById(claim.tournamentId as TournamentID),
-              getReferralById(claim.referralId as ReferralID),
-              getLootbox(payload.chosenLootboxID as LootboxID),
-            ]);
+          const [
+            previousClaims,
+            tournament,
+            referral,
+            lootbox,
+            lootboxTournamentSnapshot,
+          ] = await Promise.all([
+            getCompletedUserReferralClaimsForTournament(
+              context.userId,
+              claim.tournamentId as TournamentID,
+              1
+            ),
+            getTournamentById(claim.tournamentId as TournamentID),
+            getReferralById(claim.referralId as ReferralID),
+            getLootbox(payload.chosenLootboxID as LootboxID),
+            getLootboxTournamentSnapshotByLootboxID(
+              claim.tournamentId,
+              payload.chosenLootboxID as LootboxID
+            ),
+          ]);
 
           if (!lootbox || !!lootbox?.timestamps?.deletedAt) {
             return {
@@ -851,6 +890,30 @@ const ReferralResolvers: Resolvers = {
           if (
             lootbox.status === LootboxStatus_Firestore.disabled ||
             lootbox.status === LootboxStatus_Firestore.soldOut
+          ) {
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                message: "Out of stock! Please select a different team.",
+              },
+            };
+          }
+
+          if (
+            !lootboxTournamentSnapshot ||
+            !!lootboxTournamentSnapshot.timestamps.deletedAt
+          ) {
+            return {
+              error: {
+                code: StatusCode.NotFound,
+                message: "Lootbox Tournament Snapshot not found",
+              },
+            };
+          }
+
+          if (
+            lootboxTournamentSnapshot.status ===
+            LootboxTournamentStatus_Firestore.disabled
           ) {
             return {
               error: {

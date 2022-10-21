@@ -18,6 +18,8 @@ import {
   StreamType,
   LootboxTournamentStatus,
   PaginateLootboxTournamentSnapshotEdge,
+  PaginatedLootboxTournamentSnapshotPageInfo,
+  LootboxTournamentSnapshotCursor,
 } from "../../graphql/generated/types";
 import {
   UserID,
@@ -25,6 +27,8 @@ import {
   TournamentID,
   StreamID,
   AffiliateID,
+  LootboxID,
+  LootboxTournamentStatus_Firestore,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -66,11 +70,11 @@ export const getTournamentById = async (
 export const paginateLootboxSnapshotsForTournament = async (
   tournamentID: TournamentID,
   limit: number,
-  cursor: LootboxTournamentSnapshotID | null
+  cursor?: LootboxTournamentSnapshotCursor // Created at timestamp
 ): Promise<{
   totalCount: number;
   edges: PaginateLootboxTournamentSnapshotEdge[];
-  pageInfo: PageInfo;
+  pageInfo: PaginatedLootboxTournamentSnapshotPageInfo;
 }> => {
   const lootboxTournamentSnapshotsRef = db
     .collection(Collection.Tournament)
@@ -83,7 +87,10 @@ export const paginateLootboxSnapshotsForTournament = async (
     ) as Query<LootboxTournamentSnapshot_Firestore>;
 
   const lootboxTournamentSnapshotsQuery = cursor
-    ? lootboxTournamentSnapshotsRef.startAfter(cursor)
+    ? lootboxTournamentSnapshotsRef.startAfter(
+        Number(cursor.impression),
+        Number(cursor.createdAt)
+      )
     : lootboxTournamentSnapshotsRef;
 
   const lootboxTournamentSnapshots = await lootboxTournamentSnapshotsQuery
@@ -97,7 +104,11 @@ export const paginateLootboxSnapshotsForTournament = async (
     const data = lootboxTournamentSnapshot.data();
     if (data) {
       edges.push({
-        cursor: data.id,
+        // cursor: data.id,
+        cursor: {
+          impression: data.impressionPriority,
+          createdAt: data.timestamps.createdAt,
+        },
         node: convertLootboxTournamentSnapshotDBToGQL(data),
       });
     }
@@ -105,10 +116,12 @@ export const paginateLootboxSnapshotsForTournament = async (
 
   totalCount = edges.length;
 
-  const pageInfo: PageInfo = {
+  const lastNode = edges[edges.length - 1];
+
+  const pageInfo: PaginatedLootboxTournamentSnapshotPageInfo = {
     hasNextPage: totalCount === limit,
     // startCursor: edges[0]?.cursor || null,
-    endCursor: edges[edges.length - 1]?.cursor || null,
+    endCursor: lastNode?.cursor || null,
   };
 
   return {
@@ -118,20 +131,54 @@ export const paginateLootboxSnapshotsForTournament = async (
   };
 };
 
-export const getLootboxSnapshotsForTournament = async (
-  tournamentID: TournamentID
-): Promise<LootboxTournamentSnapshot_Firestore[]> => {
-  const collectionRef = db
+export const getLootboxTournamentSnapshotByLootboxID = async (
+  tournamentID: TournamentID,
+  lootboxID: LootboxID
+): Promise<LootboxTournamentSnapshot_Firestore | undefined> => {
+  const lootboxIDFieldName: keyof LootboxTournamentSnapshot_Firestore =
+    "lootboxID";
+  const lootboxTournamentSnapshotRef = db
     .collection(Collection.Tournament)
     .doc(tournamentID)
     .collection(Collection.LootboxTournamentSnapshot)
-    .orderBy("impressionPriority", "desc")
+    .where(lootboxIDFieldName, "==", lootboxID)
+    .limit(1) as Query<LootboxTournamentSnapshot_Firestore>;
+
+  const lootboxTournamentSnapshot = await lootboxTournamentSnapshotRef.get();
+
+  if (lootboxTournamentSnapshot.empty) {
+    return undefined;
+  } else {
+    const data = lootboxTournamentSnapshot.docs[0].data();
+    return data === undefined
+      ? undefined
+      : parseLootboxTournamentSnapshotDB(data);
+  }
+};
+
+export const getLootboxSnapshotsForTournament = async (
+  tournamentID: TournamentID,
+  status: LootboxTournamentStatus_Firestore | null
+): Promise<LootboxTournamentSnapshot_Firestore[]> => {
+  const impressionPriorityFieldName: keyof LootboxTournamentSnapshot_Firestore =
+    "impressionPriority";
+  const statusFieldName: keyof LootboxTournamentSnapshot_Firestore = "status";
+
+  let query: Query<LootboxTournamentSnapshot_Firestore> = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .orderBy(impressionPriorityFieldName, "desc")
     .orderBy(
       "timestamps.createdAt",
-      "asc"
+      "desc"
     ) as Query<LootboxTournamentSnapshot_Firestore>;
 
-  const collectionSnapshot = await collectionRef.get();
+  if (status) {
+    query = query.where(statusFieldName, "==", status);
+  }
+
+  const collectionSnapshot = await query.get();
 
   if (collectionSnapshot.empty) {
     return [];
@@ -498,6 +545,25 @@ export const paginateBattleFeedQuery = async (
   }
 };
 
+export const getLootboxTournamentSnapshot = async (
+  tournamentID: TournamentID,
+  snapshotID: LootboxTournamentSnapshotID
+): Promise<LootboxTournamentSnapshot_Firestore> => {
+  const lootboxRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .doc(snapshotID) as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+  const lootboxSnapshot = await lootboxRef.get();
+
+  if (!lootboxSnapshot.exists) {
+    throw new Error("Lootbox does not exist");
+  }
+
+  return lootboxSnapshot.data() as LootboxTournamentSnapshot_Firestore;
+};
+
 /** @deprecated please use getLootboxSnapshotsForTournament */
 export const getLootboxSnapshotsForTournamentDeprecated = async (
   tournamentID: TournamentID
@@ -518,6 +584,7 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
     return collectionSnapshot.docs.map((doc) => {
       const data = doc.data();
       return {
+        id: doc.id,
         address: data.address,
         // creatorID: data?.creatorID || "",
         creatorID: "",
@@ -534,7 +601,66 @@ export const getLootboxSnapshotsForTournamentDeprecated = async (
         },
         stampImage: data.metadata?.image || "",
         status: LootboxTournamentStatus.Active,
+        impressionPriority: 0,
       };
     });
   }
+};
+
+export const bulkDeleteLootboxTournamentSnapshots = async (
+  tournamentID: TournamentID,
+  lootboxSnapshotIDs: LootboxTournamentSnapshotID[]
+): Promise<void> => {
+  const batch = db.batch();
+
+  for (const lootboxSnapshotID of lootboxSnapshotIDs) {
+    const lootboxRef = db
+      .collection(Collection.Tournament)
+      .doc(tournamentID)
+      .collection(Collection.LootboxTournamentSnapshot)
+      .doc(
+        lootboxSnapshotID
+      ) as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+    batch.delete(lootboxRef);
+  }
+
+  await batch.commit();
+};
+
+export const bulkEditLootboxTournamentSnapshots = async (
+  tournamentID: TournamentID,
+  lootboxSnapshotIDs: LootboxTournamentSnapshotID[],
+  payload: {
+    status?: LootboxTournamentStatus_Firestore | null;
+    impressionPriority?: number | null;
+  }
+): Promise<void> => {
+  const updateRequest: Partial<LootboxTournamentSnapshot_Firestore> = {};
+  if (payload.status != null) {
+    updateRequest.status = payload.status;
+  }
+  if (payload.impressionPriority != null) {
+    updateRequest.impressionPriority = payload.impressionPriority;
+  }
+
+  if (Object.values(updateRequest).length === 0) {
+    throw new Error("Nothing to update");
+  }
+
+  const batch = db.batch();
+
+  for (const lootboxSnapshotID of lootboxSnapshotIDs) {
+    const lootboxSnapshotRef = db
+      .collection(Collection.Tournament)
+      .doc(tournamentID)
+      .collection(Collection.LootboxTournamentSnapshot)
+      .doc(
+        lootboxSnapshotID
+      ) as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+    batch.update(lootboxSnapshotRef, updateRequest);
+  }
+
+  await batch.commit();
 };
