@@ -104,11 +104,12 @@ export const paginateLootboxSnapshotsForTournament = async (
     const data = lootboxTournamentSnapshot.data();
     if (data) {
       edges.push({
-        // cursor: data.id,
-        cursor: {
-          impression: data.impressionPriority,
-          createdAt: data.timestamps.createdAt,
-        },
+        cursor: data.id,
+        // TODO: fix with this:
+        // cursor: {
+        //   impression: data.impressionPriority,
+        //   createdAt: data.timestamps.createdAt,
+        // },
         node: convertLootboxTournamentSnapshotDBToGQL(data),
       });
     }
@@ -121,7 +122,9 @@ export const paginateLootboxSnapshotsForTournament = async (
   const pageInfo: PaginatedLootboxTournamentSnapshotPageInfo = {
     hasNextPage: totalCount === limit,
     // startCursor: edges[0]?.cursor || null,
-    endCursor: lastNode?.cursor || null,
+    // TODO: uncomment this:
+    // endCursor: lastNode?.cursor || null,
+    endCursor: null, // TEMPORARY HACK FOR BACKWARDS COMPATIBILITY
   };
 
   return {
