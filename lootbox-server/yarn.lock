@@ -1835,28 +1835,20 @@
     undici "^5.10.0"
     web-streams-polyfill "^3.2.0"
 
-"@wormgraph/helpers@0.7.0-prod":
-  version "0.7.0-prod"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.0-prod.tgz#2c1936ce485d5b4c074e253d13bd28456f6776ea"
-  integrity sha512-rFTv+4ws8N8RTaVXJCJ3UDagULOU8E4cT96wrc1Kcow+KETwW2my/tBeviaKKPYH55Z90GPMXvzbl6IfavpCqA==
+"@wormgraph/helpers@0.7.1-demo-1":
+  version "0.7.1-demo-1"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.1-demo-1.tgz#1749d61cd495ff2334ce72f6d9daaf553aa910cf"
+  integrity sha512-aHkEuFMhf1uDxfGNVePyyfEPotTK8aehU8WT8AMLxf0b6V9ZtQsT69EiAiuXicsrXLoeq3szxlPYe8yYf026gw==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.7.0-prod-1":
-  version "0.7.0-prod-1"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.0-prod-1.tgz#e6e35f430684569869418dc0a58411a7bc7ab228"
-  integrity sha512-KV5Ix1A99z/jGKZxD4gOXGFHYbr9mPr0neVGzBCveYjLMEnPGTkjslbcdkvoynQxW7PMc9rYsbbKSsLc9UOwxQ==
+"@wormgraph/manifest@0.7.1-demo-1":
+  version "0.7.1-demo-1"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.7.1-demo-1.tgz#93546875a48679984328f7672bc8a32c4a011027"
+  integrity sha512-H4aM6olj2DIuiB8n3DvMEWMFnQcFZVk5ixsddRgOwVVvpWuVdSDBMCourQUEg3HgmAo0DNJyLRZst239vOvnYg==
   dependencies:
-    axios "0.25.0"
-    lodash "4.17.21"
-
-"@wormgraph/manifest@0.7.0-prod-5":
-  version "0.7.0-prod-5"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.7.0-prod-5.tgz#062968c203dad5d6fd798df89178ad42052f2c42"
-  integrity sha512-2DF+TPELefpoMDC7SC/lgBBW7TsqciCtdchA2LD36UR5XakDRvcxOmlaTt6gGBmVHYNsweYTB0bFtFEAwTzMmw==
-  dependencies:
-    "@wormgraph/helpers" "0.7.0-prod"
+    "@wormgraph/helpers" "0.7.1-demo-1"
 
 abort-controller@^3.0.0:
   version "3.0.0"

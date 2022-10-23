@@ -84,18 +84,6 @@ const LootboxTypeDefs = gql`
   type Lootbox {
     # Immutable stuff
     id: ID!
-    address: ID!
-    factory: ID!
-    creatorAddress: ID!
-    creatorID: ID!
-    chainIdHex: String!
-    variant: LootboxVariant!
-    timestamps: LootboxTimestamps!
-    chainIdDecimal: String!
-    chainName: String!
-    transactionHash: String!
-    blockNumber: String!
-
     # Mutable
     name: String!
     symbol: String!
@@ -108,8 +96,21 @@ const LootboxTypeDefs = gql`
     logo: String!
     backgroundImage: String!
     themeColor: String!
-    baseTokenURI: String!
     runningCompletedClaims: Int!
+
+    # Web3 stuff
+    address: ID
+    factory: ID
+    creatorAddress: ID
+    creatorID: ID
+    chainIdHex: String
+    variant: LootboxVariant
+    timestamps: LootboxTimestamps
+    chainIdDecimal: String
+    chainName: String
+    transactionHash: String
+    blockNumber: String
+    baseTokenURI: String
 
     # GQL layer
     userClaims(
@@ -132,8 +133,8 @@ const LootboxTypeDefs = gql`
   }
 
   type LootboxSnapshot {
-    address: ID!
-    issuer: ID!
+    address: ID
+    issuer: ID
     description: String!
 
     name: String!
