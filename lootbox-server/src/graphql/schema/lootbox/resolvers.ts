@@ -16,6 +16,8 @@ import {
   LootboxUserClaimsArgs,
   QueryMyLootboxByNonceArgs,
   MyLootboxByNonceResponse,
+  CreateLootboxResponse,
+  MutationCreateLootboxArgs,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -33,6 +35,7 @@ import {
   Address,
   LootboxMintSignatureNonce,
   LootboxTicketID,
+  TournamentID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
 import { LootboxID, UserID } from "@wormgraph/helpers";
@@ -43,6 +46,7 @@ import {
 } from "../../../lib/lootbox";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
+import * as LootboxService from "../../../service/lootbox";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -145,6 +149,47 @@ const LootboxResolvers: Resolvers = {
   },
 
   Mutation: {
+    createLootbox: async (
+      _,
+      { payload }: MutationCreateLootboxArgs,
+      context: Context
+    ): Promise<CreateLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const lootbox = await LootboxService.create({
+          lootboxDescription: payload.description,
+          backgroundImage: payload.backgroundImage,
+          logoImage: payload.logo,
+          themeColor: payload.themeColor,
+          nftBountyValue: payload.nftBountyValue,
+          maxTickets: payload.maxTickets,
+          joinCommunityUrl: payload.joinCommunityUrl || undefined,
+          symbol: payload.name.slice(0, 12),
+          creatorID: context.userId as unknown as UserID,
+          lootboxName: payload.name,
+          tournamentID: (payload.tournamentID as TournamentID) || undefined,
+        });
+
+        return { lootbox: convertLootboxDBToGQL(lootbox) };
+      } catch (err) {
+        console.log("Error creating Lootbox!");
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     editLootbox: async (
       _,
       { payload }: MutationEditLootboxArgs,

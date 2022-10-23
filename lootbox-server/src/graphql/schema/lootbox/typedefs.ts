@@ -187,6 +187,18 @@ const LootboxTypeDefs = gql`
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
   }
 
+  input CreateLootboxPayload {
+    name: String!
+    description: String!
+    logo: String!
+    backgroundImage: String!
+    nftBountyValue: String!
+    joinCommunityUrl: String!
+    maxTickets: Int!
+    themeColor: String!
+    tournamentID: String
+  }
+
   input EditLootboxPayload {
     lootboxID: ID!
     name: String
@@ -215,7 +227,11 @@ const LootboxTypeDefs = gql`
   #   errors: [String] # For partial errors
   # }
 
-  # union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
+  type CreateLootboxResponseSuccess {
+    lootbox: Lootbox!
+  }
+
+  union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
   union EditLootboxResponse = EditLootboxResponseSuccess | ResponseError
   union GetWhitelistSignaturesResponse =
       GetWhitelistSignaturesResponseSuccess
@@ -225,6 +241,7 @@ const LootboxTypeDefs = gql`
   #   | ResponseError
 
   extend type Mutation {
+    createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
     # bulkMintWhitelist(
     #   payload: BulkMintWhitelistPayload!

@@ -1,3 +1,93 @@
+import {
+  ContractAddress,
+  Lootbox_Firestore,
+  TournamentID,
+  UserID,
+} from "@wormgraph/helpers";
+import { stampNewLootbox } from "../api/stamp";
+import {
+  createLootbox,
+  createLootboxTournamentSnapshot,
+  getTournamentById,
+} from "../api/firestore";
+import { getStampSecret } from "../api/secrets";
+
+interface CreateLootboxRequest {
+  // passed in variables
+  lootboxDescription: string;
+  backgroundImage: string;
+  logoImage: string;
+  themeColor: string;
+  nftBountyValue: string;
+  maxTickets: number;
+  joinCommunityUrl?: string;
+  symbol: string;
+  creatorID: UserID;
+  lootboxName: string;
+  tournamentID?: TournamentID;
+}
+
+export const create = async (
+  request: CreateLootboxRequest
+): Promise<Lootbox_Firestore> => {
+  console.log("creating lootbox", request);
+  const stampSecret = await getStampSecret();
+
+  // stamp lootbox image
+  const stampImageUrl = await stampNewLootbox(stampSecret, {
+    backgroundImage: request.backgroundImage,
+    logoImage: request.logoImage,
+    themeColor: request.themeColor,
+    name: request.lootboxName,
+    // TODO FIX THESE:
+    lootboxAddress: "0x0" as unknown as ContractAddress,
+    chainIdHex: "0x89", // DEFAULT POLYGON?
+    // lootboxAddress: request.lootboxAddress as unknown as ContractAddress,
+    // chainIdHex: chain.chainIdHex,
+  });
+
+  const createdLootbox = await createLootbox({
+    creatorID: request.creatorID,
+    stampImage: stampImageUrl,
+    logo: request.logoImage,
+    symbol: request.symbol,
+    name: request.lootboxName,
+    description: request.lootboxDescription,
+    nftBountyValue: request.nftBountyValue,
+    maxTickets: request.maxTickets,
+    backgroundImage: request.backgroundImage,
+    themeColor: request.themeColor,
+    joinCommunityUrl: request.joinCommunityUrl,
+  });
+
+  if (request.tournamentID) {
+    console.log("Checking to add tournament snapshot", {
+      tournamentID: request.tournamentID,
+      lootboxID: createdLootbox.id,
+    });
+    // Make sure tournament exists
+    const tournament = await getTournamentById(request.tournamentID);
+    if (tournament != null) {
+      console.log("creating tournament snapshot", {
+        tournamentID: request.tournamentID,
+        lootboxID: createdLootbox.id,
+      });
+      await createLootboxTournamentSnapshot({
+        tournamentID: request.tournamentID,
+        lootboxID: createdLootbox.id,
+        lootboxAddress: createdLootbox.address || null,
+        creatorID: request.creatorID,
+        lootboxCreatorID: request.creatorID,
+        description: createdLootbox.description,
+        name: createdLootbox.name,
+        stampImage: createdLootbox.stampImage,
+      });
+    }
+  }
+
+  return createdLootbox;
+};
+
 // import { Address, LootboxID, Lootbox_Firestore } from "@wormgraph/helpers";
 // import { ethers } from "ethers";
 // import { whitelistLootboxMintSignature } from "../api/ethers";
@@ -65,5 +155,3 @@
 
 //   return { signatures: signatures, errors: partialErrors };
 // };
-
-export {};

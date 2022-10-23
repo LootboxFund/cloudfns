@@ -17,6 +17,10 @@ import {
   Lootbox_Firestore,
   LootboxStatus_Firestore,
   MintWhitelistSignature_Firestore,
+  TournamentID,
+  LootboxTournamentSnapshot_Firestore,
+  LootboxTournamentSnapshotID,
+  LootboxTournamentStatus_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -314,4 +318,106 @@ export const getLootboxByUserIDAndNonce = async (
   }
 
   return collectionSnapshot.docs[0].data();
+};
+
+interface CreateLootboxPayload {
+  creatorID: UserID;
+  stampImage: string;
+  logo: string;
+  name: string;
+  description: string;
+  symbol: string;
+  maxTickets: number;
+  backgroundImage: string;
+  nftBountyValue: string;
+  themeColor: string;
+  joinCommunityUrl?: string;
+}
+export const createLootbox = async (
+  payload: CreateLootboxPayload
+): Promise<Lootbox_Firestore> => {
+  const lootboxRef = db
+    .collection(Collection.Lootbox)
+    .doc() as DocumentReference<Lootbox_Firestore>;
+
+  const lootboxPayload: Lootbox_Firestore = {
+    id: lootboxRef.id as LootboxID,
+    address: null,
+    factory: null,
+    creatorID: payload.creatorID,
+    creatorAddress: null,
+    variant: null,
+    chainIdHex: null,
+    chainIdDecimal: null,
+    chainName: null,
+    transactionHash: null,
+    blockNumber: null,
+    baseTokenURI: null,
+    stampImage: payload.stampImage,
+    logo: payload.logo,
+    name: payload.name,
+    description: payload.description,
+    nftBountyValue: payload.nftBountyValue,
+    joinCommunityUrl: payload.joinCommunityUrl || "",
+    status: LootboxStatus_Firestore.active,
+    maxTickets: payload.maxTickets,
+    backgroundImage: payload.backgroundImage,
+    themeColor: payload.themeColor,
+    symbol: payload.symbol,
+    runningCompletedClaims: 0,
+    creationNonce: null,
+    members: [],
+    timestamps: {
+      createdAt: Timestamp.now().toMillis(),
+      updatedAt: Timestamp.now().toMillis(),
+      deletedAt: null,
+    },
+  };
+
+  await lootboxRef.set(lootboxPayload);
+
+  return lootboxPayload;
+};
+
+interface CreateLootboxTournamentSnapshot {
+  tournamentID: TournamentID;
+  lootboxAddress: Address | null;
+  lootboxID: LootboxID;
+  creatorID: UserID;
+  lootboxCreatorID: UserID;
+  description: string;
+  name: string;
+  stampImage: string;
+}
+export const createLootboxTournamentSnapshot = async (
+  payload: CreateLootboxTournamentSnapshot
+): Promise<LootboxTournamentSnapshot_Firestore> => {
+  const doc = db
+    .collection(Collection.Tournament)
+    .doc(payload.tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+
+  const request: LootboxTournamentSnapshot_Firestore = {
+    id: doc.id as LootboxTournamentSnapshotID,
+    tournamentID: payload.tournamentID as TournamentID,
+    address: payload.lootboxAddress || null,
+    lootboxID: payload.lootboxID,
+    creatorID: payload.creatorID,
+    lootboxCreatorID: payload.lootboxCreatorID,
+    description: payload.description,
+    name: payload.name,
+    stampImage: payload.stampImage,
+    impressionPriority: 0,
+    status: LootboxTournamentStatus_Firestore.active,
+    timestamps: {
+      createdAt: Timestamp.now().toMillis(),
+      updatedAt: Timestamp.now().toMillis(),
+      deletedAt: null,
+    },
+  };
+
+  await doc.set(request);
+
+  return request;
 };
