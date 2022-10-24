@@ -43,6 +43,7 @@ import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 
 interface CreateLootboxRequest {
     // passed in variables
+    creatorID: UserID;
     lootboxID: LootboxID;
     factory: Address;
     creatorAddress: Address;
@@ -80,6 +81,14 @@ export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo
             lootboxID: request.lootboxID,
         });
         throw new Error("Lootbox already created");
+    }
+    if (lootbox.creatorID !== request.creatorID) {
+        logger.error("User does not own Lootbox", {
+            lootboxID: request.lootboxID,
+            callerID: request.creatorID,
+            lootboxCreatorID: lootbox.creatorID,
+        });
+        throw new Error("Caller does not have permission");
     }
 
     logger.info("updating lootbox with web3 data", request);

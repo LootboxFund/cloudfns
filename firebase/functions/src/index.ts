@@ -27,7 +27,6 @@ import {
     ChainInfo,
     LootboxCreatedNonce,
     EnqueueLootboxOnCreateCallableRequest,
-    TournamentID,
     Claim_Firestore,
     ClaimStatus_Firestore,
     ReferralType_Firestore,
@@ -554,16 +553,8 @@ interface IndexLootboxOnCreateTaskRequest {
     payload: {
         creatorID: UserID;
         factory: Address;
-        lootboxDescription: string;
-        // version: string;
-        backgroundImage: string;
-        logoImage: string;
-        themeColor: string;
-        nftBountyValue: string;
-        joinCommunityUrl?: string;
         symbol: string;
         nonce: LootboxCreatedNonce;
-        tournamentID?: TournamentID;
         lootboxID: LootboxID;
     };
     filter: {
@@ -676,6 +667,7 @@ export const indexLootboxOnCreate = functions
                         // Associates the Web3 data to Lootbox
                         await lootboxService.createWeb3(
                             {
+                                creatorID: data.payload.creatorID,
                                 lootboxID: data.payload.lootboxID,
                                 factory: data.payload.factory,
                                 lootboxAddress,
@@ -754,15 +746,8 @@ export const enqueueLootboxOnCreate = functions
             payload: {
                 factory: data.listenAddress,
                 nonce: data.payload.nonce,
-                lootboxDescription: data.payload.lootboxDescription,
-                backgroundImage: data.payload.backgroundImage,
-                logoImage: data.payload.logoImage,
-                themeColor: data.payload.themeColor,
-                nftBountyValue: data.payload.nftBountyValue,
-                joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
                 symbol: data.payload.symbol,
                 creatorID: context.auth.uid as UserID,
-                tournamentID: data.payload.tournamentID,
                 lootboxID: data.payload.lootboxID,
             },
             filter: {
