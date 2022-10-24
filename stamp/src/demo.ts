@@ -1,4 +1,4 @@
-import { ContractAddress } from "@wormgraph/helpers";
+import { ContractAddress, LootboxID } from "@wormgraph/helpers";
 import { generateImage } from "./lib/api/stamp";
 
 const demo = async () => {
@@ -11,9 +11,10 @@ const demo = async () => {
       "https://images.fineartamerica.com/images/artworkimages/mediumlarge/1/teutonic-knight-04-andrea-mazzocchetti.jpg",
     themeColor: "#000000",
     name: "Pig Iron Gang",
-    lootboxAddress:
-      "0x1c69bcBCb7f860680cDf9D4914Fc850a61888f89" as ContractAddress,
-    chainIdHex: "0x38",
+    // lootboxAddress:
+    // "0x1c69bcBCb7f860680cDf9D4914Fc850a61888f89" as ContractAddress,
+    // chainIdHex: "0x38",
+    lootboxID: "doisdfhhzl12a" as LootboxID,
   });
   console.log(`linkToImage = ${linkToImage}`);
 };

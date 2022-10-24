@@ -17,6 +17,7 @@ export const generateStaticElement = (props: TicketProps) =>
       name={props.name}
       lootboxAddress={props.lootboxAddress}
       chainIdHex={props.chainIdHex}
+      lootboxID={props.lootboxID}
     />
   );
 
@@ -48,7 +49,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
     const imagePath = await saveLocalFileToGBucket({
       alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
-      fileName: `${props.lootboxAddress}/lootbox.png`,
+      fileName: `${props.lootboxID}/lootbox.png`,
       bucket: manifest.storage.buckets.stamp.id,
     });
     return imagePath;
@@ -87,7 +88,7 @@ export const generateTicketImage = async (path: string, props: TicketProps) => {
     const imagePath = await saveLocalFileToGBucket({
       alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
-      fileName: `${props.lootboxAddress}/${props.ticketID}.png`,
+      fileName: `${props.lootboxID}/${props.ticketID}.png`,
       bucket: manifest.storage.buckets.stamp.id,
     });
     return imagePath;

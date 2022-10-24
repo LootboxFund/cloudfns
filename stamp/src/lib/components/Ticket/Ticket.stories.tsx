@@ -2,7 +2,7 @@ import React from "react";
 import Ticket from ".";
 import { $CardViewport } from "../Generics";
 import { useEffect } from "react";
-import { ContractAddress } from "@wormgraph/helpers";
+import { ContractAddress, LootboxID } from "@wormgraph/helpers";
 
 export default {
   title: "Ticket",
@@ -29,6 +29,7 @@ const Template = () => {
         name="Steppe Industry Faction"
         lootboxAddress={lootboxAddress}
         chainIdHex="0x38"
+        lootboxID={"ljsdbfljb123jlhbasd" as LootboxID}
       />
     </$CardViewport>
   );

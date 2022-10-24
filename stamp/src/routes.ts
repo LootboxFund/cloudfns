@@ -7,6 +7,7 @@ import {
   LootboxTicketMetadataV2_Firestore,
   StampNewLootboxProps,
   StampNewLootboxResponse,
+  LootboxID,
 } from "@wormgraph/helpers";
 import { saveTicketMetadataToGBucket } from "./lib/api/gbucket";
 import { manifest } from "./manifest";
@@ -31,6 +32,7 @@ router.get("/demo", async (req, res, next) => {
     lootboxAddress:
       "0x1c69bcBCb7f860680cDf9D4914Fc850a61888f89" as ContractAddress,
     chainIdHex: "0x38",
+    lootboxID: "qoweinalaj12da" as LootboxID,
   });
   res.json({
     message: "You hit the snap endpoint",
@@ -62,6 +64,7 @@ router.post(
         name,
         lootboxAddress,
         chainIdHex,
+        lootboxID,
       } = req.body;
       const linkToImage = await generateImage(tempLocalPath, {
         backgroundImage,
@@ -70,6 +73,7 @@ router.post(
         name,
         lootboxAddress,
         chainIdHex,
+        lootboxID,
       });
       res.json({
         message: "Created stamp!",
@@ -115,6 +119,7 @@ router.post(
         name,
         lootboxAddress,
         chainIdHex,
+        lootboxID,
         metadata,
       } = req.body;
 
@@ -126,6 +131,7 @@ router.post(
         name,
         lootboxAddress,
         chainIdHex,
+        lootboxID,
       });
 
       const updatedMetadata: LootboxTicketMetadataV2_Firestore = {
@@ -135,7 +141,7 @@ router.post(
 
       const linkToURI = await saveTicketMetadataToGBucket({
         alias: `${lootboxAddress}-${ticketID}`,
-        fileName: `${lootboxAddress.toLowerCase()}/${ticketID}.json`,
+        fileName: `${lootboxID}/${ticketID}.json`,
         data: JSON.stringify(updatedMetadata),
         bucket: manifest.storage.buckets.data.id,
       });
