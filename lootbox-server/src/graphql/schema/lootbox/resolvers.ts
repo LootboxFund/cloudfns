@@ -554,6 +554,20 @@ const LootboxResolvers: Resolvers = {
       return null;
     },
   },
+
+  CreateLootboxResponse: {
+    __resolveType: (obj: CreateLootboxResponse) => {
+      if ("lootbox" in obj) {
+        return "CreateLootboxResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const lootboxResolverComposition = {
