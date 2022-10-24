@@ -2,6 +2,7 @@ import {
   Collection,
   ContractAddress,
   LootboxID,
+  LootboxVariant_Firestore,
   Lootbox_Firestore,
   TournamentID,
   UserID,
@@ -51,6 +52,7 @@ export const create = async (
 
   const createdLootbox = await createLootbox(
     {
+      variant: LootboxVariant_Firestore.cosmic,
       creatorID: request.creatorID,
       stampImage: stampImageUrl,
       logo: request.logoImage,

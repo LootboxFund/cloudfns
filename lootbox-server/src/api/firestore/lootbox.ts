@@ -21,6 +21,7 @@ import {
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentSnapshotID,
   LootboxTournamentStatus_Firestore,
+  LootboxVariant_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -332,6 +333,7 @@ interface CreateLootboxPayload {
   nftBountyValue: string;
   themeColor: string;
   joinCommunityUrl?: string;
+  variant: LootboxVariant_Firestore;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayload,
@@ -349,7 +351,7 @@ export const createLootbox = async (
     factory: null,
     creatorID: payload.creatorID,
     creatorAddress: null,
-    variant: null,
+    variant: payload.variant, // WARN: This also gets updated when web3 contract is deployed in @cloudfns/firebase/functions/index.ts > indexLootboxOnCreate
     chainIdHex: null,
     chainIdDecimal: null,
     chainName: null,
