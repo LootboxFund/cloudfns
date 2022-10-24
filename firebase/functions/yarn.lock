@@ -1902,28 +1902,28 @@
     undici "^5.10.0"
     web-streams-polyfill "^3.2.0"
 
-"@wormgraph/helpers@0.7.0-prod":
-  version "0.7.0-prod"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.0-prod.tgz#2c1936ce485d5b4c074e253d13bd28456f6776ea"
-  integrity sha512-rFTv+4ws8N8RTaVXJCJ3UDagULOU8E4cT96wrc1Kcow+KETwW2my/tBeviaKKPYH55Z90GPMXvzbl6IfavpCqA==
+"@wormgraph/helpers@0.7.1-demo-3":
+  version "0.7.1-demo-3"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.1-demo-3.tgz#6f850426347d0d2828e5865e5c934aebd16b97a1"
+  integrity sha512-mbFrcYt/YnC6FVQTT0rPqq+1Lv1pJPk6RgVy+Esn09rah8CQmQeSnBlb1rpKFpd9wI9M+uQdB8MkSWZIU/9byw==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.7.0-prod-1":
-  version "0.7.0-prod-1"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.0-prod-1.tgz#e6e35f430684569869418dc0a58411a7bc7ab228"
-  integrity sha512-KV5Ix1A99z/jGKZxD4gOXGFHYbr9mPr0neVGzBCveYjLMEnPGTkjslbcdkvoynQxW7PMc9rYsbbKSsLc9UOwxQ==
+"@wormgraph/helpers@0.7.1-demo-4":
+  version "0.7.1-demo-4"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.1-demo-4.tgz#f270d18bde22d71ae465c7e157dfea17ffc39a90"
+  integrity sha512-8hzINxunMX3qmywMXBQPI97WF07pw8o8nG8f8mc9AycAtfaTOD9ZLTcfGrQ8sTKA4shd8gCnAtzhTqy9Q0zapw==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/manifest@0.7.0-prod-6":
-  version "0.7.0-prod-6"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.7.0-prod-6.tgz#2793fd159107eb2e58ac6c1416a26b1a10cade91"
-  integrity sha512-o9NCg+makMb6JMwLNoNN4XXPHQdeEnzygxFdTDEfbjcMIBvPeB4+lXcoyGMYryT/iO9KxeC93Qg+tTnawyGYsg==
+"@wormgraph/manifest@0.7.1-demo-3":
+  version "0.7.1-demo-3"
+  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.7.1-demo-3.tgz#091d77fe9a2c787abfe0e0ebe4c38f2761314e5d"
+  integrity sha512-nNPK2H0cVVpDofZadGVWTh5jER8q77pvGz9g4fAuaHkQ2teTTFWyhjFSPz6OhAYbn2VcA38VbJ3MdJXdqti2Kg==
   dependencies:
-    "@wormgraph/helpers" "0.7.0-prod"
+    "@wormgraph/helpers" "0.7.1-demo-3"
 
 abort-controller@^3.0.0:
   version "3.0.0"

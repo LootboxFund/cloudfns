@@ -564,6 +564,7 @@ interface IndexLootboxOnCreateTaskRequest {
         symbol: string;
         nonce: LootboxCreatedNonce;
         tournamentID?: TournamentID;
+        lootboxID: LootboxID;
     };
     filter: {
         fromBlock: number;
@@ -622,8 +623,10 @@ export const indexLootboxOnCreate = functions
                     issuerAddress: Address,
                     maxTickets: ethers.BigNumber,
                     baseTokenURI: string,
+                    lootboxID: string,
                     // TODO: correct typing on these paramaters, maybe typechain?
-                    nonce: { hash: string }
+                    nonce: { hash: string },
+                    event: ethers.Event
                 ) => {
                     logger.debug("Got log", {
                         lootboxName,
@@ -632,7 +635,9 @@ export const indexLootboxOnCreate = functions
                         maxTickets,
                         baseTokenURI,
                         nonce,
+                        lootboxID,
                         maxTicketsParsed: maxTickets.toNumber(),
+                        event,
                     });
 
                     if (
@@ -641,12 +646,21 @@ export const indexLootboxOnCreate = functions
                         issuerAddress === undefined ||
                         maxTickets === undefined ||
                         baseTokenURI === undefined ||
-                        nonce === undefined
+                        lootboxID === undefined ||
+                        nonce === undefined ||
+                        event === undefined
                     ) {
                         return;
                     }
 
                     // Make sure its the right event
+                    if (lootboxID !== data.payload.lootboxID) {
+                        logger.info("LootboxID does not match", {
+                            lootboxID,
+                            expectedLootboxID: data.payload.lootboxID,
+                        });
+                        return;
+                    }
                     const testNonce = data.payload.nonce;
                     const hashedTestNonce = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(testNonce));
                     if (nonce.hash !== hashedTestNonce) {
@@ -659,33 +673,49 @@ export const indexLootboxOnCreate = functions
                     }
 
                     try {
-                        // Get the lootbox info
-                        await lootboxService.create(
+                        // Associates the Web3 data to Lootbox
+                        await lootboxService.createWeb3(
                             {
-                                tournamentID: data.payload.tournamentID,
+                                lootboxID: data.payload.lootboxID,
                                 factory: data.payload.factory,
-                                lootboxDescription: data.payload.lootboxDescription,
-                                backgroundImage: data.payload.backgroundImage,
-                                logoImage: data.payload.logoImage,
-                                themeColor: data.payload.themeColor,
-                                nftBountyValue: data.payload.nftBountyValue,
-                                joinCommunityUrl: data.payload.joinCommunityUrl
-                                    ? data.payload.joinCommunityUrl
-                                    : undefined,
                                 lootboxAddress,
-                                // blockNumber: log.blockNumber,
-                                blockNumber: "",
+                                blockNumber: `${event.blockNumber}`,
                                 lootboxName,
-                                transactionHash: "",
+                                transactionHash: event.transactionHash,
                                 creatorAddress: issuerAddress,
-                                maxTickets: maxTickets.toNumber(),
-                                creatorID: data.payload.creatorID,
                                 baseTokenURI: baseTokenURI,
                                 symbol: data.payload.symbol, // Todo move this to onchain event
                                 creationNonce: data.payload.nonce,
                             },
                             data.chain
                         );
+                        // // Get the lootbox info
+                        // await lootboxService.create(
+                        //     {
+                        //         tournamentID: data.payload.tournamentID,
+                        //         factory: data.payload.factory,
+                        //         lootboxDescription: data.payload.lootboxDescription,
+                        //         backgroundImage: data.payload.backgroundImage,
+                        //         logoImage: data.payload.logoImage,
+                        //         themeColor: data.payload.themeColor,
+                        //         nftBountyValue: data.payload.nftBountyValue,
+                        //         joinCommunityUrl: data.payload.joinCommunityUrl
+                        //             ? data.payload.joinCommunityUrl
+                        //             : undefined,
+                        //         lootboxAddress,
+                        //         // blockNumber: log.blockNumber,
+                        //         blockNumber: "",
+                        //         lootboxName,
+                        //         transactionHash: "",
+                        //         creatorAddress: issuerAddress,
+                        //         maxTickets: maxTickets.toNumber(),
+                        //         creatorID: data.payload.creatorID,
+                        //         baseTokenURI: baseTokenURI,
+                        //         symbol: data.payload.symbol, // Todo move this to onchain event
+                        //         creationNonce: data.payload.nonce,
+                        //     },
+                        //     data.chain
+                        // );
                         provider.removeAllListeners(lootboxEventFilter);
                         res(null);
                         return;
@@ -733,6 +763,7 @@ export const enqueueLootboxOnCreate = functions
                 symbol: data.payload.symbol,
                 creatorID: context.auth.uid as UserID,
                 tournamentID: data.payload.tournamentID,
+                lootboxID: data.payload.lootboxID,
             },
             filter: {
                 fromBlock: data.fromBlock,
