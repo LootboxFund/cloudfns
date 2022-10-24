@@ -75,7 +75,7 @@ export const createRewardClaim = async (req: CreateRewardClaimReq): Promise<Clai
         type: ClaimType_Firestore.reward,
         referralType: ReferralType_Firestore.viral,
         lootboxID: lootbox.id,
-        lootboxAddress: lootbox.address,
+        lootboxAddress: lootbox?.address || null,
         lootboxName: lootbox.name,
         lootboxMaxTickets: lootbox.maxTickets,
         ticketWeb3ID: null, // this will be filled out later in indexLootboxOnMint
