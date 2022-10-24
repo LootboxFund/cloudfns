@@ -567,7 +567,7 @@ export const indexLootboxOnCreate = functions
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
-        secrets: [stampSecretName],
+        // secrets: [stampSecretName],
     })
     .tasks.taskQueue({
         retryConfig: {
