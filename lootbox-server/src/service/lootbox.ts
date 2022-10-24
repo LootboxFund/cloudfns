@@ -36,6 +36,19 @@ export const create = async (
   request: CreateLootboxRequest
 ): Promise<Lootbox_Firestore> => {
   console.log("creating lootbox", request);
+
+  // Make sure the tournament exists
+  if (request.tournamentID) {
+    const tournament = await getTournamentById(
+      request.tournamentID as TournamentID
+    );
+    if (!tournament || !!tournament.timestamps.deletedAt) {
+      throw new Error(
+        "Could not create Lootbox. The Requested tournament was not found."
+      );
+    }
+  }
+
   const stampSecret = await getStampSecret();
   const lootboxDocumentRef = db
     .collection(Collection.Lootbox)

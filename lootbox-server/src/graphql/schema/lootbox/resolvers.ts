@@ -30,6 +30,7 @@ import {
   paginateLootboxUserClaims,
   getUserClaimCountForLootbox,
   getLootboxByUserIDAndNonce,
+  getTournamentById,
 } from "../../../api/firestore";
 import {
   Address,
@@ -175,7 +176,7 @@ const LootboxResolvers: Resolvers = {
           symbol: payload.name.slice(0, 12),
           creatorID: context.userId as unknown as UserID,
           lootboxName: payload.name,
-          tournamentID: (payload.tournamentID as TournamentID) || undefined,
+          tournamentID: payload.tournamentID as TournamentID | undefined,
         });
 
         return { lootbox: convertLootboxDBToGQL(lootbox) };
@@ -577,6 +578,7 @@ const lootboxResolverComposition = {
   "Mutation.whitelistAllUnassignedClaims": [isAuthenticated()],
   "Mutation.editLootbox": [isAuthenticated()],
   "Mutation.mintLootboxTicket": [isAuthenticated()],
+  "Mutation.createLootbox": [isAuthenticated()],
 };
 
 const lootboxResolvers = composeResolvers(
