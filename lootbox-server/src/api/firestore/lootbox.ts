@@ -334,11 +334,14 @@ interface CreateLootboxPayload {
   joinCommunityUrl?: string;
 }
 export const createLootbox = async (
-  payload: CreateLootboxPayload
+  payload: CreateLootboxPayload,
+  ref?: DocumentReference<Lootbox_Firestore>
 ): Promise<Lootbox_Firestore> => {
-  const lootboxRef = db
-    .collection(Collection.Lootbox)
-    .doc() as DocumentReference<Lootbox_Firestore>;
+  const lootboxRef = ref
+    ? ref
+    : (db
+        .collection(Collection.Lootbox)
+        .doc() as DocumentReference<Lootbox_Firestore>);
 
   const lootboxPayload: Lootbox_Firestore = {
     id: lootboxRef.id as LootboxID,
@@ -367,10 +370,12 @@ export const createLootbox = async (
     runningCompletedClaims: 0,
     creationNonce: null,
     members: [],
+    isContractDeployed: false,
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
       deletedAt: null,
+      deployedAt: null,
     },
   };
 

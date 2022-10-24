@@ -1,5 +1,7 @@
 import {
+  Collection,
   ContractAddress,
+  LootboxID,
   Lootbox_Firestore,
   TournamentID,
   UserID,
@@ -11,6 +13,8 @@ import {
   getTournamentById,
 } from "../api/firestore";
 import { getStampSecret } from "../api/secrets";
+import { db } from "../api/firebase";
+import { DocumentReference } from "firebase-admin/firestore";
 
 interface CreateLootboxRequest {
   // passed in variables
@@ -32,6 +36,9 @@ export const create = async (
 ): Promise<Lootbox_Firestore> => {
   console.log("creating lootbox", request);
   const stampSecret = await getStampSecret();
+  const lootboxDocumentRef = db
+    .collection(Collection.Lootbox)
+    .doc() as DocumentReference<Lootbox_Firestore>;
 
   // stamp lootbox image
   const stampImageUrl = await stampNewLootbox(stampSecret, {
@@ -39,26 +46,25 @@ export const create = async (
     logoImage: request.logoImage,
     themeColor: request.themeColor,
     name: request.lootboxName,
-    // TODO FIX THESE:
-    lootboxAddress: "0x0" as unknown as ContractAddress,
-    chainIdHex: "0x89", // DEFAULT POLYGON?
-    // lootboxAddress: request.lootboxAddress as unknown as ContractAddress,
-    // chainIdHex: chain.chainIdHex,
+    lootboxID: lootboxDocumentRef.id as LootboxID,
   });
 
-  const createdLootbox = await createLootbox({
-    creatorID: request.creatorID,
-    stampImage: stampImageUrl,
-    logo: request.logoImage,
-    symbol: request.symbol,
-    name: request.lootboxName,
-    description: request.lootboxDescription,
-    nftBountyValue: request.nftBountyValue,
-    maxTickets: request.maxTickets,
-    backgroundImage: request.backgroundImage,
-    themeColor: request.themeColor,
-    joinCommunityUrl: request.joinCommunityUrl,
-  });
+  const createdLootbox = await createLootbox(
+    {
+      creatorID: request.creatorID,
+      stampImage: stampImageUrl,
+      logo: request.logoImage,
+      symbol: request.symbol,
+      name: request.lootboxName,
+      description: request.lootboxDescription,
+      nftBountyValue: request.nftBountyValue,
+      maxTickets: request.maxTickets,
+      backgroundImage: request.backgroundImage,
+      themeColor: request.themeColor,
+      joinCommunityUrl: request.joinCommunityUrl,
+    },
+    lootboxDocumentRef
+  );
 
   if (request.tournamentID) {
     console.log("Checking to add tournament snapshot", {

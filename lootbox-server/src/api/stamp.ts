@@ -17,6 +17,7 @@ export const stampNewLootbox = async (
     name,
     lootboxAddress,
     chainIdHex,
+    lootboxID,
   } = props;
   const stampConfig: StampNewLootboxProps = {
     backgroundImage,
@@ -25,6 +26,7 @@ export const stampNewLootbox = async (
     name,
     lootboxAddress,
     chainIdHex,
+    lootboxID,
   };
   const response = await axios.post<StampNewLootboxResponse>(
     manifest.cloudRun.containers.stampNewLootbox.fullRoute,
