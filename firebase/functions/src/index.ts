@@ -599,6 +599,7 @@ export const indexLootboxOnCreate = functions
             null,
             null,
             null,
+            null,
             data.payload.nonce
         );
 
