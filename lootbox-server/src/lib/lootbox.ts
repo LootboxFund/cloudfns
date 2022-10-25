@@ -189,6 +189,7 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       symbol: lootbox.symbol || "",
       baseTokenURI: lootbox.baseTokenURI || null,
       runningCompletedClaims: lootbox.runningCompletedClaims || 0,
+      creationNonce: lootbox.creationNonce || null,
     };
   } else {
     // this should all be removed soon

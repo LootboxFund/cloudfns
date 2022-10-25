@@ -111,6 +111,7 @@ const LootboxTypeDefs = gql`
     transactionHash: String
     blockNumber: String
     baseTokenURI: String
+    creationNonce: String
 
     # GQL layer
     userClaims(
