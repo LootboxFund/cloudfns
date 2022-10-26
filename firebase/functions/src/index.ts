@@ -33,7 +33,6 @@ import {
     ClaimType_Firestore,
     Lootbox_Firestore,
     LootboxStatus_Firestore,
-    Wallet_Firestore,
     LootboxID,
     MeasurementPartnerType,
     tableActivationIngestorRoutes,
@@ -50,7 +49,7 @@ import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
-import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
+import { createRewardClaim } from "./api/firestore/referral";
 import axios from "axios";
 import mkdirp from "mkdirp";
 import ffmpeg from "fluent-ffmpeg";

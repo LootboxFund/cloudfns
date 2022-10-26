@@ -119,6 +119,7 @@ export const create = async (
 };
 
 export const whitelist = async (
+  whitelisterPrivateKey: string,
   whitelistAddress: Address,
   lootbox: Lootbox_Firestore,
   claim: Claim_Firestore
@@ -136,9 +137,7 @@ export const whitelist = async (
   }
 
   const nonce = generateNonce();
-  const _whitelisterPrivateKey =
-    process.env.PARTY_BASKET_WHITELISTER_PRIVATE_KEY || "";
-  const signer = new ethers.Wallet(_whitelisterPrivateKey);
+  const signer = new ethers.Wallet(whitelisterPrivateKey);
   const digest = generateTicketDigest({
     minterAddress: whitelistAddress,
     lootboxAddress: lootbox.address,
@@ -163,7 +162,7 @@ export const whitelist = async (
     lootbox.chainIdHex,
     lootbox.address,
     whitelistAddress,
-    _whitelisterPrivateKey,
+    whitelisterPrivateKey,
     nonce
   );
 

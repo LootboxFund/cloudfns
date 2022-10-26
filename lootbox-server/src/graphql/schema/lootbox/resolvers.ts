@@ -33,14 +33,12 @@ import {
   paginateLootboxUserClaims,
   getUserClaimCountForLootbox,
   getLootboxByUserIDAndNonce,
-  getTournamentById,
   getLootboxUnassignedClaimForUser,
 } from "../../../api/firestore";
 import {
   Address,
   LootboxMintSignatureNonce,
   LootboxTicketID,
-  MintWhitelistSignature_Firestore,
   TournamentID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
@@ -56,6 +54,8 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import * as LootboxService from "../../../service/lootbox";
 import { validateSignature } from "../../../lib/whitelist";
 import { batcher } from "../../../lib/utils";
+import { ethers } from "ethers";
+import { getWhitelisterPrivateKey } from "../../../api/secrets";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -290,23 +290,11 @@ const LootboxResolvers: Resolvers = {
         };
       }
 
-      // Validate the signature is correct from the wallet
-      let addressToWhitelist: Address;
-      let nonce: string;
-
-      try {
-        const res = await validateSignature(
-          payload?.message,
-          payload?.signedMessage
-        );
-
-        addressToWhitelist = res.address;
-        nonce = res.nonce;
-      } catch (err) {
+      if (!ethers.utils.isAddress(payload.walletAddress)) {
         return {
           error: {
-            code: StatusCode.Unauthorized,
-            message: err instanceof Error ? err.message : "",
+            code: StatusCode.BadRequest,
+            message: "Invalid address",
           },
         };
       }
@@ -344,6 +332,10 @@ const LootboxResolvers: Resolvers = {
           };
         }
 
+        // Gets WHITELISTER_PRIVATE_KEY
+        // This will THROW if not found
+        const whitelisterPrivateKey = await getWhitelisterPrivateKey();
+
         // get eligible claims to whitelist claims
         const unassignedClaims = await getLootboxUnassignedClaimForUser(
           lootbox.id,
@@ -366,18 +358,17 @@ const LootboxResolvers: Resolvers = {
           const signatureResults = await Promise.allSettled(
             batchClaims.map((claim) => {
               return LootboxService.whitelist(
-                addressToWhitelist,
+                whitelisterPrivateKey,
+                payload.walletAddress as Address,
                 lootbox,
                 claim
               );
             })
           );
 
-          // Disect allsettled
-
           const createdSignatures: MintWhitelistSignature[] = signatureResults
             .filter(
-              (res) => res.status === "fulfilled" && res?.value != undefined
+              (res) => res.status === "fulfilled" && res.value != undefined
             )
             // @ts-ignore
             .map((res) => res.value);

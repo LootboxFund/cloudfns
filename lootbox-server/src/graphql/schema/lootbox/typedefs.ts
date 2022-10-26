@@ -238,8 +238,7 @@ const LootboxTypeDefs = gql`
 
   input WhitelistMyLootboxClaimsPayload {
     lootboxID: ID!
-    message: String!
-    signedMessage: String!
+    walletAddress: ID! # A web3 wallet address
   }
 
   union WhitelistMyLootboxClaimsResponse =
