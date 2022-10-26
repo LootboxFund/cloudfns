@@ -127,3 +127,25 @@ export const getUnassignedClaimsForUser = async (
         return snapshot.docs.map((doc) => doc.data());
     }
 };
+
+// export const getUnassignedClaimRefsForLootbox = async (
+//     lootboxID: LootboxID
+// ): Promise<DocumentReference<Claim_Firestore>[]> => {
+//     const lootboxSatusField: keyof Claim_Firestore = "status";
+//     const whitelistIDField: keyof Claim_Firestore = "whitelistId";
+//     const lootboIDField: keyof Claim_Firestore = "lootboxID";
+
+//     const collectionGroupRef = db
+//         .collectionGroup(Collection.Claim)
+//         .where(lootboIDField, "==", lootboxID)
+//         .where(lootboxSatusField, "==", ClaimStatus_Firestore.complete)
+//         .where(whitelistIDField, "==", null) as CollectionGroup<Claim_Firestore>;
+
+//     const snapshot = await collectionGroupRef.get();
+
+//     if (!snapshot || snapshot.empty) {
+//         return [];
+//     } else {
+//         return snapshot.docs.map((doc) => doc.ref);
+//     }
+// };

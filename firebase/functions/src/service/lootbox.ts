@@ -4,9 +4,7 @@ import {
     Lootbox_Firestore,
     TournamentID,
     UserID,
-    MintWhitelistSignature_Firestore,
     LootboxID,
-    Claim_Firestore,
     LootboxTicketID_Web3,
     LootboxMintWhitelistID,
     ClaimID,
@@ -21,11 +19,9 @@ import {
     LootboxTimestamps,
     LootboxVariant_Firestore,
 } from "@wormgraph/helpers";
-import { ethers } from "ethers";
 import { logger } from "firebase-functions";
 import { db } from "../api/firebase";
 import {
-    createMintWhitelistSignature,
     finalizeMint,
     getAllLootboxTournamentSnapshotRefs,
     getLootbox,
@@ -34,9 +30,9 @@ import {
     getTicketByWeb3ID,
     getWhitelistByDigest,
     associateWeb3Lootbox,
+    associateLootboxSnapshotsToWeb3,
 } from "../api/firestore/lootbox";
 import { stampNewLootbox, stampNewTicket } from "../api/stamp";
-import { generateNonce, generateTicketDigest, whitelistLootboxMintSignature } from "../lib/ethers";
 import { convertLootboxToTicketMetadata } from "../lib/lootbox";
 import { v4 as uuidV4 } from "uuid";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
@@ -109,74 +105,6 @@ export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo
     });
 
     return updatedLootbox;
-};
-
-export const whitelist = async (
-    whitelistAddress: Address,
-    lootbox: Lootbox_Firestore,
-    claim: Claim_Firestore
-): Promise<MintWhitelistSignature_Firestore> => {
-    logger.info("Whitelisting user", { whitelistAddress, lootbox: lootbox.id });
-
-    if (!lootbox.address || !lootbox.chainIdHex) {
-        throw new Error("Lootbox has not been deployed");
-    }
-    if (!ethers.utils.isAddress(whitelistAddress)) {
-        throw new Error("Invalid Address");
-    }
-    if (!lootbox) {
-        throw new Error("Lootbox not found");
-    }
-
-    const nonce = generateNonce();
-    const _whitelisterPrivateKey = process.env.PARTY_BASKET_WHITELISTER_PRIVATE_KEY || "";
-    const signer = new ethers.Wallet(_whitelisterPrivateKey);
-    const digest = generateTicketDigest({
-        minterAddress: whitelistAddress,
-        lootboxAddress: lootbox.address,
-        nonce,
-        chainIDHex: lootbox.chainIdHex,
-    });
-
-    // Make sure whitelist with the provided digest does not already exist
-    const existingWhitelist = await getWhitelistByDigest(lootbox.id, digest);
-
-    if (existingWhitelist) {
-        throw new Error("Whitelist already exists!");
-    }
-
-    logger.info("generating whitelist", {
-        whitelistAddress,
-        lootbox: lootbox.id,
-        signerAddress: signer.address,
-        digest,
-    });
-    const signature = await whitelistLootboxMintSignature(
-        lootbox.chainIdHex,
-        lootbox.address,
-        whitelistAddress,
-        _whitelisterPrivateKey,
-        nonce
-    );
-
-    logger.info("Adding the signature to DB", {
-        whitelistAddress,
-        lootbox: lootbox.id,
-        signerAddress: signer.address,
-        digest: digest,
-    });
-    const signatureDB = await createMintWhitelistSignature({
-        signature,
-        signer: signer.address as Address,
-        whitelistedAddress: whitelistAddress as Address,
-        lootboxId: lootbox.id as LootboxID,
-        lootboxAddress: lootbox.address as Address,
-        nonce,
-        claim,
-        digest,
-    });
-
-    return signatureDB;
 };
 
 interface MintNewTicketCallbackRequest {
@@ -374,3 +302,18 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
 
 //     return createdLootbox;
 // };
+
+export const onDeployed = async (lootbox: Lootbox_Firestore): Promise<void> => {
+    if (!lootbox.address || !lootbox.id) {
+        return;
+    }
+
+    try {
+        // We also need to update all lootboxTOurnamentSnapshots
+        await associateLootboxSnapshotsToWeb3(lootbox.id, {
+            lootboxAddress: lootbox.address,
+        });
+    } catch (err) {
+        logger.error("Error onDeployed updating LootboxSnapshots", err);
+    }
+};

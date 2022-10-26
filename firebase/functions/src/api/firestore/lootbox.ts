@@ -169,89 +169,6 @@ export const incrementLootboxRunningClaims = async (lootboxID: LootboxID): Promi
     await lootboxRef.update(updateReq);
 };
 
-interface CreateMintWhitelistSignatureRequest {
-    signature: string;
-    signer: Address;
-    whitelistedAddress: Address;
-    lootboxId: LootboxID;
-    lootboxAddress: Address;
-    nonce: LootboxMintSignatureNonce;
-    digest: LootboxTicketDigest;
-    claim: Claim_Firestore;
-}
-
-/**
- * Creates whitelist signature database object
- * Updates claim if provided with whitelistId as DB transaction
- */
-export const createMintWhitelistSignature = async ({
-    signature,
-    signer,
-    whitelistedAddress,
-    lootboxId,
-    lootboxAddress,
-    nonce,
-    claim,
-    digest,
-}: CreateMintWhitelistSignatureRequest): Promise<MintWhitelistSignature_Firestore> => {
-    const batch = db.batch();
-
-    const signatureRef = db
-        .collection(Collection.Lootbox)
-        .doc(lootboxId)
-        .collection(Collection.MintWhiteList)
-        .doc() as DocumentReference<MintWhitelistSignature_Firestore>;
-
-    const whitelistID: LootboxMintWhitelistID = signatureRef.id as LootboxMintWhitelistID;
-
-    const signatureDocument: MintWhitelistSignature_Firestore = {
-        id: whitelistID,
-        isRedeemed: false,
-        lootboxAddress,
-        whitelistedAddress,
-        signature,
-        signer,
-        nonce,
-        digest,
-        createdAt: Timestamp.now().toMillis(),
-        updatedAt: Timestamp.now().toMillis(),
-        deletedAt: null,
-        lootboxTicketID: null,
-        lootboxID: lootboxId,
-        whitelistedAt: null,
-        userID: claim?.claimerUserId ? claim.claimerUserId : null,
-        claimID: claim.id,
-        referralID: claim.referralId,
-    };
-
-    batch.set(signatureRef, signatureDocument);
-
-    if (claim) {
-        // Update the claim's whitelistId
-        const claimRef = db
-            .collection(Collection.Referral)
-            .doc(claim.referralId)
-            .collection(Collection.Claim)
-            .doc(claim.id) as DocumentReference<Claim_Firestore>;
-
-        // Annoying typesafety for nested objects
-        const timestampName: keyof Claim_Firestore = "timestamps";
-        const updatedAtName: keyof ClaimTimestamps_Firestore = "updatedAt";
-        const whitelistedAtName: keyof ClaimTimestamps_Firestore = "whitelistedAt";
-        const updateClaimRequest: Partial<Claim_Firestore> = {
-            whitelistId: whitelistID,
-            [`${timestampName}.${updatedAtName}`]: Timestamp.now().toMillis(),
-            [`${timestampName}.${whitelistedAtName}`]: Timestamp.now().toMillis(),
-        };
-
-        batch.update(claimRef, updateClaimRequest);
-    }
-
-    await batch.commit();
-
-    return signatureDocument;
-};
-
 interface CreateTicketRequest {
     minterUserID: UserID;
     lootboxID: LootboxID;
@@ -450,4 +367,25 @@ export const associateWeb3Lootbox = async (
 
     const lootbox = await lootboxRef.get();
     return lootbox.data()!;
+};
+
+interface AssociateWeb3LootboxTournamentPayload {
+    lootboxAddress: Address;
+}
+
+export const associateLootboxSnapshotsToWeb3 = async (
+    lootboxID: LootboxID,
+    payload: AssociateWeb3LootboxTournamentPayload
+): Promise<void> => {
+    const snapshotRefs = await getAllLootboxTournamentSnapshotRefs(lootboxID);
+
+    const batch = db.batch();
+
+    snapshotRefs.forEach((snapshotRef) => {
+        batch.update(snapshotRef, { address: payload.lootboxAddress });
+    });
+
+    await batch.commit();
+
+    return;
 };

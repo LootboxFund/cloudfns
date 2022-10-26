@@ -51,7 +51,6 @@ import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
 import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
-import { getUserWallets } from "./api/firestore/user";
 import axios from "axios";
 import mkdirp from "mkdirp";
 import ffmpeg from "fluent-ffmpeg";
@@ -112,21 +111,6 @@ export const onClaimWrite = functions
                 } catch (err) {
                     logger.error("error fetching lootbox", { lootboxID: newClaim.lootboxID, err });
                     return;
-                }
-
-                if (!newClaim.whitelistId && newClaim.claimerUserId) {
-                    try {
-                        // Generate the whitelist only if the user wallet exists
-                        const userWallets = await getUserWallets(newClaim.claimerUserId, 1); // Uses the first wallet
-                        if (userWallets.length > 0) {
-                            const walletToWhitelist = userWallets[0];
-                            // If user has wallet, whitelist it
-                            // If not, this claim will be whitelisted later when the user adds their wallet
-                            await lootboxService.whitelist(walletToWhitelist.address, lootbox, newClaim);
-                        }
-                    } catch (err) {
-                        logger.error("Error onClaimWrite generating whitelist", err);
-                    }
                 }
 
                 try {
@@ -197,63 +181,65 @@ export const onClaimWrite = functions
         return;
     });
 
-export const onWalletCreate = functions
-    .region(REGION)
-    .runWith({
-        secrets: [whitelisterPrivateKeySecretName],
-    })
-    .firestore.document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
-    .onCreate(async (snap) => {
-        logger.info(snap);
+// Not needed anymore because whitelist happens on the fly via GQL call
+// export const onWalletCreate = functions
+//     .region(REGION)
+//     .runWith({
+//         secrets: [whitelisterPrivateKeySecretName],
+//     })
+//     .firestore.document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
+//     .onCreate(async (snap) => {
+//         logger.info(snap);
 
-        const wallet: Wallet_Firestore = snap.data() as Wallet_Firestore;
+//         const wallet: Wallet_Firestore = snap.data() as Wallet_Firestore;
 
-        try {
-            // Look for un resolved claims
-            const unassignedClaims = await getUnassignedClaimsForUser(wallet.userId);
-            if (unassignedClaims && unassignedClaims.length > 0) {
-                logger.info(`Found claims to whitelist: ${unassignedClaims.length}`, {
-                    numClaims: unassignedClaims.length,
-                    userID: wallet.userId,
-                });
+//         try {
+//             // Look for un resolved claims
+//             const unassignedClaims = await getUnassignedClaimsForUser(wallet.userId);
+//             if (unassignedClaims && unassignedClaims.length > 0) {
+//                 logger.info(`Found claims to whitelist: ${unassignedClaims.length}`, {
+//                     numClaims: unassignedClaims.length,
+//                     userID: wallet.userId,
+//                 });
 
-                const lootboxMapping: { [key: LootboxID]: Lootbox_Firestore } = {};
-                for (const claim of unassignedClaims) {
-                    try {
-                        let lootbox: Lootbox_Firestore | undefined;
-                        if (
-                            !claim.lootboxID ||
-                            claim.status !== ClaimStatus_Firestore.complete ||
-                            !!claim.whitelistId
-                        ) {
-                            continue;
-                        }
-                        if (!lootboxMapping[claim.lootboxID]) {
-                            lootbox = await getLootbox(claim.lootboxID);
-                            if (!lootbox) {
-                                continue;
-                            }
-                            lootboxMapping[claim.lootboxID] = lootbox;
-                        } else {
-                            lootbox = lootboxMapping[claim.lootboxID];
-                        }
-                        if (lootbox) {
-                            await lootboxService.whitelist(wallet.address, lootbox, claim);
-                        }
-                    } catch (err) {
-                        logger.error("Error processing unassigned claim", {
-                            err,
-                            claimID: claim.id,
-                            referralID: claim.referralId,
-                        });
-                        continue;
-                    }
-                }
-            }
-        } catch (err) {
-            logger.error("Error onWalletCreate", err);
-        }
-    });
+//                 // Generate a whitelist for each claim
+//                 const lootboxMapping: { [key: LootboxID]: Lootbox_Firestore } = {};
+//                 for (const claim of unassignedClaims) {
+//                     try {
+//                         let lootbox: Lootbox_Firestore | undefined;
+//                         if (
+//                             !claim.lootboxID ||
+//                             claim.status !== ClaimStatus_Firestore.complete ||
+//                             !!claim.whitelistId
+//                         ) {
+//                             continue;
+//                         }
+//                         if (!lootboxMapping[claim.lootboxID]) {
+//                             lootbox = await getLootbox(claim.lootboxID);
+//                             if (!lootbox) {
+//                                 continue;
+//                             }
+//                             lootboxMapping[claim.lootboxID] = lootbox;
+//                         } else {
+//                             lootbox = lootboxMapping[claim.lootboxID];
+//                         }
+//                         if (lootbox) {
+//                             await lootboxService.whitelist(wallet.address, lootbox, claim);
+//                         }
+//                     } catch (err) {
+//                         logger.error("Error processing unassigned claim", {
+//                             err,
+//                             claimID: claim.id,
+//                             referralID: claim.referralId,
+//                         });
+//                         continue;
+//                     }
+//                 }
+//             }
+//         } catch (err) {
+//             logger.error("Error onWalletCreate", err);
+//         }
+//     });
 
 export const onLootboxWrite = functions
     .region(REGION)
@@ -299,6 +285,16 @@ export const onLootboxWrite = functions
                 logger.error(err, {
                     lootboxID: newLootbox.id,
                 });
+            }
+        }
+
+        const wasLootboxDeployed = !!newLootbox.address && !oldLootbox.address;
+
+        if (wasLootboxDeployed) {
+            try {
+                await lootboxService.onDeployed(newLootbox);
+            } catch (err) {
+                logger.error("Error on Lootbox Deployed Callback", err);
             }
         }
 
