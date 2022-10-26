@@ -1,9 +1,13 @@
 import {
+  Address,
+  Claim_Firestore,
   Collection,
   ContractAddress,
   LootboxID,
+  LootboxTicketDigest,
   LootboxVariant_Firestore,
   Lootbox_Firestore,
+  MintWhitelistSignature_Firestore,
   TournamentID,
   UserID,
 } from "@wormgraph/helpers";
@@ -11,11 +15,16 @@ import { stampNewLootbox } from "../api/stamp";
 import {
   createLootbox,
   createLootboxTournamentSnapshot,
+  createMintWhitelistSignature,
   getTournamentById,
+  getWhitelistByDigest,
 } from "../api/firestore";
 import { getStampSecret } from "../api/secrets";
 import { db } from "../api/firebase";
 import { DocumentReference } from "firebase-admin/firestore";
+import { ethers } from "ethers";
+import { generateNonce, generateTicketDigest } from "../lib/whitelist";
+import { whitelistLootboxMintSignature } from "../lib/whitelist";
 
 interface CreateLootboxRequest {
   // passed in variables
@@ -109,70 +118,71 @@ export const create = async (
   return createdLootbox;
 };
 
-// import { Address, LootboxID, Lootbox_Firestore } from "@wormgraph/helpers";
-// import { ethers } from "ethers";
-// import { whitelistLootboxMintSignature } from "../api/ethers";
-// import { createMintWhitelistSignature } from "../api/firestore";
-// import { getWhitelisterPrivateKey } from "../api/secrets";
-// import { generateNonce } from "../lib/whitelist";
-// import { generateTicketDigest } from "../lib/lootbox";
+export const whitelist = async (
+  whitelistAddress: Address,
+  lootbox: Lootbox_Firestore,
+  claim: Claim_Firestore
+): Promise<MintWhitelistSignature_Firestore> => {
+  console.log("Whitelisting user", { whitelistAddress, lootbox: lootbox.id });
 
-// export const bulkSignMintWhitelistSignatures = async (
-//   whitelistAddresses: Address[],
-//   lootbox: Lootbox_Firestore
-// ): Promise<{ signatures: (string | null)[]; errors: (string | null)[] }> => {
-//   const whitelisterPrivateKey = await getWhitelisterPrivateKey();
+  if (!lootbox.address || !lootbox.chainIdHex) {
+    throw new Error("Lootbox has not been deployed");
+  }
+  if (!ethers.utils.isAddress(whitelistAddress)) {
+    throw new Error("Invalid Address");
+  }
+  if (!lootbox) {
+    throw new Error("Lootbox not found");
+  }
 
-//   const signer = new ethers.Wallet(whitelisterPrivateKey);
+  const nonce = generateNonce();
+  const _whitelisterPrivateKey =
+    process.env.PARTY_BASKET_WHITELISTER_PRIVATE_KEY || "";
+  const signer = new ethers.Wallet(_whitelisterPrivateKey);
+  const digest = generateTicketDigest({
+    minterAddress: whitelistAddress,
+    lootboxAddress: lootbox.address,
+    nonce,
+    chainIDHex: lootbox.chainIdHex,
+  });
 
-//   const res = await Promise.allSettled(
-//     whitelistAddresses.map(async (whitelistAddress) => {
-//       if (!ethers.utils.isAddress(whitelistAddress)) {
-//         throw new Error("Invalid Address");
-//       }
-//       const nonce = generateNonce();
+  // Make sure whitelist with the provided digest does not already exist
+  const existingWhitelist = await getWhitelistByDigest(lootbox.id, digest);
 
-//       const signature = await whitelistLootboxMintSignature(
-//         lootbox.chainIdHex,
-//         lootbox.address,
-//         whitelistAddress,
-//         whitelisterPrivateKey,
-//         nonce
-//       );
+  if (existingWhitelist) {
+    throw new Error("Whitelist already exists!");
+  }
 
-//       const digest = generateTicketDigest({
-//         minterAddress: whitelistAddress,
-//         lootboxAddress: lootbox.address as Address,
-//         nonce,
-//         chainIDHex: lootbox.chainIdHex,
-//       });
+  console.log("generating whitelist", {
+    whitelistAddress,
+    lootbox: lootbox.id,
+    signerAddress: signer.address,
+    digest,
+  });
+  const signature = await whitelistLootboxMintSignature(
+    lootbox.chainIdHex,
+    lootbox.address,
+    whitelistAddress,
+    _whitelisterPrivateKey,
+    nonce
+  );
 
-//       await createMintWhitelistSignature({
-//         signature,
-//         signer: signer.address as Address,
-//         whitelistedAddress: whitelistAddress,
-//         lootboxId: lootbox.id,
-//         lootboxAddress: lootbox.address,
-//         nonce,
-//         digest,
-//         userID: null,
-//       });
+  console.log("Adding the signature to DB", {
+    whitelistAddress,
+    lootbox: lootbox.id,
+    signerAddress: signer.address,
+    digest: digest,
+  });
+  const signatureDB = await createMintWhitelistSignature({
+    signature,
+    signer: signer.address as Address,
+    whitelistedAddress: whitelistAddress as Address,
+    lootboxId: lootbox.id as LootboxID,
+    lootboxAddress: lootbox.address as Address,
+    nonce,
+    claim,
+    digest,
+  });
 
-//       return signature;
-//     })
-//   );
-
-//   const signatures: (string | null)[] = [];
-//   const partialErrors: (string | null)[] = [];
-//   res.forEach((result) => {
-//     if (result.status === "fulfilled") {
-//       signatures.push(result.value);
-//       partialErrors.push(null);
-//     } else {
-//       partialErrors.push(result.reason);
-//       signatures.push(null);
-//     }
-//   });
-
-//   return { signatures: signatures, errors: partialErrors };
-// };
+  return signatureDB;
+};

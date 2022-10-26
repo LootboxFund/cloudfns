@@ -304,3 +304,8 @@ const convertLootboxToSnapshotOld = (
     stampImage: data?.metadata?.image || "",
   };
 };
+
+export const isLootboxDeployed = (lootbox: Lootbox_Firestore) => {
+  // return lootbox && lootbox.isContractDeployed
+  return lootbox && !!lootbox.address;
+};

@@ -232,6 +232,19 @@ const LootboxTypeDefs = gql`
     lootbox: Lootbox!
   }
 
+  type WhitelistMyLootboxClaimsResponseSuccess {
+    signatures: [MintWhitelistSignature!]!
+  }
+
+  input WhitelistMyLootboxClaimsPayload {
+    lootboxID: ID!
+    message: String!
+    signedMessage: String!
+  }
+
+  union WhitelistMyLootboxClaimsResponse =
+      WhitelistMyLootboxClaimsResponseSuccess
+    | ResponseError
   union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
   union EditLootboxResponse = EditLootboxResponseSuccess | ResponseError
   union GetWhitelistSignaturesResponse =
@@ -244,6 +257,9 @@ const LootboxTypeDefs = gql`
   extend type Mutation {
     createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
+    whitelistMyLootboxClaims(
+      payload: WhitelistMyLootboxClaimsPayload!
+    ): WhitelistMyLootboxClaimsResponse!
     # bulkMintWhitelist(
     #   payload: BulkMintWhitelistPayload!
     # ): BulkMintWhitelistResponse!
