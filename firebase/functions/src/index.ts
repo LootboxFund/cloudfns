@@ -298,11 +298,16 @@ export const onLootboxWrite = functions
         }
 
         // If needed, update Lootbox status to sold out
+        const soldOutRequiredFieldsChanged =
+            // a new claim was made
+            oldLootbox.runningCompletedClaims !== newLootbox.runningCompletedClaims ||
+            // max tickets was changed
+            oldLootbox.maxTickets !== newLootbox.maxTickets;
         if (
             !!newLootbox.runningCompletedClaims &&
             newLootbox.runningCompletedClaims >= newLootbox.maxTickets &&
             newLootbox.status !== LootboxStatus_Firestore.soldOut &&
-            oldLootbox?.runningCompletedClaims !== newLootbox.runningCompletedClaims
+            soldOutRequiredFieldsChanged
         ) {
             logger.log("updating lootbox to sold out", snap.after.id);
             try {
