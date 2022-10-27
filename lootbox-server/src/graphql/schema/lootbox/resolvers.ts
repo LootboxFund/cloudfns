@@ -242,14 +242,6 @@ const LootboxResolvers: Resolvers = {
             },
           };
         }
-        if (!!payload.maxTickets && payload.maxTickets < lootbox.maxTickets) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "MaxTickets must be increasing.",
-            },
-          };
-        }
         const res = await editLootbox(payload.lootboxID as LootboxID, {
           name: payload.name || undefined,
           description: payload.description || undefined,
