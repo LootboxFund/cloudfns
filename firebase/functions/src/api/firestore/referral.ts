@@ -80,6 +80,7 @@ export const createRewardClaim = async (req: CreateRewardClaimReq): Promise<Clai
         lootboxMaxTickets: lootbox.maxTickets,
         ticketWeb3ID: null, // this will be filled out later in indexLootboxOnMint
         ticketID: null, // this will be filled out later in indexLootboxOnMint
+        whitelistedAddress: null, // gets filled out later on the fly when user requests it
         timestamps: {
             createdAt: timestamp,
             updatedAt: timestamp,
