@@ -94,7 +94,7 @@ export const parseLootboxDB = (
       updatedAt: lootbox.timestamps.updatedAt,
       deletedAt: lootbox.timestamps.deletedAt || null,
     },
-    // metadata: lootbox.metadata, // deprecated, dont use
+    metadata: lootbox.metadata, // deprecated, dont use
     runningCompletedClaims: lootbox.runningCompletedClaims || 0,
   };
 
