@@ -61,7 +61,6 @@ export const convertLootboxTicketDBToGQL = (
   return ticket;
 };
 
-// THIS IS BROKEN
 export const parseLootboxDB = (
   lootbox: Lootbox_Firestore
 ): Lootbox_Firestore => {
@@ -95,7 +94,7 @@ export const parseLootboxDB = (
       updatedAt: lootbox.timestamps.updatedAt,
       deletedAt: lootbox.timestamps.deletedAt || null,
     },
-    // metadata: lootbox.metadata, // deprecated, dont use
+    metadata: lootbox.metadata, // deprecated, dont use
     runningCompletedClaims: lootbox.runningCompletedClaims || 0,
   };
 
