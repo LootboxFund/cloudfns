@@ -61,6 +61,7 @@ export const convertLootboxTicketDBToGQL = (
   return ticket;
 };
 
+// THIS IS BROKEN
 export const parseLootboxDB = (
   lootbox: Lootbox_Firestore
 ): Lootbox_Firestore => {
