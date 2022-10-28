@@ -10,7 +10,7 @@ import { logger } from "firebase-functions";
 
 export const stampNewLootbox = async (props: StampNewLootboxProps): Promise<string> => {
     logger.info("Stamping new lootbox", props);
-    const { backgroundImage, logoImage, themeColor, name, lootboxAddress, chainIdHex } = props;
+    const { backgroundImage, logoImage, themeColor, name, lootboxAddress, chainIdHex, lootboxID } = props;
     const stampConfig: StampNewLootboxProps = {
         backgroundImage,
         logoImage,
@@ -18,6 +18,7 @@ export const stampNewLootbox = async (props: StampNewLootboxProps): Promise<stri
         name,
         lootboxAddress,
         chainIdHex,
+        lootboxID,
     };
     const secret = process.env.STAMP_SECRET || "";
     const response = await axios.post<StampNewLootboxResponse>(
@@ -40,7 +41,8 @@ export const stampNewTicket = async (
     props: StampNewTicketProps
 ): Promise<{ stampURL: string; metadataURL: string }> => {
     const secret = process.env.STAMP_SECRET || "";
-    const { backgroundImage, logoImage, themeColor, name, ticketID, lootboxAddress, chainIdHex, metadata } = props;
+    const { backgroundImage, logoImage, themeColor, name, ticketID, lootboxAddress, chainIdHex, metadata, lootboxID } =
+        props;
     const stampConfig: StampNewTicketProps = {
         backgroundImage,
         logoImage,
@@ -50,6 +52,7 @@ export const stampNewTicket = async (
         lootboxAddress,
         chainIdHex,
         metadata,
+        lootboxID,
     };
     const response = await axios.post<StampNewTicketResponse>(
         manifest.cloudRun.containers.stampNewTicket.fullRoute,

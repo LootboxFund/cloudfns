@@ -94,7 +94,7 @@ export const parseLootboxDB = (
       updatedAt: lootbox.timestamps.updatedAt,
       deletedAt: lootbox.timestamps.deletedAt || null,
     },
-    metadata: lootbox.metadata, // deprecated, dont use
+    // metadata: lootbox.metadata, // deprecated, dont use
     runningCompletedClaims: lootbox.runningCompletedClaims || 0,
   };
 
@@ -187,8 +187,9 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       themeColor: lootbox.themeColor,
       // version: lootbox.version,
       symbol: lootbox.symbol || "",
-      baseTokenURI: lootbox.baseTokenURI,
+      baseTokenURI: lootbox.baseTokenURI || null,
       runningCompletedClaims: lootbox.runningCompletedClaims || 0,
+      creationNonce: lootbox.creationNonce || null,
     };
   } else {
     // this should all be removed soon
@@ -302,4 +303,9 @@ const convertLootboxToSnapshotOld = (
     image: data?.metadata?.lootboxCustomSchema?.lootbox.image || "",
     stampImage: data?.metadata?.image || "",
   };
+};
+
+export const isLootboxDeployed = (lootbox: Lootbox_Firestore) => {
+  // return lootbox && lootbox.isContractDeployed
+  return lootbox && !!lootbox.address;
 };

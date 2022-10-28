@@ -16,6 +16,11 @@ import {
   LootboxUserClaimsArgs,
   QueryMyLootboxByNonceArgs,
   MyLootboxByNonceResponse,
+  CreateLootboxResponse,
+  MutationCreateLootboxArgs,
+  WhitelistMyLootboxClaimsResponse,
+  MutationWhitelistMyLootboxClaimsArgs,
+  User,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -28,11 +33,13 @@ import {
   paginateLootboxUserClaims,
   getUserClaimCountForLootbox,
   getLootboxByUserIDAndNonce,
+  getLootboxUnassignedClaimForUser,
 } from "../../../api/firestore";
 import {
   Address,
   LootboxMintSignatureNonce,
   LootboxTicketID,
+  TournamentID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
 import { LootboxID, UserID } from "@wormgraph/helpers";
@@ -40,9 +47,15 @@ import {
   convertLootboxDBToGQL,
   convertLootboxStatusGQLToDB,
   convertLootboxTicketDBToGQL,
+  isLootboxDeployed,
 } from "../../../lib/lootbox";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
+import * as LootboxService from "../../../service/lootbox";
+import { validateSignature } from "../../../lib/whitelist";
+import { batcher } from "../../../lib/utils";
+import { ethers } from "ethers";
+import { getWhitelisterPrivateKey } from "../../../api/secrets";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -145,6 +158,47 @@ const LootboxResolvers: Resolvers = {
   },
 
   Mutation: {
+    createLootbox: async (
+      _,
+      { payload }: MutationCreateLootboxArgs,
+      context: Context
+    ): Promise<CreateLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const lootbox = await LootboxService.create({
+          lootboxDescription: payload.description,
+          backgroundImage: payload.backgroundImage,
+          logoImage: payload.logo,
+          themeColor: payload.themeColor,
+          nftBountyValue: payload.nftBountyValue,
+          maxTickets: payload.maxTickets,
+          joinCommunityUrl: payload.joinCommunityUrl || undefined,
+          symbol: payload.name.slice(0, 12),
+          creatorID: context.userId as unknown as UserID,
+          lootboxName: payload.name,
+          tournamentID: payload.tournamentID as TournamentID | undefined,
+        });
+
+        return { lootbox: convertLootboxDBToGQL(lootbox) };
+      } catch (err) {
+        console.log("Error creating Lootbox!");
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     editLootbox: async (
       _,
       { payload }: MutationEditLootboxArgs,
@@ -188,14 +242,6 @@ const LootboxResolvers: Resolvers = {
             },
           };
         }
-        if (!!payload.maxTickets && payload.maxTickets < lootbox.maxTickets) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "MaxTickets must be increasing.",
-            },
-          };
-        }
         const res = await editLootbox(payload.lootboxID as LootboxID, {
           name: payload.name || undefined,
           description: payload.description || undefined,
@@ -222,108 +268,119 @@ const LootboxResolvers: Resolvers = {
         };
       }
     },
-    // bulkMintWhitelist: async (
-    //   _,
-    //   { payload }: MutationBulkMintWhitelistArgs,
-    //   context: Context
-    // ): Promise<BulkMintWhitelistResponse> => {
-    //   if (!context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `Unauthorized`,
-    //       },
-    //     };
-    //   }
+    whitelistMyLootboxClaims: async (
+      _,
+      { payload }: MutationWhitelistMyLootboxClaimsArgs,
+      context: Context
+    ): Promise<WhitelistMyLootboxClaimsResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "User is not authenticated",
+          },
+        };
+      }
 
-    //   const { lootboxAddress, whitelistAddresses } = payload;
+      if (!ethers.utils.isAddress(payload.walletAddress)) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Invalid address",
+          },
+        };
+      }
 
-    //   if (whitelistAddresses.length > 100) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: `Too many addresses. Max 100.`,
-    //       },
-    //     };
-    //   }
+      try {
+        const [user, lootbox] = await Promise.all([
+          getUser(context.userId),
+          getLootbox(payload.lootboxID as LootboxID),
+        ]);
+        if (!user || !!user.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+        if (!lootbox || !!lootbox.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Lootbox not found",
+            },
+          };
+        }
 
-    //   if (!ethers.utils.isAddress(lootboxAddress)) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: `Invalid Lootbox address.`,
-    //       },
-    //     };
-    //   }
+        // Make sure the lootbox is deployed on the blockchain
+        if (!isLootboxDeployed(lootbox)) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message:
+                "Lootbox has not been deployed on the blockchain yet. Please ask the Lootbox owner to deploy it.",
+            },
+          };
+        }
 
-    //   let lootbox: Lootbox_Firestore;
+        // Gets WHITELISTER_PRIVATE_KEY
+        // This will THROW if not found
+        const whitelisterPrivateKey = await getWhitelisterPrivateKey();
 
-    //   try {
-    //     lootbox = (await getLootboxByAddress(
-    //       lootboxAddress as Address
-    //     )) as Lootbox_Firestore;
-    //     if (!lootbox) {
-    //       throw new Error("Lootbox Not Found");
-    //     }
-    //     // lootbox = convertLootboxDBToGQL(lootboxDB);
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
+        // get eligible claims to whitelist claims
+        const unassignedClaims = await getLootboxUnassignedClaimForUser(
+          lootbox.id,
+          context.userId as unknown as UserID
+        );
 
-    //   if (lootbox.status === LootboxStatus_Firestore.disabled) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: "Lootbox is disabled",
-    //       },
-    //     };
-    //   }
+        // whitelist these bad boys
+        if (unassignedClaims.length === 0) {
+          return {
+            signatures: [],
+          };
+        }
 
-    //   if (lootbox.status === LootboxStatus_Firestore.soldOut) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.BadRequest,
-    //         message: "Lootbox is sold out",
-    //       },
-    //     };
-    //   }
+        // might as well batch them just in case
+        const batchedClaimArray = batcher(unassignedClaims, 50);
 
-    //   if ((lootbox.creatorID as unknown as UserIdpID) !== context.userId) {
-    //     return {
-    //       error: {
-    //         code: StatusCode.Unauthorized,
-    //         message: `You do not own this Lootbox`,
-    //       },
-    //     };
-    //   }
+        const result: MintWhitelistSignature[] = [];
 
-    //   try {
-    //     const { signatures, errors } =
-    //       await lootboxService.bulkSignMintWhitelistSignatures(
-    //         whitelistAddresses as Address[],
-    //         lootbox
-    //       );
+        for (let batchClaims of batchedClaimArray) {
+          const signatureResults = await Promise.allSettled(
+            batchClaims.map((claim) => {
+              return LootboxService.whitelist(
+                whitelisterPrivateKey,
+                payload.walletAddress as Address,
+                lootbox,
+                claim
+              );
+            })
+          );
 
-    //     return {
-    //       signatures,
-    //       errors: errors.every((err) => !!err) ? errors : null,
-    //     };
-    //   } catch (err) {
-    //     console.error(err);
-    //     return {
-    //       error: {
-    //         code: StatusCode.ServerError,
-    //         message: err instanceof Error ? err.message : "",
-    //       },
-    //     };
-    //   }
-    // },
+          const createdSignatures: MintWhitelistSignature[] = signatureResults
+            .filter(
+              (res) => res.status === "fulfilled" && res.value != undefined
+            )
+            // @ts-ignore
+            .map((res) => res.value);
+
+          result.push(...createdSignatures);
+        }
+
+        return {
+          signatures: result,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   MintWhitelistSignature: {
@@ -509,6 +566,34 @@ const LootboxResolvers: Resolvers = {
       return null;
     },
   },
+
+  CreateLootboxResponse: {
+    __resolveType: (obj: CreateLootboxResponse) => {
+      if ("lootbox" in obj) {
+        return "CreateLootboxResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  WhitelistMyLootboxClaimsResponse: {
+    __resolveType: (obj: WhitelistMyLootboxClaimsResponse) => {
+      if ("signatures" in obj) {
+        return "WhitelistMyLootboxClaimsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const lootboxResolverComposition = {
@@ -518,6 +603,8 @@ const lootboxResolverComposition = {
   "Mutation.whitelistAllUnassignedClaims": [isAuthenticated()],
   "Mutation.editLootbox": [isAuthenticated()],
   "Mutation.mintLootboxTicket": [isAuthenticated()],
+  "Mutation.createLootbox": [isAuthenticated()],
+  "Mutation.whitelistMyLootboxClaims": [isAuthenticated()],
 };
 
 const lootboxResolvers = composeResolvers(

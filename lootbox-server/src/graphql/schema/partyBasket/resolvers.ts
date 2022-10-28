@@ -39,7 +39,7 @@ import {
   validatePartyBasketSignature,
   validateSignature,
   whitelistPartyBasketSignature,
-} from "../../../api/ethers";
+} from "../../../lib/whitelist";
 import {
   Address,
   ClaimID,
@@ -48,7 +48,7 @@ import {
   Claim_Firestore,
   LootboxMintWhitelistID,
 } from "@wormgraph/helpers";
-import { generateNonce } from "../../../lib/whitelist";
+import { generateNonceV1 } from "../../../lib/whitelist";
 import { errors, ethers } from "ethers";
 import { PartyBasketID, WhitelistSignatureID } from "@wormgraph/helpers";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
@@ -333,7 +333,7 @@ const PartyBasketResolvers: Resolvers = {
             if (!ethers.utils.isAddress(whitelistAddress)) {
               throw new Error("Invalid Address");
             }
-            const nonce = generateNonce();
+            const nonce = generateNonceV1();
 
             const signature = await whitelistPartyBasketSignature(
               partyBasket.chainIdHex,
@@ -478,7 +478,7 @@ const PartyBasketResolvers: Resolvers = {
           }
 
           // Generate a whitelist
-          const nonce = generateNonce();
+          const nonce = generateNonceV1();
 
           const signature = await whitelistPartyBasketSignature(
             partyBasket.chainIdHex,

@@ -37,7 +37,7 @@ import {
   updateUser,
   getUserByEmail,
 } from "../../../api/firestore";
-import { validateSignature } from "../../../api/ethers";
+import { validateSignature } from "../../../lib/whitelist";
 import { Address } from "@wormgraph/helpers";
 import identityProvider from "../../../api/identityProvider";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";

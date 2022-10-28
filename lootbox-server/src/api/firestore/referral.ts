@@ -182,6 +182,7 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
     type: req.type,
     referralType: req.referralType,
     whitelistId: null,
+    whitelistedAddress: null,
     isPostCosmic: req.isPostCosmic,
     ticketID: null,
     ticketWeb3ID: null,
@@ -311,7 +312,7 @@ interface CreateRewardClaimReq {
   chosenPartyBasketName: string;
   chosenPartyBasketNFTBountyValue?: string;
   lootboxName: string;
-  lootboxAddress: Address;
+  lootboxAddress: Address | undefined;
   rewardFromFriendReferred: UserID;
   isPostCosmic: boolean;
 }
@@ -349,7 +350,7 @@ interface CompleteClaimReq {
   referralId: ReferralID;
   claimerUserId: UserID;
   lootboxID: LootboxID;
-  lootboxAddress: Address;
+  lootboxAddress: Address | null;
   lootboxName: string;
   lootboxNFTBountyValue?: string;
   lootboxMaxTickets?: number;
@@ -374,9 +375,12 @@ export const completeClaim = async (
     status: ClaimStatus_Firestore.complete,
     claimerUserId: req.claimerUserId,
     lootboxID: req.lootboxID,
-    lootboxAddress: req.lootboxAddress,
     lootboxName: req.lootboxName,
   };
+
+  if (req.lootboxAddress) {
+    updateClaimRequest.lootboxAddress = req.lootboxAddress;
+  }
 
   if (req.lootboxNFTBountyValue) {
     updateClaimRequest.lootboxNFTBountyValue = req.lootboxNFTBountyValue;

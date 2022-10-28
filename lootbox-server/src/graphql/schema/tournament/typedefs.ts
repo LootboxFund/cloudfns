@@ -28,7 +28,7 @@ const TournamentTypeDefs = gql`
   # this will live as a subcollection under the lootbox
   type LootboxTournamentSnapshot {
     id: ID!
-    address: ID!
+    address: ID
     lootboxID: ID!
     lootboxCreatorID: ID!
     creatorID: ID!

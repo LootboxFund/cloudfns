@@ -84,18 +84,6 @@ const LootboxTypeDefs = gql`
   type Lootbox {
     # Immutable stuff
     id: ID!
-    address: ID!
-    factory: ID!
-    creatorAddress: ID!
-    creatorID: ID!
-    chainIdHex: String!
-    variant: LootboxVariant!
-    timestamps: LootboxTimestamps!
-    chainIdDecimal: String!
-    chainName: String!
-    transactionHash: String!
-    blockNumber: String!
-
     # Mutable
     name: String!
     symbol: String!
@@ -108,8 +96,22 @@ const LootboxTypeDefs = gql`
     logo: String!
     backgroundImage: String!
     themeColor: String!
-    baseTokenURI: String!
     runningCompletedClaims: Int!
+
+    # Web3 stuff
+    address: ID
+    factory: ID
+    creatorAddress: ID
+    creatorID: ID
+    chainIdHex: String
+    variant: LootboxVariant
+    timestamps: LootboxTimestamps
+    chainIdDecimal: String
+    chainName: String
+    transactionHash: String
+    blockNumber: String
+    baseTokenURI: String
+    creationNonce: String
 
     # GQL layer
     userClaims(
@@ -132,8 +134,8 @@ const LootboxTypeDefs = gql`
   }
 
   type LootboxSnapshot {
-    address: ID!
-    issuer: ID!
+    address: ID
+    issuer: ID
     description: String!
 
     name: String!
@@ -186,6 +188,18 @@ const LootboxTypeDefs = gql`
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
   }
 
+  input CreateLootboxPayload {
+    name: String!
+    description: String!
+    logo: String!
+    backgroundImage: String!
+    nftBountyValue: String!
+    joinCommunityUrl: String!
+    maxTickets: Int!
+    themeColor: String!
+    tournamentID: String
+  }
+
   input EditLootboxPayload {
     lootboxID: ID!
     name: String
@@ -214,7 +228,23 @@ const LootboxTypeDefs = gql`
   #   errors: [String] # For partial errors
   # }
 
-  # union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
+  type CreateLootboxResponseSuccess {
+    lootbox: Lootbox!
+  }
+
+  type WhitelistMyLootboxClaimsResponseSuccess {
+    signatures: [MintWhitelistSignature!]!
+  }
+
+  input WhitelistMyLootboxClaimsPayload {
+    lootboxID: ID!
+    walletAddress: ID! # A web3 wallet address
+  }
+
+  union WhitelistMyLootboxClaimsResponse =
+      WhitelistMyLootboxClaimsResponseSuccess
+    | ResponseError
+  union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
   union EditLootboxResponse = EditLootboxResponseSuccess | ResponseError
   union GetWhitelistSignaturesResponse =
       GetWhitelistSignaturesResponseSuccess
@@ -224,7 +254,11 @@ const LootboxTypeDefs = gql`
   #   | ResponseError
 
   extend type Mutation {
+    createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
+    whitelistMyLootboxClaims(
+      payload: WhitelistMyLootboxClaimsPayload!
+    ): WhitelistMyLootboxClaimsResponse!
     # bulkMintWhitelist(
     #   payload: BulkMintWhitelistPayload!
     # ): BulkMintWhitelistResponse!

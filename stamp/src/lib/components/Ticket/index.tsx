@@ -10,6 +10,7 @@ import {
   chainIdHexToName,
   ChainSlugs,
   Address,
+  LootboxID,
 } from "@wormgraph/helpers";
 import { $Horizontal } from "../Generics";
 import ReactDOMServer from "react-dom/server";
@@ -19,8 +20,9 @@ export interface TicketProps {
   logoImage: Url;
   themeColor: string;
   name: string;
-  lootboxAddress: Address;
-  chainIdHex: ChainIDHex;
+  lootboxID: LootboxID;
+  lootboxAddress?: Address;
+  chainIdHex?: ChainIDHex;
   ticketID?: string;
 }
 export const Ticket = (props: TicketProps) => {
@@ -29,13 +31,15 @@ export const Ticket = (props: TicketProps) => {
     logoImage,
     name,
     ticketID,
+    themeColor,
     lootboxAddress,
     chainIdHex,
-    themeColor,
   } = props;
-  const networkLogo =
-    BLOCKCHAINS[chainIdHexToSlug(chainIdHex) as ChainSlugs].currentNetworkLogo;
-  const networkName = chainIdHexToName(chainIdHex);
+  const networkLogo = chainIdHex
+    ? BLOCKCHAINS[chainIdHexToSlug(chainIdHex) as ChainSlugs].currentNetworkLogo
+    : null;
+
+  const networkName = chainIdHex ? chainIdHexToName(chainIdHex) : null;
   return (
     <section style={StyleTicketContainer({ backgroundImage })}>
       <div style={StyleTagHeader()}>
@@ -62,18 +66,35 @@ export const Ticket = (props: TicketProps) => {
           <span style={StyleTagText()}>{name}</span>
         </div>
       )}
-      <div style={StyleTagAddressFooter()}>
-        <$Horizontal verticalCenter style={{ textAlign: "center" }}>
-          {`Redeem at www.lootbox.fund (${networkName})`}
-        </$Horizontal>
-        <$Horizontal verticalCenter>
-          {lootboxAddress}
-          <img
-            src={networkLogo}
-            style={{ width: "1.2rem", height: "1.2rem", marginLeft: "5px" }}
-          />
-        </$Horizontal>
-      </div>
+      {lootboxAddress ? (
+        <div style={StyleTagAddressFooter()}>
+          <$Horizontal verticalCenter style={{ textAlign: "center" }}>
+            {`Redeem at www.lootbox.fund${
+              networkName ? ` (${networkName})` : ""
+            }`}
+          </$Horizontal>
+          <$Horizontal verticalCenter>
+            {lootboxAddress}
+            {networkLogo ? (
+              <img
+                src={networkLogo}
+                style={{ width: "1.2rem", height: "1.2rem", marginLeft: "5px" }}
+              />
+            ) : null}
+          </$Horizontal>
+        </div>
+      ) : (
+        <div style={StyleTagAddressFooter()}>
+          <$Horizontal verticalCenter style={{ textAlign: "center" }}>
+            {`Redeemable at`}
+          </$Horizontal>
+          <$Horizontal verticalCenter>
+            {`www.lootbox.fund/earn${
+              props.lootboxID ? `?lid=${props.lootboxID}` : ""
+            }`}
+          </$Horizontal>
+        </div>
+      )}
     </section>
   );
 };

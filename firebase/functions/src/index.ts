@@ -27,14 +27,12 @@ import {
     ChainInfo,
     LootboxCreatedNonce,
     EnqueueLootboxOnCreateCallableRequest,
-    TournamentID,
     Claim_Firestore,
     ClaimStatus_Firestore,
     ReferralType_Firestore,
     ClaimType_Firestore,
     Lootbox_Firestore,
     LootboxStatus_Firestore,
-    Wallet_Firestore,
     LootboxID,
     MeasurementPartnerType,
     tableActivationIngestorRoutes,
@@ -51,8 +49,7 @@ import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
 import { generateMemoBills } from "./api/firestore/memo";
 import { ethers } from "ethers";
 import * as lootboxService from "./service/lootbox";
-import { createRewardClaim, getUnassignedClaimsForUser } from "./api/firestore/referral";
-import { getUserWallets } from "./api/firestore/user";
+import { createRewardClaim } from "./api/firestore/referral";
 import axios from "axios";
 import mkdirp from "mkdirp";
 import ffmpeg from "fluent-ffmpeg";
@@ -113,21 +110,6 @@ export const onClaimWrite = functions
                 } catch (err) {
                     logger.error("error fetching lootbox", { lootboxID: newClaim.lootboxID, err });
                     return;
-                }
-
-                if (!newClaim.whitelistId && newClaim.claimerUserId) {
-                    try {
-                        // Generate the whitelist only if the user wallet exists
-                        const userWallets = await getUserWallets(newClaim.claimerUserId, 1); // Uses the first wallet
-                        if (userWallets.length > 0) {
-                            const walletToWhitelist = userWallets[0];
-                            // If user has wallet, whitelist it
-                            // If not, this claim will be whitelisted later when the user adds their wallet
-                            await lootboxService.whitelist(walletToWhitelist.address, lootbox, newClaim);
-                        }
-                    } catch (err) {
-                        logger.error("Error onClaimWrite generating whitelist", err);
-                    }
                 }
 
                 try {
@@ -198,63 +180,65 @@ export const onClaimWrite = functions
         return;
     });
 
-export const onWalletCreate = functions
-    .region(REGION)
-    .runWith({
-        secrets: [whitelisterPrivateKeySecretName],
-    })
-    .firestore.document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
-    .onCreate(async (snap) => {
-        logger.info(snap);
+// Not needed anymore because whitelist happens on the fly via GQL call
+// export const onWalletCreate = functions
+//     .region(REGION)
+//     .runWith({
+//         secrets: [whitelisterPrivateKeySecretName],
+//     })
+//     .firestore.document(`/${Collection.User}/{userID}/${Collection.Wallet}/{walletID}`)
+//     .onCreate(async (snap) => {
+//         logger.info(snap);
 
-        const wallet: Wallet_Firestore = snap.data() as Wallet_Firestore;
+//         const wallet: Wallet_Firestore = snap.data() as Wallet_Firestore;
 
-        try {
-            // Look for un resolved claims
-            const unassignedClaims = await getUnassignedClaimsForUser(wallet.userId);
-            if (unassignedClaims && unassignedClaims.length > 0) {
-                logger.info(`Found claims to whitelist: ${unassignedClaims.length}`, {
-                    numClaims: unassignedClaims.length,
-                    userID: wallet.userId,
-                });
+//         try {
+//             // Look for un resolved claims
+//             const unassignedClaims = await getUnassignedClaimsForUser(wallet.userId);
+//             if (unassignedClaims && unassignedClaims.length > 0) {
+//                 logger.info(`Found claims to whitelist: ${unassignedClaims.length}`, {
+//                     numClaims: unassignedClaims.length,
+//                     userID: wallet.userId,
+//                 });
 
-                const lootboxMapping: { [key: LootboxID]: Lootbox_Firestore } = {};
-                for (const claim of unassignedClaims) {
-                    try {
-                        let lootbox: Lootbox_Firestore | undefined;
-                        if (
-                            !claim.lootboxID ||
-                            claim.status !== ClaimStatus_Firestore.complete ||
-                            !!claim.whitelistId
-                        ) {
-                            continue;
-                        }
-                        if (!lootboxMapping[claim.lootboxID]) {
-                            lootbox = await getLootbox(claim.lootboxID);
-                            if (!lootbox) {
-                                continue;
-                            }
-                            lootboxMapping[claim.lootboxID] = lootbox;
-                        } else {
-                            lootbox = lootboxMapping[claim.lootboxID];
-                        }
-                        if (lootbox) {
-                            await lootboxService.whitelist(wallet.address, lootbox, claim);
-                        }
-                    } catch (err) {
-                        logger.error("Error processing unassigned claim", {
-                            err,
-                            claimID: claim.id,
-                            referralID: claim.referralId,
-                        });
-                        continue;
-                    }
-                }
-            }
-        } catch (err) {
-            logger.error("Error onWalletCreate", err);
-        }
-    });
+//                 // Generate a whitelist for each claim
+//                 const lootboxMapping: { [key: LootboxID]: Lootbox_Firestore } = {};
+//                 for (const claim of unassignedClaims) {
+//                     try {
+//                         let lootbox: Lootbox_Firestore | undefined;
+//                         if (
+//                             !claim.lootboxID ||
+//                             claim.status !== ClaimStatus_Firestore.complete ||
+//                             !!claim.whitelistId
+//                         ) {
+//                             continue;
+//                         }
+//                         if (!lootboxMapping[claim.lootboxID]) {
+//                             lootbox = await getLootbox(claim.lootboxID);
+//                             if (!lootbox) {
+//                                 continue;
+//                             }
+//                             lootboxMapping[claim.lootboxID] = lootbox;
+//                         } else {
+//                             lootbox = lootboxMapping[claim.lootboxID];
+//                         }
+//                         if (lootbox) {
+//                             await lootboxService.whitelist(wallet.address, lootbox, claim);
+//                         }
+//                     } catch (err) {
+//                         logger.error("Error processing unassigned claim", {
+//                             err,
+//                             claimID: claim.id,
+//                             referralID: claim.referralId,
+//                         });
+//                         continue;
+//                     }
+//                 }
+//             }
+//         } catch (err) {
+//             logger.error("Error onWalletCreate", err);
+//         }
+//     });
 
 export const onLootboxWrite = functions
     .region(REGION)
@@ -303,12 +287,27 @@ export const onLootboxWrite = functions
             }
         }
 
+        const wasLootboxDeployed = !!newLootbox.address && !oldLootbox.address;
+
+        if (wasLootboxDeployed) {
+            try {
+                await lootboxService.onDeployed(newLootbox);
+            } catch (err) {
+                logger.error("Error on Lootbox Deployed Callback", err);
+            }
+        }
+
         // If needed, update Lootbox status to sold out
+        const soldOutRequiredFieldsChanged =
+            // a new claim was made
+            oldLootbox.runningCompletedClaims !== newLootbox.runningCompletedClaims ||
+            // max tickets was changed
+            oldLootbox.maxTickets !== newLootbox.maxTickets;
         if (
             !!newLootbox.runningCompletedClaims &&
             newLootbox.runningCompletedClaims >= newLootbox.maxTickets &&
             newLootbox.status !== LootboxStatus_Firestore.soldOut &&
-            oldLootbox?.runningCompletedClaims !== newLootbox.runningCompletedClaims
+            soldOutRequiredFieldsChanged
         ) {
             logger.log("updating lootbox to sold out", snap.after.id);
             try {
@@ -554,16 +553,9 @@ interface IndexLootboxOnCreateTaskRequest {
     payload: {
         creatorID: UserID;
         factory: Address;
-        lootboxDescription: string;
-        // version: string;
-        backgroundImage: string;
-        logoImage: string;
-        themeColor: string;
-        nftBountyValue: string;
-        joinCommunityUrl?: string;
         symbol: string;
         nonce: LootboxCreatedNonce;
-        tournamentID?: TournamentID;
+        lootboxID: LootboxID;
     };
     filter: {
         fromBlock: number;
@@ -575,7 +567,7 @@ export const indexLootboxOnCreate = functions
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: true,
-        secrets: [stampSecretName],
+        // secrets: [stampSecretName],
     })
     .tasks.taskQueue({
         retryConfig: {
@@ -607,6 +599,7 @@ export const indexLootboxOnCreate = functions
             null,
             null,
             null,
+            null,
             data.payload.nonce
         );
 
@@ -622,8 +615,10 @@ export const indexLootboxOnCreate = functions
                     issuerAddress: Address,
                     maxTickets: ethers.BigNumber,
                     baseTokenURI: string,
+                    lootboxID: string,
                     // TODO: correct typing on these paramaters, maybe typechain?
-                    nonce: { hash: string }
+                    nonce: { hash: string },
+                    event: ethers.Event
                 ) => {
                     logger.debug("Got log", {
                         lootboxName,
@@ -632,7 +627,9 @@ export const indexLootboxOnCreate = functions
                         maxTickets,
                         baseTokenURI,
                         nonce,
+                        lootboxID,
                         maxTicketsParsed: maxTickets.toNumber(),
+                        event,
                     });
 
                     if (
@@ -641,12 +638,21 @@ export const indexLootboxOnCreate = functions
                         issuerAddress === undefined ||
                         maxTickets === undefined ||
                         baseTokenURI === undefined ||
-                        nonce === undefined
+                        lootboxID === undefined ||
+                        nonce === undefined ||
+                        event === undefined
                     ) {
                         return;
                     }
 
                     // Make sure its the right event
+                    if (lootboxID !== data.payload.lootboxID) {
+                        logger.info("LootboxID does not match", {
+                            lootboxID,
+                            expectedLootboxID: data.payload.lootboxID,
+                        });
+                        return;
+                    }
                     const testNonce = data.payload.nonce;
                     const hashedTestNonce = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(testNonce));
                     if (nonce.hash !== hashedTestNonce) {
@@ -659,33 +665,50 @@ export const indexLootboxOnCreate = functions
                     }
 
                     try {
-                        // Get the lootbox info
-                        await lootboxService.create(
+                        // Associates the Web3 data to Lootbox
+                        await lootboxService.createWeb3(
                             {
-                                tournamentID: data.payload.tournamentID,
-                                factory: data.payload.factory,
-                                lootboxDescription: data.payload.lootboxDescription,
-                                backgroundImage: data.payload.backgroundImage,
-                                logoImage: data.payload.logoImage,
-                                themeColor: data.payload.themeColor,
-                                nftBountyValue: data.payload.nftBountyValue,
-                                joinCommunityUrl: data.payload.joinCommunityUrl
-                                    ? data.payload.joinCommunityUrl
-                                    : undefined,
-                                lootboxAddress,
-                                // blockNumber: log.blockNumber,
-                                blockNumber: "",
-                                lootboxName,
-                                transactionHash: "",
-                                creatorAddress: issuerAddress,
-                                maxTickets: maxTickets.toNumber(),
                                 creatorID: data.payload.creatorID,
+                                lootboxID: data.payload.lootboxID,
+                                factory: data.payload.factory,
+                                lootboxAddress,
+                                blockNumber: `${event.blockNumber}`,
+                                lootboxName,
+                                transactionHash: event.transactionHash,
+                                creatorAddress: issuerAddress,
                                 baseTokenURI: baseTokenURI,
                                 symbol: data.payload.symbol, // Todo move this to onchain event
                                 creationNonce: data.payload.nonce,
                             },
                             data.chain
                         );
+                        // // Get the lootbox info
+                        // await lootboxService.create(
+                        //     {
+                        //         tournamentID: data.payload.tournamentID,
+                        //         factory: data.payload.factory,
+                        //         lootboxDescription: data.payload.lootboxDescription,
+                        //         backgroundImage: data.payload.backgroundImage,
+                        //         logoImage: data.payload.logoImage,
+                        //         themeColor: data.payload.themeColor,
+                        //         nftBountyValue: data.payload.nftBountyValue,
+                        //         joinCommunityUrl: data.payload.joinCommunityUrl
+                        //             ? data.payload.joinCommunityUrl
+                        //             : undefined,
+                        //         lootboxAddress,
+                        //         // blockNumber: log.blockNumber,
+                        //         blockNumber: "",
+                        //         lootboxName,
+                        //         transactionHash: "",
+                        //         creatorAddress: issuerAddress,
+                        //         maxTickets: maxTickets.toNumber(),
+                        //         creatorID: data.payload.creatorID,
+                        //         baseTokenURI: baseTokenURI,
+                        //         symbol: data.payload.symbol, // Todo move this to onchain event
+                        //         creationNonce: data.payload.nonce,
+                        //     },
+                        //     data.chain
+                        // );
                         provider.removeAllListeners(lootboxEventFilter);
                         res(null);
                         return;
@@ -724,15 +747,9 @@ export const enqueueLootboxOnCreate = functions
             payload: {
                 factory: data.listenAddress,
                 nonce: data.payload.nonce,
-                lootboxDescription: data.payload.lootboxDescription,
-                backgroundImage: data.payload.backgroundImage,
-                logoImage: data.payload.logoImage,
-                themeColor: data.payload.themeColor,
-                nftBountyValue: data.payload.nftBountyValue,
-                joinCommunityUrl: data.payload.joinCommunityUrl ? data.payload.joinCommunityUrl : undefined,
                 symbol: data.payload.symbol,
                 creatorID: context.auth.uid as UserID,
-                tournamentID: data.payload.tournamentID,
+                lootboxID: data.payload.lootboxID,
             },
             filter: {
                 fromBlock: data.fromBlock,
