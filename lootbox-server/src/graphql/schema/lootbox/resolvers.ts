@@ -52,7 +52,6 @@ import {
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import * as LootboxService from "../../../service/lootbox";
-import { validateSignature } from "../../../lib/whitelist";
 import { batcher } from "../../../lib/utils";
 import { ethers } from "ethers";
 import { getWhitelisterPrivateKey } from "../../../api/secrets";
