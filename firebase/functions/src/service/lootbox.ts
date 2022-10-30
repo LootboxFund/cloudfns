@@ -144,17 +144,26 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
     }
 
     // stamp the new ticket
-    const { stampURL, metadataURL } = await stampNewTicket({
-        backgroundImage: lootbox.backgroundImage,
-        logoImage: lootbox.logo,
-        themeColor: lootbox.themeColor,
-        name: lootbox.name,
-        ticketID: params.ticketID,
-        lootboxAddress: lootbox.address as Address,
-        chainIdHex: lootbox.chainIdHex,
-        metadata: convertLootboxToTicketMetadata(params.ticketID, lootbox),
-        lootboxID: lootbox.id,
-    });
+    let stampURL: string;
+    let metadataURL: string;
+
+    try {
+        ({ stampURL, metadataURL } = await stampNewTicket({
+            backgroundImage: lootbox.backgroundImage,
+            logoImage: lootbox.logo,
+            themeColor: lootbox.themeColor,
+            name: lootbox.name,
+            ticketID: params.ticketID,
+            lootboxAddress: lootbox.address as Address,
+            chainIdHex: lootbox.chainIdHex,
+            metadata: convertLootboxToTicketMetadata(params.ticketID, lootbox),
+            lootboxID: lootbox.id,
+        }));
+    } catch (err) {
+        logger.error("Error stamping ticket", err);
+        stampURL = lootbox.stampImage;
+        metadataURL = "";
+    }
 
     const ticketDB = await finalizeMint({
         minterUserID: params.minterUserID,

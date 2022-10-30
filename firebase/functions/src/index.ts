@@ -1,6 +1,6 @@
 import { db, fun, gcs } from "./api/firebase";
 import * as functions from "firebase-functions";
-import { Ad, AdEventAction, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
+import { Ad, AdEventAction, LootboxTicket, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
@@ -604,6 +604,29 @@ export const indexLootboxOnCreate = functions
         );
 
         // const events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        // example event.args:
+        // [
+        //     'Top BOY',
+        //     '0x90648E44e9FB1D84896320586140Adf52579c481',
+        //     '0xE0eC4d917a9E6754801Ed503582399D8cBa91858',
+        //     BigNumber { value: "100" },
+        //     'https://storage.googleapis.com/lootbox-data-prod/hEMFTT5kCOG1Ysu3FcHC',
+        //     'hEMFTT5kCOG1Ysu3FcHC',
+        //     Indexed {
+        //       _isIndexed: true,
+        //       hash: '0x25d843a2b7512b09c556c3ea3e6b5a5f3a0464a82fef7c3ca3db607bee888e1f'
+        //     },
+        //     lootboxName: 'Top BOY',
+        //     lootbox: '0x90648E44e9FB1D84896320586140Adf52579c481',
+        //     issuer: '0xE0eC4d917a9E6754801Ed503582399D8cBa91858',
+        //     maxTickets: BigNumber { value: "100" },
+        //     baseTokenURI: 'https://storage.googleapis.com/lootbox-data-prod/hEMFTT5kCOG1Ysu3FcHC',
+        //     lootboxID: 'hEMFTT5kCOG1Ysu3FcHC',
+        //     _nonce: Indexed {
+        //       _isIndexed: true,
+        //       hash: '0x25d843a2b7512b09c556c3ea3e6b5a5f3a0464a82fef7c3ca3db607bee888e1f'
+        //     }
+        //   ]
 
         await new Promise((res) => {
             // This is the event listener
@@ -814,8 +837,92 @@ export const indexLootboxOnMint = functions
 
         // eslint-disable-next-line
         const lootboxEventFilter = lootbox.filters.MintTicket(null, null, null, null, data.payload.digest);
-        logger.info("starting listener...");
 
+        let events: ethers.Event[] = [];
+
+        // Do a retrospective lookup for the event
+        try {
+            events = await lootbox.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        } catch (err) {
+            logger.error("Error querying retrospective event filter", err);
+        }
+
+        if (events.length > 0) {
+            logger.info("Found event in past", { events });
+            // Index it then return
+            for (const event of events) {
+                if (!event.args) {
+                    continue;
+                }
+
+                const [minter, lootboxAddress, nonce, ticketID, digest] = event.args as [
+                    Address,
+                    Address,
+                    ethers.BigNumber,
+                    ethers.BigNumber,
+                    LootboxTicketDigest
+                ];
+
+                logger.info("retrospective event", {
+                    minter,
+                    lootboxAddress,
+                    nonce: nonce.toString(),
+                    ticketID: ticketID.toString(),
+                    digest,
+                });
+
+                if (
+                    minter === undefined ||
+                    lootboxAddress === undefined ||
+                    nonce === undefined ||
+                    ticketID === undefined ||
+                    digest === undefined
+                ) {
+                    continue;
+                }
+
+                // Make sure its the right event
+                const testNonce = data.payload.nonce;
+                const eventNonce = nonce.toString() as LootboxMintSignatureNonce;
+                if (eventNonce !== testNonce) {
+                    logger.info("Event nonce does not match", {
+                        nonceHash: eventNonce,
+                        expectedNonce: testNonce,
+                        event,
+                    });
+                    continue;
+                }
+
+                if (digest !== data.payload.digest) {
+                    logger.info("Event digest does not match", {
+                        digestHash: digest,
+                        expectedDigest: data.payload.digest,
+                        event,
+                    });
+                    continue;
+                }
+
+                try {
+                    // Get the lootbox info
+                    await lootboxService.mintNewTicketCallback({
+                        lootboxAddress: lootboxAddress,
+                        chainIDHex: data.chain.chainIdHex,
+                        minterUserID: data.payload.userID,
+                        ticketID: ticketID.toString() as LootboxTicketID_Web3,
+                        minterAddress: minter,
+                        digest: digest,
+                        nonce: eventNonce,
+                    });
+
+                    return;
+                } catch (err) {
+                    logger.error("Error creating lootbox from retrospective nonce", err);
+                }
+            }
+        }
+
+        // If we could not retroactively find the event, listen for it
+        logger.info("starting listener...");
         await new Promise((res) => {
             // This is the event listener
             lootbox.on(
