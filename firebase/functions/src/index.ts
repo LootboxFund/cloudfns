@@ -603,7 +603,82 @@ export const indexLootboxOnCreate = functions
             data.payload.nonce
         );
 
-        // const events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        let events: ethers.Event[] = [];
+        try {
+            events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        } catch (err) {
+            logger.error("Error querying retrospective event filter", err);
+        }
+
+        if (events.length > 0) {
+            logger.info("Found event in past", { events });
+            // Index it then return
+            for (const event of events) {
+                if (!event.args) {
+                    continue;
+                }
+
+                const [lootboxName, lootboxAddress, issuerAddress, maxTickets, baseTokenURI, lootboxID, nonce] =
+                    event.args as [string, Address, Address, ethers.BigNumber, string, string, { hash: string }];
+
+                if (
+                    lootboxName === undefined ||
+                    lootboxAddress === undefined ||
+                    issuerAddress === undefined ||
+                    maxTickets === undefined ||
+                    baseTokenURI === undefined ||
+                    lootboxID === undefined ||
+                    nonce === undefined ||
+                    event === undefined
+                ) {
+                    continue;
+                }
+
+                // Make sure its the right event
+                if (lootboxID !== data.payload.lootboxID) {
+                    logger.info("Event LootboxID does not match", {
+                        lootboxID,
+                        expectedLootboxID: data.payload.lootboxID,
+                        event,
+                    });
+                    continue;
+                }
+                const testNonce = data.payload.nonce;
+                const hashedTestNonce = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(testNonce));
+                if (nonce.hash !== hashedTestNonce) {
+                    logger.info("Event Nonce does not match", {
+                        nonceHash: nonce.hash,
+                        expectedNonce: testNonce,
+                        expectedNonceHash: hashedTestNonce,
+                        event,
+                    });
+                    continue;
+                }
+
+                try {
+                    // Associates the Web3 data to Lootbox
+                    await lootboxService.createWeb3(
+                        {
+                            creatorID: data.payload.creatorID,
+                            lootboxID: data.payload.lootboxID,
+                            factory: data.payload.factory,
+                            lootboxAddress,
+                            blockNumber: `${event.blockNumber}`,
+                            lootboxName,
+                            transactionHash: event.transactionHash,
+                            creatorAddress: issuerAddress,
+                            baseTokenURI: baseTokenURI,
+                            symbol: data.payload.symbol, // Todo move this to onchain event
+                            creationNonce: data.payload.nonce,
+                        },
+                        data.chain
+                    );
+                    return;
+                } catch (err) {
+                    logger.error("Error creating lootbox", err);
+                }
+            }
+        }
 
         await new Promise((res) => {
             // This is the event listener
@@ -814,8 +889,92 @@ export const indexLootboxOnMint = functions
 
         // eslint-disable-next-line
         const lootboxEventFilter = lootbox.filters.MintTicket(null, null, null, null, data.payload.digest);
-        logger.info("starting listener...");
 
+        let events: ethers.Event[] = [];
+
+        // Do a retrospective lookup for the event
+        try {
+            events = await lootbox.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        } catch (err) {
+            logger.error("Error querying retrospective event filter", err);
+        }
+
+        if (events.length > 0) {
+            logger.info("Found event in past", { events });
+            // Index it then return
+            for (const event of events) {
+                if (!event.args) {
+                    continue;
+                }
+
+                const [minter, lootboxAddress, nonce, ticketID, digest] = event.args as [
+                    Address,
+                    Address,
+                    ethers.BigNumber,
+                    ethers.BigNumber,
+                    LootboxTicketDigest
+                ];
+
+                logger.info("retrospective event", {
+                    minter,
+                    lootboxAddress,
+                    nonce: nonce.toString(),
+                    ticketID: ticketID.toString(),
+                    digest,
+                });
+
+                if (
+                    minter === undefined ||
+                    lootboxAddress === undefined ||
+                    nonce === undefined ||
+                    ticketID === undefined ||
+                    digest === undefined
+                ) {
+                    continue;
+                }
+
+                // Make sure its the right event
+                const testNonce = data.payload.nonce;
+                const eventNonce = nonce.toString() as LootboxMintSignatureNonce;
+                if (eventNonce !== testNonce) {
+                    logger.info("Event nonce does not match", {
+                        nonceHash: eventNonce,
+                        expectedNonce: testNonce,
+                        event,
+                    });
+                    continue;
+                }
+
+                if (digest !== data.payload.digest) {
+                    logger.info("Event digest does not match", {
+                        digestHash: digest,
+                        expectedDigest: data.payload.digest,
+                        event,
+                    });
+                    continue;
+                }
+
+                try {
+                    // Get the lootbox info
+                    await lootboxService.mintNewTicketCallback({
+                        lootboxAddress: lootboxAddress,
+                        chainIDHex: data.chain.chainIdHex,
+                        minterUserID: data.payload.userID,
+                        ticketID: ticketID.toString() as LootboxTicketID_Web3,
+                        minterAddress: minter,
+                        digest: digest,
+                        nonce: eventNonce,
+                    });
+
+                    return;
+                } catch (err) {
+                    logger.error("Error creating lootbox from retrospective nonce", err);
+                }
+            }
+        }
+
+        // If we could not retroactively find the event, listen for it
+        logger.info("starting listener...");
         await new Promise((res) => {
             // This is the event listener
             lootbox.on(
