@@ -1,6 +1,6 @@
 import { db, fun, gcs } from "./api/firebase";
 import * as functions from "firebase-functions";
-import { Ad, AdEventAction, LootboxTicket, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
+import { Ad, AdEventAction, PartyBasket, PartyBasketStatus } from "./api/graphql/generated/types";
 import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Message } from "firebase-functions/v1/pubsub";
@@ -603,30 +603,82 @@ export const indexLootboxOnCreate = functions
             data.payload.nonce
         );
 
-        // const events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
-        // example event.args:
-        // [
-        //     'Top BOY',
-        //     '0x90648E44e9FB1D84896320586140Adf52579c481',
-        //     '0xE0eC4d917a9E6754801Ed503582399D8cBa91858',
-        //     BigNumber { value: "100" },
-        //     'https://storage.googleapis.com/lootbox-data-prod/hEMFTT5kCOG1Ysu3FcHC',
-        //     'hEMFTT5kCOG1Ysu3FcHC',
-        //     Indexed {
-        //       _isIndexed: true,
-        //       hash: '0x25d843a2b7512b09c556c3ea3e6b5a5f3a0464a82fef7c3ca3db607bee888e1f'
-        //     },
-        //     lootboxName: 'Top BOY',
-        //     lootbox: '0x90648E44e9FB1D84896320586140Adf52579c481',
-        //     issuer: '0xE0eC4d917a9E6754801Ed503582399D8cBa91858',
-        //     maxTickets: BigNumber { value: "100" },
-        //     baseTokenURI: 'https://storage.googleapis.com/lootbox-data-prod/hEMFTT5kCOG1Ysu3FcHC',
-        //     lootboxID: 'hEMFTT5kCOG1Ysu3FcHC',
-        //     _nonce: Indexed {
-        //       _isIndexed: true,
-        //       hash: '0x25d843a2b7512b09c556c3ea3e6b5a5f3a0464a82fef7c3ca3db607bee888e1f'
-        //     }
-        //   ]
+        let events: ethers.Event[] = [];
+        try {
+            events = await lootboxFactory.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        } catch (err) {
+            logger.error("Error querying retrospective event filter", err);
+        }
+
+        if (events.length > 0) {
+            logger.info("Found event in past", { events });
+            // Index it then return
+            for (const event of events) {
+                if (!event.args) {
+                    continue;
+                }
+
+                const [lootboxName, lootboxAddress, issuerAddress, maxTickets, baseTokenURI, lootboxID, nonce] =
+                    event.args as [string, Address, Address, ethers.BigNumber, string, string, { hash: string }];
+
+                if (
+                    lootboxName === undefined ||
+                    lootboxAddress === undefined ||
+                    issuerAddress === undefined ||
+                    maxTickets === undefined ||
+                    baseTokenURI === undefined ||
+                    lootboxID === undefined ||
+                    nonce === undefined ||
+                    event === undefined
+                ) {
+                    continue;
+                }
+
+                // Make sure its the right event
+                if (lootboxID !== data.payload.lootboxID) {
+                    logger.info("Event LootboxID does not match", {
+                        lootboxID,
+                        expectedLootboxID: data.payload.lootboxID,
+                        event,
+                    });
+                    continue;
+                }
+                const testNonce = data.payload.nonce;
+                const hashedTestNonce = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(testNonce));
+                if (nonce.hash !== hashedTestNonce) {
+                    logger.info("Event Nonce does not match", {
+                        nonceHash: nonce.hash,
+                        expectedNonce: testNonce,
+                        expectedNonceHash: hashedTestNonce,
+                        event,
+                    });
+                    continue;
+                }
+
+                try {
+                    // Associates the Web3 data to Lootbox
+                    await lootboxService.createWeb3(
+                        {
+                            creatorID: data.payload.creatorID,
+                            lootboxID: data.payload.lootboxID,
+                            factory: data.payload.factory,
+                            lootboxAddress,
+                            blockNumber: `${event.blockNumber}`,
+                            lootboxName,
+                            transactionHash: event.transactionHash,
+                            creatorAddress: issuerAddress,
+                            baseTokenURI: baseTokenURI,
+                            symbol: data.payload.symbol, // Todo move this to onchain event
+                            creationNonce: data.payload.nonce,
+                        },
+                        data.chain
+                    );
+                    return;
+                } catch (err) {
+                    logger.error("Error creating lootbox", err);
+                }
+            }
+        }
 
         await new Promise((res) => {
             // This is the event listener
