@@ -19,6 +19,9 @@ import {
     ChainIDDecimal,
     LootboxCreatedNonce,
     LootboxTimestamps,
+    DepositID,
+    Deposit_Firestore,
+    DepositID_Web3,
 } from "@wormgraph/helpers";
 import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -388,4 +391,64 @@ export const associateLootboxSnapshotsToWeb3 = async (
     await batch.commit();
 
     return;
+};
+
+export const createDeposit = async (request: {
+    depositerAddress: Address;
+    depositerID: UserID;
+    lootboxID: LootboxID;
+    lootboxAddress: Address;
+    erc20Amount: string;
+    nativeAmount: string;
+    transactionHash: string;
+    blockNumber: number;
+    chainIDHex: ChainIDHex;
+    depositID: DepositID_Web3;
+    erc20Address: Address;
+    maxTicketSnapshot: number;
+}): Promise<Deposit_Firestore> => {
+    const depositRef = db.collection(Collection.Deposit).doc() as DocumentReference<Deposit_Firestore>;
+
+    const deposit: Deposit_Firestore = {
+        id: depositRef.id as DepositID,
+        depositID: request.depositID,
+        createdAt: Timestamp.now().toMillis(),
+        updatedAt: Timestamp.now().toMillis(),
+        depositerAddress: request.depositerAddress,
+        depositerID: request.depositerID,
+        lootboxID: request.lootboxID,
+        lootboxAddress: request.lootboxAddress,
+        erc20Amount: request.erc20Amount,
+        nativeAmount: request.nativeAmount,
+        transactionHash: request.transactionHash,
+        blockNumber: request.blockNumber,
+        chainIDHex: request.chainIDHex,
+        erc20Address: request.erc20Address,
+        maxTicketSnapshot: request.maxTicketSnapshot,
+    };
+
+    await depositRef.set(deposit);
+
+    return deposit;
+};
+
+export const getLootboxDeposit = async (
+    lootboxID: LootboxID,
+    depositID: DepositID_Web3
+): Promise<Deposit_Firestore | undefined> => {
+    const depositIDFieldName: keyof Deposit_Firestore = "depositID";
+    const depositRef = db
+        .collection(Collection.Lootbox)
+        .doc(lootboxID)
+        .collection(Collection.Deposit)
+        .where(depositIDFieldName, "==", depositID)
+        .limit(1) as Query<Deposit_Firestore>;
+
+    const depositSnapshot = await depositRef.get();
+
+    if (depositSnapshot.empty) {
+        return undefined;
+    }
+
+    return depositSnapshot.docs[0].data();
 };

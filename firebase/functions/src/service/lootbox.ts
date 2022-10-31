@@ -18,6 +18,8 @@ import {
     LootboxSnapshotTimestamps,
     LootboxTimestamps,
     LootboxVariant_Firestore,
+    Deposit_Firestore,
+    DepositID_Web3,
 } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
 import { db } from "../api/firebase";
@@ -31,6 +33,8 @@ import {
     getWhitelistByDigest,
     associateWeb3Lootbox,
     associateLootboxSnapshotsToWeb3,
+    createDeposit,
+    getLootboxDeposit,
 } from "../api/firestore/lootbox";
 import { stampNewLootbox, stampNewTicket } from "../api/stamp";
 import { convertLootboxToTicketMetadata } from "../lib/lootbox";
@@ -325,4 +329,48 @@ export const onDeployed = async (lootbox: Lootbox_Firestore): Promise<void> => {
     } catch (err) {
         logger.error("Error onDeployed updating LootboxSnapshots", err);
     }
+};
+
+interface OnDepositRequest {
+    erc20Amount: string;
+    nativeAmount: string;
+    erc20Address: Address;
+    transactionHash: string;
+    blockNumber: number;
+    depositerAddress: Address;
+    depositerID: UserID;
+    lootboxAddress: Address;
+    chainIDHex: ChainIDHex;
+    depositID: DepositID_Web3;
+    maxTicketSnapshot: number;
+}
+export const onDeposit = async (params: OnDepositRequest): Promise<Deposit_Firestore> => {
+    const lootbox = await getLootboxByChainAddress(params.lootboxAddress, params.chainIDHex);
+
+    if (!lootbox) {
+        throw new Error("Lootbox not found");
+    }
+
+    const _deposit = await getLootboxDeposit(lootbox.id, params.depositID);
+    if (_deposit) {
+        logger.error("Deposit already created", { depositID: params.depositID, deposit: _deposit });
+        throw new Error("Deposit already exists");
+    }
+
+    const deposit = await createDeposit({
+        lootboxID: lootbox.id,
+        erc20Amount: params.erc20Amount,
+        nativeAmount: params.nativeAmount,
+        transactionHash: params.transactionHash,
+        blockNumber: params.blockNumber,
+        depositerAddress: params.depositerAddress,
+        depositerID: params.depositerID,
+        lootboxAddress: params.lootboxAddress,
+        chainIDHex: params.chainIDHex,
+        erc20Address: params.erc20Address,
+        depositID: params.depositID,
+        maxTicketSnapshot: params.maxTicketSnapshot,
+    });
+
+    return deposit;
 };

@@ -42,6 +42,8 @@ import {
     LootboxMintSignatureNonce,
     EnqueueLootboxOnMintCallableRequest,
     Tournament_Firestore,
+    DepositID_Web3,
+    EnqueueLootboxOnDepositCallableRequest,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import { checkIfOfferIncludesLootboxAppWebsiteVisit, reportViewToMMP } from "./api/mmp/mmp";
@@ -66,7 +68,7 @@ const stampSecretName: SecretName = "STAMP_SECRET";
 // TODO: Rename this secret to be LOOTBOX
 const whitelisterPrivateKeySecretName: SecretName = "PARTY_BASKET_WHITELISTER_PRIVATE_KEY";
 
-type taskQueueID = "indexLootboxOnCreate" | "indexLootboxOnMint";
+type taskQueueID = "indexLootboxOnCreate" | "indexLootboxOnMint" | "indexLootboxOnDeposit";
 const buildTaskQueuePath = (taskQueueID: taskQueueID) => `locations/${REGION}/functions/${taskQueueID}`;
 
 export const onClaimWrite = functions
@@ -1098,6 +1100,302 @@ export const enqueueLootboxOnMint = functions
         };
         logger.debug("Enqueing task", taskData);
         const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnMint"));
+        await queue.enqueue(taskData);
+
+        return;
+    });
+
+interface IndexLootboxOnDepositTaskRequest {
+    chain: ChainInfo;
+    payload: {
+        lootboxAddress: Address;
+        depositor: Address;
+        userID: UserID;
+        afterDepositID: DepositID_Web3; // The deposit ID should be bigger than this
+        amount: string; // Stringified big number ie. "1000000000000000000"
+        erc20Address: Address;
+    };
+    filter: {
+        fromBlock: number;
+    };
+}
+
+export const indexLootboxOnDeposit = functions
+    .region(REGION)
+    .runWith({
+        timeoutSeconds: 540,
+        failurePolicy: true,
+    })
+    .tasks.taskQueue({
+        retryConfig: {
+            maxAttempts: 5,
+            /**
+             * The maximum number of times to double the backoff between
+             * retries. If left unspecified will default to 16.
+             */
+            maxDoublings: 1,
+            /**
+             * The minimum time to wait between attempts. If left unspecified
+             * will default to 100ms.
+             */
+            minBackoffSeconds: 60 * 5 /* 5 minutes */,
+        },
+    })
+    .onDispatch(async (data: IndexLootboxOnDepositTaskRequest) => {
+        logger.info("indexLootboxOnDeposit", { data });
+        // Any errors thrown or timeouts will trigger a retry
+
+        // Start a listener to listen for the event
+        const provider = new ethers.providers.JsonRpcProvider(data.chain.rpcUrls[0]);
+
+        logger.info("creating lootbox contract");
+
+        const lootbox = new ethers.Contract(data.payload.lootboxAddress, LootboxCosmicABI, provider);
+
+        logger.info("lootbox: ", { lootbox });
+
+        // eslint-disable-next-line
+        const lootboxEventFilter = lootbox.filters.DepositEarnings(
+            data.payload.depositor,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
+
+        let events: ethers.Event[] = [];
+
+        // Do a retrospective lookup for the event
+        try {
+            events = await lootbox.queryFilter(lootboxEventFilter, data.filter.fromBlock);
+        } catch (err) {
+            logger.error("Error querying retrospective event filter", err);
+        }
+
+        if (events.length > 0) {
+            logger.info("Found event in past", { events });
+            // Index it then return
+            for (const event of events) {
+                if (!event.args) {
+                    continue;
+                }
+
+                const [
+                    depositor,
+                    lootboxAddress,
+                    depositId,
+                    nativeTokenAmount,
+                    erc20Address,
+                    erc20Amount,
+                    maxTicketsSnapshot,
+                ] = event.args as [
+                    Address,
+                    Address,
+                    ethers.BigNumber,
+                    ethers.BigNumber,
+                    Address,
+                    ethers.BigNumber,
+                    ethers.BigNumber
+                ];
+
+                logger.info("retrospective event", {
+                    depositor,
+                    lootboxAddress,
+                    depositId: depositId.toString(),
+                    nativeTokenAmount: nativeTokenAmount.toString(),
+                    erc20Address,
+                    erc20Amount: erc20Amount.toString(),
+                    maxTicketsSnapshot: maxTicketsSnapshot.toString(),
+                });
+
+                if (
+                    depositor == undefined ||
+                    lootboxAddress == undefined ||
+                    depositId == undefined ||
+                    nativeTokenAmount == undefined ||
+                    erc20Address == undefined ||
+                    erc20Amount == undefined ||
+                    maxTicketsSnapshot == undefined
+                ) {
+                    continue;
+                }
+
+                if (depositId.toNumber() <= data.payload.afterDepositID) {
+                    logger.info("Deposit ID is too low", {
+                        depositId: depositId.toNumber(),
+                        minDepositID: data.payload.afterDepositID,
+                    });
+                    continue;
+                }
+
+                if (erc20Amount.toString() !== data.payload.amount) {
+                    logger.info("ERC20 amount does not match", {
+                        erc20Amount: erc20Amount.toString(),
+                        expectedAmount: data.payload.amount,
+                    });
+                    continue;
+                }
+
+                if (erc20Address !== data.payload.erc20Address) {
+                    logger.info("ERC20 token does not match", {
+                        erc20Address,
+                        expectedToken: data.payload.erc20Address,
+                    });
+                    continue;
+                }
+
+                try {
+                    // Get the lootbox info
+                    await lootboxService.onDeposit({
+                        erc20Amount: erc20Amount.toString(),
+                        nativeAmount: nativeTokenAmount.toString(),
+                        erc20Address: erc20Address,
+                        transactionHash: event.transactionHash,
+                        blockNumber: event.blockNumber,
+                        depositerAddress: depositor,
+                        depositerID: data.payload.userID,
+                        lootboxAddress: lootboxAddress,
+                        chainIDHex: data.chain.chainIdHex,
+                        depositID: depositId.toNumber() as DepositID_Web3,
+                        maxTicketSnapshot: maxTicketsSnapshot.toNumber(),
+                    });
+
+                    return;
+                } catch (err) {
+                    logger.error("Error creating from retrospective lookup", err);
+                }
+            }
+        }
+
+        // If we could not retroactively find the event, listen for it
+        logger.info("starting listener...");
+        await new Promise((res) => {
+            // This is the event listener
+            lootbox.on(
+                lootboxEventFilter,
+                async (
+                    depositor: Address,
+                    lootboxAddress: Address,
+                    depositId: ethers.BigNumber,
+                    nativeTokenAmount: ethers.BigNumber,
+                    erc20Address: Address,
+                    erc20Amount: ethers.BigNumber,
+                    maxTicketsSnapshot: ethers.BigNumber,
+                    event: ethers.Event
+                ) => {
+                    logger.debug("Got log", {
+                        depositor,
+                        lootboxAddress,
+                        depositId: depositId.toString(),
+                        nativeTokenAmount: nativeTokenAmount.toString(),
+                        erc20Address,
+                        erc20Amount: erc20Amount.toString(),
+                        maxTicketsSnapshot: maxTicketsSnapshot.toString(),
+                    });
+
+                    if (
+                        depositor == undefined ||
+                        lootboxAddress == undefined ||
+                        depositId == undefined ||
+                        nativeTokenAmount == undefined ||
+                        erc20Address == undefined ||
+                        erc20Amount == undefined ||
+                        maxTicketsSnapshot == undefined
+                    ) {
+                        return;
+                    }
+
+                    if (depositId.toNumber() <= data.payload.afterDepositID) {
+                        logger.info("Deposit ID is too low", {
+                            depositId: depositId.toNumber(),
+                            minDepositID: data.payload.afterDepositID,
+                        });
+                        return;
+                    }
+
+                    if (erc20Amount.toString() !== data.payload.amount) {
+                        logger.info("ERC20 amount does not match", {
+                            erc20Amount: erc20Amount.toString(),
+                            expectedAmount: data.payload.amount,
+                        });
+                        return;
+                    }
+
+                    if (erc20Address !== data.payload.erc20Address) {
+                        logger.info("ERC20 token does not match", {
+                            erc20Address,
+                            expectedToken: data.payload.erc20Address,
+                        });
+                        return;
+                    }
+
+                    try {
+                        // Get the lootbox info
+                        await lootboxService.onDeposit({
+                            erc20Amount: erc20Amount.toString(),
+                            nativeAmount: nativeTokenAmount.toString(),
+                            erc20Address: erc20Address,
+                            transactionHash: event.transactionHash,
+                            blockNumber: event.blockNumber,
+                            depositerAddress: depositor,
+                            depositerID: data.payload.userID,
+                            lootboxAddress: lootboxAddress,
+                            chainIDHex: data.chain.chainIdHex,
+                            depositID: depositId.toNumber() as DepositID_Web3,
+                            maxTicketSnapshot: maxTicketsSnapshot.toNumber(),
+                        });
+
+                        provider.removeAllListeners(lootboxEventFilter);
+                        res(null);
+                        return;
+                    } catch (err) {
+                        logger.error("Error creating lootbox", err);
+                        return;
+                    }
+                }
+            );
+        });
+    });
+
+export const enqueueLootboxOnDeposit = functions
+    .region(REGION)
+    .https.onCall(async (data: EnqueueLootboxOnDepositCallableRequest, context) => {
+        if (!context.auth?.uid) {
+            // Unauthenticated
+            logger.error("Unauthenticated");
+            return;
+        }
+
+        if (!ethers.utils.isAddress(data.lootboxAddress)) {
+            logger.error("Address not valid", { listenAddress: data.lootboxAddress });
+            return;
+        }
+
+        const chainSlug = chainIdHexToSlug(data.chainIDHex);
+        if (!chainSlug) {
+            logger.warn("Could not match chain", { chainIdHex: data.chainIDHex });
+            return;
+        }
+        const chain = BLOCKCHAINS[chainSlug];
+
+        const taskData: IndexLootboxOnDepositTaskRequest = {
+            chain,
+            payload: {
+                lootboxAddress: data.lootboxAddress,
+                userID: context.auth.uid as UserID,
+                afterDepositID: data.afterDepositID, // The deposit ID should be bigger than this
+                amount: data.amount, // Stringified big number ie. "1000000000000000000"
+                depositor: data.depositerAddress,
+                erc20Address: data.erc20Address,
+            },
+            filter: {
+                fromBlock: data.fromBlock,
+            },
+        };
+        logger.debug("Enqueing task", taskData);
+        const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnDeposit"));
         await queue.enqueue(taskData);
 
         return;
