@@ -289,6 +289,7 @@ export const enqueueLootboxDepositEmail = functions
                     deposits: lootboxDeposits,
                     userIDs: userIDBatch,
                 };
+                // TODO: Add time delay to try and accompany warm up delay https://twilio-cms-prod.s3.amazonaws.com/documents/Generic_IP_Warmup_Schedule.pdf
                 enqueues.push(queue.enqueue(taskData));
             }
 
