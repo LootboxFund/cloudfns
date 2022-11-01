@@ -22,6 +22,8 @@ import {
     DepositID,
     Deposit_Firestore,
     DepositID_Web3,
+    TournamentID,
+    LootboxSnapshotTimestamps,
 } from "@wormgraph/helpers";
 import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -451,4 +453,51 @@ export const getLootboxDeposit = async (
     }
 
     return depositSnapshot.docs[0].data();
+};
+
+export const getLootboxTournamentSnapshot = async (
+    lootboxID: LootboxID,
+    tournamentID: TournamentID
+): Promise<LootboxTournamentSnapshot_Firestore | undefined> => {
+    const lootboxIDFieldName: keyof LootboxTournamentSnapshot_Firestore = "lootboxID";
+    const snapshotRef = db
+        .collection(Collection.Tournament)
+        .doc(tournamentID)
+        .collection(Collection.LootboxTournamentSnapshot)
+        .where(lootboxIDFieldName, "==", lootboxID)
+        .limit(1) as Query<LootboxTournamentSnapshot_Firestore>;
+
+    const snapshot = await snapshotRef.get();
+
+    if (snapshot.empty) {
+        return undefined;
+    }
+
+    return snapshot.docs[0]?.data();
+};
+
+export const markDepositEmailAsSent = async (lootboxID: LootboxID, tournamentID: TournamentID): Promise<void> => {
+    const lootboxIDFieldName: keyof LootboxTournamentSnapshot_Firestore = "lootboxID";
+    const snapshotQuery = db
+        .collection(Collection.Tournament)
+        .doc(tournamentID)
+        .collection(Collection.LootboxTournamentSnapshot)
+        .where(lootboxIDFieldName, "==", lootboxID)
+        .limit(1) as Query<LootboxTournamentSnapshot_Firestore>;
+
+    const snapshot = await snapshotQuery.get();
+    const lootboxSnapshotRef = snapshot?.docs[0]?.ref as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+    if (!lootboxSnapshotRef) {
+        throw new Error("Lootbox Snapshot Not Found");
+    }
+
+    const timestampFieldName: keyof LootboxTournamentSnapshot_Firestore = "timestamps";
+    const depositEmailSentAtFieldName: keyof LootboxSnapshotTimestamps = "depositEmailSentAt";
+
+    const updateRequest: Partial<LootboxTournamentSnapshot_Firestore> = {
+        [`${timestampFieldName}.${depositEmailSentAtFieldName}`]: Timestamp.now().toMillis(),
+    };
+    lootboxSnapshotRef.update(updateRequest);
+
+    return;
 };
