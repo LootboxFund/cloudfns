@@ -109,7 +109,7 @@ export const getUnassignedClaimsForUser = async (
     // lootboxID: LootboxID
 ): Promise<Claim_Firestore[]> => {
     // const lootboxIDField: keyof Claim_Firestore = "lootboxID";
-    const lootboxSatusField: keyof Claim_Firestore = "status";
+    const claimStatusField: keyof Claim_Firestore = "status";
     const whitelistIDField: keyof Claim_Firestore = "whitelistId";
     const claimerIDField: keyof Claim_Firestore = "claimerUserId";
 
@@ -117,7 +117,7 @@ export const getUnassignedClaimsForUser = async (
         .collectionGroup(Collection.Claim)
         .where(claimerIDField, "==", claimerUserID)
         // .where(lootboxIDField, "==", lootboxID)
-        .where(lootboxSatusField, "==", ClaimStatus_Firestore.complete)
+        .where(claimStatusField, "==", ClaimStatus_Firestore.complete)
         .where(whitelistIDField, "==", null) as CollectionGroup<Claim_Firestore>;
 
     const snapshot = await collectionGroupRef.get();
@@ -150,3 +150,20 @@ export const getUnassignedClaimsForUser = async (
 //         return snapshot.docs.map((doc) => doc.ref);
 //     }
 // };
+
+export const getCompletedClaimsForLootbox = async (lootboxID: LootboxID): Promise<Claim_Firestore[]> => {
+    const lootboxIDField: keyof Claim_Firestore = "lootboxID";
+    const claimStatusField: keyof Claim_Firestore = "status";
+    const collectionGroupRef = db
+        .collectionGroup(Collection.Claim)
+        .where(lootboxIDField, "==", lootboxID)
+        .where(claimStatusField, "==", ClaimStatus_Firestore.complete) as CollectionGroup<Claim_Firestore>;
+
+    const snapshot = await collectionGroupRef.get();
+
+    if (!snapshot || snapshot.empty) {
+        return [];
+    } else {
+        return snapshot.docs.map((doc) => doc.data());
+    }
+};

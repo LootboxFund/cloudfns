@@ -38,6 +38,7 @@ export const parseLootboxTournamentSnapshotDB = (
       createdAt: data.timestamps.createdAt,
       updatedAt: data.timestamps.updatedAt,
       deletedAt: data.timestamps.deletedAt,
+      depositEmailSentAt: data.timestamps.depositEmailSentAt || null,
     },
     // socials,
     status: data.status || LootboxTournamentStatus_Firestore.disabled,
@@ -232,6 +233,7 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
     timestamps: {
       createdAt: snapshot.timestamps.createdAt,
       updatedAt: snapshot.timestamps.updatedAt,
+      depositEmailSentAt: snapshot.timestamps.depositEmailSentAt || null,
     },
     // socials,
     status: convertLootboxTournamentSnapshotStatusDBToGQL(snapshot.status),

@@ -483,6 +483,7 @@ export const createLootboxTournamentSnapshot = async (
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
       deletedAt: null,
+      depositEmailSentAt: null,
     },
   };
 

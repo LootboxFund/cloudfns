@@ -7,3 +7,4 @@ export const db = admin.firestore(app);
 db.settings({ ignoreUndefinedProperties: true });
 export const fun = getFunctions(app);
 export const gcs = new Storage();
+export const auth = admin.auth(app);
