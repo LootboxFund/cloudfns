@@ -29,7 +29,7 @@ const ReferralTypeDefs = gql`
   enum ClaimStatus {
     pending
     pending_verification
-    verification_sent
+    expired
     complete
   }
 
