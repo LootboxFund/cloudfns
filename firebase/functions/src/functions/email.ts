@@ -131,7 +131,10 @@ export const enqueueLootboxDepositEmail = functions
                 tournamentID: data.tournamentID,
                 lootboxID: data.lootboxID,
             });
-            throw new functions.https.HttpsError("already-exists", "Deposit email already sent");
+            throw new functions.https.HttpsError(
+                "already-exists",
+                "Deposit email already sent. You can only do this once."
+            );
         }
 
         const chainSlug = chainIdHexToSlug(data.chainIDHex);
@@ -240,6 +243,10 @@ export const enqueueLootboxDepositEmail = functions
             throw new functions.https.HttpsError("internal", "Error loading deposits. Please try again later.");
         }
 
+        if (lootboxDeposits.length === 0) {
+            throw new functions.https.HttpsError("not-found", "No Lootbox deposits");
+        }
+
         let uniqueUserIDs: UserID[] = [];
         try {
             // Now find all the users and enqueue batches of them
@@ -257,6 +264,10 @@ export const enqueueLootboxDepositEmail = functions
         } catch (err) {
             console.error("Error loading claims", err);
             throw new functions.https.HttpsError("internal", "An error occured. Please try again later.");
+        }
+
+        if (uniqueUserIDs.length === 0) {
+            throw new functions.https.HttpsError("not-found", "No claimers to email");
         }
 
         const userIDBatches = batcher(uniqueUserIDs, EMAIL_BATCH_SIZE);

@@ -38,6 +38,7 @@ export const parseLootboxTournamentSnapshotDB = (
       createdAt: data.timestamps.createdAt,
       updatedAt: data.timestamps.updatedAt,
       deletedAt: data.timestamps.deletedAt,
+      depositEmailSentAt: data.timestamps.depositEmailSentAt || null,
     },
     // socials,
     status: data.status || LootboxTournamentStatus_Firestore.disabled,
