@@ -118,6 +118,7 @@ const LootboxTypeDefs = gql`
       first: Int!
       cursor: UserClaimsCursor
     ): LootboxUserClaimPageInfoResponse
+    tournamentSnapshot(tournamentID: ID): LootboxTournamentSnapshot
     # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
     partyBaskets: [PartyBasket!]
@@ -131,6 +132,7 @@ const LootboxTypeDefs = gql`
   type LootboxSnapshotTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
+    depositEmailSentAt: Timestamp
   }
 
   type LootboxSnapshot {

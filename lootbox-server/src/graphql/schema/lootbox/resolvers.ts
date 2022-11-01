@@ -21,6 +21,8 @@ import {
   WhitelistMyLootboxClaimsResponse,
   MutationWhitelistMyLootboxClaimsArgs,
   User,
+  LootboxTournamentSnapshotArgs,
+  LootboxTournamentSnapshot,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -34,6 +36,8 @@ import {
   getUserClaimCountForLootbox,
   getLootboxByUserIDAndNonce,
   getLootboxUnassignedClaimForUser,
+  getLootboxTournamentSnapshot,
+  getLootboxTournamentSnapshotByLootboxID,
 } from "../../../api/firestore";
 import {
   Address,
@@ -55,6 +59,7 @@ import * as LootboxService from "../../../service/lootbox";
 import { batcher } from "../../../lib/utils";
 import { ethers } from "ethers";
 import { getWhitelisterPrivateKey } from "../../../api/secrets";
+import { convertLootboxTournamentSnapshotDBToGQL } from "../../../lib/tournament";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -421,6 +426,25 @@ const LootboxResolvers: Resolvers = {
   },
 
   Lootbox: {
+    tournamentSnapshot: async (
+      lootbox: Lootbox,
+      { tournamentID }: LootboxTournamentSnapshotArgs
+    ): Promise<LootboxTournamentSnapshot | null> => {
+      if (!tournamentID || !lootbox.id) {
+        return null;
+      }
+
+      const snapshot = await getLootboxTournamentSnapshotByLootboxID(
+        tournamentID as TournamentID,
+        lootbox.id as LootboxID
+      );
+
+      if (!snapshot) {
+        return null;
+      }
+
+      return convertLootboxTournamentSnapshotDBToGQL(snapshot);
+    },
     userClaims: async (
       lootbox: Lootbox,
       { first, cursor }: LootboxUserClaimsArgs,

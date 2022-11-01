@@ -232,6 +232,7 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
     timestamps: {
       createdAt: snapshot.timestamps.createdAt,
       updatedAt: snapshot.timestamps.updatedAt,
+      depositEmailSentAt: snapshot.timestamps.depositEmailSentAt || null,
     },
     // socials,
     status: convertLootboxTournamentSnapshotStatusDBToGQL(snapshot.status),
