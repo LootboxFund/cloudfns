@@ -86,8 +86,25 @@ interface ClaimBackfilled_Firestore extends Claim_Firestore {
 const _scriptData: { prod: Config; staging: Config } = {
   // FILL THIS IN
   prod: {
-    newTournamentID: "_________" as TournamentID,
-    mappings: [],
+    newTournamentID: "I9CPcXHC5oKnxEyEmL9d" as TournamentID,
+    mappings: [
+      {
+        partyBasketID: "iVeH3DkbejUcxbkxLvXU" as PartyBasketID,
+        newLootboxID: "rG9yzy5sUmeYnjAcpwH4" as LootboxID,
+      },
+      {
+        partyBasketID: "RnqyGEgkGCUPFhG5wXkl" as PartyBasketID,
+        newLootboxID: "ucFYKLgPZCD7IiupFT8B" as LootboxID,
+      },
+      {
+        partyBasketID: "rf1T9r0MeSarwNgvpsxZ" as PartyBasketID,
+        newLootboxID: "xU0adyCMemd9RwyNrHWf" as LootboxID,
+      },
+      {
+        partyBasketID: "9vByS4Uz0Rd0nKiMYwnU" as PartyBasketID,
+        newLootboxID: "FEhGRGEZWr08mEhwcenx" as LootboxID,
+      },
+    ],
   },
   staging: {
     newTournamentID: "AVkMS8PZAJ6uiTgVp1wP" as TournamentID,
