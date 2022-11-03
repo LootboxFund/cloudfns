@@ -53,10 +53,12 @@ import {
   getMintWhistlistSignature,
   getLootboxTournamentSnapshot,
   getLootboxTournamentSnapshotByLootboxID,
+  completeAnonClaim,
 } from "../../../api/firestore";
 import {
   AffiliateID,
   ClaimID,
+  Claim_Firestore,
   LootboxID,
   LootboxMintWhitelistID,
   LootboxStatus_Firestore,
@@ -804,13 +806,21 @@ const ReferralResolvers: Resolvers = {
           getClaimById(payload.claimId as ClaimID),
         ]);
 
-        if (!user || !user.phoneNumber) {
-          // Prevent abuse by requiring a phone number
+        // if (!user || !user.phoneNumber) {
+        //   // Prevent abuse by requiring a phone number
+        //   return {
+        //     error: {
+        //       code: StatusCode.Forbidden,
+        //       message:
+        //         "You need to login with your PHONE NUMBER to claim a ticket.",
+        //     },
+        //   };
+        // }
+        if (!user) {
           return {
             error: {
               code: StatusCode.Forbidden,
-              message:
-                "You need to login with your PHONE NUMBER to claim a ticket.",
+              message: "You need to login to claim a ticket.",
             },
           };
         }
@@ -981,16 +991,38 @@ const ReferralResolvers: Resolvers = {
             }
           }
 
-          const updatedClaim = await completeClaim({
-            claimId: claim.id as ClaimID,
-            referralId: claim.referralId as ReferralID,
-            lootboxID: payload.chosenLootboxID as LootboxID,
-            lootboxAddress: lootbox.address,
-            lootboxName: lootbox.name,
-            lootboxNFTBountyValue: lootbox.nftBountyValue,
-            lootboxMaxTickets: lootbox.maxTickets,
-            claimerUserId: context.userId as unknown as UserID,
-          });
+          // To prevent abuse, we ensure the user has a phone number to complete a claim.
+          // If they dont, they are usually an anonymous user and the claim actually becomes status = pending_verification
+          // In this case, no side effects happen until some async method changes the claim status to status = complete
+          // & firebase cloud function "onClaimWrite" gets triggered
+          const isPhoneVerified = !!user.phoneNumber;
+          let updatedClaim: Claim_Firestore | undefined;
+          if (isPhoneVerified) {
+            // set status = complete
+            updatedClaim = await completeClaim({
+              claimId: claim.id as ClaimID,
+              referralId: claim.referralId as ReferralID,
+              lootboxID: payload.chosenLootboxID as LootboxID,
+              lootboxAddress: lootbox.address,
+              lootboxName: lootbox.name,
+              lootboxNFTBountyValue: lootbox.nftBountyValue,
+              lootboxMaxTickets: lootbox.maxTickets,
+              claimerUserId: context.userId as unknown as UserID,
+            });
+          } else {
+            // set status = pending_verification
+            // side effects like firebase cloud function "onClaimWrite" DO NOT get triggered
+            updatedClaim = await completeAnonClaim({
+              claimId: claim.id as ClaimID,
+              referralId: claim.referralId as ReferralID,
+              lootboxID: payload.chosenLootboxID as LootboxID,
+              lootboxAddress: lootbox.address,
+              lootboxName: lootbox.name,
+              lootboxNFTBountyValue: lootbox.nftBountyValue,
+              lootboxMaxTickets: lootbox.maxTickets,
+              claimerUserId: context.userId as unknown as UserID,
+            });
+          }
 
           return {
             claim: convertClaimDBToGQL(updatedClaim),

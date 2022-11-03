@@ -169,7 +169,7 @@ const UserResolvers = {
 
   Mutation: {
     /**
-     * Used primarily in phone sign up
+     * Used primarily in phone or sign up anonymous sign up
      * User IDP object gets created in the frontend, so we expect this call to be authenticated
      * However, corresponding user database object does not get created, so this function will create that object
      * if it dosent exist. If it already exists, this function returns the existing user object from the database

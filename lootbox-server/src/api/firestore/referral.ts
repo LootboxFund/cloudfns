@@ -434,6 +434,96 @@ export const completeClaim = async (
   return claim as Claim_Firestore;
 };
 
+interface CompleteAnonClaimReq {
+  claimId: ClaimID;
+  referralId: ReferralID;
+  claimerUserId: UserID;
+  lootboxID: LootboxID;
+  lootboxAddress: Address | null;
+  lootboxName: string;
+  lootboxNFTBountyValue?: string;
+  lootboxMaxTickets?: number;
+  /** @deprecated */
+  chosenPartyBasketId?: PartyBasketID;
+  /** @deprecated */
+  chosenPartyBasketAddress?: Address;
+  /** @deprecated */
+  chosenPartyBasketName?: string;
+  /** @deprecated */
+  chosenPartyBasketNFTBountyValue?: string;
+}
+export const completeAnonClaim = async (
+  req: CompleteAnonClaimReq
+): Promise<Claim_Firestore> => {
+  const referralRef = db.collection(Collection.Referral).doc(req.referralId);
+  const claimRef = referralRef
+    .collection(Collection.Claim)
+    .doc(req.claimId) as DocumentReference<Claim_Firestore>;
+
+  const updateClaimRequest: Partial<Claim_Firestore> = {
+    status: ClaimStatus_Firestore.pending_verification,
+    claimerUserId: req.claimerUserId,
+    lootboxID: req.lootboxID,
+    lootboxName: req.lootboxName,
+  };
+
+  if (req.lootboxAddress) {
+    updateClaimRequest.lootboxAddress = req.lootboxAddress;
+  }
+
+  if (req.lootboxNFTBountyValue) {
+    updateClaimRequest.lootboxNFTBountyValue = req.lootboxNFTBountyValue;
+  }
+
+  if (req.lootboxMaxTickets) {
+    updateClaimRequest.lootboxMaxTickets = req.lootboxMaxTickets;
+  }
+
+  if (req.chosenPartyBasketId) {
+    updateClaimRequest.chosenPartyBasketId = req.chosenPartyBasketId;
+  }
+
+  if (req.chosenPartyBasketNFTBountyValue) {
+    updateClaimRequest.chosenPartyBasketNFTBountyValue =
+      req.chosenPartyBasketNFTBountyValue;
+  }
+
+  if (req.chosenPartyBasketAddress) {
+    updateClaimRequest.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
+  }
+  if (req.chosenPartyBasketName) {
+    updateClaimRequest.chosenPartyBasketName = req.chosenPartyBasketName;
+  }
+
+  // This is to update nested object in non-destructive way
+  const nowMillis = Timestamp.now().toMillis();
+  updateClaimRequest["timestamps.updatedAt"] = nowMillis;
+  // TODO: update this in the backend?
+  // updateClaimRequest["timestamps.completedAt"] = nowMillis;
+
+  // This updates the claim & increments the parent referral's nConversion
+  // Get a new write batch
+  var batch = db.batch();
+
+  // Update the population of 'SF'
+  // var sfRef = db.collection("cities").doc("SF");
+  batch.update(claimRef, updateClaimRequest);
+  batch.update(referralRef, {
+    nConversions: FieldValue.increment(1),
+  });
+
+  // Commit the batch
+  await batch.commit();
+
+  // await documentRef.update(updateRequest);
+
+  const snapshot = await claimRef.get();
+
+  const claim = snapshot.data();
+
+  return claim as Claim_Firestore;
+};
+
 export const getClaimById = async (
   claimId: ClaimID
 ): Promise<Claim_Firestore | undefined> => {
