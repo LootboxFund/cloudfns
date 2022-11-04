@@ -23,6 +23,8 @@ import {
   PublicUser,
   MutationUpdateUserAuthArgs,
   MutationCreateUserRecordArgs,
+  GetAnonTokenResponse,
+  QueryGetAnonTokenArgs,
 } from "../../generated/types";
 import {
   getUser,
@@ -113,6 +115,84 @@ const UserResolvers = {
           error: {
             code: StatusCode.ServerError,
             message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    getAnonToken: async (
+      _,
+      { idToken }: QueryGetAnonTokenArgs
+    ): Promise<GetAnonTokenResponse> => {
+      let uid: UserIdpID | null;
+      try {
+        uid = await identityProvider.verifyIDToken(idToken);
+        if (uid == null) {
+          throw "invalid token";
+        }
+      } catch (err) {
+        console.error("Error verifying token", err);
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Invalid ID token",
+          },
+        };
+      }
+
+      try {
+        const [userIDP, userDB, userWallets] = await Promise.all([
+          identityProvider.getUserById(uid),
+          getUser(uid),
+          getUserWallets(uid as unknown as UserID, 1),
+        ]);
+
+        /**
+         *  This method should not return a token if ANY of the conditions are met
+         *  1. User has a VERIFIED email (unverified is fine)
+         *  2. User has phoneNumber attached to account
+         *  3. User has a wallet attached to account
+         *  4. User IDP has ANY providerData
+         *
+         *  If none of these conditions are met, then the user is mostlikely a new / anonymous user
+         *  and we can return a sign in token
+         */
+
+        if (!userIDP || !userDB) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+
+        if (
+          userIDP.emailVerified ||
+          userIDP.phoneNumber ||
+          // userDB.email ||  // this is not a good check because this field can exist, but it might not be linked to credentials. Thus, we check the IDP email
+          userDB.phoneNumber ||
+          userWallets.length > 0 ||
+          (userIDP.providerData && userIDP.providerData.length > 0)
+        ) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "Not Allowed",
+            },
+          };
+        }
+
+        const token = await identityProvider.getSigninToken(uid);
+
+        return {
+          token,
+          email: userDB.email || "",
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error ocurred",
           },
         };
       }
@@ -879,6 +959,19 @@ const UserResolvers = {
     __resolveType: (obj: PublicUserResponse) => {
       if ("user" in obj) {
         return "PublicUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  GetAnonTokenResponse: {
+    __resolveType: (obj: GetAnonTokenResponse) => {
+      if ("token" in obj) {
+        return "GetAnonTokenResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

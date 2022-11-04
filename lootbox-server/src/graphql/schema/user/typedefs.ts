@@ -73,13 +73,21 @@ const UserTypeDefs = gql`
     user: PublicUser!
   }
 
+  type GetAnonTokenResponseSuccess {
+    token: String!
+    email: String!
+  }
+
   union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
 
   union PublicUserResponse = PublicUserResponseSuccess | ResponseError
 
+  union GetAnonTokenResponse = GetAnonTokenResponseSuccess | ResponseError
+
   extend type Query {
     getMyProfile: GetMyProfileResponse!
     publicUser(id: ID!): PublicUserResponse!
+    getAnonToken(idToken: ID!): GetAnonTokenResponse!
   }
 
   type CreateUserResponseSuccess {
