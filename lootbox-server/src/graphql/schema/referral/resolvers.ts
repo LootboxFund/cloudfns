@@ -54,6 +54,7 @@ import {
   getLootboxTournamentSnapshot,
   getLootboxTournamentSnapshotByLootboxID,
   completeAnonClaim,
+  getUnverifiedClaimsForUser,
 } from "../../../api/firestore";
 import {
   AffiliateID,
@@ -97,6 +98,7 @@ import {
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
+// Also this is duplicated in @firebase/functions
 const HACKY_MESSAGE =
   "You have already accepted a referral for this tournament";
 
@@ -800,6 +802,14 @@ const ReferralResolvers: Resolvers = {
         };
       }
 
+      // ########################## BIG WARNING ##########################
+      // ##                                                             ##
+      // ##   Some validation logic is DUPLICATED in                    ##
+      // ##   @cloudfns/firebase/functions                              ##
+      // ##                                                             ##
+      // ##                                                             ##
+      // #################################################################
+
       try {
         const [user, claim] = await Promise.all([
           provider.getUserById(context.userId as unknown as UserID),
@@ -991,11 +1001,29 @@ const ReferralResolvers: Resolvers = {
             }
           }
 
+          const isPhoneVerified = !!user.phoneNumber;
+          if (!isPhoneVerified) {
+            // If the user is not verified, we have the restraint of only allowing them to claim 3 referrals
+            const unverifiedClaims = await getUnverifiedClaimsForUser(
+              context.userId as unknown as UserID
+            );
+            if (unverifiedClaims.length > 3) {
+              // NOTE: Be weary of making this bigger / removing it.
+              return {
+                error: {
+                  code: StatusCode.BadRequest,
+                  message:
+                    "You have already claimed 3 referrals. Please verify your phone number to claim more.",
+                },
+              };
+            }
+          }
+
           // To prevent abuse, we ensure the user has a phone number to complete a claim.
           // If they dont, they are usually an anonymous user and the claim actually becomes status = pending_verification
           // In this case, no side effects happen until some async method changes the claim status to status = complete
           // & firebase cloud function "onClaimWrite" gets triggered
-          const isPhoneVerified = !!user.phoneNumber;
+
           let updatedClaim: Claim_Firestore | undefined;
           if (isPhoneVerified) {
             // set status = complete
@@ -1029,6 +1057,17 @@ const ReferralResolvers: Resolvers = {
           };
         } else {
           // DEPRECATED
+          if (!user.phoneNumber) {
+            // Prevent abuse by requiring a phone number
+            return {
+              error: {
+                code: StatusCode.Forbidden,
+                message:
+                  "You need to login with your PHONE NUMBER to claim a ticket.",
+              },
+            };
+          }
+
           if (!payload.chosenPartyBasketId) {
             return {
               error: {

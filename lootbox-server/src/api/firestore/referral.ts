@@ -4,7 +4,6 @@ import {
   ClaimEdge,
   ClaimPageInfo,
   User,
-  PageInfo,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -22,7 +21,6 @@ import {
   Claim_Firestore,
   LootboxMintWhitelistID,
   AffiliateID,
-  LootboxTicketID_Web3,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -541,6 +539,7 @@ export const getClaimById = async (
   }
 };
 
+// Duplicated in firebase functions
 export const getCompletedUserReferralClaimsForTournament = async (
   userId: UserIdpID,
   tournamentId: TournamentID,
@@ -565,6 +564,7 @@ export const getCompletedUserReferralClaimsForTournament = async (
   }
 };
 
+// Duplicated in firebase functions
 export const getCompletedClaimsForReferral = async (
   referralId: ReferralID,
   limit?: number
@@ -995,4 +995,29 @@ export const paginateLootboxUserClaims = async (
     edges,
     pageInfo,
   };
+};
+
+export const getUnverifiedClaimsForUser = async (
+  claimerUserID: UserID
+): Promise<Claim_Firestore[]> => {
+  const claimStatusField: keyof Claim_Firestore = "status";
+  const claimerIDField: keyof Claim_Firestore = "claimerUserId";
+
+  const collectionGroupRef = db
+    .collectionGroup(Collection.Claim)
+    .where(claimerIDField, "==", claimerUserID)
+    // .where(lootboxIDField, "==", lootboxID)
+    .where(
+      claimStatusField,
+      "==",
+      ClaimStatus_Firestore.pending_verification
+    ) as CollectionGroup<Claim_Firestore>;
+
+  const snapshot = await collectionGroupRef.get();
+
+  if (!snapshot || snapshot.empty) {
+    return [];
+  } else {
+    return snapshot.docs.map((doc) => doc.data());
+  }
 };
