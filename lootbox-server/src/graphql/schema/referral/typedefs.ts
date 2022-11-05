@@ -31,6 +31,7 @@ const ReferralTypeDefs = gql`
     pending_verification
     expired
     complete
+    untrusted
   }
 
   type Claim {
@@ -136,6 +137,17 @@ const ReferralTypeDefs = gql`
     chosenPartyBasketId: ID # @deprecated(reason: "Use chosenLootboxId instead")
   }
 
+  input PendingClaimToUntrustedPayload {
+    claimId: ID!
+    chosenLootboxID: ID!
+    targetUserEmail: String!
+  }
+
+  input CompleteUntrustedClaimPayload {
+    claimId: ID!
+    chosenLootboxID: ID!
+  }
+
   input CreateClaimPayload {
     referralSlug: ID!
   }
@@ -209,6 +221,12 @@ const ReferralTypeDefs = gql`
     createReferral(payload: CreateReferralPayload!): CreateReferralResponse!
     createClaim(payload: CreateClaimPayload!): CreateClaimResponse!
     completeClaim(payload: CompleteClaimPayload!): CompleteClaimResponse!
+    pendingClaimToUntrusted(
+      payload: PendingClaimToUntrustedPayload!
+    ): CompleteClaimResponse!
+    completeUntrustedClaim(
+      payload: CompleteUntrustedClaimPayload!
+    ): CompleteClaimResponse!
     generateClaimsCsv(
       payload: GenerateClaimsCsvPayload!
     ): GenerateClaimsCsvResponse!
