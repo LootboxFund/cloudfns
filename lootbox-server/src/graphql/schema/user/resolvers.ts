@@ -167,6 +167,7 @@ const UserResolvers = {
         }
 
         if (
+          userIDP.email ||
           userIDP.emailVerified ||
           userIDP.phoneNumber ||
           // userDB.email ||  // this is not a good check because this field can exist, but it might not be linked to credentials. Thus, we check the IDP email
