@@ -2,6 +2,7 @@ import {
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
+  LootboxID,
   LootboxStatus_Firestore,
   LootboxTournamentStatus_Firestore,
   Lootbox_Firestore,
@@ -18,6 +19,7 @@ import {
   getLootboxTournamentSnapshotByLootboxID,
   getReferralById,
   getTournamentById,
+  getUnverifiedClaimsForUser,
 } from "../api/firestore";
 import { IIdpUser } from "../api/identityProvider/interface";
 
@@ -27,15 +29,21 @@ import { IIdpUser } from "../api/identityProvider/interface";
 const HACKY_MESSAGE =
   "You have already accepted a referral for this tournament";
 
+const MAX_UNVERIFIED_CLAIMS = 3;
+
 interface ValidateClaimForCompletionResult {
-  lootbox: Lootbox_Firestore;
+  targetLootbox: Lootbox_Firestore;
   claim: Claim_Firestore;
 }
 
-// Throws if the claim is not valid
-export const validateClaimForCompletion = async (
+/**
+ * Claim is pending with no lootbox (or user) association & will transition to complete
+ * This will throw if the claim is not valid for this operation
+ */
+export const validatePendingClaimForCompletion = async (
   claim: Claim_Firestore,
-  user: IIdpUser
+  claimer: IIdpUser,
+  targetLootboxID: LootboxID
 ): Promise<ValidateClaimForCompletionResult> => {
   // ########################## BIG WARNING ##########################
   // ##                                                             ##
@@ -45,24 +53,189 @@ export const validateClaimForCompletion = async (
   // ##                                                             ##
   // #################################################################
 
-  if (!user) {
+  if (claim.status !== ClaimStatus_Firestore.pending) {
+    throw new Error(`Claim is invalid state ${claim.status}`);
+  }
+  // These claims should not have a lootbox ID
+  if (claim.lootboxID) {
+    throw new Error("Claim should not have a Lootbox association");
+  }
+
+  if (claim.claimerUserId) {
+    throw new Error("Claim already has a claimer");
+  }
+
+  // User should have phone
+  if (!claimer.phoneNumber) {
+    throw new Error(
+      "You need to verify your phone number to claim this ticket."
+    );
+  }
+
+  const { lootbox: targetLootbox } = await _validateBaseClaimForCompletionStep(
+    claimer,
+    claim,
+    targetLootboxID
+  );
+
+  // Valid, resolve the promise
+  return {
+    targetLootbox: targetLootbox,
+    claim,
+  };
+};
+
+interface ValidateUntrustedClaimResult {
+  associatedLootbox: Lootbox_Firestore;
+  claim: Claim_Firestore;
+}
+
+/**
+ * Claim is untrusted state, but it should have a lootbox association etc
+ * These untrusted claims have a claimerUserID that we also need to verify
+ * This will throw if the claim is not valid for this operation
+ */
+export const validateUntrustedClaimForCompletion = async (
+  claim: Claim_Firestore,
+  claimer: IIdpUser
+): Promise<ValidateUntrustedClaimResult> => {
+  if (!claimer) {
     throw new Error("You need to login to claim a ticket.");
   }
-  if (!claim || !!claim?.timestamps?.deletedAt) {
+  if (!claimer.phoneNumber) {
+    throw new Error(
+      "You need to verify your phone number to claim this ticket."
+    );
+  }
+  if (claim.status !== ClaimStatus_Firestore.untrusted) {
+    throw new Error(`Claim is invalid state ${claim.status}`);
+  }
+  // These claims should have a lootbox ID
+  if (!claim.lootboxID) {
+    throw new Error("Claim is not associated to Lootbox");
+  }
+
+  if ((claimer.id as unknown as UserID) !== claim.claimerUserId) {
+    throw new Error("You are not the owner of this claim");
+  }
+
+  const { lootbox: associatedLootbox } =
+    await _validateBaseClaimForCompletionStep(claimer, claim, claim.lootboxID);
+
+  // Valid, resolve the promise
+  return {
+    associatedLootbox,
+    claim,
+  };
+};
+
+/**
+ * Claim is pending with no lootbox associations
+ * This will throw if the claim is not valid for this operation & should be no claimerUserId
+ */
+export const validatePendingClaimForUntrusted = async (
+  claim: Claim_Firestore,
+  claimer: IIdpUser,
+  targetLootboxID: LootboxID
+) => {
+  if (claim.status !== ClaimStatus_Firestore.pending) {
+    throw new Error(`Claim is invalid state ${claim.status}`);
+  }
+  // These claims should not have a lootbox ID
+  if (claim.lootboxID) {
+    throw new Error("Claim should not have a Lootbox association");
+  }
+
+  if (claim.claimerUserId) {
+    throw new Error("Claim should not have a claimerUserId");
+  }
+
+  const { lootbox: targetLootbox } = await _validateBaseClaimForCompletionStep(
+    claimer,
+    claim,
+    targetLootboxID
+  );
+
+  // Valid, resolve the promise
+  return {
+    targetLootbox: targetLootbox,
+    claim,
+  };
+};
+
+interface ValidatePendingClaimToUnVerifiedResult {
+  targetLootbox: Lootbox_Firestore;
+  claim: Claim_Firestore;
+}
+
+/**
+ * No associated lootbox and it should be pending & should be no claimerUserId
+ */
+export const validatePendingClaimForPendingVerification = async (
+  claim: Claim_Firestore,
+  claimer: IIdpUser,
+  targetLootboxID: LootboxID
+): Promise<ValidatePendingClaimToUnVerifiedResult> => {
+  if (claim.status !== ClaimStatus_Firestore.pending) {
+    throw new Error(`Claim is invalid state ${claim.status}`);
+  }
+  // These claims should not have a lootbox ID
+  if (claim.lootboxID) {
+    throw new Error("Claim should not have a Lootbox association");
+  }
+
+  if (claim.claimerUserId) {
+    throw new Error("Claim should not have a claimerUserId");
+  }
+
+  // If the user is not verified, we have the restraint of only allowing them to claim 3 referrals
+  const unverifiedClaims = await getUnverifiedClaimsForUser(
+    claimer.id as unknown as UserID
+  );
+  if (unverifiedClaims.length > MAX_UNVERIFIED_CLAIMS) {
+    // NOTE: Be weary of making this bigger / removing it.
+    throw new Error(
+      "You already have 3 unverified referrals. Please verify your phone number to claim more."
+    );
+  }
+
+  const { lootbox: targetLootbox } = await _validateBaseClaimForCompletionStep(
+    claimer,
+    claim,
+    targetLootboxID
+  );
+
+  return {
+    targetLootbox,
+    claim,
+  };
+};
+
+const _validateBaseClaimForCompletionStep = async (
+  claimer: IIdpUser,
+  claim: Claim_Firestore,
+  targetLootboxID: LootboxID
+): Promise<{
+  lootbox: Lootbox_Firestore;
+}> => {
+  // ########################## BIG WARNING ##########################
+  // ##                                                             ##
+  // ##   Some validation logic is DUPLICATED in                    ##
+  // ##   @cloudfns/firebase/functions                              ##
+  // ##                                                             ##
+  // ##                                                             ##
+  // #################################################################
+
+  if (claim?.timestamps?.deletedAt) {
     throw new Error("Claim not found");
   }
-  if ((user.id as unknown as UserID) === claim.referrerId) {
-    throw new Error("You cannot redeem your own referral link!");
-  }
-  if (claim.status === ClaimStatus_Firestore.complete) {
-    throw new Error("Claim already completed");
-  }
+
   if (claim.type === ClaimType_Firestore.reward) {
     throw new Error("Cannot complete a Reward type claim");
   }
 
-  if (!claim.lootboxID) {
-    throw new Error("No Lootbox chosen");
+  if ((claimer.id as unknown as UserID) === claim.referrerId) {
+    throw new Error("You cannot redeem your own referral link!");
   }
 
   // Make sure the user has not accepted a claim for a tournament before
@@ -74,16 +247,16 @@ export const validateClaimForCompletion = async (
     lootboxTournamentSnapshot,
   ] = await Promise.all([
     getCompletedUserReferralClaimsForTournament(
-      user.id as unknown as UserIdpID,
+      claimer.id as unknown as UserIdpID,
       claim.tournamentId as TournamentID,
       1
     ),
     getTournamentById(claim.tournamentId),
     getReferralById(claim.referralId),
-    getLootbox(claim.lootboxID),
+    getLootbox(targetLootboxID),
     getLootboxTournamentSnapshotByLootboxID(
       claim.tournamentId,
-      claim.lootboxID
+      targetLootboxID
     ),
   ]);
 
@@ -115,9 +288,10 @@ export const validateClaimForCompletion = async (
     throw new Error("Referral not found");
   }
 
-  if (referral.referrerId === (user.id as unknown as UserID)) {
+  if (referral.referrerId === (claimer.id as unknown as UserID)) {
     throw new Error("You cannot redeem your own referral link!");
   }
+
   if (!tournament || !!tournament.timestamps.deletedAt) {
     throw new Error("Tournament not found");
   }
@@ -145,9 +319,7 @@ export const validateClaimForCompletion = async (
     }
   }
 
-  // Valid, resolve the promise
   return {
     lootbox,
-    claim,
   };
 };

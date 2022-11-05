@@ -106,7 +106,6 @@ import * as claimService from "../../../service/claim";
 // Also this is duplicated in @firebase/functions
 const HACKY_MESSAGE =
   "You have already accepted a referral for this tournament";
-const MAX_UNVERIFIED_CLAIMS = 3;
 
 const ReferralResolvers: Resolvers = {
   Query: {
@@ -794,6 +793,7 @@ const ReferralResolvers: Resolvers = {
         };
       }
     },
+    /** Untrusted claims being one made without any auth  */
     completeUntrustedClaim: async (
       _,
       { payload }: MutationCompleteUntrustedClaimArgs,
@@ -814,16 +814,6 @@ const ReferralResolvers: Resolvers = {
           getClaimById(payload.claimId as ClaimID),
         ]);
 
-        // if (!user || !user.phoneNumber) {
-        //   // Prevent abuse by requiring a phone number
-        //   return {
-        //     error: {
-        //       code: StatusCode.Forbidden,
-        //       message:
-        //         "You need to login with your PHONE NUMBER to claim a ticket.",
-        //     },
-        //   };
-        // }
         if (!user) {
           return {
             error: {
@@ -859,64 +849,13 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        if (claim.status != ClaimStatus_Firestore.untrusted) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "Claim must be in untrusted state",
-            },
-          };
-        }
+        // this will throw if invalid
+        await claimService.validateUntrustedClaimForCompletion(claim, user);
 
-        if (!payload.chosenLootboxID) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "Must choose a lootbox",
-            },
-          };
-        }
-
-        // this will throw
-        await claimService.validateClaimForCompletion(claim, user);
-
-        const isPhoneVerified = !!user.phoneNumber;
-        if (!isPhoneVerified) {
-          // If the user is not verified, we have the restraint of only allowing them to claim 3 referrals
-          const unverifiedClaims = await getUnverifiedClaimsForUser(
-            user.id as unknown as UserID
-          );
-          if (unverifiedClaims.length > MAX_UNVERIFIED_CLAIMS) {
-            // NOTE: Be weary of making this bigger / removing it.
-            return {
-              error: {
-                code: StatusCode.BadRequest,
-                message:
-                  "You have already 3 unverified claims. Please verify your phone number to claim more.",
-              },
-            };
-          }
-        }
-
-        // To prevent abuse, we ensure the user has a phone number to complete a claim.
-        // If they dont, they are usually an anonymous user and the claim actually becomes status = pending_verification
-        // In this case, no side effects happen until some async method changes the claim status to status = complete
-        // & firebase cloud function "onClaimWrite" gets triggered
-        let updatedClaim: Claim_Firestore | undefined;
-        if (isPhoneVerified) {
-          // set status = complete
-          updatedClaim = await transitionUntrustedClaimToComplete({
-            claimId: claim.id as ClaimID,
-            referralId: claim.referralId as ReferralID,
-          });
-        } else {
-          // set status = pending_verification
-          // side effects like firebase cloud function "onClaimWrite" DO NOT get triggered
-          updatedClaim = await transitionUntrustedClaimToPendingVerification({
-            claimId: claim.id as ClaimID,
-            referralId: claim.referralId as ReferralID,
-          });
-        }
+        const updatedClaim = await transitionUntrustedClaimToComplete({
+          claimId: claim.id as ClaimID,
+          referralId: claim.referralId as ReferralID,
+        });
 
         return {
           claim: convertClaimDBToGQL(updatedClaim),
@@ -959,46 +898,21 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        if ((user.id as unknown as UserID) === claim.referrerId) {
-          return {
-            error: {
-              code: StatusCode.Forbidden,
-              message: "You cannot redeem your own referral link!",
-            },
-          };
-        }
-
-        if (claim.status !== ClaimStatus_Firestore.pending) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "Claim is not correct status",
-            },
-          };
-        }
-
-        if (claim.type === ClaimType_Firestore.reward) {
-          return {
-            error: {
-              code: StatusCode.ServerError,
-              message: "Cannot complete a Reward type claim",
-            },
-          };
-        }
-
-        const { lootbox } = await claimService.validateClaimForCompletion(
-          claim,
-          user
-        );
+        const { targetLootbox } =
+          await claimService.validatePendingClaimForUntrusted(
+            claim,
+            user,
+            payload.chosenLootboxID as LootboxID
+          );
 
         const updatedClaim = await transitionToUntrustedClaim({
           claimId: claim.id as ClaimID,
           referralId: claim.referralId as ReferralID,
-          lootboxID: payload.chosenLootboxID as LootboxID,
-          lootboxAddress: lootbox.address,
-          lootboxName: lootbox.name,
-          lootboxNFTBountyValue: lootbox.nftBountyValue,
-          lootboxMaxTickets: lootbox.maxTickets,
+          lootboxID: targetLootbox.id,
+          lootboxAddress: targetLootbox.address,
+          lootboxName: targetLootbox.name,
+          lootboxNFTBountyValue: targetLootbox.nftBountyValue,
+          lootboxMaxTickets: targetLootbox.maxTickets,
           claimerUserId: user.id as unknown as UserID,
         });
 
@@ -1028,30 +942,12 @@ const ReferralResolvers: Resolvers = {
         };
       }
 
-      // ########################## BIG WARNING ##########################
-      // ##                                                             ##
-      // ##   Some validation logic is DUPLICATED in                    ##
-      // ##   @cloudfns/firebase/functions                              ##
-      // ##                                                             ##
-      // ##                                                             ##
-      // #################################################################
-
       try {
         const [user, claim] = await Promise.all([
           provider.getUserById(context.userId as unknown as UserID),
           getClaimById(payload.claimId as ClaimID),
         ]);
 
-        // if (!user || !user.phoneNumber) {
-        //   // Prevent abuse by requiring a phone number
-        //   return {
-        //     error: {
-        //       code: StatusCode.Forbidden,
-        //       message:
-        //         "You need to login with your PHONE NUMBER to claim a ticket.",
-        //     },
-        //   };
-        // }
         if (!user) {
           return {
             error: {
@@ -1069,32 +965,6 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        if ((context.userId as unknown as UserID) === claim.referrerId) {
-          return {
-            error: {
-              code: StatusCode.Forbidden,
-              message: "You cannot redeem your own referral link!",
-            },
-          };
-        }
-
-        if (claim.status === ClaimStatus_Firestore.complete) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "Claim already completed",
-            },
-          };
-        }
-        if (claim.type === ClaimType_Firestore.reward) {
-          return {
-            error: {
-              code: StatusCode.ServerError,
-              message: "Cannot complete a Reward type claim",
-            },
-          };
-        }
-
         if (!!claim?.isPostCosmic) {
           if (!payload.chosenLootboxID) {
             return {
@@ -1105,55 +975,49 @@ const ReferralResolvers: Resolvers = {
             };
           }
 
-          const { lootbox } = await claimService.validateClaimForCompletion(
-            claim,
-            user
-          );
-
-          const isPhoneVerified = !!user.phoneNumber;
-          if (!isPhoneVerified) {
-            // If the user is not verified, we have the restraint of only allowing them to claim 3 referrals
-            const unverifiedClaims = await getUnverifiedClaimsForUser(
-              user.id as unknown as UserID
-            );
-            if (unverifiedClaims.length > MAX_UNVERIFIED_CLAIMS) {
-              // NOTE: Be weary of making this bigger / removing it.
-              throw {
-                code: StatusCode.BadRequest,
-                message:
-                  "You have already claimed 3 referrals. Please verify your phone number to claim more.",
-              };
-            }
-          }
-
           // To prevent abuse, we ensure the user has a phone number to complete a claim.
           // If they dont, they are usually an anonymous user and the claim actually becomes status = pending_verification
           // In this case, no side effects happen until some async method changes the claim status to status = complete
           // & firebase cloud function "onClaimWrite" gets triggered
+          const isPhoneVerified = !!user.phoneNumber;
           let updatedClaim: Claim_Firestore | undefined;
           if (isPhoneVerified) {
+            const { targetLootbox } =
+              await claimService.validatePendingClaimForCompletion(
+                claim,
+                user,
+                payload.chosenLootboxID as LootboxID
+              );
+
             // set status = complete
             updatedClaim = await completeClaim({
               claimId: claim.id as ClaimID,
               referralId: claim.referralId as ReferralID,
               lootboxID: payload.chosenLootboxID as LootboxID,
-              lootboxAddress: lootbox.address,
-              lootboxName: lootbox.name,
-              lootboxNFTBountyValue: lootbox.nftBountyValue,
-              lootboxMaxTickets: lootbox.maxTickets,
+              lootboxAddress: targetLootbox.address,
+              lootboxName: targetLootbox.name,
+              lootboxNFTBountyValue: targetLootbox.nftBountyValue,
+              lootboxMaxTickets: targetLootbox.maxTickets,
               claimerUserId: context.userId as unknown as UserID,
             });
           } else {
+            const { targetLootbox } =
+              await claimService.validatePendingClaimForPendingVerification(
+                claim,
+                user,
+                payload.chosenLootboxID as LootboxID
+              );
+
             // set status = pending_verification
             // side effects like firebase cloud function "onClaimWrite" DO NOT get triggered
             updatedClaim = await completeAnonClaim({
               claimId: claim.id as ClaimID,
               referralId: claim.referralId as ReferralID,
               lootboxID: payload.chosenLootboxID as LootboxID,
-              lootboxAddress: lootbox.address,
-              lootboxName: lootbox.name,
-              lootboxNFTBountyValue: lootbox.nftBountyValue,
-              lootboxMaxTickets: lootbox.maxTickets,
+              lootboxAddress: targetLootbox.address,
+              lootboxName: targetLootbox.name,
+              lootboxNFTBountyValue: targetLootbox.nftBountyValue,
+              lootboxMaxTickets: targetLootbox.maxTickets,
               claimerUserId: context.userId as unknown as UserID,
             });
           }
