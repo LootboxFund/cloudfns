@@ -25,6 +25,8 @@ import {
   MutationCreateUserRecordArgs,
   GetAnonTokenResponse,
   QueryGetAnonTokenArgs,
+  CheckPhoneEnabledResponse,
+  QueryCheckPhoneEnabledArgs,
 } from "../../generated/types";
 import {
   getUser,
@@ -37,7 +39,7 @@ import {
   getUserTournaments,
   getUserPartyBasketsForLootbox,
   updateUser,
-  getUserByEmail,
+  getUsersByEmail,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../lib/whitelist";
 import { Address } from "@wormgraph/helpers";
@@ -120,6 +122,14 @@ const UserResolvers = {
         };
       }
     },
+    /**
+     * Returns a login token for an anonymous user given the idtoken of the user
+     * This function is NOT protected by auth guard, however, it will error if the id token
+     * is invalid.
+     *
+     * Warning: this is sensitive, be careful when changing the clauses determining when a
+     *          token is returned!
+     */
     getAnonToken: async (
       _,
       { idToken }: QueryGetAnonTokenArgs
@@ -195,6 +205,51 @@ const UserResolvers = {
           error: {
             code: StatusCode.ServerError,
             message: "An error ocurred",
+          },
+        };
+      }
+    },
+    /**
+     * Cheks if a given email has any phone association to the user account
+     * WARNING: This is sensitive and slightly dangerous, because it is not auth guarded
+     *          and it reveals login information for an account. However, we need it to
+     *          provide a good user flow for users with phone numbers.
+     */
+    checkPhoneEnabled: async (
+      _,
+      { email }: QueryCheckPhoneEnabledArgs
+    ): Promise<CheckPhoneEnabledResponse> => {
+      try {
+        const fmtEmail = formatEmail(email);
+        const [userDBs, userIDP] = await Promise.all([
+          getUsersByEmail(fmtEmail),
+          identityProvider.getUserByEmail(fmtEmail),
+        ]);
+        if (userDBs.length === 0 && !userIDP) {
+          return { isEnabled: false };
+        }
+
+        /**
+         * Previously, we have a smelly mixture of:
+         * - unverified email on the userDB object, but not the userIDP
+         * - unverified or verified email on userIDP & userDB object
+         *
+         * Either one might have an associated phone number
+         */
+
+        if (userIDP?.phoneNumber) {
+          return { isEnabled: true };
+        } else if (userDBs.some((u) => u.phoneNumber)) {
+          return { isEnabled: true };
+        } else {
+          return { isEnabled: false };
+        }
+      } catch (err) {
+        console.error("Error checking phone enabled", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured. Please try again later.",
           },
         };
       }
@@ -795,7 +850,7 @@ const UserResolvers = {
             identityProvider.getUserById(context.userId),
             identityProvider.getUserByEmail(formattedEmail),
             getUser(context.userId),
-            getUserByEmail(formattedEmail),
+            getUsersByEmail(formattedEmail),
           ]);
 
         if (
@@ -974,6 +1029,19 @@ const UserResolvers = {
     __resolveType: (obj: GetAnonTokenResponse) => {
       if ("token" in obj) {
         return "GetAnonTokenResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  CheckPhoneEnabledResponse: {
+    __resolveType: (obj: CheckPhoneEnabledResponse) => {
+      if ("isEnabled" in obj) {
+        return "CheckPhoneEnabledResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

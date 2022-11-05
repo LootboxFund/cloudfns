@@ -78,6 +78,14 @@ const UserTypeDefs = gql`
     email: String!
   }
 
+  type CheckPhoneEnabledResponseSuccess {
+    isEnabled: Boolean!
+  }
+
+  union CheckPhoneEnabledResponse =
+      CheckPhoneEnabledResponseSuccess
+    | ResponseError
+
   union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
 
   union PublicUserResponse = PublicUserResponseSuccess | ResponseError
@@ -88,6 +96,7 @@ const UserTypeDefs = gql`
     getMyProfile: GetMyProfileResponse!
     publicUser(id: ID!): PublicUserResponse!
     getAnonToken(idToken: ID!): GetAnonTokenResponse!
+    checkPhoneEnabled(email: String!): CheckPhoneEnabledResponse!
   }
 
   type CreateUserResponseSuccess {

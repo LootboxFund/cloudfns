@@ -52,7 +52,7 @@ const parseUserData = (user: User): UserWithoutWalletsOrLootboxSnapshots => {
   };
 };
 
-export const getUserByEmail = async (
+export const getUsersByEmail = async (
   email: string
 ): Promise<UserWithoutWalletsOrLootboxSnapshots[]> => {
   const userRef = db
