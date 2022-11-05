@@ -51,6 +51,7 @@ import { generateUsername } from "../../../lib/rng";
 import { convertUserToPublicUser } from "./utils";
 import { paginateUserClaims } from "../../../api/firestore";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
+import { formatEmail } from "../../../lib/utils";
 
 const UserResolvers = {
   Query: {
@@ -300,6 +301,16 @@ const UserResolvers = {
           return { user: dbUser };
         }
 
+        let createUserRequest = { ...idpUser };
+
+        if (!createUserRequest.email && !!payload?.email) {
+          // We add the email to our DB if the user provided the email address. However, we don't want to
+          // update the underlying AUTH user object because firebase will force a token refresh, invalidating
+          // the users current token. This will kinda fuck with the viral onboarding flow. So just update
+          // the database object and then later the user can confirm it in their profile.
+          createUserRequest.email = formatEmail(payload.email);
+        }
+
         // Update the idp username if needed
         // let updatedUserIdp: IIdpUser | undefined = undefined;
         if (!idpUser.username) {
@@ -310,16 +321,6 @@ const UserResolvers = {
             }
           );
           idpUser = { ...updatedUserIdp };
-        }
-
-        let createUserRequest = { ...idpUser };
-
-        if (!createUserRequest.email && !!payload?.email) {
-          // We add the email to our DB if the user provided the email address. However, we don't want to
-          // update the underlying AUTH user object because firebase will force a token refresh, invalidating
-          // the users current token. This will kinda fuck with the viral onboarding flow. So just update
-          // the database object and then later the user can confirm it in their profile.
-          createUserRequest.email = payload.email;
         }
 
         // User does not exist in database, create it
@@ -343,7 +344,7 @@ const UserResolvers = {
         // Create the user in the IDP
         const username = generateUsername();
         const idpUser = await identityProvider.createUser({
-          email: payload.email,
+          email: formatEmail(`${payload.email}`),
           phoneNumber: payload.phoneNumber || undefined,
           emailVerified: false,
           password: payload.password,
@@ -412,7 +413,7 @@ const UserResolvers = {
 
         // Create the user in the IDP
         const idpUser = await identityProvider.createUser({
-          email: payload.email,
+          email: formatEmail(`${payload.email}`),
           phoneNumber: payload.phoneNumber,
           emailVerified: false,
           username,
@@ -785,7 +786,7 @@ const UserResolvers = {
         };
       }
 
-      const formattedEmail = payload.email.toLowerCase().trim();
+      const formattedEmail = formatEmail(payload.email);
 
       try {
         // Make sure the user exists
