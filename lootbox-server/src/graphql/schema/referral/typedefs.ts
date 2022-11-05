@@ -145,7 +145,6 @@ const ReferralTypeDefs = gql`
 
   input CompleteUntrustedClaimPayload {
     claimId: ID!
-    chosenLootboxID: ID!
   }
 
   input CreateClaimPayload {

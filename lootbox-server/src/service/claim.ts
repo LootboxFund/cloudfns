@@ -1,9 +1,7 @@
 import {
-  ClaimID,
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
-  LootboxID,
   LootboxStatus_Firestore,
   LootboxTournamentStatus_Firestore,
   Lootbox_Firestore,
@@ -22,7 +20,6 @@ import {
   getTournamentById,
 } from "../api/firestore";
 import { IIdpUser } from "../api/identityProvider/interface";
-import { StatusCode } from "../graphql/generated/types";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -38,8 +35,7 @@ interface ValidateClaimForCompletionResult {
 // Throws if the claim is not valid
 export const validateClaimForCompletion = async (
   claim: Claim_Firestore,
-  user: IIdpUser,
-  lootboxID: LootboxID
+  user: IIdpUser
 ): Promise<ValidateClaimForCompletionResult> => {
   // ########################## BIG WARNING ##########################
   // ##                                                             ##
@@ -49,45 +45,24 @@ export const validateClaimForCompletion = async (
   // ##                                                             ##
   // #################################################################
 
-  // if (!user || !user.phoneNumber) {
-  //   // Prevent abuse by requiring a phone number
-  //   return {
-  //     error: {
-  //       code: StatusCode.Forbidden,
-  //       message:
-  //         "You need to login with your PHONE NUMBER to claim a ticket.",
-  //     },
-  //   };
-  // }
   if (!user) {
-    throw {
-      code: StatusCode.Forbidden,
-      message: "You need to login to claim a ticket.",
-    };
+    throw new Error("You need to login to claim a ticket.");
   }
   if (!claim || !!claim?.timestamps?.deletedAt) {
-    throw {
-      code: StatusCode.NotFound,
-      message: "Claim not found",
-    };
+    throw new Error("Claim not found");
   }
   if ((user.id as unknown as UserID) === claim.referrerId) {
-    throw {
-      code: StatusCode.Forbidden,
-      message: "You cannot redeem your own referral link!",
-    };
+    throw new Error("You cannot redeem your own referral link!");
   }
   if (claim.status === ClaimStatus_Firestore.complete) {
-    throw {
-      code: StatusCode.BadRequest,
-      message: "Claim already completed",
-    };
+    throw new Error("Claim already completed");
   }
   if (claim.type === ClaimType_Firestore.reward) {
-    throw {
-      code: StatusCode.ServerError,
-      message: "Cannot complete a Reward type claim",
-    };
+    throw new Error("Cannot complete a Reward type claim");
+  }
+
+  if (!claim.lootboxID) {
+    throw new Error("No Lootbox chosen");
   }
 
   // Make sure the user has not accepted a claim for a tournament before
@@ -105,64 +80,46 @@ export const validateClaimForCompletion = async (
     ),
     getTournamentById(claim.tournamentId),
     getReferralById(claim.referralId),
-    getLootbox(lootboxID),
-    getLootboxTournamentSnapshotByLootboxID(claim.tournamentId, lootboxID),
+    getLootbox(claim.lootboxID),
+    getLootboxTournamentSnapshotByLootboxID(
+      claim.tournamentId,
+      claim.lootboxID
+    ),
   ]);
 
   if (!lootbox || !!lootbox?.timestamps?.deletedAt) {
-    throw {
-      code: StatusCode.NotFound,
-      message: "Lootbox not found",
-    };
+    throw new Error("Lootbox not found");
   }
   if (
     lootbox.status === LootboxStatus_Firestore.disabled ||
     lootbox.status === LootboxStatus_Firestore.soldOut
   ) {
-    throw {
-      code: StatusCode.BadRequest,
-      message: "Out of stock! Please select a different team.",
-    };
+    throw new Error("Out of stock! Please select a different team.");
   }
 
   if (
     !lootboxTournamentSnapshot ||
     !!lootboxTournamentSnapshot.timestamps.deletedAt
   ) {
-    throw {
-      code: StatusCode.NotFound,
-      message: "Lootbox Tournament Snapshot not found",
-    };
+    throw new Error("Lootbox Tournament Snapshot not found");
   }
 
   if (
     lootboxTournamentSnapshot.status ===
     LootboxTournamentStatus_Firestore.disabled
   ) {
-    throw {
-      code: StatusCode.BadRequest,
-      message: "Out of stock! Please select a different team.",
-    };
+    throw new Error("Out of stock! Please select a different team.");
   }
 
   if (!referral || !!referral.timestamps.deletedAt) {
-    throw {
-      code: StatusCode.NotFound,
-      message: "Referral not found",
-    };
+    throw new Error("Referral not found");
   }
 
   if (referral.referrerId === (user.id as unknown as UserID)) {
-    throw {
-      code: StatusCode.Forbidden,
-      message: "You cannot redeem your own referral link!",
-    };
+    throw new Error("You cannot redeem your own referral link!");
   }
   if (!tournament || !!tournament.timestamps.deletedAt) {
-    throw {
-      code: StatusCode.NotFound,
-      message: "Tournament not found",
-    };
+    throw new Error("Tournament not found");
   }
 
   if (
@@ -171,11 +128,10 @@ export const validateClaimForCompletion = async (
     claim.type === ClaimType_Firestore.referral
   ) {
     if (previousClaims.length > 0) {
-      throw {
-        code: StatusCode.BadRequest,
+      throw new Error(
         // WARNING - this message is stupidly parsed in the frontend for internationalization.
-        message: HACKY_MESSAGE,
-      };
+        HACKY_MESSAGE
+      );
     }
   }
 
@@ -185,10 +141,7 @@ export const validateClaimForCompletion = async (
       1
     );
     if (previousClaimsForReferral.length > 0) {
-      throw {
-        code: StatusCode.BadRequest,
-        message: "This referral link has already been used",
-      };
+      throw new Error("This referral link has already been used");
     }
   }
 

@@ -877,11 +877,8 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        await claimService.validateClaimForCompletion(
-          claim,
-          user,
-          payload.chosenLootboxID as LootboxID
-        );
+        // this will throw
+        await claimService.validateClaimForCompletion(claim, user);
 
         const isPhoneVerified = !!user.phoneNumber;
         if (!isPhoneVerified) {
@@ -891,10 +888,12 @@ const ReferralResolvers: Resolvers = {
           );
           if (unverifiedClaims.length > MAX_UNVERIFIED_CLAIMS) {
             // NOTE: Be weary of making this bigger / removing it.
-            throw {
-              code: StatusCode.BadRequest,
-              message:
-                "You have already 3 unverified claims. Please verify your phone number to claim more.",
+            return {
+              error: {
+                code: StatusCode.BadRequest,
+                message:
+                  "You have already 3 unverified claims. Please verify your phone number to claim more.",
+              },
             };
           }
         }
@@ -989,8 +988,7 @@ const ReferralResolvers: Resolvers = {
 
         const { lootbox } = await claimService.validateClaimForCompletion(
           claim,
-          user,
-          payload.chosenLootboxID as LootboxID
+          user
         );
 
         const updatedClaim = await transitionToUntrustedClaim({
@@ -1109,8 +1107,7 @@ const ReferralResolvers: Resolvers = {
 
           const { lootbox } = await claimService.validateClaimForCompletion(
             claim,
-            user,
-            payload.chosenLootboxID as LootboxID
+            user
           );
 
           const isPhoneVerified = !!user.phoneNumber;
