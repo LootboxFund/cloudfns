@@ -25,6 +25,7 @@ const AdTypeDefs = gql`
     AfterPayout
     DailySpin
     TicketCarousel
+    Airdrop
   }
 
   enum AdEventAction {

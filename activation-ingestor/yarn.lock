@@ -1916,6 +1916,14 @@
     axios "0.25.0"
     lodash "4.17.21"
 
+"@wormgraph/helpers@0.7.2-demo-18":
+  version "0.7.2-demo-18"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.2-demo-18.tgz#7b427aa20e26d20ffe11bd3684e7c0554a4595d9"
+  integrity sha512-moOEeHZL0XeGQPQtM3HxeZu9pYyoGU4rEXB+P4ZPxmvC6/wnZib+aYlZiu+dzKiI5fm298EnfO4xmTBjnzp6ew==
+  dependencies:
+    axios "0.25.0"
+    lodash "4.17.21"
+
 "@wormgraph/manifest@0.7.0-prod":
   version "0.7.0-prod"
   resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.7.0-prod.tgz#23622dc515efcc23eca023038fed55d3faa1580a"

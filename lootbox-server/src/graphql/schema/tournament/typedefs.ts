@@ -95,6 +95,7 @@ const TournamentTypeDefs = gql`
     advertiserID: ID!
     advertiserName: String!
     advertiserAvatar: String
+    strategy: OfferStrategyType
     adSets: [AdSetPreviewInDealConfig!]!
     rateQuoteConfigs: [RateQuoteDealConfig!]!
   }
@@ -296,6 +297,38 @@ const TournamentTypeDefs = gql`
       ViewTournamentAsOrganizerResponseSuccess
     | ResponseError
 
+  # ------ List Potential Airdrop Claimers ------
+  input ListPotentialAirdropClaimersPayload {
+    tournamentID: ID!
+    offerID: ID!
+  }
+  type ListPotentialAirdropClaimersResponseSuccess {
+    potentialClaimers: [PotentialAirdropClaimer!]!
+  }
+  union ListPotentialAirdropClaimersResponse =
+      ListPotentialAirdropClaimersResponseSuccess
+    | ResponseError
+  enum AirdropUserClaimStatus {
+    Completed
+    Submitted
+    InProgress
+    Pending
+    Awaiting
+    Revoked
+  }
+  type PotentialAirdropClaimer {
+    userID: ID!
+    username: String!
+    avatar: String
+    status: AirdropUserClaimStatus
+    lootboxID: ID
+    lootboxAddress: String
+    batchAlias: String
+    tournamentID: ID
+    advertiserID: ID
+    offerID: ID
+  }
+
   extend type Query {
     # get the public view a specific tournament
     tournament(id: ID!): TournamentResponse!
@@ -307,6 +340,10 @@ const TournamentTypeDefs = gql`
     viewTournamentAsOrganizer(
       tournamentID: ID!
     ): ViewTournamentAsOrganizerResponse!
+    # get the list of airdrop claimers for a given offer in a tournament
+    listPotentialAirdropClaimers(
+      payload: ListPotentialAirdropClaimersPayload!
+    ): ListPotentialAirdropClaimersResponse!
     # get the private promoter affiliate view of a tournament with earnings report
     #myMonetizedPromoterTournament(
     #  id: ID!
@@ -315,6 +352,7 @@ const TournamentTypeDefs = gql`
     #listMonetizedTournaments(
     #  affiliateID: ID!
     #): ListMonetizedTournamentsResponse!
+    #
   }
 
   type BulkEditLootboxTournamentSnapshotsResponseSuccess {

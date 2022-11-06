@@ -55,6 +55,7 @@ export const parseTournamentDB = (
     title: data.title,
     description: data.description,
     creatorId: data.creatorId,
+    organizer: data.organizer,
     isPostCosmic: data.isPostCosmic || false,
     runningCompletedClaims: data.runningCompletedClaims || 0,
     timestamps: {

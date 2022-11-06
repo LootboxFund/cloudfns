@@ -6,6 +6,7 @@ import {
   LootboxTournamentSnapshotID,
   LootboxTournamentSnapshot_Firestore,
   Lootbox_Firestore,
+  OfferID,
   Tournament_Firestore,
   UserID,
   UserIdpID,
@@ -80,9 +81,13 @@ import {
   PaginateLootboxTournamentSnapshots,
   MutationBulkEditLootboxTournamentSnapshotsArgs,
   BulkEditLootboxTournamentSnapshotsResponse,
+  QueryListPotentialAirdropClaimersArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
-import { MutationRemovePromoterFromTournamentArgs } from "../../generated/types";
+import {
+  MutationRemovePromoterFromTournamentArgs,
+  ListPotentialAirdropClaimersResponse,
+} from "../../generated/types";
 import { AddUpdatePromoterRateQuoteInTournamentResponse } from "../../generated/types";
 import {
   MutationRemoveOfferAdSetFromTournamentArgs,
@@ -96,6 +101,7 @@ import {
   convertTournamentDBToGQL,
 } from "../../../lib/tournament";
 import { convertLootboxDBToGQL } from "../../../lib/lootbox";
+import { listPotentialAirdropClaimers } from "../../../api/firestore/airdrop";
 
 const TournamentResolvers = {
   Query: {
@@ -176,6 +182,46 @@ const TournamentResolvers = {
         after as TournamentID | null | undefined
       );
       return response;
+    },
+    listPotentialAirdropClaimers: async (
+      _,
+      { payload }: QueryListPotentialAirdropClaimersArgs,
+      context: Context
+    ): Promise<ListPotentialAirdropClaimersResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      const { tournamentID, offerID } = payload;
+      try {
+        const potentialClaimers = await listPotentialAirdropClaimers(
+          {
+            tournamentID: tournamentID as TournamentID,
+            offerID: offerID as OfferID,
+          },
+          context.userId
+        );
+        if (!potentialClaimers) {
+          return {
+            error: {
+              code: StatusCode.Forbidden,
+              message: `You do not own this tournament`,
+            },
+          };
+        }
+        return { potentialClaimers };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
     },
   },
   Tournament: {
@@ -1012,6 +1058,19 @@ const TournamentResolvers = {
     __resolveType: (obj: BulkEditLootboxTournamentSnapshotsResponse) => {
       if ("lootboxTournamentSnapshotIDs" in obj) {
         return "BulkEditLootboxTournamentSnapshotsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  ListPotentialAirdropClaimersResponse: {
+    __resolveType: (obj: ListPotentialAirdropClaimersResponse) => {
+      if ("potentialClaimers" in obj) {
+        return "ListPotentialAirdropClaimersResponseSuccess";
       }
 
       if ("error" in obj) {

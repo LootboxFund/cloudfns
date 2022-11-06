@@ -78,6 +78,37 @@ export const createOffer = async (
     adSets: [],
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
+  if (payload.airdropMetadata) {
+    offer.airdropMetadata = {
+      offerID: offerRef.id as OfferID,
+      title: payload.title,
+      oneLiner: payload.airdropMetadata.oneLiner,
+      value: payload.airdropMetadata.value || "",
+      instructionsLink: payload.airdropMetadata.instructionsLink,
+      advertiserID: payload.advertiserID as AdvertiserID,
+      questionFields: [],
+      excludedOffers: payload.airdropMetadata.excludedOffers as OfferID[],
+      batchCount: 0,
+    };
+    // even when theres no questions we will push an empty question set
+    // because it makes editing easier due to stupid object to array conversion
+    offer.airdropMetadata.questionFields.push({
+      id: `${offerRef.id}-1` as AirdropQuestionFieldID,
+      offerID: offerRef.id as OfferID,
+      question: payload.airdropMetadata.questionOne || "",
+      type:
+        (payload.airdropMetadata.questionOneType as AirdropQuestionFieldType) ||
+        AirdropQuestionFieldType.Text,
+    });
+    offer.airdropMetadata.questionFields.push({
+      id: `${offerRef.id}-2` as AirdropQuestionFieldID,
+      offerID: offerRef.id as OfferID,
+      question: payload.airdropMetadata.questionTwo || "",
+      type:
+        (payload.airdropMetadata.questionTwoType as AirdropQuestionFieldType) ||
+        AirdropQuestionFieldType.Text,
+    });
+  }
   await offerRef.set(offer);
   return offer;
 };
