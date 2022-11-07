@@ -460,7 +460,7 @@ export const completeAnonClaim = async (
     .doc(req.claimId) as DocumentReference<Claim_Firestore>;
 
   const updateClaimRequest: Partial<Claim_Firestore> = {
-    status: ClaimStatus_Firestore.pending_verification,
+    status: ClaimStatus_Firestore.unverified,
     claimerUserId: req.claimerUserId,
     lootboxID: req.lootboxID,
     lootboxName: req.lootboxName,
@@ -1011,7 +1011,7 @@ export const getUnverifiedClaimsForUser = async (
     .where(
       claimStatusField,
       "==",
-      ClaimStatus_Firestore.pending_verification
+      ClaimStatus_Firestore.unverified
     ) as CollectionGroup<Claim_Firestore>;
 
   const snapshot = await collectionGroupRef.get();
@@ -1021,159 +1021,4 @@ export const getUnverifiedClaimsForUser = async (
   } else {
     return snapshot.docs.map((doc) => doc.data());
   }
-};
-
-interface CompleteAnonClaimReq {
-  claimId: ClaimID;
-  referralId: ReferralID;
-  claimerUserId: UserID;
-  lootboxID: LootboxID;
-  lootboxAddress: Address | null;
-  lootboxName: string;
-  lootboxNFTBountyValue?: string;
-  lootboxMaxTickets?: number;
-  /** @deprecated */
-  chosenPartyBasketId?: PartyBasketID;
-  /** @deprecated */
-  chosenPartyBasketAddress?: Address;
-  /** @deprecated */
-  chosenPartyBasketName?: string;
-  /** @deprecated */
-  chosenPartyBasketNFTBountyValue?: string;
-}
-export const transitionToUntrustedClaim = async (
-  req: CompleteAnonClaimReq
-): Promise<Claim_Firestore> => {
-  const referralRef = db.collection(Collection.Referral).doc(req.referralId);
-  const claimRef = referralRef
-    .collection(Collection.Claim)
-    .doc(req.claimId) as DocumentReference<Claim_Firestore>;
-
-  const updateClaimRequest: Partial<Claim_Firestore> = {
-    status: ClaimStatus_Firestore.untrusted,
-    claimerUserId: req.claimerUserId,
-    lootboxID: req.lootboxID,
-    lootboxName: req.lootboxName,
-  };
-
-  if (req.lootboxAddress) {
-    updateClaimRequest.lootboxAddress = req.lootboxAddress;
-  }
-
-  if (req.lootboxNFTBountyValue) {
-    updateClaimRequest.lootboxNFTBountyValue = req.lootboxNFTBountyValue;
-  }
-
-  if (req.lootboxMaxTickets) {
-    updateClaimRequest.lootboxMaxTickets = req.lootboxMaxTickets;
-  }
-
-  if (req.chosenPartyBasketId) {
-    updateClaimRequest.chosenPartyBasketId = req.chosenPartyBasketId;
-  }
-
-  if (req.chosenPartyBasketNFTBountyValue) {
-    updateClaimRequest.chosenPartyBasketNFTBountyValue =
-      req.chosenPartyBasketNFTBountyValue;
-  }
-
-  if (req.chosenPartyBasketAddress) {
-    updateClaimRequest.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
-  }
-  if (req.chosenPartyBasketName) {
-    updateClaimRequest.chosenPartyBasketName = req.chosenPartyBasketName;
-  }
-
-  // This is to update nested object in non-destructive way
-  const nowMillis = Timestamp.now().toMillis();
-  updateClaimRequest["timestamps.updatedAt"] = nowMillis;
-  // TODO: update this in the backend?
-  // updateClaimRequest["timestamps.completedAt"] = nowMillis;
-
-  // This updates the claim & increments the parent referral's nConversion
-  // Get a new write batch
-  var batch = db.batch();
-
-  // Update the population of 'SF'
-  // var sfRef = db.collection("cities").doc("SF");
-  batch.update(claimRef, updateClaimRequest);
-  batch.update(referralRef, {
-    nConversions: FieldValue.increment(1),
-  });
-
-  // Commit the batch
-  await batch.commit();
-
-  // await documentRef.update(updateRequest);
-
-  const snapshot = await claimRef.get();
-
-  const claim = snapshot.data();
-
-  return claim as Claim_Firestore;
-};
-
-interface TransitionUntrustedClaimToCompleteReq {
-  claimId: ClaimID;
-  referralId: ReferralID;
-}
-export const transitionUntrustedClaimToComplete = async (
-  req: TransitionUntrustedClaimToCompleteReq
-): Promise<Claim_Firestore> => {
-  const referralRef = db.collection(Collection.Referral).doc(req.referralId);
-  const claimRef = referralRef
-    .collection(Collection.Claim)
-    .doc(req.claimId) as DocumentReference<Claim_Firestore>;
-
-  const updateClaimRequest: Partial<Claim_Firestore> = {
-    status: ClaimStatus_Firestore.complete,
-  };
-
-  // This is to update nested object in non-destructive way
-  const nowMillis = Timestamp.now().toMillis();
-  const timestampsFN: keyof Claim_Firestore = "timestamps";
-  const updatedAtFN: keyof ClaimTimestamps_Firestore = "updatedAt";
-  const completedAtFN: keyof ClaimTimestamps_Firestore = "completedAt";
-  updateClaimRequest[`${timestampsFN}.${updatedAtFN}`] = nowMillis;
-  // TODO: update this in the backend?
-  updateClaimRequest[`${timestampsFN}.${completedAtFN}`] = nowMillis;
-
-  await claimRef.update(updateClaimRequest);
-
-  const snapshot = await claimRef.get();
-
-  const claim = snapshot.data();
-
-  return claim as Claim_Firestore;
-};
-
-interface TransitionUntrustedClaimToCompleteReq {
-  claimId: ClaimID;
-  referralId: ReferralID;
-}
-export const transitionUntrustedClaimToPendingVerification = async (
-  req: TransitionUntrustedClaimToCompleteReq
-): Promise<Claim_Firestore> => {
-  const referralRef = db.collection(Collection.Referral).doc(req.referralId);
-  const claimRef = referralRef
-    .collection(Collection.Claim)
-    .doc(req.claimId) as DocumentReference<Claim_Firestore>;
-
-  const updateClaimRequest: Partial<Claim_Firestore> = {
-    status: ClaimStatus_Firestore.pending_verification,
-  };
-
-  // This is to update nested object in non-destructive way
-  const nowMillis = Timestamp.now().toMillis();
-  const timestampsFN: keyof Claim_Firestore = "timestamps";
-  const updatedAtFN: keyof ClaimTimestamps_Firestore = "updatedAt";
-  updateClaimRequest[`${timestampsFN}.${updatedAtFN}`] = nowMillis;
-
-  await claimRef.update(updateClaimRequest);
-
-  const snapshot = await claimRef.get();
-
-  const claim = snapshot.data();
-
-  return claim as Claim_Firestore;
 };

@@ -19,7 +19,6 @@ import {
   getLootboxTournamentSnapshotByLootboxID,
   getReferralById,
   getTournamentById,
-  getUntrustedClaimsForUser,
   getUnverifiedClaimsForUser,
 } from "../api/firestore";
 import { IIdpUser } from "../api/identityProvider/interface";
@@ -86,95 +85,6 @@ export const validatePendingClaimForCompletion = async (
   };
 };
 
-interface ValidateUntrustedClaimResult {
-  associatedLootbox: Lootbox_Firestore;
-  claim: Claim_Firestore;
-}
-
-/**
- * Claim is untrusted state, but it should have a lootbox association etc
- * These untrusted claims have a claimerUserID that we also need to verify
- * This will throw if the claim is not valid for this operation
- */
-export const validateUntrustedClaimForCompletion = async (
-  claim: Claim_Firestore,
-  claimer: IIdpUser
-): Promise<ValidateUntrustedClaimResult> => {
-  if (!claimer) {
-    throw new Error("You need to login to claim a ticket.");
-  }
-  if (!claimer.phoneNumber) {
-    throw new Error(
-      "You need to verify your phone number to claim this ticket."
-    );
-  }
-  if (claim.status !== ClaimStatus_Firestore.untrusted) {
-    throw new Error(`Claim is invalid state ${claim.status}`);
-  }
-  // These claims should have a lootbox ID
-  if (!claim.lootboxID) {
-    throw new Error("Claim is not associated to Lootbox");
-  }
-
-  if ((claimer.id as unknown as UserID) !== claim.claimerUserId) {
-    throw new Error("You are not the owner of this claim");
-  }
-
-  const { lootbox: associatedLootbox } =
-    await _validateBaseClaimForCompletionStep(claimer, claim, claim.lootboxID);
-
-  // Valid, resolve the promise
-  return {
-    associatedLootbox,
-    claim,
-  };
-};
-
-/**
- * Claim is pending with no lootbox associations
- * This will throw if the claim is not valid for this operation & should be no claimerUserId
- */
-export const validatePendingClaimForUntrusted = async (
-  claim: Claim_Firestore,
-  claimer: IIdpUser,
-  targetLootboxID: LootboxID
-) => {
-  if (claim.status !== ClaimStatus_Firestore.pending) {
-    throw new Error(`Claim is invalid state ${claim.status}`);
-  }
-  // These claims should not have a lootbox ID
-  if (claim.lootboxID) {
-    throw new Error("Claim should not have a Lootbox association");
-  }
-
-  if (claim.claimerUserId) {
-    throw new Error("Claim should not have a claimerUserId");
-  }
-
-  // If the user is not verified, we have the restraint of only allowing them to claim 3 referrals
-  const untrusted = await getUntrustedClaimsForUser(
-    claimer.id as unknown as UserID
-  );
-  if (untrusted.length > MAX_UNVERIFIED_CLAIMS) {
-    // NOTE: Be weary of making this bigger / removing it.
-    throw new Error(
-      "You already have 3 untrusted claims. Please verify your phone number to claim more."
-    );
-  }
-
-  const { lootbox: targetLootbox } = await _validateBaseClaimForCompletionStep(
-    claimer,
-    claim,
-    targetLootboxID
-  );
-
-  // Valid, resolve the promise
-  return {
-    targetLootbox: targetLootbox,
-    claim,
-  };
-};
-
 interface ValidatePendingClaimToUnVerifiedResult {
   targetLootbox: Lootbox_Firestore;
   claim: Claim_Firestore;
@@ -183,7 +93,7 @@ interface ValidatePendingClaimToUnVerifiedResult {
 /**
  * No associated lootbox and it should be pending & should be no claimerUserId
  */
-export const validatePendingClaimForPendingVerification = async (
+export const validatePendingClaimForUnverified = async (
   claim: Claim_Firestore,
   claimer: IIdpUser,
   targetLootboxID: LootboxID

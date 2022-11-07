@@ -28,10 +28,9 @@ const ReferralTypeDefs = gql`
 
   enum ClaimStatus {
     pending
-    pending_verification
+    unverified
     expired
     complete
-    untrusted
   }
 
   type Claim {
@@ -143,10 +142,6 @@ const ReferralTypeDefs = gql`
     targetUserEmail: String!
   }
 
-  input CompleteUntrustedClaimPayload {
-    claimId: ID!
-  }
-
   input CreateClaimPayload {
     referralSlug: ID!
   }
@@ -220,12 +215,6 @@ const ReferralTypeDefs = gql`
     createReferral(payload: CreateReferralPayload!): CreateReferralResponse!
     createClaim(payload: CreateClaimPayload!): CreateClaimResponse!
     completeClaim(payload: CompleteClaimPayload!): CompleteClaimResponse!
-    pendingClaimToUntrusted(
-      payload: PendingClaimToUntrustedPayload!
-    ): CompleteClaimResponse!
-    completeUntrustedClaim(
-      payload: CompleteUntrustedClaimPayload!
-    ): CompleteClaimResponse!
     generateClaimsCsv(
       payload: GenerateClaimsCsvPayload!
     ): GenerateClaimsCsvResponse!

@@ -28,8 +28,6 @@ import {
   BulkCreateReferralResponse,
   Lootbox,
   MintWhitelistSignature,
-  MutationCompleteUntrustedClaimArgs,
-  MutationPendingClaimToUntrustedArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -55,10 +53,6 @@ import {
   getMintWhistlistSignature,
   getLootboxTournamentSnapshotByLootboxID,
   completeAnonClaim,
-  getUnverifiedClaimsForUser,
-  transitionToUntrustedClaim,
-  transitionUntrustedClaimToPendingVerification,
-  transitionUntrustedClaimToComplete,
 } from "../../../api/firestore";
 import {
   AffiliateID,
@@ -793,141 +787,6 @@ const ReferralResolvers: Resolvers = {
         };
       }
     },
-    /** Untrusted claims being one made without any auth  */
-    completeUntrustedClaim: async (
-      _,
-      { payload }: MutationCompleteUntrustedClaimArgs,
-      context: Context
-    ): Promise<CompleteClaimResponse> => {
-      if (!context.userId) {
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: "You must be logged in to complete a claim",
-          },
-        };
-      }
-
-      try {
-        const [user, claim] = await Promise.all([
-          provider.getUserById(context.userId as unknown as UserID),
-          getClaimById(payload.claimId as ClaimID),
-        ]);
-
-        if (!user) {
-          return {
-            error: {
-              code: StatusCode.Forbidden,
-              message: "You need to login to claim a ticket.",
-            },
-          };
-        }
-        if (!claim) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "Claim not found",
-            },
-          };
-        }
-
-        if (claim.claimerUserId !== (context.userId as unknown as UserID)) {
-          return {
-            error: {
-              code: StatusCode.Forbidden,
-              message: "You are not the owner of this claim",
-            },
-          };
-        }
-
-        if ((context.userId as unknown as UserID) === claim.referrerId) {
-          return {
-            error: {
-              code: StatusCode.Forbidden,
-              message: "You cannot redeem your own referral link!",
-            },
-          };
-        }
-
-        // this will throw if invalid
-        await claimService.validateUntrustedClaimForCompletion(claim, user);
-
-        const updatedClaim = await transitionUntrustedClaimToComplete({
-          claimId: claim.id as ClaimID,
-          referralId: claim.referralId as ReferralID,
-        });
-
-        return {
-          claim: convertClaimDBToGQL(updatedClaim),
-        };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-    },
-    pendingClaimToUntrusted: async (
-      _,
-      { payload }: MutationPendingClaimToUntrustedArgs
-    ): Promise<CompleteClaimResponse> => {
-      // THIS IS UNAUTHENTICATED ENDPOINT
-      // THIS WILL CREATE A GHOST CLAIM FOR USER SPECIFIED IN payload....
-      try {
-        const [user, claim] = await Promise.all([
-          provider.getUserByEmail(payload.targetUserEmail),
-          getClaimById(payload.claimId as ClaimID),
-        ]);
-
-        if (!user) {
-          return {
-            error: {
-              code: StatusCode.Forbidden,
-              message: "You need to login to claim a ticket.",
-            },
-          };
-        }
-        if (!claim) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "Claim not found",
-            },
-          };
-        }
-
-        const { targetLootbox } =
-          await claimService.validatePendingClaimForUntrusted(
-            claim,
-            user,
-            payload.chosenLootboxID as LootboxID
-          );
-
-        const updatedClaim = await transitionToUntrustedClaim({
-          claimId: claim.id as ClaimID,
-          referralId: claim.referralId as ReferralID,
-          lootboxID: targetLootbox.id,
-          lootboxAddress: targetLootbox.address,
-          lootboxName: targetLootbox.name,
-          lootboxNFTBountyValue: targetLootbox.nftBountyValue,
-          lootboxMaxTickets: targetLootbox.maxTickets,
-          claimerUserId: user.id as unknown as UserID,
-        });
-
-        return {
-          claim: convertClaimDBToGQL(updatedClaim),
-        };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-    },
     completeClaim: async (
       _,
       { payload }: MutationCompleteClaimArgs,
@@ -976,7 +835,7 @@ const ReferralResolvers: Resolvers = {
           }
 
           // To prevent abuse, we ensure the user has a phone number to complete a claim.
-          // If they dont, they are usually an anonymous user and the claim actually becomes status = pending_verification
+          // If they dont, they are usually an anonymous user and the claim actually becomes status = unverified
           // In this case, no side effects happen until some async method changes the claim status to status = complete
           // & firebase cloud function "onClaimWrite" gets triggered
           const isPhoneVerified = !!user.phoneNumber;
@@ -1002,13 +861,13 @@ const ReferralResolvers: Resolvers = {
             });
           } else {
             const { targetLootbox } =
-              await claimService.validatePendingClaimForPendingVerification(
+              await claimService.validatePendingClaimForUnverified(
                 claim,
                 user,
                 payload.chosenLootboxID as LootboxID
               );
 
-            // set status = pending_verification
+            // set status = unverified
             // side effects like firebase cloud function "onClaimWrite" DO NOT get triggered
             updatedClaim = await completeAnonClaim({
               claimId: claim.id as ClaimID,
@@ -1404,6 +1263,7 @@ const referralResolverComposition = {
   "Mutation.generateClaimsCsv": [isAuthenticated()],
   "Mutation.bulkCreateReferral": [isAuthenticated()],
   "Mutation.completeUntrustedClaim": [isAuthenticated()],
+  "Mutation.pendingClaimToUntrusted": [isAuthenticated()],
 };
 
 const referralResolvers = composeResolvers(

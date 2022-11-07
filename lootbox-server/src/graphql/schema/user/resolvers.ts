@@ -229,7 +229,6 @@ const UserResolvers = {
          *
          * Either one might have an associated phone number
          */
-
         if (userIDP?.phoneNumber) {
           return { isEnabled: true };
         } else if (userDBs.some((u) => u.phoneNumber)) {
