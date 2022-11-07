@@ -54,6 +54,7 @@ import { convertUserToPublicUser } from "./utils";
 import { paginateUserClaims } from "../../../api/firestore";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
 import { formatEmail } from "../../../lib/utils";
+import { isAnon } from "../../../lib/user";
 
 const UserResolvers = {
   Query: {
@@ -177,15 +178,7 @@ const UserResolvers = {
           };
         }
 
-        if (
-          userIDP.email ||
-          userIDP.emailVerified ||
-          userIDP.phoneNumber ||
-          // userDB.email ||  // this is not a good check because this field can exist, but it might not be linked to credentials. Thus, we check the IDP email
-          userDB.phoneNumber ||
-          userWallets.length > 0 ||
-          (userIDP.providerData && userIDP.providerData.length > 0)
-        ) {
+        if (isAnon(userIDP, userDB, userWallets)) {
           return {
             error: {
               code: StatusCode.Unauthorized,
@@ -666,7 +659,7 @@ const UserResolvers = {
               message: "Wallet does not exist",
             },
           };
-        } else if (wallet.userId !== context.userId) {
+        } else if (wallet.userId !== (context.userId as unknown as UserID)) {
           return {
             error: {
               code: StatusCode.Unauthorized,
@@ -747,7 +740,10 @@ const UserResolvers = {
           };
         }
 
-        if (userIdp.id !== context.userId || userRecord.id !== context.userId) {
+        if (
+          userIdp.id !== context.userId ||
+          userRecord.id !== (context.userId as unknown as UserID)
+        ) {
           console.error("USER MISCONFIGURED");
           return {
             error: {
@@ -890,7 +886,10 @@ const UserResolvers = {
           };
         }
 
-        if (userIdp.id !== context.userId || userRecord.id !== context.userId) {
+        if (
+          userIdp.id !== context.userId ||
+          userRecord.id !== (context.userId as unknown as UserID)
+        ) {
           console.error("USER MISCONFIGURED");
           return {
             error: {

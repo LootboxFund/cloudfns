@@ -6,7 +6,12 @@ import {
 import { db } from "../firebase";
 import { User, UserSocials } from "../../graphql/generated/types";
 import { IIdpUser } from "../identityProvider/interface";
-import { Collection } from "@wormgraph/helpers";
+import {
+  Collection,
+  UserID,
+  UserSocials_Firestore,
+  User_Firestore,
+} from "@wormgraph/helpers";
 
 export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   const userRef = db
@@ -37,16 +42,16 @@ export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   return user;
 };
 
-const parseUserData = (user: User): UserWithoutWalletsOrLootboxSnapshots => {
+const parseUserData = (user: User): User_Firestore => {
   return {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    avatar: user.avatar,
-    biography: user.biography,
-    headshot: user.headshot,
-    socials: { ...user.socials },
-    phoneNumber: user.phoneNumber,
+    id: user.id as UserID,
+    email: user.email || "",
+    username: user.username || "",
+    avatar: user.avatar || "",
+    biography: user.biography || "",
+    headshot: user.headshot || [],
+    socials: { ...user.socials } as UserSocials_Firestore,
+    phoneNumber: user.phoneNumber || "",
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -75,7 +80,7 @@ export type UserWithoutWalletsOrLootboxSnapshots = Omit<
 
 export const getUser = async (
   id: string
-): Promise<UserWithoutWalletsOrLootboxSnapshots | undefined> => {
+): Promise<User_Firestore | undefined> => {
   const userRef = db
     .collection(Collection.User)
     .doc(id) as DocumentReference<User>;

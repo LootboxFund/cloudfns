@@ -19,6 +19,7 @@ import {
   getLootboxTournamentSnapshotByLootboxID,
   getReferralById,
   getTournamentById,
+  getUntrustedClaimsForUser,
   getUnverifiedClaimsForUser,
 } from "../api/firestore";
 import { IIdpUser } from "../api/identityProvider/interface";
@@ -148,6 +149,17 @@ export const validatePendingClaimForUntrusted = async (
 
   if (claim.claimerUserId) {
     throw new Error("Claim should not have a claimerUserId");
+  }
+
+  // If the user is not verified, we have the restraint of only allowing them to claim 3 referrals
+  const untrusted = await getUntrustedClaimsForUser(
+    claimer.id as unknown as UserID
+  );
+  if (untrusted.length > MAX_UNVERIFIED_CLAIMS) {
+    // NOTE: Be weary of making this bigger / removing it.
+    throw new Error(
+      "You already have 3 untrusted claims. Please verify your phone number to claim more."
+    );
   }
 
   const { lootbox: targetLootbox } = await _validateBaseClaimForCompletionStep(
