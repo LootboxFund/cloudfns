@@ -138,7 +138,7 @@ export const getUnverifiedClaimsForUser = async (claimerUserID: UserID): Promise
         .collectionGroup(Collection.Claim)
         .where(claimerIDField, "==", claimerUserID)
         // .where(lootboxIDField, "==", lootboxID)
-        .where(claimStatusField, "==", ClaimStatus_Firestore.pending_verification) as CollectionGroup<Claim_Firestore>;
+        .where(claimStatusField, "==", ClaimStatus_Firestore.unverified) as CollectionGroup<Claim_Firestore>;
 
     const snapshot = await collectionGroupRef.get();
 

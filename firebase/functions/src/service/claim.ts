@@ -25,11 +25,11 @@ export const validateUnverifiedUserClaim = async (user: User_Firestore, claim: C
         return false;
     }
 
-    if (!!claim?.timestamps?.deletedAt) {
+    if (claim?.timestamps?.deletedAt) {
         return false;
     }
 
-    if (claim.status !== ClaimStatus_Firestore.pending_verification) {
+    if (claim.status !== ClaimStatus_Firestore.unverified) {
         return false;
     }
 
