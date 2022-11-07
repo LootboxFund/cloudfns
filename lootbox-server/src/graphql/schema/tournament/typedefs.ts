@@ -302,7 +302,16 @@ const TournamentTypeDefs = gql`
     tournamentID: ID!
     offerID: ID!
   }
+  type OfferAirdropPromoterView {
+    id: ID!
+    title: String!
+    description: String
+    image: String
+    advertiserID: ID!
+    airdropMetadata: OfferAirdropMetadata
+  }
   type ListPotentialAirdropClaimersResponseSuccess {
+    offer: OfferAirdropPromoterView!
     potentialClaimers: [PotentialAirdropClaimer!]!
   }
   union ListPotentialAirdropClaimersResponse =

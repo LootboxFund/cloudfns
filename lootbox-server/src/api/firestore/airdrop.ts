@@ -17,7 +17,10 @@ import {
   Lootbox_Firestore,
 } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAffiliate } from "../identityProvider/firebase";
-import { PotentialAirdropClaimer } from "../../graphql/generated/types";
+import {
+  ListPotentialAirdropClaimersResponseSuccess,
+  PotentialAirdropClaimer,
+} from "../../graphql/generated/types";
 import { getTournamentById } from "./tournament";
 
 export const listPotentialAirdropClaimers = async (
@@ -29,7 +32,7 @@ export const listPotentialAirdropClaimers = async (
     offerID: OfferID;
   },
   userIdpID: UserIdpID
-): Promise<PotentialAirdropClaimer[]> => {
+): Promise<Omit<ListPotentialAirdropClaimersResponseSuccess, "__typename">> => {
   console.log(`
   
     tournamentID: ${tournamentID}
@@ -90,7 +93,6 @@ export const listPotentialAirdropClaimers = async (
   // exclude the user who have received a past airdrop from the offer's airdrop exclusion list
   const airdropOffersToExclude = offer.airdropMetadata?.excludedOffers || [];
   const uniquePotentialUsers = uniqueUsers.filter((u) => {
-    console.log(u.airdropsReceived);
     if (!u.airdropsReceived) return true;
     return !u.airdropsReceived.some((r) => airdropOffersToExclude.includes(r));
   });
@@ -125,7 +127,18 @@ export const listPotentialAirdropClaimers = async (
       return potentialClaimer;
     })
     .filter((u) => u);
-  return uniquePotentialClaimers;
+  const offerAirdropPromoterView = {
+    id: offer.id,
+    title: offer.title,
+    description: offer.description,
+    image: offer.image,
+    advertiserID: offer.advertiserID,
+    airdropMetadata: offer.airdropMetadata,
+  };
+  return {
+    offer: offerAirdropPromoterView,
+    potentialClaimers: uniquePotentialClaimers,
+  };
 };
 
 export const listClaimsInTournament = async (

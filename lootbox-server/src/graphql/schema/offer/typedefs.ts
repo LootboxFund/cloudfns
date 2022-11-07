@@ -26,6 +26,24 @@ const OfferTypeDefs = gql`
     activations: [Activation!]!
     adSetPreviews: [AdSetPreview!]!
     #targetingTags: [AdTargetTag!]!
+    airdropMetadata: OfferAirdropMetadata
+  }
+
+  type OfferAirdropMetadata {
+    oneLiner: String!
+    value: String
+    instructionsLink: String!
+    questionOne: String
+    questionOneType: String
+    questionTwo: String
+    questionTwoType: String
+    excludedOffers: [ID!]!
+    batchCount: Int
+  }
+
+  enum OfferStrategyType {
+    None
+    Airdrop
   }
 
   type OfferAffiliateView {

@@ -198,7 +198,7 @@ const TournamentResolvers = {
       }
       const { tournamentID, offerID } = payload;
       try {
-        const potentialClaimers = await listPotentialAirdropClaimers(
+        const { offer, potentialClaimers } = await listPotentialAirdropClaimers(
           {
             tournamentID: tournamentID as TournamentID,
             offerID: offerID as OfferID,
@@ -213,7 +213,7 @@ const TournamentResolvers = {
             },
           };
         }
-        return { potentialClaimers };
+        return { offer, potentialClaimers };
       } catch (err) {
         return {
           error: {
