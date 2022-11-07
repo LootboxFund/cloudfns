@@ -50,11 +50,19 @@ export const listPotentialAirdropClaimers = async (
     throw new Error("Offer not found");
   }
   console.log(`tournament === ${tournament?.id}`);
-  console.log(`--- claimers of tournament ---`);
-  console.log(claimsOfThisTournament.map((c) => c.id));
+  console.log(`--- claims of tournament ---`);
+  console.log(
+    claimsOfThisTournament.map(
+      (c) => `${c.id} = ${c.status} owned by ${c.claimerUserId}`
+    )
+  );
   console.log(`offer === ${offer?.id}`);
   console.log(`--- claimers of airdrop offer ---`);
-  console.log(claimsOfThisAirdropOffer.map((c) => c.id));
+  console.log(
+    claimsOfThisAirdropOffer.map(
+      (c) => `${c.id} = ${c.status} owned by ${c.claimerUserId}`
+    )
+  );
   if (!tournament || !tournament.organizer) {
     throw new Error("Tournament not found bruh");
   }
@@ -82,8 +90,9 @@ export const listPotentialAirdropClaimers = async (
   // exclude the user who have received a past airdrop from the offer's airdrop exclusion list
   const airdropOffersToExclude = offer.airdropMetadata?.excludedOffers || [];
   const uniquePotentialUsers = uniqueUsers.filter((u) => {
-    if (!u.airdropsReceived) return false;
-    return u.airdropsReceived.some((r) => airdropOffersToExclude.includes(r));
+    console.log(u.airdropsReceived);
+    if (!u.airdropsReceived) return true;
+    return !u.airdropsReceived.some((r) => airdropOffersToExclude.includes(r));
   });
   console.log(`--- uniquePotentialUsers ---`);
   console.log(uniquePotentialUsers.map((c) => c.id));
@@ -123,7 +132,7 @@ export const listClaimsInTournament = async (
   tournamentID: TournamentID
 ): Promise<Claim_Firestore[]> => {
   const claimRef = db
-    .collection(Collection.Claim)
+    .collectionGroup(Collection.Claim)
     .where("tournamentId", "==", tournamentID) as Query<Claim_Firestore>;
   const claimCollectionItems = await claimRef.get();
   if (claimCollectionItems.empty) {
