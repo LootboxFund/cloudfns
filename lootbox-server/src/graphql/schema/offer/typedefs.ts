@@ -30,15 +30,29 @@ const OfferTypeDefs = gql`
   }
 
   type OfferAirdropMetadata {
-    oneLiner: String!
-    value: String
-    instructionsLink: String!
-    questionOne: String
-    questionOneType: String
-    questionTwo: String
-    questionTwoType: String
+    oneLiner: String
+    value: String!
+    instructionsLink: String
+    questions: [QuestionAnswerPreview!]!
     excludedOffers: [ID!]!
     batchCount: Int
+  }
+
+  type QuestionAnswerPreview {
+    id: ID!
+    batch: ID!
+    question: String!
+    type: QuestionFieldType!
+  }
+
+  enum QuestionFieldType {
+    Text
+    Number
+    Phone
+    Email
+    Address
+    Date
+    Screenshot
   }
 
   enum OfferStrategyType {
@@ -235,6 +249,22 @@ const OfferTypeDefs = gql`
     affiliateBaseLink: String
     mmp: MeasurementPartnerType
     #targetingTags: [AdTargetTag!]!
+    airdropMetadata: OfferAirdropMetadataCreateInput
+  }
+  input OfferAirdropMetadataCreateInput {
+    oneLiner: String
+    value: String
+    instructionsLink: String
+    questions: [OfferAirdropQuestionCreateInput!]!
+    excludedOffers: [ID!]!
+  }
+  input OfferAirdropQuestionCreateInput {
+    question: String!
+    type: QuestionFieldType!
+  }
+  enum QuestionAnswerStatus {
+    Active
+    Inactive
   }
   type CreateOfferResponseSuccess {
     offer: Offer!
@@ -252,7 +282,17 @@ const OfferTypeDefs = gql`
     startDate: Timestamp
     endDate: Timestamp
     status: OfferStatus!
+    airdropMetadata: OfferAirdropMetadataEditInput
     #targetingTags: [AdTargetTag!]!
+  }
+  input OfferAirdropMetadataEditInput {
+    oneLiner: String!
+    value: String
+    instructionsLink: String!
+    excludedOffers: [ID!]!
+    activeQuestions: [ID!]!
+    inactiveQuestions: [ID!]!
+    newQuestions: [OfferAirdropQuestionCreateInput!]!
   }
   type EditOfferResponseSuccess {
     offer: Offer!

@@ -15,6 +15,11 @@ import {
   Activation_Firestore,
   Offer_Firestore,
   UserIdpID,
+  OfferStrategy,
+  QuestionFieldType,
+  QuestionAnswer_Firestore,
+  QuestionAnswerID,
+  QuestionAnswerStatus,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -25,6 +30,8 @@ import {
   EditActivationInput,
   EditOfferPayload,
   OfferAffiliateView,
+  OfferAirdropMetadata,
+  QuestionAnswerPreview,
   User,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
@@ -82,32 +89,27 @@ export const createOffer = async (
     offer.airdropMetadata = {
       offerID: offerRef.id as OfferID,
       title: payload.title,
-      oneLiner: payload.airdropMetadata.oneLiner,
+      oneLiner: payload.airdropMetadata.oneLiner || "",
       value: payload.airdropMetadata.value || "",
-      instructionsLink: payload.airdropMetadata.instructionsLink,
+      instructionsLink: payload.airdropMetadata.instructionsLink || "",
       advertiserID: payload.advertiserID as AdvertiserID,
-      questionFields: [],
+      questions: [],
       excludedOffers: payload.airdropMetadata.excludedOffers as OfferID[],
       batchCount: 0,
     };
+    const questions = await Promise.all(
+      payload.airdropMetadata.questions.map((q) => {
+        return createQuestion({
+          question: q.question,
+          type: q.type,
+          offerID: offerRef.id as OfferID,
+          advertiserID: payload.advertiserID as AdvertiserID,
+        });
+      })
+    );
     // even when theres no questions we will push an empty question set
     // because it makes editing easier due to stupid object to array conversion
-    offer.airdropMetadata.questionFields.push({
-      id: `${offerRef.id}-1` as AirdropQuestionFieldID,
-      offerID: offerRef.id as OfferID,
-      question: payload.airdropMetadata.questionOne || "",
-      type:
-        (payload.airdropMetadata.questionOneType as AirdropQuestionFieldType) ||
-        AirdropQuestionFieldType.Text,
-    });
-    offer.airdropMetadata.questionFields.push({
-      id: `${offerRef.id}-2` as AirdropQuestionFieldID,
-      offerID: offerRef.id as OfferID,
-      question: payload.airdropMetadata.questionTwo || "",
-      type:
-        (payload.airdropMetadata.questionTwoType as AirdropQuestionFieldType) ||
-        AirdropQuestionFieldType.Text,
-    });
+    offer.airdropMetadata.questions = questions.map((q) => q.id);
   }
   await offerRef.set(offer);
   return offer;
@@ -166,6 +168,42 @@ export const editOffer = async (
   }
   if (payload.status != undefined) {
     updatePayload.status = (payload.status || "Planned") as OfferStatus;
+  }
+  if (payload.airdropMetadata && existingOffer.airdropMetadata) {
+    updatePayload.airdropMetadata = existingOffer.airdropMetadata;
+    if (payload.airdropMetadata.excludedOffers) {
+      updatePayload.airdropMetadata.excludedOffers = payload.airdropMetadata
+        .excludedOffers as OfferID[];
+    }
+    if (payload.airdropMetadata.instructionsLink) {
+      updatePayload.airdropMetadata.instructionsLink =
+        payload.airdropMetadata.instructionsLink;
+    }
+    if (payload.airdropMetadata.oneLiner) {
+      updatePayload.airdropMetadata.oneLiner = payload.airdropMetadata.oneLiner;
+    }
+    if (payload.airdropMetadata.value) {
+      updatePayload.airdropMetadata.value = payload.airdropMetadata.value;
+    }
+    await Promise.all([
+      ...payload.airdropMetadata.inactiveQuestions.map((q) =>
+        updateQuestionStatus(q as QuestionAnswerID, QuestionAnswerStatus.Active)
+      ),
+      ...payload.airdropMetadata.inactiveQuestions.map((q) =>
+        updateQuestionStatus(
+          q as QuestionAnswerID,
+          QuestionAnswerStatus.Inactive
+        )
+      ),
+      ...payload.airdropMetadata.newQuestions.map((q) =>
+        createQuestion({
+          question: q.question,
+          type: q.type,
+          offerID: offerRef.id as OfferID,
+          advertiserID: payload.advertiserID as AdvertiserID,
+        })
+      ),
+    ]);
   }
   // if (payload.targetingTags != undefined) {
   //updatePayload.targetingTags = []; //payload.targetingTags as AdTargetTag[];
@@ -344,6 +382,31 @@ export const viewCreatedOffer = async (
   if (!offer) {
     return undefined;
   }
+  const questionsFilled = offer.airdropMetadata
+    ? await Promise.all(
+        offer.airdropMetadata.questions.map((qid) =>
+          getQuestionByID(qid as QuestionAnswerID)
+        )
+      )
+    : [];
+  const questionsTrimmed = questionsFilled
+    .filter((q) => q)
+    // @ts-ignore
+    .map((q: QuestionAnswer_Firestore) => ({
+      id: q.id,
+      batch: q.batch,
+      question: q.question,
+      type: q.type,
+    })) as QuestionAnswerPreview[];
+  const airdropMetadata = offer.airdropMetadata
+    ? ({
+        oneLiner: offer.airdropMetadata.oneLiner,
+        value: offer.airdropMetadata.value,
+        instructionsLink: offer.airdropMetadata.instructionsLink,
+        excludedOffers: offer.airdropMetadata.excludedOffers,
+        questions: questionsTrimmed,
+      } as OfferAirdropMetadata)
+    : undefined;
   // check if user is allowed to run this operation
   const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
     userIdpID,
@@ -508,4 +571,67 @@ export const getOffer = async (
     return undefined;
   }
   return offerSnapshot.data();
+};
+
+interface CreateQuestionPayload {
+  question: string;
+  type: QuestionFieldType;
+  offerID: OfferID;
+  advertiserID: AdvertiserID;
+}
+export const createQuestion = async (
+  payload: CreateQuestionPayload
+): Promise<QuestionAnswer_Firestore> => {
+  const batchID = uuidv4();
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc() as DocumentReference<QuestionAnswer_Firestore>;
+  const questionCreatedObjectOfSchema: QuestionAnswer_Firestore = {
+    id: questionRef.id as QuestionAnswerID,
+    batch: batchID, // index
+    airdropMetadata: {
+      offerID: payload.offerID,
+      advertiserID: payload.advertiserID,
+    },
+    status: QuestionAnswerStatus.Active,
+    question: payload.question,
+    type: payload.type,
+    timestamp: new Date().getTime() / 1000,
+  };
+  await questionRef.set(questionCreatedObjectOfSchema);
+  return questionCreatedObjectOfSchema;
+};
+
+export const updateQuestionStatus = async (
+  id: QuestionAnswerID,
+  status: QuestionAnswerStatus
+): Promise<QuestionAnswer_Firestore | undefined> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc(id) as DocumentReference<QuestionAnswer_Firestore>;
+  const questionSnapshot = await questionRef.get();
+  if (!questionSnapshot.exists) {
+    return undefined;
+  }
+  const updatePayload: Partial<QuestionAnswer_Firestore> = {};
+  updatePayload.status = status;
+  // until done
+  await questionRef.update(updatePayload);
+  return (await questionRef.get()).data() as QuestionAnswer_Firestore;
+};
+
+export const getQuestionByID = async (
+  id: QuestionAnswerID
+): Promise<QuestionAnswer_Firestore | undefined> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc(id) as DocumentReference<QuestionAnswer_Firestore>;
+
+  const questionSnapshot = await questionRef.get();
+
+  if (!questionSnapshot.exists) {
+    return undefined;
+  } else {
+    return questionSnapshot.data();
+  }
 };

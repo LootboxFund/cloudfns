@@ -3,11 +3,12 @@ import {
   Claim_Firestore,
   Collection,
   OfferID,
+  QuestionAnswerID,
   TournamentID,
 } from "@wormgraph/helpers";
 import { Query } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import { getOffer } from "./offer";
+import { getOffer, getQuestionByID } from "./offer";
 import * as _ from "lodash";
 import { getUser } from "./user";
 
@@ -20,6 +21,7 @@ import { checkIfUserIdpMatchesAffiliate } from "../identityProvider/firebase";
 import {
   ListPotentialAirdropClaimersResponseSuccess,
   PotentialAirdropClaimer,
+  QuestionAnswerPreview,
 } from "../../graphql/generated/types";
 import { getTournamentById } from "./tournament";
 
@@ -88,6 +90,22 @@ export const listPotentialAirdropClaimers = async (
   const uniqueUsers = await Promise.all(
     uniqueClaimersByUserID.map((u) => getUser(u))
   );
+  const questionsFilled = offer.airdropMetadata
+    ? await Promise.all(
+        offer.airdropMetadata.questions.map((qid) =>
+          getQuestionByID(qid as QuestionAnswerID)
+        )
+      )
+    : [];
+  const questionsTrimmed = questionsFilled
+    .filter((q) => q)
+    // @ts-ignore
+    .map((q: QuestionAnswer_Firestore) => ({
+      id: q.id,
+      batch: q.batch,
+      question: q.question,
+      type: q.type,
+    })) as QuestionAnswerPreview[];
   console.log(`--- uniqueUsers ---`);
   console.log(uniqueUsers.map((c) => c.id));
   // exclude the user who have received a past airdrop from the offer's airdrop exclusion list
@@ -133,7 +151,14 @@ export const listPotentialAirdropClaimers = async (
     description: offer.description,
     image: offer.image,
     advertiserID: offer.advertiserID,
-    airdropMetadata: offer.airdropMetadata,
+    airdropMetadata: {
+      oneLiner: offer.airdropMetadata?.oneLiner,
+      value: offer.airdropMetadata?.value || "",
+      instructionsLink: offer.airdropMetadata?.instructionsLink,
+      excludedOffers: offer.airdropMetadata?.excludedOffers || [],
+      batchCount: offer.airdropMetadata?.batchCount,
+      questions: questionsTrimmed,
+    },
   };
   return {
     offer: offerAirdropPromoterView,

@@ -193,7 +193,7 @@ export const whitelistAffiliateToOffer = async (
     offerID: payload.offerID as OfferID,
     advertiserID: payload.advertiserID as AdvertiserID,
     status: payload.status,
-    timestamp: new Date().getTime(),
+    timestamp: new Date().getTime() / 1000,
   };
   await whitelistAffiliateToOfferRef.set(organizerOfferWhitelist);
 
@@ -1020,7 +1020,7 @@ export const createRateQuote = async (
     offerID: payload.offerID as OfferID,
     activationID: payload.activationID as ActivationID,
     pricing: payload.pricing,
-    timestamp: new Date().getTime(),
+    timestamp: new Date().getTime() / 1000,
     status: RateQuoteStatus.Active,
   };
   await rateQuoteRef.set(newRateQuote);
