@@ -121,6 +121,12 @@ export const validatePendingClaimForUnverified = async (
     );
   }
 
+  if (unverifiedClaims.find((c) => c.referralId === claim.referralId)) {
+    throw new Error(
+      "You have already claimed this referral. Check your email to finish the process."
+    );
+  }
+
   const { lootbox: targetLootbox } = await _validateBaseClaimForCompletionStep(
     claimer,
     claim,

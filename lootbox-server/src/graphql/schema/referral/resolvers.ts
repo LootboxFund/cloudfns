@@ -28,6 +28,8 @@ import {
   BulkCreateReferralResponse,
   Lootbox,
   MintWhitelistSignature,
+  QueryClaimByIdArgs,
+  ClaimByIdResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -141,6 +143,32 @@ const ReferralResolvers: Resolvers = {
         );
 
         return response;
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    claimByID: async (
+      _,
+      { claimID }: QueryClaimByIdArgs
+    ): Promise<ClaimByIdResponse> => {
+      try {
+        const claim = await getClaimById(claimID as ClaimID);
+
+        if (!claim || claim.timestamps.deletedAt) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Claim not found",
+            },
+          };
+        }
+
+        return { claim: convertClaimDBToGQL(claim) };
       } catch (err) {
         return {
           error: {
@@ -1248,6 +1276,18 @@ const ReferralResolvers: Resolvers = {
     __resolveType: (obj: BulkCreateReferralResponse) => {
       if ("csv" in obj) {
         return "BulkCreateReferralResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+
+  ClaimByIDResponse: {
+    __resolveType: (obj: ClaimByIdResponse) => {
+      if ("claim" in obj) {
+        return "ClaimByIDResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

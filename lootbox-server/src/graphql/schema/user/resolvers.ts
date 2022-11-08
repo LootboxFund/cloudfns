@@ -178,7 +178,7 @@ const UserResolvers = {
           };
         }
 
-        if (isAnon(userIDP, userDB, userWallets)) {
+        if (!isAnon(userIDP, userDB, userWallets)) {
           return {
             error: {
               code: StatusCode.Unauthorized,
