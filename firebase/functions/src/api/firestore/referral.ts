@@ -248,7 +248,7 @@ export const transitionClaimToComplete = async (
         .collection(Collection.Claim)
         .doc(req.claimID) as DocumentReference<Claim_Firestore>;
 
-    await doc.update(doc, {
+    await doc.update({
         status: ClaimStatus_Firestore.complete,
         [`${timestampFN}.${completedAtFN}`]: Timestamp.now().toMillis(),
     });
@@ -270,7 +270,7 @@ export const transitionClaimToExpired = async (
         .collection(Collection.Claim)
         .doc(req.claimID) as DocumentReference<Claim_Firestore>;
 
-    await doc.update(doc, {
+    await doc.update({
         status: ClaimStatus_Firestore.expired,
     });
 
