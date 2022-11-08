@@ -27,6 +27,7 @@ import {
   QueryGetAnonTokenArgs,
   CheckPhoneEnabledResponse,
   QueryCheckPhoneEnabledArgs,
+  SyncProviderUserResponse,
 } from "../../generated/types";
 import {
   getUser,
@@ -54,7 +55,7 @@ import { convertUserToPublicUser } from "./utils";
 import { paginateUserClaims } from "../../../api/firestore";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
 import { formatEmail } from "../../../lib/utils";
-import { isAnon } from "../../../lib/user";
+import { convertUserDBToGQL, isAnon } from "../../../lib/user";
 
 const UserResolvers = {
   Query: {
@@ -936,6 +937,50 @@ const UserResolvers = {
         };
       }
     },
+    /** Updates user DB with user auth phonenumber */
+    syncProviderUser: async (
+      _,
+      __,
+      context: Context
+    ): Promise<SyncProviderUserResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthenticated",
+          },
+        };
+      }
+
+      try {
+        const userIDP = await identityProvider.getUserById(context.userId);
+        if (!userIDP) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "User not found",
+            },
+          };
+        }
+
+        const user = await updateUser(context.userId, {
+          phoneNumber: userIDP.phoneNumber,
+          email: userIDP.email,
+        });
+
+        return {
+          user: convertUserDBToGQL(user),
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
+          },
+        };
+      }
+    },
   },
   GetMyProfileResponse: {
     __resolveType: (obj: GetMyProfileResponse) => {
@@ -1048,6 +1093,19 @@ const UserResolvers = {
       return null;
     },
   },
+
+  SyncProviderUserResponse: {
+    __resolveType: (obj: SyncProviderUserResponse) => {
+      if ("user" in obj) {
+        return "SyncProviderUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const userResolversComposition = {
@@ -1057,6 +1115,7 @@ const userResolversComposition = {
   "Mutation.createUserRecord": [isAuthenticated()],
   "Mutation.updateUser": [isAuthenticated()],
   "Mutation.updateUserEmail": [isAuthenticated()],
+  "Mutation.syncProviderUser": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(UserResolvers, userResolversComposition);

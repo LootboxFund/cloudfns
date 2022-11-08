@@ -1,5 +1,6 @@
 import { User_Firestore, Wallet_Firestore } from "@wormgraph/helpers";
 import { IIdpUser } from "../api/identityProvider/interface";
+import { User } from "../graphql/generated/types";
 
 /** determines if a user is loosely defined as Anonymous */
 export const isAnon = (
@@ -20,4 +21,20 @@ export const isAnon = (
   }
 
   return true;
+};
+
+export const convertUserDBToGQL = (userDB: User_Firestore): User => {
+  return {
+    avatar: userDB.avatar,
+    biography: userDB.biography,
+    createdAt: userDB.createdAt,
+    deletedAt: userDB.deletedAt || null,
+    email: userDB.email || null,
+    headshot: userDB.headshot || null,
+    id: userDB.id,
+    phoneNumber: userDB.phoneNumber,
+    socials: userDB.socials,
+    updatedAt: userDB.updatedAt,
+    username: userDB.username,
+  };
 };

@@ -142,6 +142,10 @@ const UserTypeDefs = gql`
     user: User!
   }
 
+  type SyncProviderUserResponseSuccess {
+    user: User!
+  }
+
   union ConnectWalletResponse = ConnectWalletResponseSuccess | ResponseError
 
   union RemoveWalletResponse = RemoveWalletResponseSuccess | ResponseError
@@ -174,6 +178,10 @@ const UserTypeDefs = gql`
     id: ID!
   }
 
+  union SyncProviderUserResponse =
+      SyncProviderUserResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     createUserWithPassword(
       payload: CreateUserWithPasswordPayload!
@@ -189,6 +197,7 @@ const UserTypeDefs = gql`
     createUserRecord(payload: CreateUserRecordPayload): CreateUserResponse!
     updateUser(payload: UpdateUserPayload!): UpdateUserResponse!
     updateUserAuth(payload: UpdateUserAuthPayload!): UpdateUserResponse!
+    syncProviderUser: SyncProviderUserResponse!
   }
 `;
 
