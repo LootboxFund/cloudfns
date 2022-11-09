@@ -25,10 +25,6 @@
       "project": "lootbox-fund-staging",
       "rewrites": [
         {
-          "source": "/finishSignUp",
-          "destination": "/authenticateAnonUsers.html"
-        },
-        {
           "source": "**",
           "destination": "/index.html"
         }
