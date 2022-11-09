@@ -73,13 +73,30 @@ const UserTypeDefs = gql`
     user: PublicUser!
   }
 
+  type GetAnonTokenResponseSuccess {
+    token: String!
+    email: String!
+  }
+
+  type CheckPhoneEnabledResponseSuccess {
+    isEnabled: Boolean!
+  }
+
+  union CheckPhoneEnabledResponse =
+      CheckPhoneEnabledResponseSuccess
+    | ResponseError
+
   union GetMyProfileResponse = GetMyProfileSuccess | ResponseError
 
   union PublicUserResponse = PublicUserResponseSuccess | ResponseError
 
+  union GetAnonTokenResponse = GetAnonTokenResponseSuccess | ResponseError
+
   extend type Query {
     getMyProfile: GetMyProfileResponse!
     publicUser(id: ID!): PublicUserResponse!
+    getAnonToken(idToken: ID!): GetAnonTokenResponse!
+    checkPhoneEnabled(email: String!): CheckPhoneEnabledResponse!
   }
 
   type CreateUserResponseSuccess {
@@ -125,6 +142,10 @@ const UserTypeDefs = gql`
     user: User!
   }
 
+  type SyncProviderUserResponseSuccess {
+    user: User!
+  }
+
   union ConnectWalletResponse = ConnectWalletResponseSuccess | ResponseError
 
   union RemoveWalletResponse = RemoveWalletResponseSuccess | ResponseError
@@ -157,6 +178,10 @@ const UserTypeDefs = gql`
     id: ID!
   }
 
+  union SyncProviderUserResponse =
+      SyncProviderUserResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     createUserWithPassword(
       payload: CreateUserWithPasswordPayload!
@@ -172,6 +197,7 @@ const UserTypeDefs = gql`
     createUserRecord(payload: CreateUserRecordPayload): CreateUserResponse!
     updateUser(payload: UpdateUserPayload!): UpdateUserResponse!
     updateUserAuth(payload: UpdateUserAuthPayload!): UpdateUserResponse!
+    syncProviderUser: SyncProviderUserResponse!
   }
 `;
 

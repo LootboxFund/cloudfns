@@ -28,8 +28,8 @@ const ReferralTypeDefs = gql`
 
   enum ClaimStatus {
     pending
-    pending_verification
-    verification_sent
+    unverified
+    expired
     complete
   }
 
@@ -136,6 +136,12 @@ const ReferralTypeDefs = gql`
     chosenPartyBasketId: ID # @deprecated(reason: "Use chosenLootboxId instead")
   }
 
+  input PendingClaimToUntrustedPayload {
+    claimId: ID!
+    chosenLootboxID: ID!
+    targetUserEmail: String!
+  }
+
   input CreateClaimPayload {
     referralSlug: ID!
   }
@@ -180,6 +186,10 @@ const ReferralTypeDefs = gql`
     url: String!
   }
 
+  type ClaimByIDResponseSuccess {
+    claim: Claim!
+  }
+
   union CreateClaimResponse = CreateClaimResponseSuccess | ResponseError
 
   union CompleteClaimResponse = CompleteClaimResponseSuccess | ResponseError
@@ -196,10 +206,13 @@ const ReferralTypeDefs = gql`
       GenerateClaimsCsvResponseSuccess
     | ResponseError
 
+  union ClaimByIDResponse = ClaimByIDResponseSuccess | ResponseError
+
   extend type Query {
     referral(slug: ID!): ReferralResponse!
     userClaims(userId: ID!, first: Int!, after: Timestamp): UserClaimsResponse!
       @deprecated(reason: "Use public user resolver")
+    claimByID(claimID: ID!): ClaimByIDResponse!
   }
 
   extend type Mutation {

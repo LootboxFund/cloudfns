@@ -6,7 +6,12 @@ import {
 import { db } from "../firebase";
 import { User, UserSocials } from "../../graphql/generated/types";
 import { IIdpUser } from "../identityProvider/interface";
-import { Collection } from "@wormgraph/helpers";
+import {
+  Collection,
+  UserID,
+  UserSocials_Firestore,
+  User_Firestore,
+} from "@wormgraph/helpers";
 
 export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   const userRef = db
@@ -37,22 +42,22 @@ export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   return user;
 };
 
-const parseUserData = (user: User): UserWithoutWalletsOrLootboxSnapshots => {
+const parseUserData = (user: User): User_Firestore => {
   return {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    avatar: user.avatar,
-    biography: user.biography,
-    headshot: user.headshot,
-    socials: { ...user.socials },
-    phoneNumber: user.phoneNumber,
+    id: user.id as UserID,
+    email: user.email || "",
+    username: user.username || "",
+    avatar: user.avatar || "",
+    biography: user.biography || "",
+    headshot: user.headshot || [],
+    socials: { ...user.socials } as UserSocials_Firestore,
+    phoneNumber: user.phoneNumber || "",
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
 };
 
-export const getUserByEmail = async (
+export const getUsersByEmail = async (
   email: string
 ): Promise<UserWithoutWalletsOrLootboxSnapshots[]> => {
   const userRef = db
@@ -75,7 +80,7 @@ export type UserWithoutWalletsOrLootboxSnapshots = Omit<
 
 export const getUser = async (
   id: string
-): Promise<UserWithoutWalletsOrLootboxSnapshots | undefined> => {
+): Promise<User_Firestore | undefined> => {
   const userRef = db
     .collection(Collection.User)
     .doc(id) as DocumentReference<User>;
@@ -97,14 +102,15 @@ interface UpdateUserRequest {
   headshot?: string;
   biography?: string;
   email?: string;
+  phoneNumber?: string;
 }
 export const updateUser = async (
   id: string,
   request: UpdateUserRequest
-): Promise<User> => {
+): Promise<User_Firestore> => {
   const userRef = db
     .collection(Collection.User)
-    .doc(id) as DocumentReference<User>;
+    .doc(id) as DocumentReference<User_Firestore>;
 
   const user = await userRef.get();
 
@@ -113,9 +119,13 @@ export const updateUser = async (
     throw new Error("User not found");
   }
 
-  const updatedUser: Partial<User> = {
+  const updatedUser: Partial<User_Firestore> = {
     updatedAt: Timestamp.now().toMillis(),
   };
+
+  if (request.phoneNumber !== undefined) {
+    updatedUser.phoneNumber = request.phoneNumber;
+  }
 
   if (request.email !== undefined) {
     updatedUser.email = request.email;
@@ -138,37 +148,37 @@ export const updateUser = async (
   }
 
   if (request.socials !== undefined) {
-    const newSocials: Partial<UserSocials> = { ...userData.socials };
+    const newSocials: Partial<UserSocials_Firestore> = { ...userData.socials };
 
-    if (request.socials.facebook !== undefined) {
+    if (request.socials.facebook != undefined) {
       newSocials.facebook = request.socials.facebook;
     }
 
-    if (request.socials.twitter !== undefined) {
+    if (request.socials.twitter != undefined) {
       newSocials.twitter = request.socials.twitter;
     }
 
-    if (request.socials.discord !== undefined) {
+    if (request.socials.discord != undefined) {
       newSocials.discord = request.socials.discord;
     }
 
-    if (request.socials.instagram !== undefined) {
+    if (request.socials.instagram != undefined) {
       newSocials.instagram = request.socials.instagram;
     }
 
-    if (request.socials.tiktok !== undefined) {
+    if (request.socials.tiktok != undefined) {
       newSocials.tiktok = request.socials.tiktok;
     }
 
-    if (request.socials.snapchat !== undefined) {
+    if (request.socials.snapchat != undefined) {
       newSocials.snapchat = request.socials.snapchat;
     }
 
-    if (request.socials.twitch !== undefined) {
+    if (request.socials.twitch != undefined) {
       newSocials.twitch = request.socials.twitch;
     }
 
-    if (request.socials.web !== undefined) {
+    if (request.socials.web != undefined) {
       newSocials.web = request.socials.web;
     }
 

@@ -71,10 +71,10 @@ export const convertClaimStatusDBToGQL = (
   switch (status) {
     case ClaimStatus_Firestore.pending:
       return ClaimStatus.Pending;
-    case ClaimStatus_Firestore.pending_verification:
-      return ClaimStatus.PendingVerification;
-    case ClaimStatus_Firestore.verification_sent:
-      return ClaimStatus.VerificationSent;
+    case ClaimStatus_Firestore.unverified:
+      return ClaimStatus.Unverified;
+    case ClaimStatus_Firestore.expired:
+      return ClaimStatus.Expired;
     case ClaimStatus_Firestore.complete:
       return ClaimStatus.Complete;
     default:

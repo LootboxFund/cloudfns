@@ -30,6 +30,8 @@ const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
     isEnabled: !userRecord.disabled,
     username: userRecord.displayName ?? "",
     avatar: userRecord.photoURL ?? "",
+    emailVerified: userRecord.emailVerified,
+    providerData: userRecord.providerData,
   };
 };
 

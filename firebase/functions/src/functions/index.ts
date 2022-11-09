@@ -5,3 +5,4 @@ export * from "./billing";
 export * from "./tracking";
 export * from "./partyBasket";
 export * from "./email";
+export * from "./user";

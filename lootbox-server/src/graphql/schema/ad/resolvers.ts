@@ -281,7 +281,7 @@ const AdResolvers: Resolvers = {
         }
         return { ad };
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         return {
           error: {
             code: StatusCode.ServerError,

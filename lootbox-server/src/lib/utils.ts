@@ -6,3 +6,5 @@ export const batcher = <T>(values: T[], batchSize = 450): T[][] => {
   }
   return result;
 };
+
+export const formatEmail = (email: string) => email.toLowerCase().trim();

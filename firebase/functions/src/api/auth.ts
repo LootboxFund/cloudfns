@@ -35,3 +35,8 @@ export const getUsers = async (userIDs: UserID[]): Promise<IIdpUser[]> => {
     );
     return users.map(convertUserRecordToUser);
 };
+
+export const getUser = async (userID: UserID): Promise<IIdpUser> => {
+    const userRecord = await auth.getUser(userID);
+    return convertUserRecordToUser(userRecord);
+};

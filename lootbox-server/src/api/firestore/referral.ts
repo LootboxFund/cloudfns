@@ -4,7 +4,6 @@ import {
   ClaimEdge,
   ClaimPageInfo,
   User,
-  PageInfo,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -22,7 +21,7 @@ import {
   Claim_Firestore,
   LootboxMintWhitelistID,
   AffiliateID,
-  LootboxTicketID_Web3,
+  ClaimTimestamps_Firestore,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -434,6 +433,96 @@ export const completeClaim = async (
   return claim as Claim_Firestore;
 };
 
+interface CompleteAnonClaimReq {
+  claimId: ClaimID;
+  referralId: ReferralID;
+  claimerUserId: UserID;
+  lootboxID: LootboxID;
+  lootboxAddress: Address | null;
+  lootboxName: string;
+  lootboxNFTBountyValue?: string;
+  lootboxMaxTickets?: number;
+  /** @deprecated */
+  chosenPartyBasketId?: PartyBasketID;
+  /** @deprecated */
+  chosenPartyBasketAddress?: Address;
+  /** @deprecated */
+  chosenPartyBasketName?: string;
+  /** @deprecated */
+  chosenPartyBasketNFTBountyValue?: string;
+}
+export const completeAnonClaim = async (
+  req: CompleteAnonClaimReq
+): Promise<Claim_Firestore> => {
+  const referralRef = db.collection(Collection.Referral).doc(req.referralId);
+  const claimRef = referralRef
+    .collection(Collection.Claim)
+    .doc(req.claimId) as DocumentReference<Claim_Firestore>;
+
+  const updateClaimRequest: Partial<Claim_Firestore> = {
+    status: ClaimStatus_Firestore.unverified,
+    claimerUserId: req.claimerUserId,
+    lootboxID: req.lootboxID,
+    lootboxName: req.lootboxName,
+  };
+
+  if (req.lootboxAddress) {
+    updateClaimRequest.lootboxAddress = req.lootboxAddress;
+  }
+
+  if (req.lootboxNFTBountyValue) {
+    updateClaimRequest.lootboxNFTBountyValue = req.lootboxNFTBountyValue;
+  }
+
+  if (req.lootboxMaxTickets) {
+    updateClaimRequest.lootboxMaxTickets = req.lootboxMaxTickets;
+  }
+
+  if (req.chosenPartyBasketId) {
+    updateClaimRequest.chosenPartyBasketId = req.chosenPartyBasketId;
+  }
+
+  if (req.chosenPartyBasketNFTBountyValue) {
+    updateClaimRequest.chosenPartyBasketNFTBountyValue =
+      req.chosenPartyBasketNFTBountyValue;
+  }
+
+  if (req.chosenPartyBasketAddress) {
+    updateClaimRequest.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
+  }
+  if (req.chosenPartyBasketName) {
+    updateClaimRequest.chosenPartyBasketName = req.chosenPartyBasketName;
+  }
+
+  // This is to update nested object in non-destructive way
+  const nowMillis = Timestamp.now().toMillis();
+  updateClaimRequest["timestamps.updatedAt"] = nowMillis;
+  // TODO: update this in the backend?
+  // updateClaimRequest["timestamps.completedAt"] = nowMillis;
+
+  // This updates the claim & increments the parent referral's nConversion
+  // Get a new write batch
+  var batch = db.batch();
+
+  // Update the population of 'SF'
+  // var sfRef = db.collection("cities").doc("SF");
+  batch.update(claimRef, updateClaimRequest);
+  batch.update(referralRef, {
+    nConversions: FieldValue.increment(1),
+  });
+
+  // Commit the batch
+  await batch.commit();
+
+  // await documentRef.update(updateRequest);
+
+  const snapshot = await claimRef.get();
+
+  const claim = snapshot.data();
+
+  return claim as Claim_Firestore;
+};
+
 export const getClaimById = async (
   claimId: ClaimID
 ): Promise<Claim_Firestore | undefined> => {
@@ -451,6 +540,7 @@ export const getClaimById = async (
   }
 };
 
+// Duplicated in firebase functions
 export const getCompletedUserReferralClaimsForTournament = async (
   userId: UserIdpID,
   tournamentId: TournamentID,
@@ -475,6 +565,7 @@ export const getCompletedUserReferralClaimsForTournament = async (
   }
 };
 
+// Duplicated in firebase functions
 export const getCompletedClaimsForReferral = async (
   referralId: ReferralID,
   limit?: number
@@ -905,4 +996,29 @@ export const paginateLootboxUserClaims = async (
     edges,
     pageInfo,
   };
+};
+
+export const getUnverifiedClaimsForUser = async (
+  claimerUserID: UserID
+): Promise<Claim_Firestore[]> => {
+  const claimStatusField: keyof Claim_Firestore = "status";
+  const claimerIDField: keyof Claim_Firestore = "claimerUserId";
+
+  const collectionGroupRef = db
+    .collectionGroup(Collection.Claim)
+    .where(claimerIDField, "==", claimerUserID)
+    // .where(lootboxIDField, "==", lootboxID)
+    .where(
+      claimStatusField,
+      "==",
+      ClaimStatus_Firestore.unverified
+    ) as CollectionGroup<Claim_Firestore>;
+
+  const snapshot = await collectionGroupRef.get();
+
+  if (!snapshot || snapshot.empty) {
+    return [];
+  } else {
+    return snapshot.docs.map((doc) => doc.data());
+  }
 };

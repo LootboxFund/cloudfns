@@ -23,6 +23,11 @@ import {
   PublicUser,
   MutationUpdateUserAuthArgs,
   MutationCreateUserRecordArgs,
+  GetAnonTokenResponse,
+  QueryGetAnonTokenArgs,
+  CheckPhoneEnabledResponse,
+  QueryCheckPhoneEnabledArgs,
+  SyncProviderUserResponse,
 } from "../../generated/types";
 import {
   getUser,
@@ -35,7 +40,7 @@ import {
   getUserTournaments,
   getUserPartyBasketsForLootbox,
   updateUser,
-  getUserByEmail,
+  getUsersByEmail,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../lib/whitelist";
 import { Address } from "@wormgraph/helpers";
@@ -49,6 +54,8 @@ import { generateUsername } from "../../../lib/rng";
 import { convertUserToPublicUser } from "./utils";
 import { paginateUserClaims } from "../../../api/firestore";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
+import { formatEmail } from "../../../lib/utils";
+import { convertUserDBToGQL, isAnon } from "../../../lib/user";
 
 const UserResolvers = {
   Query: {
@@ -117,6 +124,129 @@ const UserResolvers = {
         };
       }
     },
+    /**
+     * Returns a login token for an anonymous user given the idtoken of the user
+     * This function is NOT protected by auth guard, however, it will error if the id token
+     * is invalid.
+     *
+     * Warning: this is sensitive, be careful when changing the clauses determining when a
+     *          token is returned!
+     */
+    getAnonToken: async (
+      _,
+      { idToken }: QueryGetAnonTokenArgs
+    ): Promise<GetAnonTokenResponse> => {
+      let uid: UserIdpID | null;
+      try {
+        uid = await identityProvider.verifyIDToken(idToken);
+        if (uid == null) {
+          throw "invalid token";
+        }
+      } catch (err) {
+        console.error("Error verifying token", err);
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Invalid ID token",
+          },
+        };
+      }
+
+      try {
+        const [userIDP, userDB, userWallets] = await Promise.all([
+          identityProvider.getUserById(uid),
+          getUser(uid),
+          getUserWallets(uid as unknown as UserID, 1),
+        ]);
+
+        /**
+         *  This method should not return a token if ANY of the conditions are met
+         *  1. User has a VERIFIED email (unverified is fine)
+         *  2. User has phoneNumber attached to account
+         *  3. User has a wallet attached to account
+         *  4. User IDP has ANY providerData
+         *
+         *  If none of these conditions are met, then the user is mostlikely a new / anonymous user
+         *  and we can return a sign in token
+         */
+
+        if (!userIDP || !userDB) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+
+        if (!isAnon(userIDP, userDB, userWallets)) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "Not Allowed",
+            },
+          };
+        }
+
+        const token = await identityProvider.getSigninToken(uid);
+
+        return {
+          token,
+          email: userDB.email || "",
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error ocurred",
+          },
+        };
+      }
+    },
+    /**
+     * Cheks if a given email has any phone association to the user account
+     * WARNING: This is sensitive and slightly dangerous, because it is not auth guarded
+     *          and it reveals login information for an account. However, we need it to
+     *          provide a good user flow for users with phone numbers.
+     */
+    checkPhoneEnabled: async (
+      _,
+      { email }: QueryCheckPhoneEnabledArgs
+    ): Promise<CheckPhoneEnabledResponse> => {
+      try {
+        const fmtEmail = formatEmail(email);
+        const [userDBs, userIDP] = await Promise.all([
+          getUsersByEmail(fmtEmail),
+          identityProvider.getUserByEmail(fmtEmail),
+        ]);
+        if (userDBs.length === 0 && !userIDP) {
+          return { isEnabled: false };
+        }
+
+        /**
+         * Previously, we have a smelly mixture of:
+         * - unverified email on the userDB object, but not the userIDP
+         * - unverified or verified email on userIDP & userDB object
+         *
+         * Either one might have an associated phone number
+         */
+        if (userIDP?.phoneNumber) {
+          return { isEnabled: true };
+        } else if (userDBs.some((u) => u.phoneNumber)) {
+          return { isEnabled: true };
+        } else {
+          return { isEnabled: false };
+        }
+      } catch (err) {
+        console.error("Error checking phone enabled", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured. Please try again later.",
+          },
+        };
+      }
+    },
   },
   PublicUser: {
     claims: async (user: PublicUser, { first, after }: QueryUserClaimsArgs) => {
@@ -169,7 +299,7 @@ const UserResolvers = {
 
   Mutation: {
     /**
-     * Used primarily in phone sign up
+     * Used primarily in phone or sign up anonymous sign up
      * User IDP object gets created in the frontend, so we expect this call to be authenticated
      * However, corresponding user database object does not get created, so this function will create that object
      * if it dosent exist. If it already exists, this function returns the existing user object from the database
@@ -219,6 +349,16 @@ const UserResolvers = {
           return { user: dbUser };
         }
 
+        let createUserRequest = { ...idpUser };
+
+        if (!createUserRequest.email && !!payload?.email) {
+          // We add the email to our DB if the user provided the email address. However, we don't want to
+          // update the underlying AUTH user object because firebase will force a token refresh, invalidating
+          // the users current token. This will kinda fuck with the viral onboarding flow. So just update
+          // the database object and then later the user can confirm it in their profile.
+          createUserRequest.email = formatEmail(payload.email);
+        }
+
         // Update the idp username if needed
         // let updatedUserIdp: IIdpUser | undefined = undefined;
         if (!idpUser.username) {
@@ -229,16 +369,6 @@ const UserResolvers = {
             }
           );
           idpUser = { ...updatedUserIdp };
-        }
-
-        let createUserRequest = { ...idpUser };
-
-        if (!createUserRequest.email && !!payload?.email) {
-          // We add the email to our DB if the user provided the email address. However, we don't want to
-          // update the underlying AUTH user object because firebase will force a token refresh, invalidating
-          // the users current token. This will kinda fuck with the viral onboarding flow. So just update
-          // the database object and then later the user can confirm it in their profile.
-          createUserRequest.email = payload.email;
         }
 
         // User does not exist in database, create it
@@ -262,7 +392,7 @@ const UserResolvers = {
         // Create the user in the IDP
         const username = generateUsername();
         const idpUser = await identityProvider.createUser({
-          email: payload.email,
+          email: formatEmail(`${payload.email}`),
           phoneNumber: payload.phoneNumber || undefined,
           emailVerified: false,
           password: payload.password,
@@ -331,7 +461,7 @@ const UserResolvers = {
 
         // Create the user in the IDP
         const idpUser = await identityProvider.createUser({
-          email: payload.email,
+          email: formatEmail(`${payload.email}`),
           phoneNumber: payload.phoneNumber,
           emailVerified: false,
           username,
@@ -529,7 +659,7 @@ const UserResolvers = {
               message: "Wallet does not exist",
             },
           };
-        } else if (wallet.userId !== context.userId) {
+        } else if (wallet.userId !== (context.userId as unknown as UserID)) {
           return {
             error: {
               code: StatusCode.Unauthorized,
@@ -610,7 +740,10 @@ const UserResolvers = {
           };
         }
 
-        if (userIdp.id !== context.userId || userRecord.id !== context.userId) {
+        if (
+          userIdp.id !== context.userId ||
+          userRecord.id !== (context.userId as unknown as UserID)
+        ) {
           console.error("USER MISCONFIGURED");
           return {
             error: {
@@ -704,7 +837,7 @@ const UserResolvers = {
         };
       }
 
-      const formattedEmail = payload.email.toLowerCase().trim();
+      const formattedEmail = formatEmail(payload.email);
 
       try {
         // Make sure the user exists
@@ -713,7 +846,7 @@ const UserResolvers = {
             identityProvider.getUserById(context.userId),
             identityProvider.getUserByEmail(formattedEmail),
             getUser(context.userId),
-            getUserByEmail(formattedEmail),
+            getUsersByEmail(formattedEmail),
           ]);
 
         if (
@@ -753,7 +886,10 @@ const UserResolvers = {
           };
         }
 
-        if (userIdp.id !== context.userId || userRecord.id !== context.userId) {
+        if (
+          userIdp.id !== context.userId ||
+          userRecord.id !== (context.userId as unknown as UserID)
+        ) {
           console.error("USER MISCONFIGURED");
           return {
             error: {
@@ -797,6 +933,50 @@ const UserResolvers = {
           error: {
             code: StatusCode.ServerError,
             message: "Error updating user",
+          },
+        };
+      }
+    },
+    /** Updates user DB with user auth phonenumber */
+    syncProviderUser: async (
+      _,
+      __,
+      context: Context
+    ): Promise<SyncProviderUserResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthenticated",
+          },
+        };
+      }
+
+      try {
+        const userIDP = await identityProvider.getUserById(context.userId);
+        if (!userIDP) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "User not found",
+            },
+          };
+        }
+
+        const user = await updateUser(context.userId, {
+          phoneNumber: userIDP.phoneNumber,
+          email: userIDP.email,
+        });
+
+        return {
+          user: convertUserDBToGQL(user),
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
           },
         };
       }
@@ -887,6 +1067,45 @@ const UserResolvers = {
       return null;
     },
   },
+
+  GetAnonTokenResponse: {
+    __resolveType: (obj: GetAnonTokenResponse) => {
+      if ("token" in obj) {
+        return "GetAnonTokenResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  CheckPhoneEnabledResponse: {
+    __resolveType: (obj: CheckPhoneEnabledResponse) => {
+      if ("isEnabled" in obj) {
+        return "CheckPhoneEnabledResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  SyncProviderUserResponse: {
+    __resolveType: (obj: SyncProviderUserResponse) => {
+      if ("user" in obj) {
+        return "SyncProviderUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const userResolversComposition = {
@@ -896,6 +1115,7 @@ const userResolversComposition = {
   "Mutation.createUserRecord": [isAuthenticated()],
   "Mutation.updateUser": [isAuthenticated()],
   "Mutation.updateUserEmail": [isAuthenticated()],
+  "Mutation.syncProviderUser": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(UserResolvers, userResolversComposition);

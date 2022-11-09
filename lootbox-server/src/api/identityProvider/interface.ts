@@ -1,5 +1,8 @@
 import { UserIdpID } from "@wormgraph/helpers";
 
+export interface IIdpUserProviderData {
+  providerId: string;
+}
 export interface IIdpUser {
   id: UserIdpID;
   email?: string;
@@ -7,6 +10,8 @@ export interface IIdpUser {
   phoneNumber?: string;
   username?: string;
   avatar?: string;
+  emailVerified: boolean;
+  providerData?: IIdpUserProviderData[];
   // claims: IClaims;
 }
 

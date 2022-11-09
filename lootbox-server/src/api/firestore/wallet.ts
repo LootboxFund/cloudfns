@@ -7,21 +7,24 @@ import {
 } from "firebase-admin/firestore";
 import { db } from "../firebase";
 import { LootboxSnapshot, Wallet } from "../../graphql/generated/types";
-import { Address, Collection, Lootbox_Firestore } from "@wormgraph/helpers";
+import {
+  Address,
+  Collection,
+  Lootbox_Firestore,
+  Wallet_Firestore,
+} from "@wormgraph/helpers";
 import { UserID, UserIdpID, WalletID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot } from "../../lib/lootbox";
-
-type WalletWithoutLootboxSnapshot = Omit<Wallet, "lootboxSnapshots">;
 
 export const getUserWallets = async (
   id: UserID,
   limit?: number
-): Promise<WalletWithoutLootboxSnapshot[]> => {
+): Promise<Wallet_Firestore[]> => {
   let wallets = db
     .collection(Collection.User)
     .doc(id)
     .collection(Collection.Wallet)
-    .orderBy("createdAt", "asc") as Query<WalletWithoutLootboxSnapshot>;
+    .orderBy("createdAt", "asc") as Query<Wallet_Firestore>;
 
   if (limit) {
     wallets = wallets.limit(limit);
