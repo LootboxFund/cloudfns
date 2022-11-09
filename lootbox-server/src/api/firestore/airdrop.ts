@@ -129,7 +129,7 @@ export const listPotentialAirdropClaimers = async (
       `);
       const potentialClaimer: PotentialAirdropClaimer = {
         userID: u.id,
-        username: u.username,
+        username: u.username || "Anon User",
         avatar: u.avatar,
         tournamentID: tournamentID,
         advertiserID: offer.advertiserID,
