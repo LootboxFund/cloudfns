@@ -13,17 +13,19 @@ import {
 } from "@wormgraph/helpers";
 import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
 import { fun } from "../api/firebase";
-import { manifest } from "../manifest";
+import { manifest, SecretName } from "../manifest";
 import { getLootbox, getLootboxTournamentSnapshot, markDepositEmailAsSent } from "../api/firestore";
 import { getTournamentByID } from "../api/firestore/tournament";
 import { promiseChainDelay } from "../lib/promise";
 import { getCompletedClaimsForLootbox } from "../api/firestore/referral";
 import * as auth from "../api/auth";
+import * as mailService from "../service/mail";
 
-const EMAIL_BATCH_SIZE = 30; // Increment this as our IP warms...
+const EMAIL_BATCH_SIZE = 50; // Increment this as our IP warms...
 const REGION = manifest.cloudFunctions.region;
-type taskQueueID = "emailUserBatch";
+type taskQueueID = "depositEmailUserBatch";
 const buildTaskQueuePath = (taskQueueID: taskQueueID) => `locations/${REGION}/functions/${taskQueueID}`;
+const SENDGRID_DEPOSIT_EMAIL_API_KEY: SecretName = "SENDGRID_DEPOSIT_EMAIL_API_KEY";
 
 export interface DepositFragment {
     tokenAddress: Address;
@@ -44,32 +46,45 @@ export const batcher = <T>(values: T[], batchSize = 450): T[][] => {
     return result;
 };
 
-interface EmailUserBatchData {
+interface DepositEmailUserBatchData {
     type: "deposit";
     deposits: Deposit[];
     userIDs: UserID[];
 }
 
-export const emailUserBatch = functions
+export const depositEmailUserBatch = functions
     .region(REGION)
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: false,
+        secrets: [SENDGRID_DEPOSIT_EMAIL_API_KEY],
     })
     .tasks.taskQueue({
         retryConfig: {
             maxAttempts: 1,
         },
     })
-    .onDispatch(async (data: EmailUserBatchData) => {
-        logger.info("emailUserBatch", data);
+    .onDispatch(async (data: DepositEmailUserBatchData) => {
+        logger.info("depositEmailUserBatch", data);
         try {
             const users = await auth.getUsers(data.userIDs);
             logger.info("Found users", { UserCount: users.length });
             const validUsers = users.filter((user) => !!user.email && !!user.emailVerified);
             logger.info("Valid Users", { ValidUserCount: validUsers.length });
 
-            // TODO: Send emails VIA sendgrid SDK
+            await Promise.all(
+                validUsers.map((user) => {
+                    if (!user.email) {
+                        return null;
+                    }
+
+                    logger.info("Sending email to user", { userID: user.id, email: user.email });
+
+                    return mailService.sendDepositEmail({
+                        toEmail: user.email,
+                    });
+                })
+            );
         } catch (err) {
             logger.error("Error sending user emails", err);
         }
@@ -279,12 +294,12 @@ export const enqueueLootboxDepositEmail = functions
         try {
             // Lets mark this here before enqueuing any tasks
             await markDepositEmailAsSent(lootbox.id, tournament.id);
-            const queue = fun.taskQueue(buildTaskQueuePath("emailUserBatch"));
+            const queue = fun.taskQueue(buildTaskQueuePath("depositEmailUserBatch"));
             const enqueues = [];
 
             for (const userIDBatch of userIDBatches) {
                 logger.info("Enqueuing batch", { batchSize: EMAIL_BATCH_SIZE, numberOfUsers: userIDBatch.length });
-                const taskData: EmailUserBatchData = {
+                const taskData: DepositEmailUserBatchData = {
                     type: "deposit",
                     deposits: lootboxDeposits,
                     userIDs: userIDBatch,
