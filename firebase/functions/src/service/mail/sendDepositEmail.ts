@@ -1,26 +1,22 @@
 import sgClient from "./client";
 import { MailDataRequired } from "@sendgrid/mail";
+import { manifest } from "../../manifest";
+import { DepositEmailParams } from "@wormgraph/helpers";
 
-const DEPOSIT_EMAIL_TEMPLATE_ID = ""; // ID for the dynamic template email designed in the sendgrid UI
-const TRACKING_UNSUBSCRIBE_GROUP_ID = NaN; // ID for the unsubscribe group initialized in the sendgrid UI
+const DEPOSIT_EMAIL_TEMPLATE_ID = manifest.sendgrid.emailTemplates.lootboxDeposit.id; // ID for the dynamic template email designed in the sendgrid UI
+// const UNSUBSCRIBE_GROUP_ID = NaN; // ID for the unsubscribe group initialized in the sendgrid UI
 const FROM_EMAIL = "alerts@lootbox.fyi";
 const FROM_NAME = "Lootbox";
-
-/**
- * Data for the template email from sendgrid's UI
- */
-interface DepositEmailTemplateData {
-    /** Business name the parcel was purchased from */
-    businessName: string;
-}
 
 interface SendEmailRequest {
     toEmail: string;
 }
 
 export const sendDepositEmail = async (request: SendEmailRequest) => {
-    const dynamicTemplateData: DepositEmailTemplateData = {
-        businessName: "TODO!!!!!",
+    const dynamicTemplateData: DepositEmailParams = {
+        lootboxImg: "",
+        lootboxName: "",
+        lootboxRedeemURL: "",
     };
 
     const emailRequest: MailDataRequired = {
@@ -31,9 +27,9 @@ export const sendDepositEmail = async (request: SendEmailRequest) => {
             name: FROM_NAME,
         },
         dynamicTemplateData,
-        asm: {
-            groupId: TRACKING_UNSUBSCRIBE_GROUP_ID,
-        },
+        // asm: {
+        //     groupId: UNSUBSCRIBE_GROUP_ID,
+        // },
     };
 
     return sgClient.send(emailRequest);
