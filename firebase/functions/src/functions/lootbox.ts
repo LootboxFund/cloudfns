@@ -290,18 +290,18 @@ export const enqueueLootboxOnCreate = functions
 
         if (!ethers.utils.isAddress(data.listenAddress)) {
             logger.error("Address not valid", { listenAddress: data.listenAddress });
-            throw new functions.https.HttpsError("internal", "Incorrect LOOTBOX address");
+            throw new functions.https.HttpsError("invalid-argument", "Incorrect LOOTBOX address");
         }
 
         const chainSlug = chainIdHexToSlug(data.chainIdHex);
         if (!chainSlug) {
             logger.error("Could not convert chain to slug", { chainIdHex: data.chainIdHex });
-            throw new functions.https.HttpsError("internal", "Invalid chain");
+            throw new functions.https.HttpsError("invalid-argument", "Invalid chain");
         }
         const chain = BLOCKCHAINS[chainSlug];
         if (!chain) {
             logger.error("Could not match chain", { chainIdHex: data.chainIdHex, chainSlug });
-            throw new functions.https.HttpsError("internal", "Invalid chain");
+            throw new functions.https.HttpsError("invalid-argument", "Invalid chain");
         }
 
         const taskData: IndexLootboxOnCreateTaskRequest = {
@@ -557,23 +557,23 @@ export const enqueueLootboxOnMint = functions
         if (!context.auth?.uid) {
             // Unauthenticated
             logger.error("Unauthenticated");
-            throw new functions.https.HttpsError("internal", "Unauthenticated! Please login.");
+            throw new functions.https.HttpsError("unauthenticated", "Unauthenticated! Please login.");
         }
 
         if (!ethers.utils.isAddress(data.lootboxAddress)) {
             logger.error("Address not valid", { listenAddress: data.lootboxAddress });
-            throw new functions.https.HttpsError("internal", "Incorrect LOOTBOX address");
+            throw new functions.https.HttpsError("invalid-argument", "Incorrect LOOTBOX address");
         }
 
         const chainSlug = chainIdHexToSlug(data.chainIDHex);
         if (!chainSlug) {
             logger.error("Could not convert chain to slug", { chainIdHex: data.chainIDHex });
-            throw new functions.https.HttpsError("internal", "Invalid chain");
+            throw new functions.https.HttpsError("invalid-argument", "Invalid chain");
         }
         const chain = BLOCKCHAINS[chainSlug];
         if (!chain) {
             logger.error("Could not match chain", { chainIdHex: data.chainIDHex, chainSlug });
-            throw new functions.https.HttpsError("internal", "Invalid chain");
+            throw new functions.https.HttpsError("invalid-argument", "Invalid chain");
         }
 
         const taskData: IndexLootboxOnMintTaskRequest = {
