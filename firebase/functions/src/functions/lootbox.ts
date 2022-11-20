@@ -285,20 +285,24 @@ export const enqueueLootboxOnCreate = functions
         if (!context.auth?.uid) {
             // Unauthenticated
             logger.error("Unauthenticated");
-            return;
+            throw new functions.https.HttpsError("unauthenticated", "Unauthenticated! Please login.");
         }
 
         if (!ethers.utils.isAddress(data.listenAddress)) {
             logger.error("Address not valid", { listenAddress: data.listenAddress });
-            return;
+            throw new functions.https.HttpsError("internal", "Incorrect LOOTBOX address");
         }
 
         const chainSlug = chainIdHexToSlug(data.chainIdHex);
         if (!chainSlug) {
-            logger.warn("Could not match chain", { chainIdHex: data.chainIdHex });
-            return;
+            logger.error("Could not convert chain to slug", { chainIdHex: data.chainIdHex });
+            throw new functions.https.HttpsError("internal", "Invalid chain");
         }
         const chain = BLOCKCHAINS[chainSlug];
+        if (!chain) {
+            logger.error("Could not match chain", { chainIdHex: data.chainIdHex, chainSlug });
+            throw new functions.https.HttpsError("internal", "Invalid chain");
+        }
 
         const taskData: IndexLootboxOnCreateTaskRequest = {
             chain,
@@ -315,10 +319,16 @@ export const enqueueLootboxOnCreate = functions
                 // topics: [topic],
             },
         };
-        logger.debug("Enqueing task", taskData);
-        const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnCreate"));
-        await queue.enqueue(taskData);
+        logger.info("Enqueing task", taskData);
 
+        try {
+            const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnCreate"));
+            await queue.enqueue(taskData);
+        } catch (err) {
+            logger.error("Error enqueuing task", err);
+            throw new functions.https.HttpsError("internal", "An error occured. Please try again later.");
+        }
+        logger.info("Finished enqueing task");
         return;
     });
 
@@ -346,15 +356,10 @@ export const indexLootboxOnMint = functions
         retryConfig: {
             maxAttempts: 5,
             /**
-             * The maximum number of times to double the backoff between
-             * retries. If left unspecified will default to 16.
-             */
-            maxDoublings: 1,
-            /**
              * The minimum time to wait between attempts. If left unspecified
              * will default to 100ms.
              */
-            minBackoffSeconds: 60 * 5 /* 5 minutes */,
+            minBackoffSeconds: 60 * 10 /* 10 minutes */,
         },
     })
     .onDispatch(async (data: IndexLootboxOnMintTaskRequest) => {
@@ -552,20 +557,24 @@ export const enqueueLootboxOnMint = functions
         if (!context.auth?.uid) {
             // Unauthenticated
             logger.error("Unauthenticated");
-            return;
+            throw new functions.https.HttpsError("internal", "Unauthenticated! Please login.");
         }
 
         if (!ethers.utils.isAddress(data.lootboxAddress)) {
             logger.error("Address not valid", { listenAddress: data.lootboxAddress });
-            return;
+            throw new functions.https.HttpsError("internal", "Incorrect LOOTBOX address");
         }
 
         const chainSlug = chainIdHexToSlug(data.chainIDHex);
         if (!chainSlug) {
-            logger.warn("Could not match chain", { chainIdHex: data.chainIDHex });
-            return;
+            logger.error("Could not convert chain to slug", { chainIdHex: data.chainIDHex });
+            throw new functions.https.HttpsError("internal", "Invalid chain");
         }
         const chain = BLOCKCHAINS[chainSlug];
+        if (!chain) {
+            logger.error("Could not match chain", { chainIdHex: data.chainIDHex, chainSlug });
+            throw new functions.https.HttpsError("internal", "Invalid chain");
+        }
 
         const taskData: IndexLootboxOnMintTaskRequest = {
             chain,
@@ -579,10 +588,16 @@ export const enqueueLootboxOnMint = functions
                 fromBlock: data.fromBlock,
             },
         };
-        logger.debug("Enqueing task", taskData);
-        const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnMint"));
-        await queue.enqueue(taskData);
+        logger.info("Enqueing task", taskData);
 
+        try {
+            const queue = fun.taskQueue(buildTaskQueuePath("indexLootboxOnMint"));
+            await queue.enqueue(taskData);
+        } catch (err) {
+            logger.error("Error enqueing task", err);
+            throw new functions.https.HttpsError("internal", "An error occured. Please try again later.");
+        }
+        logger.info("Finished enqueing task");
         return;
     });
 
