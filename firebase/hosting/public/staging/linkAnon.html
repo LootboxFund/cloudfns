@@ -9,8 +9,7 @@
     />
     <!-- <meta charset="utf-8" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lootbox Profile</title>
-    <meta name="description" content="Lootbox private profile page" />
+    <title>Lootbox Onboarding</title>
     <script
       src="https://unpkg.com/react@17/umd/react.production.min.js"
       crossorigin
@@ -22,38 +21,25 @@
         justify-content: flex-start;
         align-items: center;
         margin: 0;
-        padding: 0px 10px;
+        background-color: #1c1c1c;
       }
-      #my-profile {
-        margin: 30px auto 30px;
-        max-width: 720px;
-      }
-      #nav-bar {
+      .mobile-container {
         width: 100%;
-        max-width: 1200px;
-
-        margin: 60px auto 30px;
+        height: 100%;
       }
-      @media only screen and (max-width: 600px) {
-        #nav-bar {
-          margin-top: 20px;
-          margin-bottom: 10px;
-        }
+      #authenticate-anon-users {
+        margin: 0 auto;
       }
     </style>
   </head>
   <body>
-    <div id="nav-bar"></div>
-    <div id="my-profile"></div>
+    <div class="mobile-container">
+      <div id="authenticate-anon-users"></div>
+    </div>
 
     <script
       async
-      src="https://storage.googleapis.com/lootbox-widgets-staging/widgets/0.7.3-demo/build/NavBar.production.js"
-    ></script>
-
-    <script
-      async
-      src="https://storage.googleapis.com/lootbox-widgets-staging/widgets/0.7.3-demo/build/MyProfile.production.js"
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-demo/build/AuthenticateAnonUsers.production.js"
     ></script>
   </body>
 </html>

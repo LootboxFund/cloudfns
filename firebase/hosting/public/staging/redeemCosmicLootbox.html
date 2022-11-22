@@ -9,10 +9,10 @@
     />
     <!-- <meta charset="utf-8" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>My Lootbox Tickets</title>
+    <title>Lootbox Public Profile</title>
     <meta
       name="description"
-      content="Your collection of Lootbox Tickets. Earn by redeeming real money from them."
+      content="Lootbox public profile to display your Lootbox Fan Tickets"
     />
     <script
       src="https://unpkg.com/react@17/umd/react.production.min.js"
@@ -27,9 +27,9 @@
         margin: 0;
         padding: 0px 10px;
       }
-      #my-tickets {
+      #redeem-cosmic-lootbox {
         margin: 30px auto 30px;
-        max-width: 720px;
+        max-width: 1200px;
       }
       #nav-bar {
         width: 100%;
@@ -47,16 +47,13 @@
   </head>
   <body>
     <div id="nav-bar"></div>
-    <div id="my-tickets"></div>
-
-    <script
-      async
-      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-demo/build/MyTickets.production.js"
-    ></script>
+    <div id="redeem-cosmic-lootbox"></div>
 
     <script
       async
       src="https://storage.googleapis.com/lootbox-widgets-staging/widgets/0.7.3-demo/build/NavBar.production.js"
     ></script>
+
+    <script src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-demo/build/RedeemCosmicLootbox.production.js"></script>
   </body>
 </html>
