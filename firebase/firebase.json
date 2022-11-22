@@ -25,6 +25,10 @@
       "project": "lootbox-fund-staging",
       "rewrites": [
         {
+          "source": "/profile",
+          "destination": "/profile.html"
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
