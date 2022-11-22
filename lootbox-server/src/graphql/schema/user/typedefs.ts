@@ -96,6 +96,7 @@ const UserTypeDefs = gql`
     getMyProfile: GetMyProfileResponse!
     publicUser(id: ID!): PublicUserResponse!
     getAnonToken(idToken: ID!): GetAnonTokenResponse!
+    getAnonTokenV2(userID: ID!): GetAnonTokenResponse!
     checkPhoneEnabled(email: String!): CheckPhoneEnabledResponse!
   }
 
