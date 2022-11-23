@@ -82,6 +82,10 @@ const UserTypeDefs = gql`
     isEnabled: Boolean!
   }
 
+  type TruncatedEmailByPhoneResponseSuccess {
+    email: String
+  }
+
   union CheckPhoneEnabledResponse =
       CheckPhoneEnabledResponseSuccess
     | ResponseError
@@ -92,12 +96,17 @@ const UserTypeDefs = gql`
 
   union GetAnonTokenResponse = GetAnonTokenResponseSuccess | ResponseError
 
+  union TruncatedEmailByPhoneResponse =
+      TruncatedEmailByPhoneResponseSuccess
+    | ResponseError
+
   extend type Query {
     getMyProfile: GetMyProfileResponse!
     publicUser(id: ID!): PublicUserResponse!
     getAnonToken(idToken: ID!): GetAnonTokenResponse!
     getAnonTokenV2(userID: ID!): GetAnonTokenResponse!
     checkPhoneEnabled(email: String!): CheckPhoneEnabledResponse!
+    truncatedEmailByPhone(phoneNumber: String!): TruncatedEmailByPhoneResponse!
   }
 
   type CreateUserResponseSuccess {

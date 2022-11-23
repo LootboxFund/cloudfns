@@ -29,6 +29,8 @@ import {
   QueryCheckPhoneEnabledArgs,
   SyncProviderUserResponse,
   QueryGetAnonTokenV2Args,
+  TruncatedEmailByPhoneResponse,
+  QueryTruncatedEmailByPhoneArgs,
 } from "../../generated/types";
 import {
   getUser,
@@ -57,6 +59,7 @@ import { paginateUserClaims } from "../../../api/firestore";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
 import { formatEmail } from "../../../lib/utils";
 import { convertUserDBToGQL, isAnon } from "../../../lib/user";
+import { truncateEmail } from "../../../lib/email";
 
 const UserResolvers = {
   Query: {
@@ -317,6 +320,42 @@ const UserResolvers = {
         } else {
           return { isEnabled: false };
         }
+      } catch (err) {
+        console.error("Error checking phone enabled", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured. Please try again later.",
+          },
+        };
+      }
+    },
+    /**
+     * Returns truncated email address (i.e. s*****s@gmail.com) for a given phone number
+     * If user is not found, or if the email DNE on user, then return null
+     */
+    truncatedEmailByPhone: async (
+      _,
+      { phoneNumber }: QueryTruncatedEmailByPhoneArgs
+    ): Promise<TruncatedEmailByPhoneResponse> => {
+      try {
+        const userIDP = await identityProvider.getUserByPhoneNumber(
+          phoneNumber
+        );
+
+        if (!userIDP) {
+          return {
+            email: null,
+          };
+        }
+        const { email } = userIDP;
+        if (!email) {
+          return {
+            email: null,
+          };
+        }
+        const truncatedEmail = truncateEmail(email);
+        return { email: truncatedEmail };
       } catch (err) {
         console.error("Error checking phone enabled", err);
         return {
@@ -1178,6 +1217,19 @@ const UserResolvers = {
     __resolveType: (obj: SyncProviderUserResponse) => {
       if ("user" in obj) {
         return "SyncProviderUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  TruncatedEmailByPhoneResponse: {
+    __resolveType: (obj: TruncatedEmailByPhoneResponse) => {
+      if ("email" in obj) {
+        return "TruncatedEmailByPhoneResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
