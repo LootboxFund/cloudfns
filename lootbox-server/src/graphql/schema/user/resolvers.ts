@@ -184,7 +184,7 @@ const UserResolvers = {
           return {
             error: {
               code: StatusCode.Unauthorized,
-              message: "Link expired",
+              message: "Link expired. Please look for a more recent email.",
             },
           };
         }
