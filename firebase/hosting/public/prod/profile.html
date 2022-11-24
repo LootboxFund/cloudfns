@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://www.googleapis.com" />
+    <link rel="preconnect" href="https://lootbox-fund-prod.firebaseapp.com" />
+    <link rel="icon" href="favicon.png" />
+    <!-- <meta charset="utf-8" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lootbox Profile</title>
+    <meta name="description" content="Lootbox private profile page" />
+    <script
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+      crossorigin
+    ></script>
+    <style media="screen">
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        padding: 0px 10px;
+      }
+      #my-profile {
+        margin: 30px auto 30px;
+        max-width: 720px;
+        width: 100%;
+      }
+      #nav-bar {
+        width: 100%;
+        max-width: 1200px;
+
+        margin: 60px auto 30px;
+      }
+      @media only screen and (max-width: 600px) {
+        #nav-bar {
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="nav-bar"></div>
+    <div id="my-profile"></div>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build/NavBar.production.js"
+    ></script>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build/MyProfile.production.js"
+    ></script>
+  </body>
+</html>
