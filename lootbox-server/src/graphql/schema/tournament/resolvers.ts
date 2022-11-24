@@ -438,14 +438,14 @@ const TournamentResolvers = {
         };
       }
 
-      if (payload.lootboxSnapshotIDs.length > 50) {
-        return {
-          error: {
-            code: StatusCode.BadRequest,
-            message: `Can only edit 50 Lootboxes at a time`,
-          },
-        };
-      }
+      // if (payload.lootboxSnapshotIDs.length > 50) {
+      //   return {
+      //     error: {
+      //       code: StatusCode.BadRequest,
+      //       message: `Can only edit 50 Lootboxes at a time`,
+      //     },
+      //   };
+      // }
 
       let tournament: Tournament_Firestore | undefined;
       try {

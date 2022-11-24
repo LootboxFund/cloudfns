@@ -38,5 +38,6 @@ export interface IIdentityProvider {
   updateUser(id: string, request: UpdateUserRequest): Promise<IIdpUser>;
   getSigninToken(userId: string): Promise<string>;
   verifyIDToken(token: string, refreshToken: string): Promise<string | null>;
+  getUserByPhoneNumber(phoneNumber: string): Promise<IIdpUser | null>;
   // generateEmailVerificationLink(email: string): Promise<string>;
 }
