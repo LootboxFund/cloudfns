@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://www.googleapis.com" />
+    <link rel="preconnect" href="https://lootbox-fund-prod.firebaseapp.com" />
+    <link rel="icon" href="favicon.png" />
+    <!-- <meta charset="utf-8" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lootbox Profile Page</title>
+    <meta
+      name="description"
+      content="Lootbox private profile page. Edit your profile settings here."
+    />
+    <script
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+      crossorigin
+    ></script>
+    <style media="screen">
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        padding: 0px 10px;
+      }
+      #my-profile {
+        margin: 30px auto 30px;
+        max-width: 720px;
+        width: 100%;
+      }
+      #nav-bar {
+        width: 100%;
+        max-width: 1200px;
+
+        margin: 60px auto 30px;
+      }
+      @media only screen and (max-width: 600px) {
+        #nav-bar {
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+      }
+    </style>
+    <!-- OpenGraph -->
+    <meta content="Lootbox Profile Page" property="og:title" />
+    <meta
+      content="https://uploads-ssl.webflow.com/61e5c528430274edd50000a3/62e244633ba69fd6233c8a78_kiy8.PNG"
+      property="og:image"
+    />
+    <meta content="Lootbox Profile Page" property="twitter:title" />
+    <meta
+      content="https://uploads-ssl.webflow.com/61e5c528430274edd50000a3/62e244633ba69fd6233c8a78_kiy8.PNG"
+      property="twitter:image"
+    />
+    <meta
+      content="Lootbox private profile page. Edit your profile settings here."
+      property="og:description"
+    />
+    <meta
+      content="Lootbox private profile page. Edit your profile settings here."
+      property="twitter:description"
+    />
+  </head>
+  <body>
+    <div id="nav-bar"></div>
+    <div id="my-profile"></div>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build-1/NavBar.production.js"
+    ></script>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build/MyProfile.production.js"
+    ></script>
+
+    <!-- livechat -->
+    <script
+      src="https://embed.small.chat/T038W80G4BWC03QFP7BL64.js"
+      async
+    ></script>
+  </body>
+</html>

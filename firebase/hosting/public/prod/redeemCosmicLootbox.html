@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://www.googleapis.com" />
+    <link rel="preconnect" href="https://lootbox-fund-prod.firebaseapp.com" />
+    <link rel="icon" href="favicon.png" />
+    <!-- <meta charset="utf-8" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redeem Lootbox Prize</title>
+    <meta
+      name="description"
+      content="Redeem FREE rewards from your LOOTBOX profit sharing tickets."
+    />
+    <script
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+      crossorigin
+    ></script>
+    <script
+      async
+      src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.0/web3.min.js"
+      integrity="sha512-C63V0mFzwl8KV2fRz0QJNKX0d9877urOLSUq5WUq8nUOhDl69hKdGr9mAvl57k47GNjqEMAtiufsvDnk7xs8+w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <!-- open graph -->
+    <meta content="Redeem Lootbox Prize" property="og:title" />
+    <meta
+      content="https://uploads-ssl.webflow.com/61e5c528430274edd50000a3/62d94189b01acd4d7c62bc8b_Group%20380%20(2).png"
+      property="og:image"
+    />
+    <meta content="Redeem Lootbox Prize" property="twitter:title" />
+    <meta
+      content="https://uploads-ssl.webflow.com/61e5c528430274edd50000a3/62d94189b01acd4d7c62bc8b_Group%20380%20(2).png"
+      property="twitter:image"
+    />
+    <meta property="og:type" content="website" />
+    <meta content="summary_large_image" name="twitter:card" />
+    <meta
+      content="Redeem FREE rewards from your LOOTBOX profit sharing tickets."
+      property="og:description"
+    />
+
+    <style media="screen">
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        padding: 0px 10px;
+      }
+      #redeem-cosmic-lootbox {
+        margin: 30px auto 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+      #nav-bar {
+        width: 100%;
+        max-width: 1200px;
+
+        margin: 60px auto 30px;
+      }
+      @media only screen and (max-width: 600px) {
+        #nav-bar {
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="nav-bar"></div>
+    <div id="redeem-cosmic-lootbox"></div>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build-1/NavBar.production.js"
+    ></script>
+
+    <script src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build/RedeemCosmicLootbox.production.js"></script>
+
+    <!-- livechat -->
+    <script
+      src="https://embed.small.chat/T038W80G4BWC03QFP7BL64.js"
+      async
+    ></script>
+  </body>
+</html>
