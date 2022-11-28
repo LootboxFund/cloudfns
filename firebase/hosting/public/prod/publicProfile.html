@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://www.googleapis.com" />
+    <link rel="preconnect" href="https://lootbox-fund-prod.firebaseapp.com" />
+    <link rel="icon" href="favicon.png" />
+    <!-- <meta charset="utf-8" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lootbox Public Profile</title>
+    <meta
+      name="description"
+      content="Lootbox public profile to display your Lootbox Fan Tickets"
+    />
+    <script
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+      crossorigin
+    ></script>
+
+    <!-- OpenGraph -->
+    <title>My Lootbox ESports Tickets</title>
+    <meta
+      content="https://uploads-ssl.webflow.com/61e5c528430274edd50000a3/637f512eaecf4c308e246c8c_PublicProfileOG.png"
+      property="og:image"
+    />
+    <meta
+      content="https://uploads-ssl.webflow.com/61e5c528430274edd50000a3/637f512eaecf4c308e246c8c_PublicProfileOG.png"
+      property="twitter:image"
+    />
+    <meta content="Lootbox Public Profile" property="og:title" />
+    <meta
+      content="Earn profit sharing LOOTBOX fan tickets with your favorite gamer!"
+      property="og:description"
+    />
+    <meta content="Lootbox Public Profile" property="twitter:title" />
+    <meta
+      content="Earn profit sharing LOOTBOX fan tickets with your favorite gamer!"
+      property="twitter:description"
+    />
+    <meta property="og:type" content="website" />
+    <meta content="summary_large_image" name="twitter:card" />
+
+    <style media="screen">
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        padding: 0px 10px;
+      }
+      #public-profile {
+        margin: 30px auto 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+      #nav-bar {
+        width: 100%;
+        max-width: 1200px;
+
+        margin: 60px auto 30px;
+      }
+      @media only screen and (max-width: 600px) {
+        #nav-bar {
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="nav-bar"></div>
+    <div id="public-profile"></div>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build-1/NavBar.production.js"
+    ></script>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build/PublicProfile.production.js"
+    ></script>
+
+    <!-- livechat -->
+    <script
+      src="https://embed.small.chat/T038W80G4BWC03QFP7BL64.js"
+      async
+    ></script>
+  </body>
+</html>

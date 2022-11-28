@@ -25,8 +25,32 @@
       "project": "lootbox-fund-staging",
       "rewrites": [
         {
+          "source": "/profile",
+          "destination": "/profile.html"
+        },
+        {
+          "source": "/earn",
+          "destination": "/redeemCosmicLootbox.html"
+        },
+        {
+          "source": "/my-tickets",
+          "destination": "/myTickets.html"
+        },
+        {
+          "source": "/user",
+          "destination": "/publicProfile.html"
+        },
+        {
+          "source": "/onboard",
+          "destination": "/linkAnon.html"
+        },
+        {
+          "source": "/logout",
+          "destination": "/logout.html"
+        },
+        {
           "source": "**",
-          "destination": "/index.html"
+          "destination": "/viralOnboarding.html"
         }
       ]
     },
@@ -42,8 +66,32 @@
       "project": "lootbox-fund-prod",
       "rewrites": [
         {
+          "source": "/profile",
+          "destination": "/profile.html"
+        },
+        {
+          "source": "/earn",
+          "destination": "/redeemCosmicLootbox.html"
+        },
+        {
+          "source": "/my-tickets",
+          "destination": "/myTickets.html"
+        },
+        {
+          "source": "/user",
+          "destination": "/publicProfile.html"
+        },
+        {
+          "source": "/onboard",
+          "destination": "/linkAnon.html"
+        },
+        {
+          "source": "/logout",
+          "destination": "/logout.html"
+        },
+        {
           "source": "**",
-          "destination": "/index.html"
+          "destination": "/viralOnboarding.html"
         }
       ]
     }

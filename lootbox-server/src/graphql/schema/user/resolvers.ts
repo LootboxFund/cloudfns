@@ -28,6 +28,9 @@ import {
   CheckPhoneEnabledResponse,
   QueryCheckPhoneEnabledArgs,
   SyncProviderUserResponse,
+  QueryGetAnonTokenV2Args,
+  TruncatedEmailByPhoneResponse,
+  QueryTruncatedEmailByPhoneArgs,
 } from "../../generated/types";
 import {
   getUser,
@@ -56,6 +59,7 @@ import { paginateUserClaims } from "../../../api/firestore";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
 import { formatEmail } from "../../../lib/utils";
 import { convertUserDBToGQL, isAnon } from "../../../lib/user";
+import { truncateEmail } from "../../../lib/email";
 
 const UserResolvers = {
   Query: {
@@ -126,11 +130,90 @@ const UserResolvers = {
     },
     /**
      * Returns a login token for an anonymous user given the idtoken of the user
+     * This function is NOT protected by auth guard.
+     *
+     * Warning: this is sensitive, be careful when changing the clauses determining when a
+     *          token is returned!
+     */
+    getAnonTokenV2: async (
+      _,
+      { userID }: QueryGetAnonTokenV2Args
+    ): Promise<GetAnonTokenResponse> => {
+      try {
+        const [userIDP, userDB, userWallets] = await Promise.all([
+          identityProvider.getUserById(userID),
+          getUser(userID),
+          getUserWallets(userID as unknown as UserID, 1),
+        ]);
+
+        /**
+         *  This method should not return a token if ANY of the conditions are met
+         *  1. User has a VERIFIED email (unverified is fine)
+         *  2. User has phoneNumber attached to account
+         *  3. User has a wallet attached to account
+         *  4. User IDP has ANY providerData
+         *  5. User document was created MORE than 4 hours & 10 mins ago
+         *
+         *  If none of these conditions are met, then the user is mostlikely a new / anonymous user
+         *  and we can return a sign in token
+         */
+
+        if (!userIDP || !userDB) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "User not found",
+            },
+          };
+        }
+
+        if (!isAnon(userIDP, userDB, userWallets)) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "Not Allowed",
+            },
+          };
+        }
+        const now = new Date().valueOf();
+        const dateDiff = now - userDB.createdAt; // in milliseconds
+        const dateDiffHours = dateDiff / (1000 * 60); // minutes
+
+        if (dateDiffHours > 4 * 60 + 10) {
+          // 4 * 60 + 10 minutes = 4 hours and 10 minutes
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "Link expired. Please look for a more recent email.",
+            },
+          };
+        }
+
+        const token = await identityProvider.getSigninToken(userID);
+
+        return {
+          token,
+          email: userDB.email || "",
+        };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error ocurred",
+          },
+        };
+      }
+    },
+    /**
+     * Returns a login token for an anonymous user given the idtoken of the user
      * This function is NOT protected by auth guard, however, it will error if the id token
      * is invalid.
      *
      * Warning: this is sensitive, be careful when changing the clauses determining when a
      *          token is returned!
+     */
+    /**
+     * @deprecated - use getAnonTokenV2
      */
     getAnonToken: async (
       _,
@@ -237,6 +320,42 @@ const UserResolvers = {
         } else {
           return { isEnabled: false };
         }
+      } catch (err) {
+        console.error("Error checking phone enabled", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured. Please try again later.",
+          },
+        };
+      }
+    },
+    /**
+     * Returns truncated email address (i.e. s*****s@gmail.com) for a given phone number
+     * If user is not found, or if the email DNE on user, then return null
+     */
+    truncatedEmailByPhone: async (
+      _,
+      { phoneNumber }: QueryTruncatedEmailByPhoneArgs
+    ): Promise<TruncatedEmailByPhoneResponse> => {
+      try {
+        const userIDP = await identityProvider.getUserByPhoneNumber(
+          phoneNumber
+        );
+
+        if (!userIDP) {
+          return {
+            email: null,
+          };
+        }
+        const { email } = userIDP;
+        if (!email) {
+          return {
+            email: null,
+          };
+        }
+        const truncatedEmail = truncateEmail(email);
+        return { email: truncatedEmail };
       } catch (err) {
         console.error("Error checking phone enabled", err);
         return {
@@ -1098,6 +1217,19 @@ const UserResolvers = {
     __resolveType: (obj: SyncProviderUserResponse) => {
       if ("user" in obj) {
         return "SyncProviderUserResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  TruncatedEmailByPhoneResponse: {
+    __resolveType: (obj: TruncatedEmailByPhoneResponse) => {
+      if ("email" in obj) {
+        return "TruncatedEmailByPhoneResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

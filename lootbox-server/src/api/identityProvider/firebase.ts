@@ -168,6 +168,26 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     return convertUserRecordToUser(userRecord);
   }
 
+  async getUserByPhoneNumber(phoneNumber: string): Promise<IIdpUser | null> {
+    let userRecord: UserRecord | null = null;
+    try {
+      userRecord = await this.authInstance.getUserByPhoneNumber(phoneNumber);
+    } catch (err) {
+      if ((err as any)?.code === ERROR_CODE_USER_NOT_FOUND) {
+        // catch this error and just return null
+        return null;
+      } else {
+        throw err;
+      }
+    }
+
+    if (userRecord == null) {
+      return null;
+    }
+
+    return convertUserRecordToUser(userRecord);
+  }
+
   async verifyIDToken(token: string): Promise<UserIdpID | null> {
     try {
       if (!token) return null;

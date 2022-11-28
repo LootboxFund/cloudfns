@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://www.googleapis.com" />
+    <link rel="preconnect" href="https://lootbox-fund-prod.firebaseapp.com" />
+    <link rel="icon" href="favicon.png" />
+    <!-- <meta charset="utf-8" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lootbox Onboarding</title>
+    <script
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+      crossorigin
+    ></script>
+    <meta name="description" content="Verify your account to earn rewards." />
+    <style media="screen">
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        background-color: #1c1c1c;
+      }
+      .mobile-container {
+        width: 100%;
+        height: 100%;
+      }
+      #authenticate-anon-users {
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mobile-container">
+      <div id="authenticate-anon-users"></div>
+    </div>
+
+    <script
+      async
+      src="https://storage.googleapis.com/lootbox-widgets-prod/widgets/0.7.3-prod/build/AuthenticateAnonUsers.production.js"
+    ></script>
+
+    <!-- livechat -->
+    <script
+      src="https://embed.small.chat/T038W80G4BWC03QFP7BL64.js"
+      async
+    ></script>
+  </body>
+</html>
