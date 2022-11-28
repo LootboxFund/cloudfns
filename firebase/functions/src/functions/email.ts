@@ -10,6 +10,7 @@ import {
     LootboxTournamentSnapshot_Firestore,
     Tournament_Firestore,
     EnqueueLootboxDepositEmailRequest,
+    DepositEmailParams,
 } from "@wormgraph/helpers";
 import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
 import { fun } from "../api/firebase";
@@ -21,7 +22,10 @@ import { getCompletedClaimsForLootbox } from "../api/firestore/referral";
 import * as auth from "../api/auth";
 import * as mailService from "../service/mail";
 
-const EMAIL_BATCH_SIZE = 50; // Increment this as our IP warms...
+// const EMAIL_BATCH_SIZE = 20; // Increment this as our IP warms...
+const EMAIL_BATCH_SIZE = 1; // TODO: REMOVE THIS DEV HACK
+const DELAY_PER_EMAIL_SECODNS = 4; // Estimate 4 seconds per email to send - TODO lower this over time as IP reputation gets good & EMAIL_BATCH_SIZE increases
+const SECONDS_PER_BATCH = EMAIL_BATCH_SIZE * DELAY_PER_EMAIL_SECODNS; // Used to queue email batches with delay
 const REGION = manifest.cloudFunctions.region;
 type taskQueueID = "depositEmailUserBatch";
 const buildTaskQueuePath = (taskQueueID: taskQueueID) => `locations/${REGION}/functions/${taskQueueID}`;
@@ -50,6 +54,7 @@ interface DepositEmailUserBatchData {
     type: "deposit";
     deposits: Deposit[];
     userIDs: UserID[];
+    templateEmailData: DepositEmailParams;
 }
 
 export const depositEmailUserBatch = functions
@@ -82,6 +87,9 @@ export const depositEmailUserBatch = functions
 
                     return mailService.sendDepositEmail({
                         toEmail: user.email,
+                        lootboxImg: data.templateEmailData.lootboxImg,
+                        lootboxName: data.templateEmailData.lootboxName,
+                        lootboxRedeemURL: data.templateEmailData.lootboxRedeemURL,
                     });
                 })
             );
@@ -297,15 +305,27 @@ export const enqueueLootboxDepositEmail = functions
             const queue = fun.taskQueue(buildTaskQueuePath("depositEmailUserBatch"));
             const enqueues = [];
 
-            for (const userIDBatch of userIDBatches) {
+            // for (const userIDBatch of userIDBatches) {
+            for (let i = 0; i < userIDBatches.length; i++) {
+                const userIDBatch = userIDBatches[i];
                 logger.info("Enqueuing batch", { batchSize: EMAIL_BATCH_SIZE, numberOfUsers: userIDBatch.length });
                 const taskData: DepositEmailUserBatchData = {
                     type: "deposit",
                     deposits: lootboxDeposits,
                     userIDs: userIDBatch,
+                    templateEmailData: {
+                        lootboxImg: lootbox.stampImage,
+                        lootboxName: lootbox.name,
+                        lootboxRedeemURL: `${manifest.microfrontends.webflow.cosmicLootboxPage}?lid=${lootbox.id}`,
+                    },
                 };
-                // TODO: Add time delay to try and accompany warm up delay https://twilio-cms-prod.s3.amazonaws.com/documents/Generic_IP_Warmup_Schedule.pdf
-                enqueues.push(queue.enqueue(taskData));
+                // Add time delay to try and accompany warm up delay https://twilio-cms-prod.s3.amazonaws.com/documents/Generic_IP_Warmup_Schedule.pdf
+                const scheduleDelaySeconds = i * SECONDS_PER_BATCH;
+                enqueues.push(
+                    queue.enqueue(taskData, {
+                        scheduleDelaySeconds: scheduleDelaySeconds,
+                    })
+                );
             }
 
             await Promise.all(enqueues);
