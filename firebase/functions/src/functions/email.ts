@@ -10,20 +10,26 @@ import {
     LootboxTournamentSnapshot_Firestore,
     Tournament_Firestore,
     EnqueueLootboxDepositEmailRequest,
+    DepositEmailParams,
 } from "@wormgraph/helpers";
 import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
 import { fun } from "../api/firebase";
-import { manifest } from "../manifest";
+import { manifest, SecretName } from "../manifest";
 import { getLootbox, getLootboxTournamentSnapshot, markDepositEmailAsSent } from "../api/firestore";
 import { getTournamentByID } from "../api/firestore/tournament";
 import { promiseChainDelay } from "../lib/promise";
 import { getCompletedClaimsForLootbox } from "../api/firestore/referral";
 import * as auth from "../api/auth";
+import * as mailService from "../service/mail";
 
-const EMAIL_BATCH_SIZE = 30; // Increment this as our IP warms...
+// const EMAIL_BATCH_SIZE = 20; // Increment this as our IP warms...
+const EMAIL_BATCH_SIZE = 1; // TODO: REMOVE THIS DEV HACK
+const DELAY_PER_EMAIL_SECODNS = 4; // Estimate 4 seconds per email to send - TODO lower this over time as IP reputation gets good & EMAIL_BATCH_SIZE increases
+const SECONDS_PER_BATCH = EMAIL_BATCH_SIZE * DELAY_PER_EMAIL_SECODNS; // Used to queue email batches with delay
 const REGION = manifest.cloudFunctions.region;
-type taskQueueID = "emailUserBatch";
+type taskQueueID = "depositEmailUserBatch";
 const buildTaskQueuePath = (taskQueueID: taskQueueID) => `locations/${REGION}/functions/${taskQueueID}`;
+const SENDGRID_DEPOSIT_EMAIL_API_KEY: SecretName = "SENDGRID_DEPOSIT_EMAIL_API_KEY";
 
 export interface DepositFragment {
     tokenAddress: Address;
@@ -44,32 +50,49 @@ export const batcher = <T>(values: T[], batchSize = 450): T[][] => {
     return result;
 };
 
-interface EmailUserBatchData {
+interface DepositEmailUserBatchData {
     type: "deposit";
     deposits: Deposit[];
     userIDs: UserID[];
+    templateEmailData: DepositEmailParams;
 }
 
-export const emailUserBatch = functions
+export const depositEmailUserBatch = functions
     .region(REGION)
     .runWith({
         timeoutSeconds: 540,
         failurePolicy: false,
+        secrets: [SENDGRID_DEPOSIT_EMAIL_API_KEY],
     })
     .tasks.taskQueue({
         retryConfig: {
             maxAttempts: 1,
         },
     })
-    .onDispatch(async (data: EmailUserBatchData) => {
-        logger.info("emailUserBatch", data);
+    .onDispatch(async (data: DepositEmailUserBatchData) => {
+        logger.info("depositEmailUserBatch", data);
         try {
             const users = await auth.getUsers(data.userIDs);
             logger.info("Found users", { UserCount: users.length });
             const validUsers = users.filter((user) => !!user.email && !!user.emailVerified);
             logger.info("Valid Users", { ValidUserCount: validUsers.length });
 
-            // TODO: Send emails VIA sendgrid SDK
+            await Promise.all(
+                validUsers.map((user) => {
+                    if (!user.email) {
+                        return null;
+                    }
+
+                    logger.info("Sending email to user", { userID: user.id, email: user.email });
+
+                    return mailService.sendDepositEmail({
+                        toEmail: user.email,
+                        lootboxImg: data.templateEmailData.lootboxImg,
+                        lootboxName: data.templateEmailData.lootboxName,
+                        lootboxRedeemURL: data.templateEmailData.lootboxRedeemURL,
+                    });
+                })
+            );
         } catch (err) {
             logger.error("Error sending user emails", err);
         }
@@ -279,18 +302,30 @@ export const enqueueLootboxDepositEmail = functions
         try {
             // Lets mark this here before enqueuing any tasks
             await markDepositEmailAsSent(lootbox.id, tournament.id);
-            const queue = fun.taskQueue(buildTaskQueuePath("emailUserBatch"));
+            const queue = fun.taskQueue(buildTaskQueuePath("depositEmailUserBatch"));
             const enqueues = [];
 
-            for (const userIDBatch of userIDBatches) {
+            // for (const userIDBatch of userIDBatches) {
+            for (let i = 0; i < userIDBatches.length; i++) {
+                const userIDBatch = userIDBatches[i];
                 logger.info("Enqueuing batch", { batchSize: EMAIL_BATCH_SIZE, numberOfUsers: userIDBatch.length });
-                const taskData: EmailUserBatchData = {
+                const taskData: DepositEmailUserBatchData = {
                     type: "deposit",
                     deposits: lootboxDeposits,
                     userIDs: userIDBatch,
+                    templateEmailData: {
+                        lootboxImg: lootbox.stampImage,
+                        lootboxName: lootbox.name,
+                        lootboxRedeemURL: `${manifest.microfrontends.webflow.cosmicLootboxPage}?lid=${lootbox.id}`,
+                    },
                 };
-                // TODO: Add time delay to try and accompany warm up delay https://twilio-cms-prod.s3.amazonaws.com/documents/Generic_IP_Warmup_Schedule.pdf
-                enqueues.push(queue.enqueue(taskData));
+                // Add time delay to try and accompany warm up delay https://twilio-cms-prod.s3.amazonaws.com/documents/Generic_IP_Warmup_Schedule.pdf
+                const scheduleDelaySeconds = i * SECONDS_PER_BATCH;
+                enqueues.push(
+                    queue.enqueue(taskData, {
+                        scheduleDelaySeconds: scheduleDelaySeconds,
+                    })
+                );
             }
 
             await Promise.all(enqueues);
