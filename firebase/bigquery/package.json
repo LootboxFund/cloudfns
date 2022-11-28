@@ -1,0 +1,12 @@
+{
+  "name": "bigquery",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "deploy:test": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --table-name-prefix=claim --schema-files=./test_schema.json"
+  },
+  "devDependencies": {
+    "@firebaseextensions/fs-bq-schema-views": "^0.4.3"
+  }
+}
