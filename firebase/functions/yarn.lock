@@ -1933,10 +1933,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.7.3-prod-3":
-  version "0.7.3-prod-3"
-  resolved "https://registry.npmjs.org/@wormgraph/helpers/-/helpers-0.7.3-prod-3.tgz"
-  integrity sha512-jNmdsMtW/RM4cnomkurSIXnOL9ScTYnmQAn6wM2u/U7k5Te7nVljw/d4nl1stZRTJtvvlqVJyzlcQZfw1maGCA==
+"@wormgraph/helpers@0.7.3-prod-4":
+  version "0.7.3-prod-4"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.3-prod-4.tgz#b1e63f65c094d4a85364dcaf4a3b470f408cfbd3"
+  integrity sha512-9ZT+hdIrVuex2oLELY7Fi89vjVQ+frbxed9sKGkrVGnybUE8oeNStFsAS8qh2DSBB6+QHrxbKM2WYvOzXPs+1Q==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
