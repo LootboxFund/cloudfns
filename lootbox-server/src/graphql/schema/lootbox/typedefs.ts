@@ -48,6 +48,12 @@ const LootboxTypeDefs = gql`
     lootboxTicket: LootboxTicket
   }
 
+  # Lootbox Types
+  enum LootboxType {
+    Compete
+    Airdrop
+  }
+
   # Subcollection under the Lootbox
   type LootboxTicket {
     id: ID!
@@ -113,6 +119,9 @@ const LootboxTypeDefs = gql`
     baseTokenURI: String
     creationNonce: String
 
+    # Lootbox Type
+    type: LootboxType
+
     # GQL layer
     userClaims(
       first: Int!
@@ -148,6 +157,9 @@ const LootboxTypeDefs = gql`
 
     metadataDownloadUrl: String
     timestamps: LootboxSnapshotTimestamps!
+
+    # Lootbox Type
+    type: LootboxType
   }
 
   type LootboxResponseSuccess {

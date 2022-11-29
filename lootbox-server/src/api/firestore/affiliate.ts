@@ -767,6 +767,7 @@ export const renderDealConfigsOfTournament = async (
       advertiserAvatar: advertiser?.avatar || "",
       adSets: adSets,
       rateQuoteConfigs: rateQuoteConfigs,
+      strategy: OfferStrategyType.None,
     };
     if (offerFS?.strategy) {
       // @ts-ignore

@@ -27,6 +27,7 @@ const OfferTypeDefs = gql`
     adSetPreviews: [AdSetPreview!]!
     #targetingTags: [AdTargetTag!]!
     airdropMetadata: OfferAirdropMetadata
+    strategy: OfferStrategyType!
   }
 
   type OfferAirdropMetadata {
@@ -99,6 +100,7 @@ const OfferTypeDefs = gql`
     startDate: Timestamp
     endDate: Timestamp
     status: OfferStatus!
+    strategy: OfferStrategyType!
   }
 
   #enum Currency {

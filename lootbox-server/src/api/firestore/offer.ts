@@ -31,6 +31,7 @@ import {
   EditOfferPayload,
   OfferAffiliateView,
   OfferAirdropMetadata,
+  OfferStrategyType,
   QuestionAnswerPreview,
   User,
 } from "../../graphql/generated/types";
@@ -357,6 +358,7 @@ export const listCreatedOffers = async (
       startDate: data.startDate,
       endDate: data.endDate,
       status: data.status,
+      strategy: data.strategy || OfferStrategy.None,
       // targetingTags: data.targetingTags,
     };
     return preview;
@@ -417,7 +419,14 @@ export const viewCreatedOffer = async (
       `Unauthorized. User do not have permissions for this advertiser`
     );
   }
-  return { ...offer, activations: [], adSetPreviews: [] };
+  return {
+    ...offer,
+    // @ts-ignore
+    strategy: offer.strategy || OfferStrategyType.None,
+    airdropMetadata,
+    activations: [],
+    adSetPreviews: [],
+  };
 };
 
 export const listOffersAvailableForOrganizer = async (

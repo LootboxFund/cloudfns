@@ -87,6 +87,7 @@ const OfferResolvers: Resolvers = {
           };
         }
         return {
+          // @ts-ignore
           offers,
         };
       } catch (err) {

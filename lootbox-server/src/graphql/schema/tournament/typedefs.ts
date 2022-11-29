@@ -95,7 +95,7 @@ const TournamentTypeDefs = gql`
     advertiserID: ID!
     advertiserName: String!
     advertiserAvatar: String
-    strategy: OfferStrategyType
+    strategy: OfferStrategyType!
     adSets: [AdSetPreviewInDealConfig!]!
     rateQuoteConfigs: [RateQuoteDealConfig!]!
   }
