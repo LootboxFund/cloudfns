@@ -169,17 +169,19 @@ export const enqueueLootboxDepositEmail = functions
         }
 
         const chain = BLOCKCHAINS[chainSlug];
-        if (!chain || !chain?.rpcUrls[0]) {
+        const rpcURL = chain?.privateRPCUrls[0] || chain?.rpcUrls[0];
+
+        if (!chain || !rpcURL) {
             logger.error("Chain not found", {
                 caller: context.auth.uid,
                 chainIdHex: data.chainIDHex,
                 chainSlug,
                 rpcUrls: chain?.rpcUrls,
+                privateRPCUrls: chain.privateRPCUrls,
             });
             throw new functions.https.HttpsError("not-found", "Chain not found");
         }
-
-        const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrls[0]);
+        const provider = new ethers.providers.JsonRpcProvider(rpcURL);
 
         const tokenData: {
             [key: Address]: {
@@ -226,7 +228,6 @@ export const enqueueLootboxDepositEmail = functions
         let lootboxDeposits: Deposit[] = [];
         try {
             // Get all deposit information about the lootbox
-            // const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrls[0]);
             logger.info("Getting lootbox data", { lootboxAddress: lootbox.address, chain });
             const lootboxContract = new ethers.Contract(lootbox.address, LootboxCosmicABI, provider);
             logger.info("Getting lootbox deposits", { lootboxAddress: lootbox.address, chain });
