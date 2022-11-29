@@ -1,4 +1,5 @@
-import * as sgMail from "@sendgrid/mail";
+import sgMail from "@sendgrid/mail";
+import { SecretName } from "@wormgraph/manifest";
 
 /**
  * Note: process.env.SENDGRID_API_KEY should come from cloud function
@@ -8,6 +9,8 @@ import * as sgMail from "@sendgrid/mail";
  *          secrets: [SENDGRID_API_SECRET],
  *      })
  */
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
+const SENDGRID_DEPOSIT_EMAIL_API_KEY: SecretName = "SENDGRID_DEPOSIT_EMAIL_API_KEY";
+
+sgMail.setApiKey(process.env[SENDGRID_DEPOSIT_EMAIL_API_KEY] || "");
 
 export default sgMail;

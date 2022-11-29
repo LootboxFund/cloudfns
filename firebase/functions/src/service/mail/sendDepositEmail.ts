@@ -1,6 +1,6 @@
 import sgClient from "./client";
 import { MailDataRequired } from "@sendgrid/mail";
-import { manifest } from "../../manifest";
+import { manifest, SecretName } from "../../manifest";
 import { DepositEmailParams } from "@wormgraph/helpers";
 
 const DEPOSIT_EMAIL_TEMPLATE_ID = manifest.sendgrid.emailTemplates.lootboxDeposit.id; // ID for the dynamic template email designed in the sendgrid UI
@@ -14,9 +14,10 @@ interface SendDepositEmailRequest {
     lootboxName: string;
     lootboxRedeemURL: string;
 }
+const SENDGRID_DEPOSIT_EMAIL_API_KEY: SecretName = "SENDGRID_DEPOSIT_EMAIL_API_KEY";
 
 export const sendDepositEmail = async (request: SendDepositEmailRequest) => {
-    if (!process.env.SENDGRID_API_KEY) {
+    if (!process.env[SENDGRID_DEPOSIT_EMAIL_API_KEY]) {
         throw new Error("EMAIL_API_KEY not found in environment");
     }
     const dynamicTemplateData: DepositEmailParams = {

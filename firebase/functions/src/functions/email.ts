@@ -22,8 +22,7 @@ import { getCompletedClaimsForLootbox } from "../api/firestore/referral";
 import * as auth from "../api/auth";
 import * as mailService from "../service/mail";
 
-// const EMAIL_BATCH_SIZE = 20; // Increment this as our IP warms...
-const EMAIL_BATCH_SIZE = 1; // TODO: REMOVE THIS DEV HACK
+const EMAIL_BATCH_SIZE = 25; // Increment this as our IP warms...
 const DELAY_PER_EMAIL_SECODNS = 4; // Estimate 4 seconds per email to send - TODO lower this over time as IP reputation gets good & EMAIL_BATCH_SIZE increases
 const SECONDS_PER_BATCH = EMAIL_BATCH_SIZE * DELAY_PER_EMAIL_SECODNS; // Used to queue email batches with delay
 const REGION = manifest.cloudFunctions.region;
