@@ -261,7 +261,9 @@ const AnalyticsResolvers: Resolvers = {
         }
 
         const baseStats = await baseClaimStatisticsForTournament({
-          tournamentID: tournamentID as TournamentID,
+          queryParams: {
+            tournamentID: tournamentID as TournamentID,
+          },
           table: manifest.bigQuery.tables.claims.id,
           location: manifest.bigQuery.tables.claims.location,
         });

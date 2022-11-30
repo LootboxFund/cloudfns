@@ -18,7 +18,9 @@ const convertSQLRowToBaseClaimStatisticsForTournament = (
 };
 
 export interface BaseClaimStatisticsForTournamentRequest {
-  tournamentID: TournamentID;
+  queryParams: {
+    tournamentID: TournamentID;
+  };
   /** Like manifest.bigquery.tables.claim (i.e. ) */
   table: string;
   location: string; // Might be US or maybe the same location as the google cloud project
@@ -35,7 +37,7 @@ export interface BaseClaimStatisticsForTournamentResponse {
  * Fetches base statistics for claims of a tournament
  */
 export const baseClaimStatisticsForTournament = async ({
-  tournamentID,
+  queryParams,
   table,
   location,
 }: BaseClaimStatisticsForTournamentRequest): Promise<BaseClaimStatisticsForTournamentResponse> => {
@@ -43,7 +45,7 @@ export const baseClaimStatisticsForTournament = async ({
     "Querying BigQuery for",
     `
 
-    tournamentID: ${tournamentID}
+    tournamentID: ${queryParams.tournamentID}
     table: ${table}
     location: ${location}
   
@@ -51,10 +53,12 @@ export const baseClaimStatisticsForTournament = async ({
   );
 
   // Queries the claim table to return base statistics about a tournament
+  // Use parameterized queries to prevent SQL injection attacks
+  // See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
   const query = `
   with all_claims as (
     select status, type
-      from \`${table}\` where tournamentId = ${tournamentID}
+      from \`${table}\` where tournamentId = @eventID
   ),
   completed_claims as (
     select * from all_claims where status = 'complete'
@@ -81,6 +85,9 @@ export const baseClaimStatisticsForTournament = async ({
     query: query,
     // Location must match that of the dataset(s) referenced in the query.
     location: location,
+    params: {
+      eventID: queryParams.tournamentID,
+    },
   };
 
   // Run the query as a job
