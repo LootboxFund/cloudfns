@@ -6,7 +6,10 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import { LootboxFeedResponseSuccess } from "../../graphql/generated/types";
+import {
+  LootboxFeedResponseSuccess,
+  AirdropMetadataCreateInput,
+} from "../../graphql/generated/types";
 import {
   Address,
   Collection,
@@ -27,9 +30,13 @@ import {
   Claim_Firestore,
   ClaimTimestamps_Firestore,
   ClaimStatus_Firestore,
+  LootboxType,
+  OfferID,
 } from "@wormgraph/helpers";
 import { LootboxID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
+import { getTournamentById } from "./tournament";
+import { getOffer } from "./offer";
 
 export const getLootbox = async (
   id: LootboxID
@@ -396,6 +403,8 @@ interface CreateLootboxPayload {
   themeColor: string;
   joinCommunityUrl?: string;
   variant: LootboxVariant_Firestore;
+  type?: LootboxType;
+  airdropMetadata?: AirdropMetadataCreateInput;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayload,
@@ -442,9 +451,41 @@ export const createLootbox = async (
       deployedAt: null,
     },
   };
-
+  if (payload.type) {
+    lootboxPayload.type = payload.type;
+  }
+  if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
+    const [offerInfo, tournamentInfo] = await Promise.all([
+      getOffer(payload.airdropMetadata.offerID as OfferID),
+      payload.airdropMetadata.tournamentID
+        ? getTournamentById(
+            payload.airdropMetadata.tournamentID as TournamentID
+          )
+        : undefined,
+    ]);
+    lootboxPayload.airdropMetadata = {
+      batch: payload.airdropMetadata.batch,
+      instructionsLink: payload.airdropMetadata.instructionsLink || "",
+      offerID: payload.airdropMetadata.offerID as OfferID,
+      oneLiner: payload.airdropMetadata.oneLiner || "",
+      title: payload.airdropMetadata.title,
+      tournamentID: payload.airdropMetadata.tournamentID
+        ? (payload.airdropMetadata.tournamentID as TournamentID)
+        : undefined,
+      value: payload.airdropMetadata.value,
+      lootboxID: lootboxRef.id as LootboxID,
+      organizerID: tournamentInfo ? tournamentInfo.organizer : undefined,
+      advertiserID: offerInfo?.advertiserID,
+      questions: offerInfo?.airdropMetadata?.questions || [],
+    };
+    await Promise.all(
+      payload.airdropMetadata.claimers.map((uid) => {
+        const claimUserID = uid as UserID;
+        // createUserClaimForAirdrop
+      })
+    );
+  }
   await lootboxRef.set(lootboxPayload);
-
   return lootboxPayload;
 };
 
@@ -457,6 +498,7 @@ interface CreateLootboxTournamentSnapshot {
   description: string;
   name: string;
   stampImage: string;
+  type?: LootboxType;
 }
 export const createLootboxTournamentSnapshot = async (
   payload: CreateLootboxTournamentSnapshot
@@ -486,6 +528,9 @@ export const createLootboxTournamentSnapshot = async (
       depositEmailSentAt: null,
     },
   };
+  if (payload.type) {
+    request.type = payload.type;
+  }
 
   await doc.set(request);
 

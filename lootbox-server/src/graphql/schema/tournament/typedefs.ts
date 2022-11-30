@@ -39,6 +39,7 @@ const TournamentTypeDefs = gql`
     timestamps: LootboxSnapshotTimestamps!
     lootbox: Lootbox # Extra Firestore lookup
     impressionPriority: Int!
+    type: String
     # -- BREAKING CHANGE --
     # image: String!
     # backgroundColor: String!

@@ -25,6 +25,10 @@ import { DocumentReference } from "firebase-admin/firestore";
 import { ethers } from "ethers";
 import { generateNonce, generateTicketDigest } from "../lib/whitelist";
 import { whitelistLootboxMintSignature } from "../lib/whitelist";
+import {
+  LootboxType,
+  AirdropMetadataCreateInput,
+} from "../graphql/generated/types";
 
 interface CreateLootboxRequest {
   // passed in variables
@@ -39,6 +43,8 @@ interface CreateLootboxRequest {
   creatorID: UserID;
   lootboxName: string;
   tournamentID?: TournamentID;
+  type?: LootboxType;
+  airdropMetadata?: AirdropMetadataCreateInput;
 }
 
 export const create = async (
@@ -86,6 +92,8 @@ export const create = async (
       backgroundImage: request.backgroundImage,
       themeColor: request.themeColor,
       joinCommunityUrl: request.joinCommunityUrl,
+      type: request.type,
+      airdropMetadata: request.airdropMetadata,
     },
     lootboxDocumentRef
   );
@@ -111,6 +119,7 @@ export const create = async (
         description: createdLootbox.description,
         name: createdLootbox.name,
         stampImage: createdLootbox.stampImage,
+        type: createdLootbox.type,
       });
     }
   }

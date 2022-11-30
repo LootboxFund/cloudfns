@@ -121,6 +121,7 @@ const LootboxTypeDefs = gql`
 
     # Lootbox Type
     type: LootboxType
+    airdropMetadata: LootboxAirdropMetadata
 
     # GQL layer
     userClaims(
@@ -136,6 +137,20 @@ const LootboxTypeDefs = gql`
       @deprecated(
         reason: "Use LootboxTournamentSnapshot subcollection instead - will be removed after Cosmic"
       ) # Optional, if lootboxes are associated to a tournament
+  }
+
+  type LootboxAirdropMetadata {
+    lootboxID: ID!
+    batch: ID!
+    offerID: ID!
+    title: String
+    oneLiner: String
+    value: String
+    instructionsLink: String
+    tournamentID: ID
+    organizerID: ID
+    advertiserID: ID!
+    questions: [ID!]!
   }
 
   type LootboxSnapshotTimestamps {
@@ -212,6 +227,19 @@ const LootboxTypeDefs = gql`
     maxTickets: Int!
     themeColor: String!
     tournamentID: String
+    type: LootboxType
+    airdropMetadata: AirdropMetadataCreateInput
+  }
+
+  input AirdropMetadataCreateInput {
+    batch: Int!
+    offerID: ID!
+    title: String!
+    oneLiner: String
+    value: String!
+    instructionsLink: String
+    tournamentID: ID
+    claimers: [ID!]!
   }
 
   input EditLootboxPayload {
