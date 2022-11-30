@@ -414,7 +414,7 @@ export const createLootbox = async (
   payload: CreateLootboxPayload,
   ref?: DocumentReference<Lootbox_Firestore>
 ): Promise<Lootbox_Firestore> => {
-  if (!payload.airdropMetadata || !payload.airdropMetadata.offerID) {
+  if (payload.airdropMetadata && !payload.airdropMetadata.offerID) {
     throw Error("No offerID provided");
   }
   const lootboxRef = ref
