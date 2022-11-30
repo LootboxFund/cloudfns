@@ -99,17 +99,17 @@ export const create = async (
   );
 
   if (request.tournamentID) {
-    console.log("Checking to add tournament snapshot", {
-      tournamentID: request.tournamentID,
-      lootboxID: createdLootbox.id,
-    });
+    // console.log("Checking to add tournament snapshot", {
+    //   tournamentID: request.tournamentID,
+    //   lootboxID: createdLootbox.id,
+    // });
     // Make sure tournament exists
     const tournament = await getTournamentById(request.tournamentID);
     if (tournament != null) {
-      console.log("creating tournament snapshot", {
-        tournamentID: request.tournamentID,
-        lootboxID: createdLootbox.id,
-      });
+      // console.log("creating tournament snapshot", {
+      //   tournamentID: request.tournamentID,
+      //   lootboxID: createdLootbox.id,
+      // });
       await createLootboxTournamentSnapshot({
         tournamentID: request.tournamentID,
         lootboxID: createdLootbox.id,

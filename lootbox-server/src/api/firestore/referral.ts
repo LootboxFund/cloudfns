@@ -22,6 +22,9 @@ import {
   LootboxMintWhitelistID,
   AffiliateID,
   ClaimTimestamps_Firestore,
+  OfferID,
+  AirdropUserClaimStatus,
+  QuestionAnswerID,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -161,7 +164,10 @@ interface CreateClaimCall {
   /** @deprecated use lootbox */
   chosenPartyBasketNFTBountyValue?: string;
 }
-const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
+export const _createClaim = async (
+  req: CreateClaimCall
+): Promise<Claim_Firestore> => {
+  console.log(`createClaim => ${req.referralId}`);
   const ref = db
     .collection(Collection.Referral)
     .doc(req.referralId)
@@ -257,7 +263,93 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
   }
 
   await ref.set(newClaim);
+  console.log(`Created claim=${ref.id} on referral=${req.referralId}`);
+  return newClaim;
+};
 
+interface CreateAirdropClaimCall extends CreateClaimCall {
+  airdropMetadata: {
+    lootboxID: LootboxID;
+    lootboxAddress?: Address;
+    offerID: OfferID;
+    batchAlias: string;
+    claimStatus: AirdropUserClaimStatus;
+    answers: QuestionAnswerID[];
+  };
+}
+export const _createAirdropClaim = async (
+  req: CreateAirdropClaimCall
+): Promise<Claim_Firestore> => {
+  console.log(`createClaim => ${req.referralId}`);
+  const ref = db
+    .collection(Collection.Referral)
+    .doc(req.referralId)
+    .collection(Collection.Claim)
+    .doc() as DocumentReference<Claim_Firestore>;
+
+  const timestamp = Timestamp.now().toMillis();
+  const newClaim: Claim_Firestore = {
+    id: ref.id as ClaimID,
+    referralId: req.referralId,
+    referrerId: req.referrerId,
+    tournamentId: req.tournamentId,
+    tournamentName: req.tournamentName,
+    referralSlug: req.referralSlug,
+    referralCampaignName: req.referralCampaignName,
+    status: req.status,
+    type: req.type,
+    referralType: req.referralType,
+    whitelistId: null,
+    whitelistedAddress: null,
+    isPostCosmic: req.isPostCosmic,
+    ticketID: null,
+    ticketWeb3ID: null,
+    claimerUserId: req.claimerUserId,
+    timestamps: {
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      deletedAt: null,
+      completedAt: !!req.completed ? timestamp : null,
+      whitelistedAt: null,
+      mintedAt: null,
+    },
+    airdropMetadata: req.airdropMetadata,
+  };
+
+  if (!!req.promoterId) {
+    newClaim.promoterId = req.promoterId;
+  }
+
+  if (!!req.lootboxName) {
+    newClaim.lootboxName = req.lootboxName;
+  }
+
+  if (!!req.lootboxID) {
+    newClaim.lootboxID = req.lootboxID;
+  }
+
+  if (!!req.lootboxNFTBountyValue) {
+    newClaim.lootboxNFTBountyValue = req.lootboxNFTBountyValue;
+  }
+
+  if (!!req.originLootboxId) {
+    newClaim.originLootboxId = req.originLootboxId;
+  }
+
+  if (!!req.lootboxAddress) {
+    newClaim.lootboxAddress = req.lootboxAddress;
+  }
+
+  if (!!req.rewardFromClaim) {
+    newClaim.rewardFromClaim = req.rewardFromClaim;
+  }
+
+  if (!!req.rewardFromFriendReferred) {
+    newClaim.rewardFromFriendReferred = req.rewardFromFriendReferred;
+  }
+
+  await ref.set(newClaim);
+  console.log(`Created airdrop claim=${ref.id} on referral=${req.referralId}`);
   return newClaim;
 };
 

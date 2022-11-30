@@ -84,6 +84,7 @@ const LootboxResolvers: Resolvers = {
           lootbox: convertLootboxDBToGQL(lootbox),
         };
       } catch (err) {
+        console.error(err);
         return {
           error: {
             code: StatusCode.ServerError,

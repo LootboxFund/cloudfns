@@ -1,10 +1,18 @@
 import {
   AffiliateID,
+  AirdropUserClaimStatus,
+  ClaimStatus_Firestore,
+  ClaimType_Firestore,
   Claim_Firestore,
   Collection,
+  LootboxID,
   OfferID,
   QuestionAnswerID,
+  ReferralID,
+  ReferralSlug,
+  ReferralType_Firestore,
   TournamentID,
+  UserID,
 } from "@wormgraph/helpers";
 import { Query } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -24,6 +32,7 @@ import {
   QuestionAnswerPreview,
 } from "../../graphql/generated/types";
 import { getTournamentById } from "./tournament";
+import { _createAirdropClaim, _createClaim } from "./referral";
 
 export const listPotentialAirdropClaimers = async (
   {
@@ -35,12 +44,7 @@ export const listPotentialAirdropClaimers = async (
   },
   userIdpID: UserIdpID
 ): Promise<Omit<ListPotentialAirdropClaimersResponseSuccess, "__typename">> => {
-  console.log(`
-  
-    tournamentID: ${tournamentID}
-    offerID: ${offerID}
-
-  `);
+  console.log(`... listPotentialAirdropClaimers`);
   // get all claims from tournament
   // get the offer details
   // get the tournament details
@@ -51,23 +55,10 @@ export const listPotentialAirdropClaimers = async (
       getOffer(offerID),
       listClaimsOfAirdropOffer(offerID),
     ]);
+  console.log(claimsOfThisAirdropOffer);
   if (!offer) {
     throw new Error("Offer not found");
   }
-  console.log(`tournament === ${tournament?.id}`);
-  console.log(`--- claims of tournament ---`);
-  console.log(
-    claimsOfThisTournament.map(
-      (c) => `${c.id} = ${c.status} owned by ${c.claimerUserId}`
-    )
-  );
-  console.log(`offer === ${offer?.id}`);
-  console.log(`--- claimers of airdrop offer ---`);
-  console.log(
-    claimsOfThisAirdropOffer.map(
-      (c) => `${c.id} = ${c.status} owned by ${c.claimerUserId}`
-    )
-  );
   if (!tournament || !tournament.organizer) {
     throw new Error("Tournament not found bruh");
   }
@@ -106,27 +97,17 @@ export const listPotentialAirdropClaimers = async (
       question: q.question,
       type: q.type,
     })) as QuestionAnswerPreview[];
-  console.log(`--- uniqueUsers ---`);
-  console.log(uniqueUsers.map((c) => c.id));
   // exclude the user who have received a past airdrop from the offer's airdrop exclusion list
   const airdropOffersToExclude = offer.airdropMetadata?.excludedOffers || [];
   const uniquePotentialUsers = uniqueUsers.filter((u) => {
     if (!u.airdropsReceived) return true;
     return !u.airdropsReceived.some((r) => airdropOffersToExclude.includes(r));
   });
-  console.log(`--- uniquePotentialUsers ---`);
-  console.log(uniquePotentialUsers.map((c) => c.id));
   const uniquePotentialClaimers = uniquePotentialUsers
     .map((u) => {
       const claimForUser = claimsOfThisAirdropOffer.find(
         (c) => c.claimerUserId === u.id
       );
-      console.log(`--- claimForUser ---
-      
-      claim = ${claimForUser?.id}
-      user = ${u.id}
-      
-      `);
       const potentialClaimer: PotentialAirdropClaimer = {
         userID: u.id,
         username: u.username || "Anon User",
@@ -183,11 +164,87 @@ export const listClaimsOfAirdropOffer = async (
   offerID: OfferID
 ): Promise<Claim_Firestore[]> => {
   const claimRef = db
-    .collection(Collection.Claim)
+    .collectionGroup(Collection.Claim)
     .where("airdropMetadata.offerID", "==", offerID) as Query<Claim_Firestore>;
   const claimCollectionItems = await claimRef.get();
+  console.log(
+    `Is empty? ${claimCollectionItems.empty}, has ${claimCollectionItems.size} items`
+  );
   if (claimCollectionItems.empty) {
     return [];
   }
   return claimCollectionItems.docs.map((doc) => doc.data());
+};
+
+export const createAirdropClaim = async (
+  req: Claim_Firestore,
+  airdropLootbox: Lootbox_Firestore,
+  offerID: OfferID
+): Promise<Claim_Firestore> => {
+  console.log(
+    `Creating airdrop claim for ${req.claimerUserId} on referral ${req.referralId} with claimID = ${req.id}`
+  );
+  return await _createAirdropClaim({
+    referralId: req.referralId,
+    tournamentId: req.tournamentId,
+    referrerId: req.referrerId as unknown as UserID,
+    promoterId: req.promoterId,
+    referralSlug: req.referralSlug,
+    referralCampaignName: req.referralCampaignName || "",
+    tournamentName: req.tournamentName,
+    status: ClaimStatus_Firestore.complete,
+    type: ClaimType_Firestore.airdrop,
+    referralType: req.referralType,
+    completed: true,
+    originLootboxId: req.lootboxID,
+    isPostCosmic: true,
+    claimerUserId: req.claimerUserId,
+    rewardFromClaim: req.rewardFromClaim,
+    lootboxName: airdropLootbox.name,
+    lootboxAddress: airdropLootbox.address || undefined,
+    rewardFromFriendReferred: req.rewardFromFriendReferred,
+    airdropMetadata: {
+      lootboxID: airdropLootbox.id,
+      lootboxAddress: airdropLootbox.address || undefined,
+      offerID: offerID,
+      // @ts-ignore
+      batchAlias: airdropLootbox.airdropMetadata.batch,
+      claimStatus: AirdropUserClaimStatus.Awaiting,
+      answers: [],
+    },
+  });
+};
+
+export const determineAirdropClaimWithReferrerCredit = async (
+  claimers: UserID[],
+  tournamentID?: TournamentID
+): Promise<Claim_Firestore[]> => {
+  if (tournamentID) {
+    console.log(`Found claimers in tournament = ${claimers.length}`);
+    const claimsOfThisTournament = await listClaimsInTournament(tournamentID);
+    // get unique users from list of tournament claims
+    const uniqueClaimsByUserID = _.uniq(
+      claimsOfThisTournament.filter((c) => c.claimerUserId)
+    ) as Claim_Firestore[];
+    console.log(
+      `Found uniqueClaimsByUserID in tournament = ${uniqueClaimsByUserID.length}`
+    );
+    const usersHashMap = claimers.reduce((acc, curr: UserID) => {
+      return {
+        ...acc,
+        [curr]: false,
+      };
+    }, {} as Record<UserID, any>);
+    uniqueClaimsByUserID.forEach((c) => {
+      if (c.claimerUserId && !usersHashMap[c.claimerUserId]) {
+        usersHashMap[c.claimerUserId] = c;
+      }
+    });
+    console.log(Object.keys(usersHashMap).map((u) => usersHashMap[u]));
+    const claimersWithReferrerCredit = Object.keys(usersHashMap)
+      .map((u) => usersHashMap[u])
+      .filter((u) => u.referralId) as Claim_Firestore[];
+    return claimersWithReferrerCredit;
+  }
+  return [];
 };

@@ -101,7 +101,7 @@ export const parseLootboxDB = (
   };
   if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
     // @ts-ignore
-    data.airdropMetadata = {
+    lootboxDB.airdropMetadata = {
       lootboxID: lootbox.airdropMetadata.lootboxID,
       batch: lootbox.airdropMetadata.batch,
       offerID: lootbox.airdropMetadata.offerID,

@@ -37,6 +37,10 @@ import { LootboxID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
 import { getTournamentById } from "./tournament";
 import { getOffer } from "./offer";
+import {
+  createAirdropClaim,
+  determineAirdropClaimWithReferrerCredit,
+} from "./airdrop";
 
 export const getLootbox = async (
   id: LootboxID
@@ -410,6 +414,9 @@ export const createLootbox = async (
   payload: CreateLootboxPayload,
   ref?: DocumentReference<Lootbox_Firestore>
 ): Promise<Lootbox_Firestore> => {
+  if (!payload.airdropMetadata || !payload.airdropMetadata.offerID) {
+    throw Error("No offerID provided");
+  }
   const lootboxRef = ref
     ? ref
     : (db
@@ -455,14 +462,24 @@ export const createLootbox = async (
     lootboxPayload.type = payload.type;
   }
   if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
-    const [offerInfo, tournamentInfo] = await Promise.all([
+    console.log(
+      `Airdrop on tournament = ${payload.airdropMetadata.tournamentID} with claimers = ${payload.airdropMetadata.claimers.length}`
+    );
+    const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([
       getOffer(payload.airdropMetadata.offerID as OfferID),
       payload.airdropMetadata.tournamentID
         ? getTournamentById(
             payload.airdropMetadata.tournamentID as TournamentID
           )
         : undefined,
+      payload.airdropMetadata.tournamentID
+        ? determineAirdropClaimWithReferrerCredit(
+            payload.airdropMetadata.claimers as UserID[],
+            payload.airdropMetadata.tournamentID as TournamentID
+          )
+        : [],
     ]);
+
     lootboxPayload.airdropMetadata = {
       batch: payload.airdropMetadata.batch,
       instructionsLink: payload.airdropMetadata.instructionsLink || "",
@@ -478,10 +495,16 @@ export const createLootbox = async (
       advertiserID: offerInfo?.advertiserID,
       questions: offerInfo?.airdropMetadata?.questions || [],
     };
+    lootboxPayload.name = `${payload.name} - Batch ${payload.airdropMetadata.batch}`;
+    console.log(`Got airdrop claimers: ${airdropClaimers.length}`);
     await Promise.all(
-      payload.airdropMetadata.claimers.map((uid) => {
-        const claimUserID = uid as UserID;
-        // createUserClaimForAirdrop
+      airdropClaimers.map((claim) => {
+        return createAirdropClaim(
+          claim,
+          lootboxPayload,
+          // @ts-ignore
+          payload.airdropMetadata.offerID as OfferID
+        );
       })
     );
   }
