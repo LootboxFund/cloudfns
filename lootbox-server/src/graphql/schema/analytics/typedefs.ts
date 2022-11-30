@@ -111,6 +111,21 @@ const AnalyticsTypeDefs = gql`
       ReportPromoterTournamentPerfResponseSuccess
     | ResponseError
 
+  type BaseClaimStatsForTournament {
+    totalClaimCount: Int!
+    completedClaimCount: Int!
+    viralClaimCount: Int!
+    bonusRewardClaimCount: Int!
+    oneTimeClaimCount: Int!
+  }
+  type BaseClaimStatsForTournamentResponseSuccess {
+    stats: BaseClaimStatsForTournament!
+  }
+
+  union BaseClaimStatsForTournamentResponse =
+      BaseClaimStatsForTournamentResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -136,6 +151,9 @@ const AnalyticsTypeDefs = gql`
     reportPromoterTournamentPerf(
       payload: ReportPromoterTournamentPerfInput!
     ): ReportPromoterTournamentPerfResponse!
+    baseClaimStatsForTournament(
+      tournamentID: ID!
+    ): BaseClaimStatsForTournamentResponse!
   }
 `;
 

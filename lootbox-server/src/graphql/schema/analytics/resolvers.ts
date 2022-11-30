@@ -5,6 +5,7 @@ import {
   AffiliateType,
   OfferID,
   TournamentID,
+  UserID,
 } from "@wormgraph/helpers";
 import {
   reportAdvertiserAffiliatePerf,
@@ -25,17 +26,20 @@ import {
   ReportPromoterTournamentPerfResponse,
   Resolvers,
   StatusCode,
+  BaseClaimStatsForTournamentResponse,
+  QueryBaseClaimStatsForTournamentArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { QueryReportOrganizerOfferPerfArgs } from "../../generated/types";
-import {
-  Affiliate,
-  ReportOrganizerOfferPerfResponse,
-} from "../../generated/types";
+import { ReportOrganizerOfferPerfResponse } from "../../generated/types";
 import {
   ReportAdvertiserAffiliatePerfResponse,
   QueryReportAdvertiserAffiliatePerfArgs,
 } from "../../generated/types";
+import { isAuthenticated } from "../../../lib/permissionGuard";
+import { getTournamentById } from "../../../api/firestore";
+import { baseClaimStatisticsForTournament } from "../../../api/analytics";
+import { manifest } from "../../../manifest";
 
 const AnalyticsResolvers: Resolvers = {
   Query: {
@@ -218,6 +222,64 @@ const AnalyticsResolvers: Resolvers = {
         };
       }
     },
+    baseClaimStatsForTournament: async (
+      _,
+      { tournamentID }: QueryBaseClaimStatsForTournamentArgs,
+      context: Context
+    ) => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      // Make sure the caller owns the tournament
+      try {
+        const tournament = await getTournamentById(
+          tournamentID as TournamentID
+        );
+
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament ${tournamentID} not found`,
+            },
+          };
+        }
+
+        if (tournament.creatorId !== (context.userId as unknown as UserID)) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "Unauthorized",
+            },
+          };
+        }
+
+        const baseStats = await baseClaimStatisticsForTournament({
+          tournamentID: tournamentID as TournamentID,
+          table: manifest.bigQuery.tables.claims.id,
+          location: manifest.bigQuery.tables.claims.location,
+        });
+
+        return { stats: baseStats };
+      } catch (err) {
+        console.error(
+          "Error in baseClaimForTournamentStats fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
+          },
+        };
+      }
+    },
   },
 
   ReportAdvertiserOfferPerformanceResponse: {
@@ -291,9 +353,24 @@ const AnalyticsResolvers: Resolvers = {
       return null;
     },
   },
+
+  BaseClaimStatsForTournamentResponse: {
+    __resolveType: (obj: BaseClaimStatsForTournamentResponse) => {
+      if ("stats" in obj) {
+        return "BaseClaimStatsForTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
-const analyticsComposition = {};
+const analyticsComposition = {
+  "Query.baseClaimStatsForTournament": [isAuthenticated()],
+};
 
 const resolvers = composeResolvers(AnalyticsResolvers, analyticsComposition);
 
