@@ -324,6 +324,14 @@ const OfferTypeDefs = gql`
   }
   union EditActivationResponse = EditActivationResponseSuccess | ResponseError
 
+  # --------- Update Claim as Rewarded ---------
+  type UpdateClaimAsRewardedResponseSuccess {
+    claimID: ID!
+  }
+  union UpdateClaimAsRewardedResponse =
+      UpdateClaimAsRewardedResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     # Advertiser creates an offer
     createOffer(
@@ -338,6 +346,8 @@ const OfferTypeDefs = gql`
     ): CreateActivationResponse!
     # Advertiser edits the activations in an offer including potential deletions
     editActivation(payload: EditActivationPayload!): EditActivationResponse!
+    # Update claim status as rewarded
+    updateClaimAsRewarded(claimID: ID!): UpdateClaimAsRewardedResponse!
   }
 `;
 

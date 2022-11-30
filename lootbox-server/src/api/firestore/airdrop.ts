@@ -207,7 +207,7 @@ export const createAirdropClaim = async (
       lootboxAddress: airdropLootbox.address || undefined,
       offerID: offerID,
       // @ts-ignore
-      batchAlias: airdropLootbox.airdropMetadata.batch,
+      batchAlias: `Batch ${airdropLootbox.airdropMetadata.batch}`,
       claimStatus: AirdropUserClaimStatus.Awaiting,
       answers: [],
     },

@@ -479,13 +479,13 @@ export const createLootbox = async (
           )
         : [],
     ]);
-
+    const batchedName = `${payload.airdropMetadata.title} - Batch ${payload.airdropMetadata.batch}`;
     lootboxPayload.airdropMetadata = {
       batch: payload.airdropMetadata.batch,
       instructionsLink: payload.airdropMetadata.instructionsLink || "",
       offerID: payload.airdropMetadata.offerID as OfferID,
       oneLiner: payload.airdropMetadata.oneLiner || "",
-      title: payload.airdropMetadata.title,
+      title: batchedName,
       tournamentID: payload.airdropMetadata.tournamentID
         ? (payload.airdropMetadata.tournamentID as TournamentID)
         : undefined,
@@ -495,7 +495,7 @@ export const createLootbox = async (
       advertiserID: offerInfo?.advertiserID,
       questions: offerInfo?.airdropMetadata?.questions || [],
     };
-    lootboxPayload.name = `${payload.name} - Batch ${payload.airdropMetadata.batch}`;
+    lootboxPayload.name = batchedName;
     console.log(`Got airdrop claimers: ${airdropClaimers.length}`);
     await Promise.all(
       airdropClaimers.map((claim) => {

@@ -32,6 +32,7 @@ const ReferralTypeDefs = gql`
     unverified
     expired
     complete
+    rewarded
   }
 
   type Claim {
@@ -209,11 +210,22 @@ const ReferralTypeDefs = gql`
 
   union ClaimByIDResponse = ClaimByIDResponseSuccess | ResponseError
 
+  type ListAvailableLootboxesForClaimResponseSuccess {
+    lootboxOptions: [LootboxTournamentSnapshot!]
+  }
+  union ListAvailableLootboxesForClaimResponse =
+      ListAvailableLootboxesForClaimResponseSuccess
+    | ResponseError
+
   extend type Query {
     referral(slug: ID!): ReferralResponse!
     userClaims(userId: ID!, first: Int!, after: Timestamp): UserClaimsResponse!
       @deprecated(reason: "Use public user resolver")
     claimByID(claimID: ID!): ClaimByIDResponse!
+    # get public referral lootbox listings
+    listAvailableLootboxesForClaim(
+      tournamentID: ID!
+    ): ListAvailableLootboxesForClaimResponse!
   }
 
   extend type Mutation {
