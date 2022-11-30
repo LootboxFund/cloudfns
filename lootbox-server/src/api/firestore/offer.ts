@@ -76,14 +76,15 @@ export const createOffer = async (
     // currency: Currency.Usd, // payload.currency || Currency.Usd,
     startDate: payload.startDate
       ? moment(payload.startDate).unix()
-      : new Date().getTime(),
+      : new Date().getTime() / 1000,
     endDate: payload.endDate
       ? moment(payload.endDate).unix()
-      : new Date().getTime() + 60 * 60 * 24 * 365,
+      : (new Date().getTime() + 60 * 60 * 24 * 365) / 1000,
     status: (payload.status || "Active") as OfferStatus,
     affiliateBaseLink: payload.affiliateBaseLink || "",
     mmp: (payload.mmp || "Manual") as MeasurementPartnerType,
     adSets: [],
+    strategy: (payload.strategy || OfferStrategy.None) as OfferStrategy,
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
   if (payload.airdropMetadata) {

@@ -251,6 +251,7 @@ const OfferTypeDefs = gql`
     affiliateBaseLink: String
     mmp: MeasurementPartnerType
     #targetingTags: [AdTargetTag!]!
+    strategy: OfferStrategyType
     airdropMetadata: OfferAirdropMetadataCreateInput
   }
   input OfferAirdropMetadataCreateInput {
