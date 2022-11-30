@@ -14,6 +14,7 @@ const convertSQLRowToBaseClaimStatisticsForTournament = (
     viralClaimCount: data?.viralClaimCount || 0,
     bonusRewardClaimCount: data?.bonusRewardClaimCount || 0,
     oneTimeClaimCount: data?.oneTimeClaimCount || 0,
+    pendingClaimCount: data?.pendingClaimCount || 0,
   };
 };
 
@@ -32,6 +33,7 @@ export interface BaseClaimStatisticsForTournamentResponse {
   viralClaimCount: number;
   bonusRewardClaimCount: number;
   oneTimeClaimCount: number;
+  pendingClaimCount: number;
 }
 /**
  * Fetches base statistics for claims of a tournament
@@ -71,13 +73,17 @@ export const baseClaimStatisticsForTournament = async ({
   ),
   one_time_claims as (
     select * from completed_claims where type = 'one_time'
+  ),
+  pending_claims as (
+    select * from all_claims where status = 'pending'
   )
   select 
     (select count(*) from all_claims)  as totalClaimCount,
     (select count(*) from completed_claims) as completedClaimCount,
     (select count(*) from viral_claims) as viralClaimCount,
     (select count(*) from reward_claims) as bonusRewardClaimCount,
-    (select count(*) from one_time_claims) as oneTimeClaimCount
+    (select count(*) from one_time_claims) as oneTimeClaimCount,
+    (select count(*) from pending_claims) as pendingClaimCount
   `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query

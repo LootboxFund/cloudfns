@@ -117,6 +117,7 @@ const AnalyticsTypeDefs = gql`
     viralClaimCount: Int!
     bonusRewardClaimCount: Int!
     oneTimeClaimCount: Int!
+    pendingClaimCount: Int!
   }
   type BaseClaimStatsForTournamentResponseSuccess {
     stats: BaseClaimStatsForTournament!
