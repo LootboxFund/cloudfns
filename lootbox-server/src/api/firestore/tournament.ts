@@ -29,6 +29,7 @@ import {
   AffiliateID,
   LootboxID,
   LootboxTournamentStatus_Firestore,
+  LootboxType,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -186,10 +187,12 @@ export const getLootboxSnapshotsForTournament = async (
   if (collectionSnapshot.empty) {
     return [];
   } else {
-    return collectionSnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return parseLootboxTournamentSnapshotDB(data);
-    });
+    return collectionSnapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        return parseLootboxTournamentSnapshotDB(data);
+      })
+      .filter((s) => s.type !== LootboxType.Airdrop);
   }
 };
 

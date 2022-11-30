@@ -215,6 +215,32 @@ export const editOffer = async (
   return (await offerRef.get()).data() as Offer_Firestore;
 };
 
+export const updateOfferBatchCount = async (id: OfferID) => {
+  const offerRef = db
+    .collection(Collection.Offer)
+    .doc(id) as DocumentReference<Offer_Firestore>;
+
+  const offerSnapshot = await offerRef.get();
+  if (!offerSnapshot.exists) {
+    throw new Error(`No offer found with ID ${id}`);
+  }
+  const existingOffer = offerSnapshot.data();
+  if (!existingOffer) {
+    throw new Error(`Offer ID ${id} is undefined`);
+  }
+  //
+  const updatePayload: Partial<Offer_Firestore> = {};
+  // repeat
+  if (existingOffer.airdropMetadata) {
+    updatePayload.airdropMetadata = {
+      ...existingOffer.airdropMetadata,
+      batchCount: existingOffer.airdropMetadata.batchCount + 1,
+    };
+  }
+  await offerRef.update(updatePayload);
+  return (await offerRef.get()).data() as Offer_Firestore;
+};
+
 // add activations to offer
 export const createActivation = async (
   id: OfferID,

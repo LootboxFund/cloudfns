@@ -18,6 +18,7 @@ const ReferralTypeDefs = gql`
     referral
     reward
     one_time
+    airdrop
   }
 
   enum ReferralType {

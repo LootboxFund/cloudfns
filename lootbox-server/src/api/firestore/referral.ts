@@ -167,7 +167,6 @@ interface CreateClaimCall {
 export const _createClaim = async (
   req: CreateClaimCall
 ): Promise<Claim_Firestore> => {
-  console.log(`createClaim => ${req.referralId}`);
   const ref = db
     .collection(Collection.Referral)
     .doc(req.referralId)
@@ -349,7 +348,9 @@ export const _createAirdropClaim = async (
   }
 
   await ref.set(newClaim);
-  console.log(`Created airdrop claim=${ref.id} on referral=${req.referralId}`);
+  console.log(
+    `Created airdrop claim=${ref.id} on referral=${req.referralId} for user=${req.claimerUserId}`
+  );
   return newClaim;
 };
 

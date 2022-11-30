@@ -92,6 +92,8 @@ export const convertClaimTypeDBToGQL = (
       return ClaimType.Referral;
     case ClaimType_Firestore.reward:
       return ClaimType.Reward;
+    case ClaimType_Firestore.airdrop:
+      return ClaimType.Airdrop;
     default:
       throw new Error(`Unknown claim type: ${type}`);
   }

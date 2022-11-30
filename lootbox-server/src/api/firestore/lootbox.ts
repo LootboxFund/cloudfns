@@ -36,7 +36,7 @@ import {
 import { LootboxID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
 import { getTournamentById } from "./tournament";
-import { getOffer } from "./offer";
+import { getOffer, updateOfferBatchCount } from "./offer";
 import {
   createAirdropClaim,
   determineAirdropClaimWithReferrerCredit,
@@ -507,6 +507,8 @@ export const createLootbox = async (
         );
       })
     );
+    lootboxPayload.runningCompletedClaims = airdropClaimers.length;
+    await updateOfferBatchCount(payload.airdropMetadata.offerID as OfferID);
   }
   await lootboxRef.set(lootboxPayload);
   return lootboxPayload;

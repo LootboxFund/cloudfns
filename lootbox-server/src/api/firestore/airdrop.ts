@@ -55,7 +55,7 @@ export const listPotentialAirdropClaimers = async (
       getOffer(offerID),
       listClaimsOfAirdropOffer(offerID),
     ]);
-  console.log(claimsOfThisAirdropOffer);
+  console.log(claimsOfThisAirdropOffer.length);
   if (!offer) {
     throw new Error("Offer not found");
   }
@@ -167,9 +167,7 @@ export const listClaimsOfAirdropOffer = async (
     .collectionGroup(Collection.Claim)
     .where("airdropMetadata.offerID", "==", offerID) as Query<Claim_Firestore>;
   const claimCollectionItems = await claimRef.get();
-  console.log(
-    `Is empty? ${claimCollectionItems.empty}, has ${claimCollectionItems.size} items`
-  );
+
   if (claimCollectionItems.empty) {
     return [];
   }
@@ -200,6 +198,7 @@ export const createAirdropClaim = async (
     isPostCosmic: true,
     claimerUserId: req.claimerUserId,
     rewardFromClaim: req.rewardFromClaim,
+    lootboxID: airdropLootbox.id,
     lootboxName: airdropLootbox.name,
     lootboxAddress: airdropLootbox.address || undefined,
     rewardFromFriendReferred: req.rewardFromFriendReferred,
@@ -220,7 +219,7 @@ export const determineAirdropClaimWithReferrerCredit = async (
   tournamentID?: TournamentID
 ): Promise<Claim_Firestore[]> => {
   if (tournamentID) {
-    console.log(`Found claimers in tournament = ${claimers.length}`);
+    console.log(`Given claimers = ${claimers.length}`);
     const claimsOfThisTournament = await listClaimsInTournament(tournamentID);
     // get unique users from list of tournament claims
     const uniqueClaimsByUserID = _.uniq(
@@ -243,7 +242,9 @@ export const determineAirdropClaimWithReferrerCredit = async (
     console.log(Object.keys(usersHashMap).map((u) => usersHashMap[u]));
     const claimersWithReferrerCredit = Object.keys(usersHashMap)
       .map((u) => usersHashMap[u])
-      .filter((u) => u.referralId) as Claim_Firestore[];
+      .filter(
+        (u) => u.referralId && claimers.includes(u.claimerUserId)
+      ) as Claim_Firestore[];
     return claimersWithReferrerCredit;
   }
   return [];
