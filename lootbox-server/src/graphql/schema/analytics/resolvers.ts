@@ -333,6 +333,9 @@ const AnalyticsResolvers: Resolvers = {
             manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
           lootboxTable:
             manifest.bigQuery.datasets.firestoreExport.tables.lootbox.id,
+          lootboxSnapshotTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.lootboxSnapshot
+              .id,
           location: manifest.bigQuery.datasets.firestoreExport.location,
         });
 

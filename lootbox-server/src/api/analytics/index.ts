@@ -130,6 +130,7 @@ export interface LootboxCompletedClaimsForTournamentRequest {
   /** Like manifest.bigquery.tables.claim (i.e. ) */
   claimTable: string;
   lootboxTable: string;
+  lootboxSnapshotTable: string;
   location: string; // Might be US or maybe the same location as the google cloud project
 }
 
@@ -165,6 +166,7 @@ export const lootboxCompletedClaimsForTournament = async ({
   queryParams,
   claimTable,
   lootboxTable,
+  lootboxSnapshotTable,
   location,
 }: LootboxCompletedClaimsForTournamentRequest): Promise<LootboxCompletedClaimsForTournamentResponse> => {
   console.log(
@@ -174,17 +176,20 @@ export const lootboxCompletedClaimsForTournament = async ({
     tournamentID: ${queryParams.tournamentID}
     claimTable: ${claimTable}
     lootboxTable: ${lootboxTable}
+    lootboxSnapshotTable: ${lootboxSnapshotTable}
     location: ${location}
   
   `
   );
 
-  // Queries the claim table to return base statistics about a tournament
-  // Use parameterized queries to prevent SQL injection attacks
-  // See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+  /**
+   * Queries the claim table to return base statistics about a tournament
+   * Use parameterized queries to prevent SQL injection attacks
+   * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+   */
   const query = `
     WITH
-      T AS (
+      AllTournamentClaims AS (
         SELECT
           lootbox.id AS lootboxID,
           lootbox.name AS lootboxName,
@@ -194,22 +199,26 @@ export const lootboxCompletedClaimsForTournament = async ({
           claim.lootboxID AS lootboxID_Claim,
           claim.status AS claimStatus
         FROM
-          \`lootbox-fund-staging.firestore_export.lootbox_schema_lootbox_schema_latest\` AS lootbox
+          \`${lootboxSnapshotTable}\` AS lootboxSnapshot
+        LEFT JOIN
+          \`${lootboxTable}\` AS lootbox
+        ON 
+          lootbox.id = lootboxSnapshot.lootboxID
         LEFT OUTER JOIN
-          \`lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest\` AS claim
+          \`${claimTable}\` AS claim
         ON
           lootbox.id = claim.lootboxID
         WHERE
-          claim.status = 'complete' and claim.tournamentID = @eventID
+          lootboxSnapshot.tournamentID = @eventID
       )
     SELECT
       lootboxID,
       lootboxName,
       maxTickets,
       lootboxImg,
-      COUNT(lootboxID) AS claimCount
+      COUNT(CASE claimStatus WHEN 'complete' THEN 1 ELSE null END) as claimCount
     FROM
-      T
+      AllTournamentClaims
     GROUP BY
       lootboxID,
       lootboxName,

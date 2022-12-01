@@ -1,0 +1,74 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "address",
+      "type": "string"
+    },
+    {
+      "name": "lootboxID",
+      "type": "string"
+    },
+    {
+      "name": "creatorID",
+      "type": "string"
+    },
+    {
+      "name": "lootboxCreatorID",
+      "type": "string"
+    },
+    {
+      "name": "tournamentID",
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "stampImage",
+      "type": "string"
+    },
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "timestamps",
+      "type": "map",
+      "fields": [
+        {
+          "name": "createdAt",
+          "type": "number"
+        },
+        {
+          "name": "updatedAt",
+          "type": "number"
+        },
+        {
+          "name": "deletedAt",
+          "type": "number"
+        },
+        {
+          "name": "depositEmailSentAt",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "impressionPriority",
+      "type": "number"
+    }
+  ]
+}
