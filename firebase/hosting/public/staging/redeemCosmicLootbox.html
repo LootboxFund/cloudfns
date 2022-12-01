@@ -38,17 +38,48 @@
 
         margin: 60px auto 30px;
       }
+      #metamask-mobile-info {
+        visibility: hidden;
+        max-height: 0px;
+        max-width: 0px;
+      }
       @media only screen and (max-width: 600px) {
         #nav-bar {
           margin-top: 20px;
           margin-bottom: 10px;
         }
+        #metamask-mobile-info {
+          background-color: yellow;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: center;
+          padding: 10px;
+          width: 100%;
+          text-align: center;
+          font-family: sans-serif;
+          visibility: visible;
+          height: auto;
+          max-height: none;
+          max-width: none;
+        }
       }
     </style>
   </head>
   <body>
+    <div id="metamask-mobile-info">
+      <b>Lootbox on mobile must use the <a href="https://youtu.be/8BL7COrxJvg?t=135" target="_blank">Metamask Android/iOS App</a></b>
+      <br/>
+      <img src="https://uploads-ssl.webflow.com/61e5c528430274edd50000a3/630efd2a11317d2840049a34_use-metatmask-compressed.gif" />
+    </div>
+
     <div id="nav-bar"></div>
+
+
     <div id="redeem-cosmic-lootbox"></div>
+
+    <br /><br /><br />
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/Xbsra2Ji-4g?start=50" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
     <script
       async
