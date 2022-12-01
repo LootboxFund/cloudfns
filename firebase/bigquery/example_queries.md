@@ -51,3 +51,39 @@ select (select count(*) from all_claims)  as totalClaimCount,
 (select count(*) from reward_claims) as bonusRewardClaimCount,
 (select count(*) from one_time_claims) as oneTimeClaimCount
 ```
+
+### Gets counts of completed claims for each lootbox
+
+```sql
+WITH
+  T AS (
+  SELECT
+    lootbox.id AS lootboxID,
+    lootbox.name AS lootboxName,
+    lootbox.maxTickets AS maxTickets,
+    lootbox.stampImage AS lootboxImg,
+    claim.id AS claimID,
+    claim.lootboxID AS lootboxID_Claim,
+    claim.status AS claimStatus
+  FROM
+    `lootbox-fund-staging.firestore_export.lootbox_schema_lootbox_schema_latest` AS lootbox
+  LEFT OUTER JOIN
+    `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` AS claim
+  ON
+    lootbox.id = claim.lootboxID
+  WHERE
+    claim.status = 'complete' )
+SELECT
+  lootboxID,
+  lootboxName,
+  maxTickets,
+  lootboxImg,
+  COUNT(lootboxID) AS claimCount
+FROM
+  T
+GROUP BY
+  lootboxID,
+  lootboxName,
+  maxTickets,
+  lootboxImg
+```

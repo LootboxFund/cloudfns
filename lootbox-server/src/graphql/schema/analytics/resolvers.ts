@@ -28,6 +28,8 @@ import {
   StatusCode,
   BaseClaimStatsForTournamentResponse,
   QueryBaseClaimStatsForTournamentArgs,
+  LootboxCompletedClaimsForTournamentResponse,
+  QueryLootboxCompletedClaimsForTournamentArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { QueryReportOrganizerOfferPerfArgs } from "../../generated/types";
@@ -38,7 +40,10 @@ import {
 } from "../../generated/types";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { getTournamentById } from "../../../api/firestore";
-import { baseClaimStatisticsForTournament } from "../../../api/analytics";
+import {
+  baseClaimStatisticsForTournament,
+  lootboxCompletedClaimsForTournament,
+} from "../../../api/analytics";
 import { manifest } from "../../../manifest";
 
 const AnalyticsResolvers: Resolvers = {
@@ -226,7 +231,7 @@ const AnalyticsResolvers: Resolvers = {
       _,
       { tournamentID }: QueryBaseClaimStatsForTournamentArgs,
       context: Context
-    ) => {
+    ): Promise<BaseClaimStatsForTournamentResponse> => {
       if (!context.userId) {
         return {
           error: {
@@ -264,11 +269,74 @@ const AnalyticsResolvers: Resolvers = {
           queryParams: {
             tournamentID: tournamentID as TournamentID,
           },
-          table: manifest.bigQuery.tables.claims.id,
-          location: manifest.bigQuery.tables.claims.location,
+          table: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          location: manifest.bigQuery.datasets.firestoreExport.location,
         });
 
         return { stats: baseStats };
+      } catch (err) {
+        console.error(
+          "Error in baseClaimForTournamentStats fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
+          },
+        };
+      }
+    },
+    lootboxCompletedClaimsForTournament: async (
+      _,
+      { tournamentID }: QueryLootboxCompletedClaimsForTournamentArgs,
+      context: Context
+    ): Promise<LootboxCompletedClaimsForTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      // Make sure the caller owns the tournament
+      try {
+        const tournament = await getTournamentById(
+          tournamentID as TournamentID
+        );
+
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament ${tournamentID} not found`,
+            },
+          };
+        }
+
+        if (tournament.creatorId !== (context.userId as unknown as UserID)) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "Unauthorized",
+            },
+          };
+        }
+
+        const { data } = await lootboxCompletedClaimsForTournament({
+          queryParams: {
+            tournamentID: tournamentID as TournamentID,
+          },
+          claimTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          lootboxTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.lootbox.id,
+          location: manifest.bigQuery.datasets.firestoreExport.location,
+        });
+
+        return { data };
       } catch (err) {
         console.error(
           "Error in baseClaimForTournamentStats fetching tournament",
@@ -368,10 +436,24 @@ const AnalyticsResolvers: Resolvers = {
       return null;
     },
   },
+
+  LootboxCompletedClaimsForTournamentResponse: {
+    __resolveType: (obj: LootboxCompletedClaimsForTournamentResponse) => {
+      if ("data" in obj) {
+        return "LootboxCompletedClaimsForTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const analyticsComposition = {
   "Query.baseClaimStatsForTournament": [isAuthenticated()],
+  "Query.lootboxCompletedClaimsForTournament": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AnalyticsResolvers, analyticsComposition);

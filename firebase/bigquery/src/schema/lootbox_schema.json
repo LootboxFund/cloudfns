@@ -1,0 +1,131 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "logo",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "name": "nftBountyValue",
+      "type": "string"
+    },
+    {
+      "name": "joinCommunityUrl",
+      "type": "string"
+    },
+
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "maxTickets",
+      "type": "number"
+    },
+    {
+      "name": "backgroundImage",
+      "type": "string"
+    },
+    {
+      "name": "themeColor",
+      "type": "string"
+    },
+    {
+      "name": "runningCompletedClaims",
+      "type": "number"
+    },
+    {
+      "name": "timestamps",
+      "type": "map",
+      "fields": [
+        {
+          "name": "createdAt",
+          "type": "number"
+        },
+        {
+          "name": "updatedAt",
+          "type": "number"
+        },
+        {
+          "name": "deletedAt",
+          "type": "number"
+        },
+        {
+          "name": "deployedAt",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "stampImage",
+      "type": "string"
+    },
+    {
+      "name": "creatorID",
+      "type": "string"
+    },
+    {
+      "name": "isContractDeployed",
+      "type": "boolean"
+    },
+    {
+      "name": "address",
+      "type": "string"
+    },
+    {
+      "name": "factory",
+      "type": "string"
+    },
+    {
+      "name": "creatorAddress",
+      "type": "string"
+    },
+    {
+      "name": "chainIdHex",
+      "type": "string"
+    },
+    {
+      "name": "variant",
+      "type": "string"
+    },
+    {
+      "name": "chainIdDecimal",
+      "type": "string"
+    },
+    {
+      "name": "chainName",
+      "type": "string"
+    },
+    {
+      "name": "symbol",
+      "type": "string"
+    },
+    {
+      "name": "transactionHash",
+      "type": "string"
+    },
+    {
+      "name": "blockNumber",
+      "type": "number"
+    },
+    {
+      "name": "baseTokenURI",
+      "type": "string"
+    },
+    {
+      "name": "creationNonce",
+      "type": "string"
+    }
+  ]
+}
