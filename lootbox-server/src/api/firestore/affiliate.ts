@@ -22,6 +22,7 @@ import {
   AdSetInTournamentStatus,
   AdID,
   Memo_Firestore,
+  OfferStrategy,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
@@ -42,6 +43,7 @@ import {
   AdSetPreviewInDealConfig,
   Tournament,
   UpdateAffiliateDetailsPayload,
+  OfferStrategyType,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
@@ -49,7 +51,7 @@ import {
   OrganizerOfferWhitelist_Firestore,
 } from "./affiliate.type";
 import { AdSetStatus, AdSet_Firestore, Ad_Firestore } from "./ad.types";
-// import { TournamentOffers } from "../../graphql/generated/types";
+// import { TournamentOffers, OfferStrategyType } from '../../graphql/generated/types';
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getOffer, listActiveActivationsForOffer } from "./offer";
 import * as _ from "lodash";
@@ -191,7 +193,7 @@ export const whitelistAffiliateToOffer = async (
     offerID: payload.offerID as OfferID,
     advertiserID: payload.advertiserID as AdvertiserID,
     status: payload.status,
-    timestamp: new Date().getTime(),
+    timestamp: new Date().getTime() / 1000,
   };
   await whitelistAffiliateToOfferRef.set(organizerOfferWhitelist);
 
@@ -411,6 +413,7 @@ export const addOfferAdSetToTournament = async (
         rq.status === RateQuoteStatus.Active
       );
     });
+
     if (!existingRateQuote) {
       rateQuotes.push(rateQuote);
     }
@@ -456,6 +459,7 @@ export const addOfferAdSetToTournament = async (
         id: payload.offerID as OfferID,
         status: OfferInTournamentStatus.Active,
         rateQuotes: updatedRateQuotes,
+        strategy: existingOffer.strategy || OfferStrategy.None,
         adSets: {
           [payload.adSetID]: AdSetInTournamentStatus.Active,
         },
@@ -469,6 +473,7 @@ export const addOfferAdSetToTournament = async (
           ...existingTournament.offers[payload.offerID],
           status: OfferInTournamentStatus.Active,
           rateQuotes: updatedRateQuotes,
+          strategy: existingOffer.strategy || OfferStrategy.None,
           adSets: {
             ...existingTournament.offers[payload.offerID].adSets,
             [payload.adSetID]: AdSetInTournamentStatus.Active,
@@ -482,6 +487,7 @@ export const addOfferAdSetToTournament = async (
           id: payload.offerID as OfferID,
           status: OfferInTournamentStatus.Active,
           rateQuotes: updatedRateQuotes,
+          strategy: existingOffer.strategy || OfferStrategy.None,
           adSets: {
             [payload.adSetID]: AdSetInTournamentStatus.Active,
           },
@@ -703,6 +709,7 @@ export const renderDealConfigsOfTournament = async (
   const dealConfigSets = offers.map((offer) => {
     const offerName = offersFirestore.find((o) => o.id === offer.id)?.title;
     const offerFS = offersFirestore.find((o) => o.id === offer.id);
+
     const advertiser = advertisersFirestore.find(
       (a) => a.id === offerFS?.advertiserID
     );
@@ -760,7 +767,12 @@ export const renderDealConfigsOfTournament = async (
       advertiserAvatar: advertiser?.avatar || "",
       adSets: adSets,
       rateQuoteConfigs: rateQuoteConfigs,
+      strategy: OfferStrategyType.None,
     };
+    if (offerFS?.strategy) {
+      // @ts-ignore
+      dealConfig.strategy = offerFS?.strategy;
+    }
     return dealConfig;
   });
 
@@ -1009,7 +1021,7 @@ export const createRateQuote = async (
     offerID: payload.offerID as OfferID,
     activationID: payload.activationID as ActivationID,
     pricing: payload.pricing,
-    timestamp: new Date().getTime(),
+    timestamp: new Date().getTime() / 1000,
     status: RateQuoteStatus.Active,
   };
   await rateQuoteRef.set(newRateQuote);
@@ -1129,8 +1141,6 @@ export const viewWhitelistedAffiliatesToOffer = async (
   ).map((w) => w.data());
   const x = affiliateInfos
     .map((o, i) => {
-      console.log(o?.name);
-      console.log(whitelisted[i]);
       return {
         organizer: o,
         whitelist: whitelisted[i],
@@ -1180,8 +1190,6 @@ export const getRateQuoteForOfferAndAffiliate = async (
   ).map((w) => w.data());
   const x = affiliateInfos
     .map((o, i) => {
-      console.log(o?.name);
-      console.log(whitelisted[i]);
       return {
         organizer: o,
         whitelist: whitelisted[i],

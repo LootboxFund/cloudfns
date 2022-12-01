@@ -9,7 +9,7 @@ export const stampNewLootbox = async (
   secret: string,
   props: StampNewLootboxProps
 ): Promise<string> => {
-  console.log("Stamping new lootbox", props);
+  // console.log("Stamping new lootbox", props);
   const {
     backgroundImage,
     logoImage,

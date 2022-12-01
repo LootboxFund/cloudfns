@@ -40,9 +40,9 @@ const typeDefs = [
   OfferTypeDefs,
   MarketplaceTypeDefs,
   PartyBasketTypeDefs,
-  ReferralTypeDefs,
   AdTypeDefs,
   AnalyticsTypeDefs,
+  ReferralTypeDefs,
 ];
 
 const resolvers = {

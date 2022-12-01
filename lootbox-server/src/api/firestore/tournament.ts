@@ -29,6 +29,7 @@ import {
   AffiliateID,
   LootboxID,
   LootboxTournamentStatus_Firestore,
+  LootboxType,
 } from "@wormgraph/helpers";
 import {
   Collection,

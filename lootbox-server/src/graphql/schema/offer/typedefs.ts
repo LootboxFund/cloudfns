@@ -26,6 +26,39 @@ const OfferTypeDefs = gql`
     activations: [Activation!]!
     adSetPreviews: [AdSetPreview!]!
     #targetingTags: [AdTargetTag!]!
+    airdropMetadata: OfferAirdropMetadata
+    strategy: OfferStrategyType!
+  }
+
+  type OfferAirdropMetadata {
+    oneLiner: String
+    value: String!
+    instructionsLink: String
+    questions: [QuestionAnswerPreview!]!
+    excludedOffers: [ID!]!
+    batchCount: Int
+  }
+
+  type QuestionAnswerPreview {
+    id: ID!
+    batch: ID!
+    question: String!
+    type: QuestionFieldType!
+  }
+
+  enum QuestionFieldType {
+    Text
+    Number
+    Phone
+    Email
+    Address
+    Date
+    Screenshot
+  }
+
+  enum OfferStrategyType {
+    None
+    Airdrop
   }
 
   type OfferAffiliateView {
@@ -67,6 +100,7 @@ const OfferTypeDefs = gql`
     startDate: Timestamp
     endDate: Timestamp
     status: OfferStatus!
+    strategy: OfferStrategyType!
   }
 
   #enum Currency {
@@ -217,6 +251,23 @@ const OfferTypeDefs = gql`
     affiliateBaseLink: String
     mmp: MeasurementPartnerType
     #targetingTags: [AdTargetTag!]!
+    strategy: OfferStrategyType
+    airdropMetadata: OfferAirdropMetadataCreateInput
+  }
+  input OfferAirdropMetadataCreateInput {
+    oneLiner: String
+    value: String
+    instructionsLink: String
+    questions: [OfferAirdropQuestionCreateInput!]!
+    excludedOffers: [ID!]!
+  }
+  input OfferAirdropQuestionCreateInput {
+    question: String!
+    type: QuestionFieldType!
+  }
+  enum QuestionAnswerStatus {
+    Active
+    Inactive
   }
   type CreateOfferResponseSuccess {
     offer: Offer!
@@ -234,7 +285,17 @@ const OfferTypeDefs = gql`
     startDate: Timestamp
     endDate: Timestamp
     status: OfferStatus!
+    airdropMetadata: OfferAirdropMetadataEditInput
     #targetingTags: [AdTargetTag!]!
+  }
+  input OfferAirdropMetadataEditInput {
+    oneLiner: String!
+    value: String
+    instructionsLink: String!
+    excludedOffers: [ID!]!
+    activeQuestions: [ID!]!
+    inactiveQuestions: [ID!]!
+    newQuestions: [OfferAirdropQuestionCreateInput!]!
   }
   type EditOfferResponseSuccess {
     offer: Offer!
@@ -263,6 +324,14 @@ const OfferTypeDefs = gql`
   }
   union EditActivationResponse = EditActivationResponseSuccess | ResponseError
 
+  # --------- Update Claim as Rewarded ---------
+  type UpdateClaimAsRewardedResponseSuccess {
+    claimID: ID!
+  }
+  union UpdateClaimAsRewardedResponse =
+      UpdateClaimAsRewardedResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     # Advertiser creates an offer
     createOffer(
@@ -277,6 +346,8 @@ const OfferTypeDefs = gql`
     ): CreateActivationResponse!
     # Advertiser edits the activations in an offer including potential deletions
     editActivation(payload: EditActivationPayload!): EditActivationResponse!
+    # Update claim status as rewarded
+    updateClaimAsRewarded(claimID: ID!): UpdateClaimAsRewardedResponse!
   }
 `;
 

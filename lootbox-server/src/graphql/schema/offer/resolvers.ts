@@ -2,6 +2,7 @@ import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import {
   ActivationID,
   AffiliateID,
+  ClaimID,
   OfferID,
   UserIdpID,
 } from "@wormgraph/helpers";
@@ -29,6 +30,8 @@ import {
   ViewOfferDetailsAsEventAffiliateResponse,
   QueryViewOfferDetailsAsAffiliateArgs,
   AdSetStatus,
+  MutationUpdateClaimAsRewardedArgs,
+  UpdateClaimAsRewardedResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -53,6 +56,7 @@ import {
   getActivationsWithRateQuoteForAffiliate,
   viewOfferDetailsAsAffiliate,
 } from "../../../api/firestore/affiliate";
+import { updateClaimAsRewarded } from "../../../api/firestore/referral";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -87,6 +91,7 @@ const OfferResolvers: Resolvers = {
           };
         }
         return {
+          // @ts-ignore
           offers,
         };
       } catch (err) {
@@ -319,6 +324,35 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
+    updateClaimAsRewarded: async (
+      _,
+      { claimID }: MutationUpdateClaimAsRewardedArgs,
+      context: Context
+    ): Promise<UpdateClaimAsRewardedResponse> => {
+      try {
+        const updatedClaimID = await updateClaimAsRewarded(
+          claimID as ClaimID,
+          context.userId || ("" as UserIdpID)
+        );
+
+        if (!updatedClaimID) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not update claim ${claimID}`,
+            },
+          };
+        }
+        return { claimID: updatedClaimID };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   Offer: {
@@ -444,6 +478,19 @@ const OfferResolvers: Resolvers = {
     __resolveType: (obj: ViewOfferDetailsAsEventAffiliateResponse) => {
       if ("offer" in obj) {
         return "ViewOfferDetailsAsEventAffiliateResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  UpdateClaimAsRewardedResponse: {
+    __resolveType: (obj: UpdateClaimAsRewardedResponse) => {
+      if ("claimID" in obj) {
+        return "UpdateClaimAsRewardedResponseSuccess";
       }
 
       if ("error" in obj) {
