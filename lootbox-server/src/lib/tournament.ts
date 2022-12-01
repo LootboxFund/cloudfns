@@ -9,6 +9,7 @@ import {
   Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
+  LootboxType,
 } from "@wormgraph/helpers";
 import {
   Stream_Firestore,
@@ -40,6 +41,7 @@ export const parseLootboxTournamentSnapshotDB = (
       deletedAt: data.timestamps.deletedAt,
       depositEmailSentAt: data.timestamps.depositEmailSentAt || null,
     },
+    type: data.type,
     // socials,
     status: data.status || LootboxTournamentStatus_Firestore.disabled,
   };
@@ -55,6 +57,7 @@ export const parseTournamentDB = (
     title: data.title,
     description: data.description,
     creatorId: data.creatorId,
+    organizer: data.organizer,
     isPostCosmic: data.isPostCosmic || false,
     runningCompletedClaims: data.runningCompletedClaims || 0,
     timestamps: {
@@ -235,6 +238,7 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
       updatedAt: snapshot.timestamps.updatedAt,
       depositEmailSentAt: snapshot.timestamps.depositEmailSentAt || null,
     },
+    type: snapshot.type,
     // socials,
     status: convertLootboxTournamentSnapshotStatusDBToGQL(snapshot.status),
   };

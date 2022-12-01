@@ -71,7 +71,7 @@ export const indexLootboxOnCreate = functions
         logger.info("indexLootboxOnCreate", { data });
         // Any errors thrown or timeouts will trigger a retry
         // Start a listener to listen for the event
-        const rpcURL = data.chain.rpcUrls[0];
+        const rpcURL = data.chain.privateRPCUrls[0] || data.chain.rpcUrls[0];
         const provider = new ethers.providers.JsonRpcProvider(rpcURL);
         const lootboxFactory = new ethers.Contract(data.payload.factory, LootboxCosmicFactoryABI, provider);
 
@@ -366,9 +366,10 @@ export const indexLootboxOnMint = functions
     .onDispatch(async (data: IndexLootboxOnMintTaskRequest) => {
         logger.info("indexLootboxOnMint", { data });
         // Any errors thrown or timeouts will trigger a retry
+        const rpcURL = data.chain.privateRPCUrls[0] || data.chain.rpcUrls[0];
 
         // Start a listener to listen for the event
-        const provider = new ethers.providers.JsonRpcProvider(data.chain.rpcUrls[0]);
+        const provider = new ethers.providers.JsonRpcProvider(rpcURL);
 
         logger.info("creating lootbox contract");
 

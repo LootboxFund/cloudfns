@@ -4,6 +4,7 @@ import {
   ClaimEdge,
   ClaimPageInfo,
   User,
+  LootboxTournamentSnapshot,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -22,6 +23,12 @@ import {
   LootboxMintWhitelistID,
   AffiliateID,
   ClaimTimestamps_Firestore,
+  OfferID,
+  AirdropUserClaimStatus,
+  QuestionAnswerID,
+  LootboxTournamentSnapshot_Firestore,
+  LootboxTournamentStatus_Firestore,
+  LootboxType,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -42,6 +49,8 @@ import {
   convertClaimStatusDBToGQL,
   convertClaimTypeDBToGQL,
 } from "../../lib/referral";
+import { parseLootboxTournamentSnapshotDB } from "../../lib/tournament";
+import { LootboxStatus } from "../../graphql/generated/types";
 
 export const getReferralBySlug = async (
   slug: ReferralSlug
@@ -161,7 +170,9 @@ interface CreateClaimCall {
   /** @deprecated use lootbox */
   chosenPartyBasketNFTBountyValue?: string;
 }
-const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
+export const _createClaim = async (
+  req: CreateClaimCall
+): Promise<Claim_Firestore> => {
   const ref = db
     .collection(Collection.Referral)
     .doc(req.referralId)
@@ -257,7 +268,95 @@ const _createClaim = async (req: CreateClaimCall): Promise<Claim_Firestore> => {
   }
 
   await ref.set(newClaim);
+  console.log(`Created claim=${ref.id} on referral=${req.referralId}`);
+  return newClaim;
+};
 
+interface CreateAirdropClaimCall extends CreateClaimCall {
+  airdropMetadata: {
+    lootboxID: LootboxID;
+    lootboxAddress?: Address;
+    offerID: OfferID;
+    batchAlias: string;
+    claimStatus: AirdropUserClaimStatus;
+    answers: QuestionAnswerID[];
+  };
+}
+export const _createAirdropClaim = async (
+  req: CreateAirdropClaimCall
+): Promise<Claim_Firestore> => {
+  console.log(`createClaim => ${req.referralId}`);
+  const ref = db
+    .collection(Collection.Referral)
+    .doc(req.referralId)
+    .collection(Collection.Claim)
+    .doc() as DocumentReference<Claim_Firestore>;
+
+  const timestamp = Timestamp.now().toMillis();
+  const newClaim: Claim_Firestore = {
+    id: ref.id as ClaimID,
+    referralId: req.referralId,
+    referrerId: req.referrerId,
+    tournamentId: req.tournamentId,
+    tournamentName: req.tournamentName,
+    referralSlug: req.referralSlug,
+    referralCampaignName: req.referralCampaignName,
+    status: req.status,
+    type: req.type,
+    referralType: req.referralType,
+    whitelistId: null,
+    whitelistedAddress: null,
+    isPostCosmic: req.isPostCosmic,
+    ticketID: null,
+    ticketWeb3ID: null,
+    claimerUserId: req.claimerUserId,
+    timestamps: {
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      deletedAt: null,
+      completedAt: !!req.completed ? timestamp : null,
+      whitelistedAt: null,
+      mintedAt: null,
+    },
+    airdropMetadata: req.airdropMetadata,
+  };
+
+  if (!!req.promoterId) {
+    newClaim.promoterId = req.promoterId;
+  }
+
+  if (!!req.lootboxName) {
+    newClaim.lootboxName = req.lootboxName;
+  }
+
+  if (!!req.lootboxID) {
+    newClaim.lootboxID = req.lootboxID;
+  }
+
+  if (!!req.lootboxNFTBountyValue) {
+    newClaim.lootboxNFTBountyValue = req.lootboxNFTBountyValue;
+  }
+
+  if (!!req.originLootboxId) {
+    newClaim.originLootboxId = req.originLootboxId;
+  }
+
+  if (!!req.lootboxAddress) {
+    newClaim.lootboxAddress = req.lootboxAddress;
+  }
+
+  if (!!req.rewardFromClaim) {
+    newClaim.rewardFromClaim = req.rewardFromClaim;
+  }
+
+  if (!!req.rewardFromFriendReferred) {
+    newClaim.rewardFromFriendReferred = req.rewardFromFriendReferred;
+  }
+
+  await ref.set(newClaim);
+  console.log(
+    `Created airdrop claim=${ref.id} on referral=${req.referralId} for user=${req.claimerUserId}`
+  );
   return newClaim;
 };
 
@@ -1020,5 +1119,93 @@ export const getUnverifiedClaimsForUser = async (
     return [];
   } else {
     return snapshot.docs.map((doc) => doc.data());
+  }
+};
+
+export const updateClaimAsRewarded = async (
+  claimID: ClaimID,
+  userIdpID: UserIdpID
+) => {
+  const claimsRef = db
+    .collectionGroup(Collection.Claim)
+    .where("id", "==", claimID) as Query<Claim_Firestore>;
+
+  const claimsCollectionItems = await claimsRef.get();
+
+  if (claimsCollectionItems.empty) {
+    throw Error(`This claim ${claimID} has no matching database entries`);
+  }
+  const claim = claimsCollectionItems.docs.map((doc) => doc.data())[0];
+  if (!claim) {
+    throw Error(`This claim ${claimID} does not exist`);
+  }
+  if (!claim.referralId) {
+    throw Error(`This claim ${claimID} does not have a referralId`);
+  }
+
+  // check if user is allowed to run this operation
+  const userMatchesIdpID =
+    claim.claimerUserId &&
+    claim.claimerUserId === (userIdpID as unknown as UserID);
+  if (!userMatchesIdpID) {
+    throw Error(
+      `Unauthorized. User do not have permissions to modify this claim`
+    );
+  }
+  // update the claim
+  const claimRef = db
+    .collection(Collection.Referral)
+    .doc(claim.referralId)
+    .collection(Collection.Claim)
+    .doc(claim.id) as DocumentReference<Claim_Firestore>;
+
+  const updatePayload: Partial<Claim_Firestore> = {};
+  updatePayload.status = ClaimStatus_Firestore.rewarded;
+  // repeat
+  if (claim.airdropMetadata && claim.type === ClaimType_Firestore.airdrop) {
+    updatePayload.airdropMetadata = {
+      ...claim.airdropMetadata,
+      claimStatus: AirdropUserClaimStatus.Completed,
+    };
+  }
+  // until done
+  await claimRef.update(updatePayload);
+  return claim.id;
+};
+
+export const getLootboxOptionsForTournament = async (
+  tournamentID: TournamentID
+) => {
+  const impressionPriorityFieldName: keyof LootboxTournamentSnapshot_Firestore =
+    "impressionPriority";
+  const statusFieldName: keyof LootboxTournamentSnapshot_Firestore = "status";
+
+  let query: Query<LootboxTournamentSnapshot_Firestore> = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID)
+    .collection(Collection.LootboxTournamentSnapshot)
+    .where(statusFieldName, "==", LootboxTournamentStatus_Firestore.active)
+    .orderBy(impressionPriorityFieldName, "desc")
+    .orderBy(
+      "timestamps.createdAt",
+      "desc"
+    ) as Query<LootboxTournamentSnapshot_Firestore>;
+
+  const collectionSnapshot = await query.get();
+
+  if (collectionSnapshot.empty) {
+    return [] as LootboxTournamentSnapshot[];
+  } else {
+    return collectionSnapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        return parseLootboxTournamentSnapshotDB(data);
+      })
+      .filter((d) => {
+        return (
+          d.status === LootboxTournamentStatus_Firestore.active &&
+          d.type !== LootboxType.Airdrop
+        );
+      }) as unknown[] as LootboxTournamentSnapshot[];
   }
 };

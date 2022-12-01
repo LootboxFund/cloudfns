@@ -23,6 +23,7 @@ import {
   User,
   LootboxTournamentSnapshotArgs,
   LootboxTournamentSnapshot,
+  AirdropMetadataCreateInput,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -43,6 +44,7 @@ import {
   Address,
   LootboxMintSignatureNonce,
   LootboxTicketID,
+  LootboxType,
   TournamentID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
@@ -82,6 +84,7 @@ const LootboxResolvers: Resolvers = {
           lootbox: convertLootboxDBToGQL(lootbox),
         };
       } catch (err) {
+        console.error(err);
         return {
           error: {
             code: StatusCode.ServerError,
@@ -189,6 +192,10 @@ const LootboxResolvers: Resolvers = {
           creatorID: context.userId as unknown as UserID,
           lootboxName: payload.name,
           tournamentID: payload.tournamentID as TournamentID | undefined,
+          type: payload.type ? (payload.type as LootboxType) : undefined,
+          airdropMetadata: payload.airdropMetadata
+            ? (payload.airdropMetadata as AirdropMetadataCreateInput)
+            : undefined,
         });
 
         return { lootbox: convertLootboxDBToGQL(lootbox) };

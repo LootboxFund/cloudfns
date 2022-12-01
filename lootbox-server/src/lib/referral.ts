@@ -77,6 +77,8 @@ export const convertClaimStatusDBToGQL = (
       return ClaimStatus.Expired;
     case ClaimStatus_Firestore.complete:
       return ClaimStatus.Complete;
+    case ClaimStatus_Firestore.rewarded:
+      return ClaimStatus.Rewarded;
     default:
       throw new Error(`Unknown claim status: ${status}`);
   }
@@ -92,6 +94,8 @@ export const convertClaimTypeDBToGQL = (
       return ClaimType.Referral;
     case ClaimType_Firestore.reward:
       return ClaimType.Reward;
+    case ClaimType_Firestore.airdrop:
+      return ClaimType.Airdrop;
     default:
       throw new Error(`Unknown claim type: ${type}`);
   }

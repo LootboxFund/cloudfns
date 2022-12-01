@@ -25,6 +25,7 @@ const AdTypeDefs = gql`
     AfterPayout
     DailySpin
     TicketCarousel
+    Airdrop
   }
 
   enum AdEventAction {
@@ -212,7 +213,7 @@ const AdTypeDefs = gql`
   input CreateAdPayload {
     name: String!
     description: String
-    publicInfo: String!
+    publicInfo: String
     status: AdStatus!
     placement: Placement!
     creative: CreativeInputCreate!

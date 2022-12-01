@@ -6,7 +6,10 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import { LootboxFeedResponseSuccess } from "../../graphql/generated/types";
+import {
+  LootboxFeedResponseSuccess,
+  AirdropMetadataCreateInput,
+} from "../../graphql/generated/types";
 import {
   Address,
   Collection,
@@ -27,9 +30,17 @@ import {
   Claim_Firestore,
   ClaimTimestamps_Firestore,
   ClaimStatus_Firestore,
+  LootboxType,
+  OfferID,
 } from "@wormgraph/helpers";
 import { LootboxID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
+import { getTournamentById } from "./tournament";
+import { getOffer, updateOfferBatchCount } from "./offer";
+import {
+  createAirdropClaim,
+  determineAirdropClaimWithReferrerCredit,
+} from "./airdrop";
 
 export const getLootbox = async (
   id: LootboxID
@@ -396,11 +407,16 @@ interface CreateLootboxPayload {
   themeColor: string;
   joinCommunityUrl?: string;
   variant: LootboxVariant_Firestore;
+  type?: LootboxType;
+  airdropMetadata?: AirdropMetadataCreateInput;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayload,
   ref?: DocumentReference<Lootbox_Firestore>
 ): Promise<Lootbox_Firestore> => {
+  if (payload.airdropMetadata && !payload.airdropMetadata.offerID) {
+    throw Error("No offerID provided");
+  }
   const lootboxRef = ref
     ? ref
     : (db
@@ -442,9 +458,59 @@ export const createLootbox = async (
       deployedAt: null,
     },
   };
-
+  if (payload.type) {
+    lootboxPayload.type = payload.type;
+  }
+  if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
+    console.log(
+      `Airdrop on tournament = ${payload.airdropMetadata.tournamentID} with claimers = ${payload.airdropMetadata.claimers.length}`
+    );
+    const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([
+      getOffer(payload.airdropMetadata.offerID as OfferID),
+      payload.airdropMetadata.tournamentID
+        ? getTournamentById(
+            payload.airdropMetadata.tournamentID as TournamentID
+          )
+        : undefined,
+      payload.airdropMetadata.tournamentID
+        ? determineAirdropClaimWithReferrerCredit(
+            payload.airdropMetadata.claimers as UserID[],
+            payload.airdropMetadata.tournamentID as TournamentID
+          )
+        : [],
+    ]);
+    const batchedName = `${payload.airdropMetadata.title} - Batch ${payload.airdropMetadata.batch}`;
+    lootboxPayload.airdropMetadata = {
+      batch: payload.airdropMetadata.batch,
+      instructionsLink: payload.airdropMetadata.instructionsLink || "",
+      offerID: payload.airdropMetadata.offerID as OfferID,
+      oneLiner: payload.airdropMetadata.oneLiner || "",
+      title: batchedName,
+      tournamentID: payload.airdropMetadata.tournamentID
+        ? (payload.airdropMetadata.tournamentID as TournamentID)
+        : undefined,
+      value: payload.airdropMetadata.value,
+      lootboxID: lootboxRef.id as LootboxID,
+      organizerID: tournamentInfo ? tournamentInfo.organizer : undefined,
+      advertiserID: offerInfo?.advertiserID,
+      questions: offerInfo?.airdropMetadata?.questions || [],
+    };
+    lootboxPayload.name = batchedName;
+    console.log(`Got airdrop claimers: ${airdropClaimers.length}`);
+    await Promise.all(
+      airdropClaimers.map((claim) => {
+        return createAirdropClaim(
+          claim,
+          lootboxPayload,
+          // @ts-ignore
+          payload.airdropMetadata.offerID as OfferID
+        );
+      })
+    );
+    lootboxPayload.runningCompletedClaims = airdropClaimers.length;
+    await updateOfferBatchCount(payload.airdropMetadata.offerID as OfferID);
+  }
   await lootboxRef.set(lootboxPayload);
-
   return lootboxPayload;
 };
 
@@ -457,6 +523,7 @@ interface CreateLootboxTournamentSnapshot {
   description: string;
   name: string;
   stampImage: string;
+  type?: LootboxType;
 }
 export const createLootboxTournamentSnapshot = async (
   payload: CreateLootboxTournamentSnapshot
@@ -486,6 +553,9 @@ export const createLootboxTournamentSnapshot = async (
       depositEmailSentAt: null,
     },
   };
+  if (payload.type) {
+    request.type = payload.type;
+  }
 
   await doc.set(request);
 

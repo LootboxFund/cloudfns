@@ -4,6 +4,7 @@ import {
   LootboxVariant_Firestore,
   LootboxStatus_Firestore,
   MintWhitelistSignature_Firestore,
+  LootboxType,
 } from "@wormgraph/helpers";
 import { LootboxDeprecated_Firestore } from "../api/firestore/lootbox.types";
 import {
@@ -96,8 +97,24 @@ export const parseLootboxDB = (
     },
     metadata: lootbox.metadata, // deprecated, dont use
     runningCompletedClaims: lootbox.runningCompletedClaims || 0,
+    type: lootbox.type,
   };
-
+  if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
+    // @ts-ignore
+    lootboxDB.airdropMetadata = {
+      lootboxID: lootbox.airdropMetadata.lootboxID,
+      batch: lootbox.airdropMetadata.batch,
+      offerID: lootbox.airdropMetadata.offerID,
+      title: lootbox.airdropMetadata.title,
+      oneLiner: lootbox.airdropMetadata.oneLiner,
+      value: lootbox.airdropMetadata.value,
+      instructionsLink: lootbox.airdropMetadata.instructionsLink,
+      tournamentID: lootbox.airdropMetadata.tournamentID,
+      organizerID: lootbox.airdropMetadata.organizerID,
+      advertiserID: lootbox.airdropMetadata.advertiserID,
+      questions: lootbox.airdropMetadata.questions,
+    };
+  }
   return lootboxDB;
 };
 
@@ -159,7 +176,7 @@ export const convertLootboxStatusGQLToDB = (
 
 export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
   if (lootbox.variant === LootboxVariant_Firestore.cosmic) {
-    return {
+    const data = {
       id: lootbox.id,
       address: lootbox.address,
       factory: lootbox.factory,
@@ -190,7 +207,25 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       baseTokenURI: lootbox.baseTokenURI || null,
       runningCompletedClaims: lootbox.runningCompletedClaims || 0,
       creationNonce: lootbox.creationNonce || null,
+      type: lootbox.type,
     };
+    if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
+      // @ts-ignore
+      data.airdropMetadata = {
+        lootboxID: lootbox.airdropMetadata.lootboxID,
+        batch: lootbox.airdropMetadata.batch,
+        offerID: lootbox.airdropMetadata.offerID,
+        title: lootbox.airdropMetadata.title,
+        oneLiner: lootbox.airdropMetadata.oneLiner,
+        value: lootbox.airdropMetadata.value,
+        instructionsLink: lootbox.airdropMetadata.instructionsLink,
+        tournamentID: lootbox.airdropMetadata.tournamentID,
+        organizerID: lootbox.airdropMetadata.organizerID,
+        advertiserID: lootbox.airdropMetadata.advertiserID,
+        questions: lootbox.airdropMetadata.questions,
+      };
+    }
+    return data;
   } else {
     // this should all be removed soon
     const deprecatedLootbox = lootbox as unknown as LootboxDeprecated_Firestore; // coerce the deprecated type

@@ -30,6 +30,7 @@ import {
   MintWhitelistSignature,
   QueryClaimByIdArgs,
   ClaimByIdResponse,
+  ListAvailableLootboxesForClaimResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { nanoid } from "nanoid";
@@ -55,6 +56,7 @@ import {
   getMintWhistlistSignature,
   getLootboxTournamentSnapshotByLootboxID,
   completeAnonClaim,
+  getLootboxOptionsForTournament,
 } from "../../../api/firestore";
 import {
   AffiliateID,
@@ -96,6 +98,7 @@ import {
   convertMintWhitelistSignatureDBToGQL,
 } from "../../../lib/lootbox";
 import * as claimService from "../../../service/claim";
+import { QueryListAvailableLootboxesForClaimArgs } from "../../generated/types";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -169,6 +172,26 @@ const ReferralResolvers: Resolvers = {
         }
 
         return { claim: convertClaimDBToGQL(claim) };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    listAvailableLootboxesForClaim: async (
+      _,
+      { tournamentID }: QueryListAvailableLootboxesForClaimArgs
+    ): Promise<ListAvailableLootboxesForClaimResponse> => {
+      try {
+        const lootboxOptions = await getLootboxOptionsForTournament(
+          tournamentID as TournamentID
+        );
+        console.log(`Lootbox Options = `);
+        console.log(lootboxOptions.map((l) => l.id));
+        return { lootboxOptions: lootboxOptions };
       } catch (err) {
         return {
           error: {
@@ -1288,6 +1311,17 @@ const ReferralResolvers: Resolvers = {
     __resolveType: (obj: ClaimByIdResponse) => {
       if ("claim" in obj) {
         return "ClaimByIDResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+  ListAvailableLootboxesForClaimResponse: {
+    __resolveType: (obj: ListAvailableLootboxesForClaimResponse) => {
+      if ("lootboxOptions" in obj) {
+        return "ListAvailableLootboxesForClaimResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
