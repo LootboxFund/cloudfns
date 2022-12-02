@@ -143,6 +143,29 @@ const AnalyticsTypeDefs = gql`
       LootboxCompletedClaimsForTournamentResponseSuccess
     | ResponseError
 
+  input DailyClaimStatisticsForTournamentInput {
+    tournamentID: ID!
+    # Like "2020-01-01"
+    startDate: String!
+    # Like "2020-01-12"
+    endDate: String!
+  }
+
+  type DailyClaimStatisticsForTournamentRow {
+    date: String!
+    claimCount: Int!
+    weekNormalized: Int!
+    day: Int!
+  }
+
+  type DailyClaimStatisticsForTournamentResponseSuccess {
+    data: [DailyClaimStatisticsForTournamentRow!]!
+  }
+
+  union DailyClaimStatisticsForTournamentResponse =
+      DailyClaimStatisticsForTournamentResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -174,6 +197,9 @@ const AnalyticsTypeDefs = gql`
     lootboxCompletedClaimsForTournament(
       tournamentID: ID!
     ): LootboxCompletedClaimsForTournamentResponse!
+    dailyClaimStatisticsForTournament(
+      payload: DailyClaimStatisticsForTournamentInput!
+    ): DailyClaimStatisticsForTournamentResponse!
   }
 `;
 

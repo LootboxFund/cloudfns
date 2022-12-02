@@ -30,6 +30,8 @@ import {
   QueryBaseClaimStatsForTournamentArgs,
   LootboxCompletedClaimsForTournamentResponse,
   QueryLootboxCompletedClaimsForTournamentArgs,
+  QueryDailyClaimStatisticsForTournamentArgs,
+  DailyClaimStatisticsForTournamentResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { QueryReportOrganizerOfferPerfArgs } from "../../generated/types";
@@ -42,6 +44,7 @@ import { isAuthenticated } from "../../../lib/permissionGuard";
 import { getTournamentById } from "../../../api/firestore";
 import {
   baseClaimStatisticsForTournament,
+  dailyClaimStatisticsForTournament,
   lootboxCompletedClaimsForTournament,
 } from "../../../api/analytics";
 import { manifest } from "../../../manifest";
@@ -353,6 +356,69 @@ const AnalyticsResolvers: Resolvers = {
         };
       }
     },
+    dailyClaimStatisticsForTournament: async (
+      _,
+      { payload }: QueryDailyClaimStatisticsForTournamentArgs,
+      context: Context
+    ): Promise<DailyClaimStatisticsForTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      // Make sure the caller owns the tournament
+      try {
+        const tournament = await getTournamentById(
+          payload.tournamentID as TournamentID
+        );
+
+        if (!tournament) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Tournament ${payload.tournamentID} not found`,
+            },
+          };
+        }
+
+        if (tournament.creatorId !== (context.userId as unknown as UserID)) {
+          return {
+            error: {
+              code: StatusCode.Unauthorized,
+              message: "Unauthorized",
+            },
+          };
+        }
+
+        const { data } = await dailyClaimStatisticsForTournament({
+          queryParams: {
+            eventID: payload.tournamentID as TournamentID,
+            endDate: payload.endDate,
+            startDate: payload.startDate,
+          },
+          claimTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          location: manifest.bigQuery.datasets.firestoreExport.location,
+        });
+
+        return { data };
+      } catch (err) {
+        console.error(
+          "Error in dailyClaimStatisticsForTournament fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: "An error occured",
+          },
+        };
+      }
+    },
   },
 
   ReportAdvertiserOfferPerformanceResponse: {
@@ -452,11 +518,25 @@ const AnalyticsResolvers: Resolvers = {
       return null;
     },
   },
+
+  DailyClaimStatisticsForTournamentResponse: {
+    __resolveType: (obj: DailyClaimStatisticsForTournamentResponse) => {
+      if ("data" in obj) {
+        return "DailyClaimStatisticsForTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const analyticsComposition = {
   "Query.baseClaimStatsForTournament": [isAuthenticated()],
   "Query.lootboxCompletedClaimsForTournament": [isAuthenticated()],
+  "Query.dailyClaimStatisticsForTournament": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AnalyticsResolvers, analyticsComposition);

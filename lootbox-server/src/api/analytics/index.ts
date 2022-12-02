@@ -245,3 +245,144 @@ export const lootboxCompletedClaimsForTournament = async ({
 
   return { data: rows.map(convertCompletedClaimStatisticsForTournamentRow) };
 };
+
+export interface DailyClaimStatisticsForTournamentRequest {
+  queryParams: {
+    eventID: TournamentID;
+    /** Like: 2022-03-12 */
+    startDate: string;
+    /** Like: 2022-03-12 */
+    endDate: string;
+  };
+  claimTable: string;
+  location: string;
+}
+export interface DailyClaimStatisticsForTournamentRow {
+  // Like 2022-03-12
+  date: string;
+  // Day of the week [1-7]
+  day: number;
+  // Day of the week [1-52]
+  week: number;
+  // Day of the week [1-infinity] (this is normalized and flattened given the start date)
+  weekNormalized: number;
+  claimCount: number; // Number of claims for the given day
+}
+export interface DailyClaimStatisticsForTournamentResponse {
+  data: DailyClaimStatisticsForTournamentRow[];
+}
+const convertDailyClaimStatisticsForTournamentRow = (
+  data: any
+): DailyClaimStatisticsForTournamentRow => {
+  return {
+    date: data?.dateValue?.value || "",
+    day: data?.day || 0,
+    week: data?.week || 0,
+    weekNormalized: data?.weekNormalized || 0,
+    claimCount: data?.claimCount || 0,
+  };
+};
+export const dailyClaimStatisticsForTournament = async ({
+  queryParams,
+  claimTable,
+  location,
+}: DailyClaimStatisticsForTournamentRequest): Promise<DailyClaimStatisticsForTournamentResponse> => {
+  console.log(
+    "Querying BigQuery (TOURNAMENT DAILY CLAIMS)",
+    `
+
+    tournamentID: ${queryParams.eventID}
+    claimTable: ${claimTable}
+    location: ${location}
+    startDate: ${queryParams.startDate}
+    endDate: ${queryParams.endDate}
+  
+  `
+  );
+
+  /**
+   * Queries the claim table to return claims per day
+   * Use parameterized queries to prevent SQL injection attacks
+   * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+   */
+  const query = `
+      WITH
+        DateTable AS (
+        SELECT
+          dateValue
+        FROM
+          UNNEST( GENERATE_DATE_ARRAY(DATE(@startDate), DATE(@endDate), INTERVAL 1 DAY) ) AS dateValue ),
+        TournamentClaimTable AS (
+          SELECT 
+            * 
+          FROM \`${claimTable}\`
+          WHERE tournamentId = @eventID
+        ),
+        CompletedClaims AS (
+        SELECT
+          dateValue,
+          status as claimStatus,
+          DATE(TIMESTAMP_SECONDS(CAST(timestamps_completedAt / 1000 AS INT64))) AS completedDate
+        FROM
+          DateTable
+        LEFT OUTER JOIN
+          TournamentClaimTable
+        ON
+          DATE(TIMESTAMP_SECONDS(CAST(timestamps_completedAt / 1000 AS INT64))) = dateValue
+        )
+      SELECT
+        dateValue,
+        EXTRACT(DAYOFWEEK
+          FROM
+            dateValue) AS day,
+        EXTRACT(WEEK
+          FROM
+            dateValue) AS week,
+          (EXTRACT(WEEK
+            FROM
+              dateValue ) + 53 * ( EXTRACT(YEAR
+              FROM
+                dateValue ) - EXTRACT(YEAR
+              FROM
+                DATE(@startDate)))) - EXTRACT(WEEK
+          FROM
+            DATE(@startDate)
+          ) + 1 AS weekNormalized,
+        COUNT(
+          CASE claimStatus
+            WHEN 'complete' THEN 1
+            ELSE
+            NULL
+          END
+        ) AS claimCount
+      FROM
+        CompletedClaims
+      WHERE
+        dateValue BETWEEN @startDate
+        AND @endDate
+      GROUP BY
+        dateValue
+      LIMIT
+        1000;
+  `;
+
+  // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+  const options = {
+    query: query,
+    // Location must match that of the dataset(s) referenced in the query.
+    location: location,
+    params: {
+      eventID: queryParams.eventID,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+    },
+  };
+
+  // Run the query as a job
+  const [job] = await bigquery.createQueryJob(options);
+
+  // Wait for the query to finish
+  const [rows] = await job.getQueryResults();
+
+  return { data: rows.map(convertDailyClaimStatisticsForTournamentRow) };
+};

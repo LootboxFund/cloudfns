@@ -87,3 +87,122 @@ GROUP BY
   maxTickets,
   lootboxImg
 ```
+
+### For the Lootbox Daily Distribution Graph
+
+```sql
+SELECT
+  DATE(TIMESTAMP_SECONDS(CAST(claim.timestamps_completedAt / 1000 AS INT64))) as completedDate,
+  COUNT(CASE claim.status WHEN 'complete' THEN 1 ELSE null END) as claimCount
+FROM `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` as claim
+  where
+    DATE(TIMESTAMP_SECONDS(CAST(timestamps_completedAt / 1000 AS INT64)))
+      between '2022-01-01' and '2022-10-09'
+  GROUP BY completedDate
+  ORDER BY completedDate ASC
+limit 100
+```
+
+### Gets date range of claims per day
+
+```sql
+WITH
+  DateTable AS (
+  SELECT
+    dateValue
+  FROM
+    UNNEST( GENERATE_DATE_ARRAY(DATE('2015-06-01'), DATE('2022-10-09'), INTERVAL 1 DAY) ) AS dateValue ),
+  CompletedClaims AS (
+  SELECT
+    *,
+    DATE(TIMESTAMP_SECONDS(CAST(timestamps_completedAt / 1000 AS INT64))) AS completedDate
+  FROM
+    DateTable
+  LEFT OUTER JOIN
+    `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest`
+  ON
+    DATE(TIMESTAMP_SECONDS(CAST(timestamps_completedAt / 1000 AS INT64))) = dateValue )
+SELECT
+  dateValue,
+  EXTRACT(DAYOFWEEK
+  FROM
+    dateValue) AS day,
+  EXTRACT(WEEK
+  FROM
+    dateValue) AS week,
+  (EXTRACT(WEEK
+    FROM
+      dateValue ) + 53 * ( EXTRACT(YEAR
+      FROM
+        dateValue ) - EXTRACT(YEAR
+      FROM
+        DATE '2015-06-01'))) - EXTRACT(WEEK
+  FROM
+    DATE '2015-06-01') + 1 AS weekNormalized,
+  COUNT(
+    CASE status
+      WHEN 'complete' THEN 1
+    ELSE
+    NULL
+  END
+    ) AS claimCountbig
+FROM
+  CompletedClaims
+WHERE
+  dateValue BETWEEN '2015-06-01'
+  AND '2022-10-09'
+GROUP BY
+  dateValue
+LIMIT
+  1000;
+```
+
+<!-- WITH
+  DateTable AS (
+  SELECT
+    dateValue
+  FROM
+    UNNEST( GENERATE_DATE_ARRAY(DATE('2015-06-01'), DATE('2022-10-09'), INTERVAL 1 DAY) ) AS dateValue ),
+  CompletedClaims AS (
+  SELECT
+    *,
+    DATE(TIMESTAMP_SECONDS(CAST(timestamps_completedAt / 1000 AS INT64))) AS completedDate
+  FROM
+    DateTable
+  LEFT OUTER JOIN
+    `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest`
+  ON
+    DATE(TIMESTAMP_SECONDS(CAST(timestamps_completedAt / 1000 AS INT64))) = dateValue )
+SELECT
+  dateValue,
+  EXTRACT(DAYOFWEEK
+  FROM
+    dateValue) AS day,
+  EXTRACT(WEEK
+  FROM
+    dateValue) AS week,
+  (EXTRACT(WEEK
+    FROM
+      dateValue ) + 53 * ( EXTRACT(YEAR
+      FROM
+        dateValue ) - EXTRACT(YEAR
+      FROM
+        DATE '2015-06-01'))) - EXTRACT(WEEK
+  FROM
+    DATE '2015-06-01') + 1 AS weekNormalized,
+  COUNT(
+    CASE status
+      WHEN 'complete' THEN 1
+    ELSE
+    NULL
+  END
+    ) AS claimCountbig
+FROM
+  CompletedClaims
+WHERE
+  dateValue BETWEEN '2015-06-01'
+  AND '2022-10-09'
+GROUP BY
+  dateValue
+LIMIT
+  1000; -->
