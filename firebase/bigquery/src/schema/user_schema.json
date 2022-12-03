@@ -1,0 +1,82 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "username",
+      "type": "string"
+    },
+    {
+      "name": "avatar",
+      "type": "string"
+    },
+    {
+      "name": "email",
+      "type": "string"
+    },
+    {
+      "name": "phoneNumber",
+      "type": "string"
+    },
+    {
+      "name": "biography",
+      "type": "string"
+    },
+    {
+      "name": "headshot",
+      "type": "string"
+    },
+    {
+      "name": "socials",
+      "type": "map",
+      "fields": [
+        {
+          "name": "twitter",
+          "type": "string"
+        },
+        {
+          "name": "instagram",
+          "type": "string"
+        },
+        {
+          "name": "tiktok",
+          "type": "string"
+        },
+        {
+          "name": "facebook",
+          "type": "string"
+        },
+        {
+          "name": "discord",
+          "type": "string"
+        },
+        {
+          "name": "snapchat",
+          "type": "string"
+        },
+        {
+          "name": "twitch",
+          "type": "string"
+        },
+        {
+          "name": "web",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "createdAt",
+      "type": "number"
+    },
+    {
+      "name": "updatedAt",
+      "type": "number"
+    },
+    {
+      "name": "deletedAt",
+      "type": "number"
+    }
+  ]
+}

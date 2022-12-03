@@ -4,13 +4,15 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "deploy:schema:staging": "yarn deploy:schema:claim:staging && yarn deploy:schema:lootbox:staging && yarn deploy:schema:lootboxsnapshot:staging",
+    "deploy:schema:staging": "yarn deploy:schema:claim:staging && yarn deploy:schema:lootbox:staging && yarn deploy:schema:lootboxsnapshot:staging && yarn deploy:schema:user:staging",
     "deploy:schema:claim:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export  --table-name-prefix=claim --schema-files=./src/schema/claim_schema.json",
     "deploy:schema:lootbox:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --table-name-prefix=lootbox --schema-files=./src/schema/lootbox_schema.json",
     "deploy:schema:lootboxsnapshot:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --table-name-prefix=lootbox_tournament_snapshot --schema-files=./src/schema/lootbox_snapshot_schema.json",
+    "deploy:schema:user:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --table-name-prefix=user --schema-files=./src/schema/user_schema.json",
     "backfill:lootbox:staging": "npx @firebaseextensions/fs-bq-import-collection --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --source-collection-path=lootbox  --table-name-prefix=lootbox --query-collection-group=false",
     "backfill:claim:staging": "npx @firebaseextensions/fs-bq-import-collection --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --source-collection-path=claim  --table-name-prefix=claim --query-collection-group=true --dataset-location=US",
-    "backfill:lootboxsnapshot:staging": "npx @firebaseextensions/fs-bq-import-collection --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --source-collection-path=lootbox-tournament-snapshot  --table-name-prefix=lootbox_tournament_snapshot --query-collection-group=true --dataset-location=US"
+    "backfill:lootboxsnapshot:staging": "npx @firebaseextensions/fs-bq-import-collection --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --source-collection-path=lootbox-tournament-snapshot  --table-name-prefix=lootbox_tournament_snapshot --query-collection-group=true --dataset-location=US",
+    "backfill:user:staging": "npx @firebaseextensions/fs-bq-import-collection --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --source-collection-path=user  --table-name-prefix=user --dataset-location=US"
   },
   "devDependencies": {
     "@firebaseextensions/fs-bq-import-collection": "^0.1.14",
