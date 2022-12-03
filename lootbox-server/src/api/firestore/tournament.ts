@@ -47,9 +47,7 @@ import {
   convertLootboxTournamentSnapshotDBToGQL,
 } from "../../lib/tournament";
 import { LootboxDeprecated_Firestore } from "./lootbox.types";
-
-const placeholderImageTournament =
-  "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/shared-company-assets%2Fgreen.jpeg?alt=media&token=cbba1393-e7e4-48e5-b418-75e43b348983";
+import { getRandomEventCoverFromLexicaHardcoded } from "../lexica-images";
 
 export const getTournamentById = async (
   id: TournamentID
@@ -360,6 +358,8 @@ export const createTournament = async ({
   const tournamentRef = db
     .collection(Collection.Tournament)
     .doc() as DocumentReference<Tournament_Firestore>;
+  const placeholderImageTournament =
+    await getRandomEventCoverFromLexicaHardcoded();
 
   const tournament: Tournament_Firestore = {
     id: tournamentRef.id as TournamentID,

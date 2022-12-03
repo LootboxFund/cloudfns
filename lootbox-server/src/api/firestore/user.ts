@@ -12,6 +12,7 @@ import {
   UserSocials_Firestore,
   User_Firestore,
 } from "@wormgraph/helpers";
+import { getRandomPortraitFromLexicaHardcoded } from "../lexica-images";
 
 export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   const userRef = db
@@ -36,6 +37,9 @@ export const createUser = async (idpUser: IIdpUser): Promise<User> => {
   if (!!idpUser.username) {
     user.username = idpUser.username;
   }
+
+  const initialAvatar = await getRandomPortraitFromLexicaHardcoded();
+  user.avatar = initialAvatar;
 
   await userRef.set(user);
 

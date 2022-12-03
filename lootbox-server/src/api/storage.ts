@@ -1,5 +1,6 @@
 import { storage } from "./firebase";
 import { manifest } from "../manifest";
+import { getRandomImageFromLexicaHardcoded } from "./lexica-images";
 
 interface GBucketSaveFragProps {
   fileName: string;
@@ -22,4 +23,14 @@ export const saveCsvToStorage = async ({
   });
 
   return signedUrl;
+};
+
+export const retrieveRandomImage = async (prompt?: string) => {
+  return getRandomImageFromLexicaHardcoded();
+};
+
+export const retrieveRandomColor = () => {
+  const randomHexColor =
+    "#" + Math.floor(Math.random() * 16777215).toString(16);
+  return randomHexColor;
 };

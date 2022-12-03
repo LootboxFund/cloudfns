@@ -30,7 +30,7 @@ import {
   AirdropMetadataCreateInput,
 } from "../graphql/generated/types";
 
-interface CreateLootboxRequest {
+export interface CreateLootboxRequest {
   // passed in variables
   lootboxDescription: string;
   backgroundImage: string;
@@ -42,7 +42,7 @@ interface CreateLootboxRequest {
   symbol: string;
   creatorID: UserID;
   lootboxName: string;
-  tournamentID?: TournamentID;
+  tournamentID: TournamentID;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
 }

@@ -39,6 +39,7 @@ import {
   getLootboxUnassignedClaimForUser,
   getLootboxTournamentSnapshot,
   getLootboxTournamentSnapshotByLootboxID,
+  extractOrGenerateLootboxCreateInput,
 } from "../../../api/firestore";
 import {
   Address,
@@ -178,22 +179,25 @@ const LootboxResolvers: Resolvers = {
           },
         };
       }
-
+      const fullPayload = await extractOrGenerateLootboxCreateInput(
+        payload,
+        context.userId
+      );
       try {
         const lootbox = await LootboxService.create({
-          lootboxDescription: payload.description,
-          backgroundImage: payload.backgroundImage,
-          logoImage: payload.logo,
-          themeColor: payload.themeColor,
-          nftBountyValue: payload.nftBountyValue,
-          maxTickets: payload.maxTickets,
-          joinCommunityUrl: payload.joinCommunityUrl || undefined,
-          symbol: payload.name.slice(0, 12),
-          creatorID: context.userId as unknown as UserID,
-          lootboxName: payload.name,
-          tournamentID: payload.tournamentID as TournamentID | undefined,
-          type: payload.type ? (payload.type as LootboxType) : undefined,
-          airdropMetadata: payload.airdropMetadata
+          lootboxDescription: fullPayload.lootboxDescription,
+          backgroundImage: fullPayload.backgroundImage,
+          logoImage: fullPayload.logoImage,
+          themeColor: fullPayload.themeColor,
+          nftBountyValue: fullPayload.nftBountyValue,
+          maxTickets: fullPayload.maxTickets,
+          joinCommunityUrl: fullPayload.joinCommunityUrl || undefined,
+          symbol: fullPayload.symbol,
+          creatorID: fullPayload.creatorID,
+          lootboxName: fullPayload.lootboxName,
+          tournamentID: fullPayload.tournamentID,
+          type: fullPayload.type ? (payload.type as LootboxType) : undefined,
+          airdropMetadata: fullPayload.airdropMetadata
             ? (payload.airdropMetadata as AirdropMetadataCreateInput)
             : undefined,
         });
