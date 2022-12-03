@@ -181,6 +181,23 @@ const AnalyticsTypeDefs = gql`
       ReferrerClaimsForTournamentResponseSuccess
     | ResponseError
 
+  type CampaignClaimsForTournamentRow {
+    referralCampaignName: String!
+    referralSlug: String!
+    userAvatar: String!
+    username: String!
+    userID: String!
+    claimCount: Int!
+  }
+
+  type CampaignClaimsForTournamentResponseSuccess {
+    data: [CampaignClaimsForTournamentRow!]!
+  }
+
+  union CampaignClaimsForTournamentResponse =
+      CampaignClaimsForTournamentResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -218,6 +235,9 @@ const AnalyticsTypeDefs = gql`
     referrerClaimsForTournament(
       tournamentID: ID!
     ): ReferrerClaimsForTournamentResponse!
+    campaignClaimsForTournament(
+      tournamentID: ID!
+    ): CampaignClaimsForTournamentResponse!
   }
 `;
 

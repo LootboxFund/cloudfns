@@ -207,7 +207,8 @@ export const lootboxCompletedClaimsForTournament = async ({
       lootboxName,
       maxTickets,
       lootboxImg
-    ORDER BY claimCount DESC;
+    ORDER BY claimCount DESC
+    LIMIT 1000;
   `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
@@ -262,7 +263,7 @@ const convertUserClaimStatisticsForTournamentRow = (
 };
 
 /**
- * Fetches base statistics for claims of a tournament
+ * Fetches statistics for claims of a tournament
  */
 export const referrerClaimsForTournament = async ({
   queryParams,
@@ -299,7 +300,7 @@ export const referrerClaimsForTournament = async ({
         users.avatar AS userAvatar
       FROM
         \`${userTable}\` AS users
-      LEFT OUTER JOIN
+      LEFT JOIN
         \`${claimTable}\` AS claims
       ON 
         claims.referrerId = users.id
@@ -317,7 +318,8 @@ export const referrerClaimsForTournament = async ({
       userID,
       userName,
       userAvatar
-    ORDER BY claimCount DESC;
+    ORDER BY claimCount DESC
+    LIMIT 1000;
   `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
@@ -337,6 +339,110 @@ export const referrerClaimsForTournament = async ({
   const [rows] = await job.getQueryResults();
 
   return { data: rows.map(convertUserClaimStatisticsForTournamentRow) };
+};
+
+export interface CampaignClaimsForTournamentRequest {
+  queryParams: {
+    tournamentID: TournamentID;
+  };
+  /** Like manifest.bigquery.tables.claim (i.e. ) */
+  claimTable: string;
+  userTable: string;
+  location: string; // Might be US or maybe the same location as the google cloud project
+}
+
+export interface CampaignClaimsForTournamentRow {
+  referralCampaignName: string;
+  referralSlug: string;
+  userAvatar: string;
+  username: string;
+  userID: string;
+  claimCount: number;
+}
+export interface CampaignClaimsForTournamentResponse {
+  data: CampaignClaimsForTournamentRow[];
+}
+
+const convertCampaignClaimsForTournamentRow = (
+  data: any
+): CampaignClaimsForTournamentRow => {
+  // Convert data into type T and return it
+  return {
+    referralCampaignName: data?.referralCampaignName || "",
+    referralSlug: data?.referralSlug || "",
+    userAvatar: data?.userAvatar || "",
+    username: data?.username || "",
+    userID: data?.userID || "",
+    claimCount: data?.claimCount || 0,
+  };
+};
+
+/**
+ * Fetches statistics for claims of a tournament
+ */
+export const campaignClaimsForTournament = async ({
+  queryParams,
+  claimTable,
+  userTable,
+  location,
+}: ReferrerForTournamentRequest): Promise<CampaignClaimsForTournamentResponse> => {
+  console.log(
+    "Querying BigQuery (TOURNAMENT CAMPAIGN CLAIMS)",
+    `
+
+    tournamentID: ${queryParams.tournamentID}
+    claimTable: ${claimTable}
+    userTable: ${userTable}
+    location: ${location}
+  
+  `
+  );
+
+  /**
+   * Queries the claim table to return base statistics about a tournament
+   * Use parameterized queries to prevent SQL injection attacks
+   * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+   */
+  const query = `
+    select 
+      referralCampaignName,
+      referralSlug,
+      avatar as userAvatar,
+      username,
+      users.id as userID,
+      COUNT(CASE WHEN claims.status = 'complete' THEN 1 ELSE null END) as claimCount
+    from \`${claimTable}\`  as claims
+    INNER JOIN 
+      \`${userTable}\` as users
+    ON claims.referrerId = users.id
+    WHERE tournamentId = @eventID
+    GROUP BY
+      userID,
+      referralCampaignName,
+      referralSlug,
+      username,
+      avatar
+    ORDER BY claimCount DESC
+    limit 1000;
+  `;
+
+  // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+  const options = {
+    query: query,
+    // Location must match that of the dataset(s) referenced in the query.
+    location: location,
+    params: {
+      eventID: queryParams.tournamentID,
+    },
+  };
+
+  // Run the query as a job
+  const [job] = await bigquery.createQueryJob(options);
+
+  // Wait for the query to finish
+  const [rows] = await job.getQueryResults();
+
+  return { data: rows.map(convertCampaignClaimsForTournamentRow) };
 };
 
 export interface DailyClaimStatisticsForTournamentRequest {
