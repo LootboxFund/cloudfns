@@ -1160,7 +1160,7 @@ export const updateClaimAsRewarded = async (
     .doc(claim.id) as DocumentReference<Claim_Firestore>;
 
   const updatePayload: Partial<Claim_Firestore> = {};
-  updatePayload.status = ClaimStatus_Firestore.rewarded;
+  // updatePayload.status = ClaimStatus_Firestore.rewarded;
   // repeat
   if (claim.airdropMetadata && claim.type === ClaimType_Firestore.airdrop) {
     updatePayload.airdropMetadata = {
