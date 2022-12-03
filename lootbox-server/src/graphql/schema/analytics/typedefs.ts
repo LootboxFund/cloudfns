@@ -111,6 +111,93 @@ const AnalyticsTypeDefs = gql`
       ReportPromoterTournamentPerfResponseSuccess
     | ResponseError
 
+  type BaseClaimStatsForTournament {
+    totalClaimCount: Int!
+    completedClaimCount: Int!
+    viralClaimCount: Int!
+    bonusRewardClaimCount: Int!
+    oneTimeClaimCount: Int!
+    completionRate: Int!
+  }
+  type BaseClaimStatsForTournamentResponseSuccess {
+    stats: BaseClaimStatsForTournament!
+  }
+
+  union BaseClaimStatsForTournamentResponse =
+      BaseClaimStatsForTournamentResponseSuccess
+    | ResponseError
+
+  type LootboxCompletedClaimsForTournamentRow {
+    lootboxID: ID!
+    lootboxName: String!
+    maxTickets: Int!
+    lootboxImg: String!
+    claimCount: Int!
+  }
+
+  type LootboxCompletedClaimsForTournamentResponseSuccess {
+    data: [LootboxCompletedClaimsForTournamentRow!]!
+  }
+
+  union LootboxCompletedClaimsForTournamentResponse =
+      LootboxCompletedClaimsForTournamentResponseSuccess
+    | ResponseError
+
+  input DailyClaimStatisticsForTournamentInput {
+    tournamentID: ID!
+    # Like "2020-01-01"
+    startDate: String!
+    # Like "2020-01-12"
+    endDate: String!
+  }
+
+  type DailyClaimStatisticsForTournamentRow {
+    date: String!
+    claimCount: Int!
+    weekNormalized: Int!
+    day: Int!
+  }
+
+  type DailyClaimStatisticsForTournamentResponseSuccess {
+    data: [DailyClaimStatisticsForTournamentRow!]!
+  }
+
+  union DailyClaimStatisticsForTournamentResponse =
+      DailyClaimStatisticsForTournamentResponseSuccess
+    | ResponseError
+
+  type ReferrerClaimsForTournamentRow {
+    userName: String!
+    userAvatar: String!
+    userID: String!
+    claimCount: Int!
+  }
+
+  type ReferrerClaimsForTournamentResponseSuccess {
+    data: [ReferrerClaimsForTournamentRow!]!
+  }
+
+  union ReferrerClaimsForTournamentResponse =
+      ReferrerClaimsForTournamentResponseSuccess
+    | ResponseError
+
+  type CampaignClaimsForTournamentRow {
+    referralCampaignName: String!
+    referralSlug: String!
+    userAvatar: String!
+    username: String!
+    userID: String!
+    claimCount: Int!
+  }
+
+  type CampaignClaimsForTournamentResponseSuccess {
+    data: [CampaignClaimsForTournamentRow!]!
+  }
+
+  union CampaignClaimsForTournamentResponse =
+      CampaignClaimsForTournamentResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -136,6 +223,21 @@ const AnalyticsTypeDefs = gql`
     reportPromoterTournamentPerf(
       payload: ReportPromoterTournamentPerfInput!
     ): ReportPromoterTournamentPerfResponse!
+    baseClaimStatsForTournament(
+      tournamentID: ID!
+    ): BaseClaimStatsForTournamentResponse!
+    lootboxCompletedClaimsForTournament(
+      tournamentID: ID!
+    ): LootboxCompletedClaimsForTournamentResponse!
+    dailyClaimStatisticsForTournament(
+      payload: DailyClaimStatisticsForTournamentInput!
+    ): DailyClaimStatisticsForTournamentResponse!
+    referrerClaimsForTournament(
+      tournamentID: ID!
+    ): ReferrerClaimsForTournamentResponse!
+    campaignClaimsForTournament(
+      tournamentID: ID!
+    ): CampaignClaimsForTournamentResponse!
   }
 `;
 

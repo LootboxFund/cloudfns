@@ -1,0 +1,134 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "referrerId",
+      "type": "string"
+    },
+    {
+      "name": "referralCampaignName",
+      "type": "string"
+    },
+    {
+      "name": "referralId",
+      "type": "string"
+    },
+    {
+      "name": "referralSlug",
+      "type": "string"
+    },
+    {
+      "name": "referralType",
+      "type": "string"
+    },
+    {
+      "name": "promoterId",
+      "type": "string"
+    },
+    {
+      "name": "tournamentId",
+      "type": "string"
+    },
+    {
+      "name": "tournamentName",
+      "type": "string"
+    },
+    {
+      "name": "originLootboxId",
+      "type": "string"
+    },
+    {
+      "name": "lootboxID",
+      "type": "string"
+    },
+    {
+      "name": "lootboxAddress",
+      "type": "string"
+    },
+    {
+      "name": "lootboxName",
+      "type": "string"
+    },
+    {
+      "name": "lootboxNFTBountyValue",
+      "type": "string"
+    },
+    {
+      "name": "lootboxMaxTickets",
+      "type": "number"
+    },
+    {
+      "name": "whitelistId",
+      "type": "string"
+    },
+    {
+      "name": "whitelistedAddress",
+      "type": "string"
+    },
+    {
+      "name": "ticketWeb3ID",
+      "type": "string"
+    },
+    {
+      "name": "ticketID",
+      "type": "string"
+    },
+    {
+      "name": "rewardFromClaim",
+      "type": "string"
+    },
+    {
+      "name": "rewardFromFriendReferred",
+      "type": "string"
+    },
+    {
+      "name": "isPostCosmic",
+      "type": "boolean"
+    },
+    {
+      "name": "claimerUserId",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "timestamps",
+      "type": "map",
+      "fields": [
+        {
+          "name": "createdAt",
+          "type": "number"
+        },
+        {
+          "name": "completedAt",
+          "type": "number"
+        },
+        {
+          "name": "updatedAt",
+          "type": "number"
+        },
+        {
+          "name": "deletedAt",
+          "type": "number"
+        },
+        {
+          "name": "whitelistedAt",
+          "type": "number"
+        },
+        {
+          "name": "mintedAt",
+          "type": "number"
+        }
+      ]
+    }
+  ]
+}
