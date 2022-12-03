@@ -7,14 +7,13 @@ const convertBaseClaimStatisticsForTournamentRow = (
   data: any
 ): BaseClaimStatisticsForTournamentResponse => {
   // Convert data into type T and return it
-  console.log("Converting data", data);
   return {
     totalClaimCount: data?.totalClaimCount || 0,
     completedClaimCount: data?.completedClaimCount || 0,
     viralClaimCount: data?.viralClaimCount || 0,
     bonusRewardClaimCount: data?.bonusRewardClaimCount || 0,
     oneTimeClaimCount: data?.oneTimeClaimCount || 0,
-    pendingClaimCount: data?.pendingClaimCount || 0,
+    completionRate: data?.completionRate || 0,
   };
 };
 
@@ -33,7 +32,7 @@ export interface BaseClaimStatisticsForTournamentResponse {
   viralClaimCount: number;
   bonusRewardClaimCount: number;
   oneTimeClaimCount: number;
-  pendingClaimCount: number;
+  completionRate: number;
 }
 /**
  * Fetches base statistics for claims of a tournament
@@ -58,32 +57,18 @@ export const baseClaimStatisticsForTournament = async ({
   // Use parameterized queries to prevent SQL injection attacks
   // See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
   const query = `
-  with all_claims as (
-    select status, type
-      from \`${table}\` where tournamentId = @eventID
-  ),
-  completed_claims as (
-    select * from all_claims where status = 'complete'
-  ),
-  viral_claims as (
-    select * from completed_claims where type = 'viral'
-  ),
-  reward_claims as (
-    select * from completed_claims where type = 'reward'
-  ),
-  one_time_claims as (
-    select * from completed_claims where type = 'one_time'
-  ),
-  pending_claims as (
-    select * from all_claims where status = 'pending'
-  )
-  select 
-    (select count(*) from all_claims)  as totalClaimCount,
-    (select count(*) from completed_claims) as completedClaimCount,
-    (select count(*) from viral_claims) as viralClaimCount,
-    (select count(*) from reward_claims) as bonusRewardClaimCount,
-    (select count(*) from one_time_claims) as oneTimeClaimCount,
-    (select count(*) from pending_claims) as pendingClaimCount;
+    SELECT
+      COUNT(*) AS totalClaimCount,
+      COUNT(CASE WHEN status = 'complete' THEN 1 ELSE null END) AS completedClaimCount,
+      COUNT(CASE WHEN status = 'complete' AND type = 'referral' THEN 1 ELSE null END) AS viralClaimCount,
+      COUNT(CASE WHEN status = 'complete' AND type = 'reward' THEN 1 ELSE null END) AS bonusRewardClaimCount,
+      COUNT(CASE WHEN status = 'complete' AND type = 'one_time' THEN 1 ELSE null END) AS oneTimeClaimCount,
+      ROUND(
+        100*
+        COUNT(CASE WHEN status = 'complete' AND NOT type = 'reward' THEN 1 ELSE null END) / 
+        COUNT(CASE WHEN not type = 'reward' THEN 1 ELSE null END)
+      ) as completionRate
+    FROM \`${table}\` where tournamentId = @eventID;
   `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
@@ -120,7 +105,6 @@ export interface BaseClaimStatisticsForTournamentResponse {
   viralClaimCount: number;
   bonusRewardClaimCount: number;
   oneTimeClaimCount: number;
-  pendingClaimCount: number;
 }
 
 export interface LootboxCompletedClaimsForTournamentRequest {
@@ -149,7 +133,6 @@ const convertCompletedClaimStatisticsForTournamentRow = (
   data: any
 ): LootboxCompletedClaimsForTournamentRow => {
   // Convert data into type T and return it
-  console.log("Converting data", data);
   return {
     lootboxID: data?.lootboxID || "",
     lootboxName: data?.lootboxName || "",
@@ -244,6 +227,116 @@ export const lootboxCompletedClaimsForTournament = async ({
   const [rows] = await job.getQueryResults();
 
   return { data: rows.map(convertCompletedClaimStatisticsForTournamentRow) };
+};
+
+export interface ReferrerForTournamentRequest {
+  queryParams: {
+    tournamentID: TournamentID;
+  };
+  /** Like manifest.bigquery.tables.claim (i.e. ) */
+  claimTable: string;
+  userTable: string;
+  location: string; // Might be US or maybe the same location as the google cloud project
+}
+
+export interface ReferrerClaimsForTournamentRow {
+  userName: string;
+  userAvatar: string;
+  userID: string;
+  claimCount: number;
+}
+export interface ReferrerClaimsForTournamentResponse {
+  data: ReferrerClaimsForTournamentRow[];
+}
+
+const convertUserClaimStatisticsForTournamentRow = (
+  data: any
+): ReferrerClaimsForTournamentRow => {
+  // Convert data into type T and return it
+  return {
+    userName: data?.userName || "",
+    userAvatar: data?.userAvatar || "",
+    userID: data?.userID || "",
+    claimCount: data?.claimCount || 0,
+  };
+};
+
+/**
+ * Fetches base statistics for claims of a tournament
+ */
+export const referrerClaimsForTournament = async ({
+  queryParams,
+  claimTable,
+  userTable,
+  location,
+}: ReferrerForTournamentRequest): Promise<ReferrerClaimsForTournamentResponse> => {
+  console.log(
+    "Querying BigQuery (TOURNAMENT COMPLETED CLAIMS)",
+    `
+
+    tournamentID: ${queryParams.tournamentID}
+    claimTable: ${claimTable}
+    userTable: ${userTable}
+    location: ${location}
+  
+  `
+  );
+
+  /**
+   * Queries the claim table to return base statistics about a tournament
+   * Use parameterized queries to prevent SQL injection attacks
+   * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+   */
+  const query = `
+    WITH
+    AllTournamentClaims AS (
+      SELECT
+        claims.id AS claimID,
+        claims.status AS claimStatus,
+        claims.tournamentId AS tournamentID,
+        users.id AS userID,
+        users.username AS userName,
+        users.avatar AS userAvatar
+      FROM
+        \`${userTable}\` AS users
+      LEFT OUTER JOIN
+        \`${claimTable}\` AS claims
+      ON 
+        claims.referrerId = users.id
+      WHERE
+        claims.status = 'complete' AND claims.tournamentId = @eventID
+    )
+    SELECT
+      userName,
+      userAvatar,
+      userID,
+      COUNT(CASE claimStatus WHEN 'complete' THEN 1 ELSE null END) as claimCount
+    FROM
+      AllTournamentClaims
+    GROUP BY
+      userID,
+      userName,
+      userAvatar
+    ORDER BY claimCount DESC;
+  `;
+
+  // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+  const options = {
+    query: query,
+    // Location must match that of the dataset(s) referenced in the query.
+    location: location,
+    params: {
+      eventID: queryParams.tournamentID,
+    },
+  };
+
+  // Run the query as a job
+  const [job] = await bigquery.createQueryJob(options);
+
+  // Wait for the query to finish
+  const [rows] = await job.getQueryResults();
+
+  return { data: rows.map(convertUserClaimStatisticsForTournamentRow) };
 };
 
 export interface DailyClaimStatisticsForTournamentRequest {

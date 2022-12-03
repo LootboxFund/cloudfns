@@ -117,7 +117,7 @@ const AnalyticsTypeDefs = gql`
     viralClaimCount: Int!
     bonusRewardClaimCount: Int!
     oneTimeClaimCount: Int!
-    pendingClaimCount: Int!
+    completionRate: Int!
   }
   type BaseClaimStatsForTournamentResponseSuccess {
     stats: BaseClaimStatsForTournament!
@@ -166,6 +166,21 @@ const AnalyticsTypeDefs = gql`
       DailyClaimStatisticsForTournamentResponseSuccess
     | ResponseError
 
+  type ReferrerClaimsForTournamentRow {
+    userName: String!
+    userAvatar: String!
+    userID: String!
+    claimCount: Int!
+  }
+
+  type ReferrerClaimsForTournamentResponseSuccess {
+    data: [ReferrerClaimsForTournamentRow!]!
+  }
+
+  union ReferrerClaimsForTournamentResponse =
+      ReferrerClaimsForTournamentResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -200,6 +215,9 @@ const AnalyticsTypeDefs = gql`
     dailyClaimStatisticsForTournament(
       payload: DailyClaimStatisticsForTournamentInput!
     ): DailyClaimStatisticsForTournamentResponse!
+    referrerClaimsForTournament(
+      tournamentID: ID!
+    ): ReferrerClaimsForTournamentResponse!
   }
 `;
 
