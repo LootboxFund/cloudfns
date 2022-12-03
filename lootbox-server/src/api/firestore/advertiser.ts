@@ -29,6 +29,7 @@ import { Affiliate_Firestore } from "./affiliate.type";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { TournamentPreview } from "../../graphql/generated/types";
 import { getRandomEventCoverFromLexicaHardcoded } from "../lexica-images";
+import { getRandomUserName } from "../lexica-images/index";
 
 export const upgradeToAdvertiser = async (
   userIdpID: UserIdpID
@@ -52,11 +53,16 @@ export const upgradeToAdvertiser = async (
     .collection(Collection.Advertiser)
     .doc() as DocumentReference<Advertiser_Firestore>;
   const initialAvatar = await getRandomEventCoverFromLexicaHardcoded();
+  const initialUsername = await getRandomUserName({
+    type: "advertiser",
+    seedEmail: user.email || undefined,
+  });
   const advertiser: Advertiser_Firestore = {
     id: advertiserRef.id as AdvertiserID,
     userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
-    name: user.username || `New Advertiser ${advertiserRef.id}`,
+    name:
+      initialUsername || user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
     publicContactEmail: "",
     website: "",

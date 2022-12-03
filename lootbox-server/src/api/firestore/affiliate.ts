@@ -63,7 +63,10 @@ import {
   checkIfUserIdpMatchesAdvertiser,
   checkIfUserIdpMatchesAffiliate,
 } from "../identityProvider/firebase";
-import { getRandomPortraitFromLexicaHardcoded } from "../lexica-images";
+import {
+  getRandomPortraitFromLexicaHardcoded,
+  getRandomUserName,
+} from "../lexica-images";
 
 export const upgradeToAffiliate = async (
   userIdpID: UserIdpID
@@ -85,11 +88,16 @@ export const upgradeToAffiliate = async (
     .collection(Collection.Affiliate)
     .doc() as DocumentReference<Affiliate_Firestore>;
   const initialAvatar = await getRandomPortraitFromLexicaHardcoded();
+  const initialUsername = await getRandomUserName({
+    type: "organizer",
+    seedEmail: user.email || undefined,
+  });
   const affiliate: Affiliate_Firestore = {
     id: affiliateRef.id as AffiliateID,
     userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
-    name: user.username || `New Affiliate ${affiliateRef.id}`,
+    name:
+      initialUsername || user.username || `New Affiliate ${affiliateRef.id}`,
     description: "",
     publicContactEmail: "",
     organizerRank: OrganizerRank.ClayRank1,

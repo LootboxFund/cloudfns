@@ -603,7 +603,9 @@ export const extractOrGenerateLootboxCreateInput = async (
 ): Promise<CreateLootboxRequest> => {
   let name = payload.name;
   if (!name) {
-    name = await getRandomUserName();
+    name = await getRandomUserName({
+      type: "lootbox",
+    });
   }
   let backgroundImage = payload.backgroundImage;
   if (!backgroundImage) {
