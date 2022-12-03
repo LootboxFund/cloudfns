@@ -218,15 +218,15 @@ const LootboxTypeDefs = gql`
   }
 
   input CreateLootboxPayload {
-    name: String!
-    description: String!
-    logo: String!
-    backgroundImage: String!
-    nftBountyValue: String!
-    joinCommunityUrl: String!
-    maxTickets: Int!
-    themeColor: String!
-    tournamentID: String
+    name: String
+    description: String
+    logo: String
+    backgroundImage: String
+    nftBountyValue: String
+    joinCommunityUrl: String
+    maxTickets: Int
+    themeColor: String
+    tournamentID: String!
     type: LootboxType
     airdropMetadata: AirdropMetadataCreateInput
   }

@@ -28,6 +28,8 @@ import * as moment from "moment";
 import { Affiliate_Firestore } from "./affiliate.type";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { TournamentPreview } from "../../graphql/generated/types";
+import { getRandomEventCoverFromLexicaHardcoded } from "../lexica-images";
+import { getRandomUserName } from "../lexica-images/index";
 
 export const upgradeToAdvertiser = async (
   userIdpID: UserIdpID
@@ -50,11 +52,17 @@ export const upgradeToAdvertiser = async (
   const advertiserRef = db
     .collection(Collection.Advertiser)
     .doc() as DocumentReference<Advertiser_Firestore>;
+  const initialAvatar = await getRandomEventCoverFromLexicaHardcoded();
+  const initialUsername = await getRandomUserName({
+    type: "advertiser",
+    seedEmail: user.email || undefined,
+  });
   const advertiser: Advertiser_Firestore = {
     id: advertiserRef.id as AdvertiserID,
     userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
-    name: user.username || `New Advertiser ${advertiserRef.id}`,
+    name:
+      initialUsername || user.username || `New Advertiser ${advertiserRef.id}`,
     description: ``,
     publicContactEmail: "",
     website: "",
@@ -62,8 +70,7 @@ export const upgradeToAdvertiser = async (
     conquests: [],
     affiliatePartners: [],
     relatedTournaments: [],
-    avatar:
-      "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/assets%2Fcompany.png?alt=media&token=b03bd52a-5e08-4ab4-80fa-029b5dfa9267",
+    avatar: initialAvatar,
   };
   await advertiserRef.set(advertiser);
   return advertiser;
@@ -118,7 +125,7 @@ export const createConquest = async (
   advertiserID: AdvertiserID
 ) => {
   const placeholderImageConquest =
-    "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/shared-company-assets%2Forange.jpeg?alt=media&token=86a2367a-3fc3-461f-a185-34d6bd0ba31e";
+    await getRandomEventCoverFromLexicaHardcoded();
   const conquestRef = db
     .collection(Collection.Advertiser)
     .doc(advertiserID)

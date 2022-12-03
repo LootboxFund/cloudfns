@@ -63,6 +63,10 @@ import {
   checkIfUserIdpMatchesAdvertiser,
   checkIfUserIdpMatchesAffiliate,
 } from "../identityProvider/firebase";
+import {
+  getRandomPortraitFromLexicaHardcoded,
+  getRandomUserName,
+} from "../lexica-images";
 
 export const upgradeToAffiliate = async (
   userIdpID: UserIdpID
@@ -83,16 +87,21 @@ export const upgradeToAffiliate = async (
   const affiliateRef = db
     .collection(Collection.Affiliate)
     .doc() as DocumentReference<Affiliate_Firestore>;
+  const initialAvatar = await getRandomPortraitFromLexicaHardcoded();
+  const initialUsername = await getRandomUserName({
+    type: "organizer",
+    seedEmail: user.email || undefined,
+  });
   const affiliate: Affiliate_Firestore = {
     id: affiliateRef.id as AffiliateID,
     userID: userIdpID as unknown as UserID,
     userIdpID: userIdpID,
-    name: user.username || `New Affiliate ${affiliateRef.id}`,
+    name:
+      initialUsername || user.username || `New Affiliate ${affiliateRef.id}`,
     description: "",
     publicContactEmail: "",
     organizerRank: OrganizerRank.ClayRank1,
-    avatar:
-      "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/assets%2Fshield.png?alt=media&token=d1a8bf9a-3903-449a-8de6-1e382b79fef6",
+    avatar: initialAvatar,
     website: "",
     audienceSize: 0,
   };

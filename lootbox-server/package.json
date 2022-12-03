@@ -1,6 +1,6 @@
 {
   "name": "lootbox-server",
-  "version": "1.0.0",
+  "version": "0.7.4c-prod-autogen-lootbox",
   "main": "dist/server.js",
   "license": "MIT",
   "scripts": {
@@ -28,6 +28,7 @@
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "nanoid": "3.3.4",
+    "unique-names-generator": "^4.7.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
