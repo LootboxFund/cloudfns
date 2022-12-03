@@ -25,6 +25,7 @@ import {
   UserIdpID,
 } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
+import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
 
 // export const getAdById = async (adId: AdID): Promise<Ad | undefined> => {
 //   const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
@@ -160,7 +161,7 @@ export const createAdSet = async (
   payload: CreateAdSetPayload
 ): Promise<AdSet_Firestore> => {
   const placeholderImageAdSet =
-    "https://media.istockphoto.com/vectors/thumbnail-image-vector-graphic-vector-id1147544807?k=20&m=1147544807&s=612x612&w=0&h=pBhz1dkwsCMq37Udtp9sfxbjaMl27JUapoyYpQm0anc=";
+    await getRandomAdOfferCoverFromLexicaHardcoded();
   const adSetRef = db
     .collection(Collection.AdSet)
     .doc() as DocumentReference<AdSet_Firestore>;

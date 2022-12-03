@@ -50,13 +50,14 @@ import { AdSet_Firestore } from "./ad.types";
 import { OrganizerOfferWhitelist_Firestore } from "./affiliate.type";
 import { getAdvertiser } from "./advertiser";
 import { Advertiser_Firestore } from "./advertiser.type";
+import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
   payload: Omit<CreateOfferPayload, "id">
 ): Promise<Offer_Firestore> => {
   const placeholderImageOffer =
-    "https://firebasestorage.googleapis.com/v0/b/lootbox-fund-staging.appspot.com/o/shared-company-assets%2Fblue.jpeg?alt=media";
+    await getRandomAdOfferCoverFromLexicaHardcoded();
   // const userRef = db
   //   .collection(Collection.User)
   //   .doc(userID) as DocumentReference<User>;

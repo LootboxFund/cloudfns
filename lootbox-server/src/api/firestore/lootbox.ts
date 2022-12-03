@@ -9,6 +9,7 @@ import { db } from "../firebase";
 import {
   LootboxFeedResponseSuccess,
   AirdropMetadataCreateInput,
+  CreateLootboxPayload,
 } from "../../graphql/generated/types";
 import {
   Address,
@@ -33,7 +34,7 @@ import {
   LootboxType,
   OfferID,
 } from "@wormgraph/helpers";
-import { LootboxID } from "@wormgraph/helpers";
+import { LootboxID, UserIdpID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
 import { getTournamentById } from "./tournament";
 import { getOffer, updateOfferBatchCount } from "./offer";
@@ -41,6 +42,14 @@ import {
   createAirdropClaim,
   determineAirdropClaimWithReferrerCredit,
 } from "./airdrop";
+import { CreateLootboxRequest } from "../../service/lootbox";
+import { retrieveRandomImage, retrieveRandomColor } from "../storage";
+import {
+  getRandomPortraitFromLexicaHardcoded,
+  getRandomUserName,
+} from "../lexica-images";
+import { getRandomBackgroundFromLexicaHardcoded } from "../lexica-images/index";
+const DEFAULT_THEME_COLOR = "#000001";
 
 export const getLootbox = async (
   id: LootboxID
@@ -394,7 +403,7 @@ export const getLootboxByUserIDAndNonce = async (
   return collectionSnapshot.docs[0].data();
 };
 
-interface CreateLootboxPayload {
+interface CreateLootboxPayloadLocalType {
   creatorID: UserID;
   stampImage: string;
   logo: string;
@@ -411,7 +420,7 @@ interface CreateLootboxPayload {
   airdropMetadata?: AirdropMetadataCreateInput;
 }
 export const createLootbox = async (
-  payload: CreateLootboxPayload,
+  payload: CreateLootboxPayloadLocalType,
   ref?: DocumentReference<Lootbox_Firestore>
 ): Promise<Lootbox_Firestore> => {
   if (payload.airdropMetadata && !payload.airdropMetadata.offerID) {
@@ -586,4 +595,48 @@ export const getLootboxUnassignedClaimForUser = async (
     // return snapshot.docs.map((doc) => doc.ref);
     return snapshot.docs.map((doc) => doc.data());
   }
+};
+
+export const extractOrGenerateLootboxCreateInput = async (
+  payload: CreateLootboxPayload,
+  userIdpID: UserIdpID
+): Promise<CreateLootboxRequest> => {
+  let name = payload.name;
+  if (!name) {
+    name = await getRandomUserName({
+      type: "lootbox",
+    });
+  }
+  let backgroundImage = payload.backgroundImage;
+  if (!backgroundImage) {
+    backgroundImage = await getRandomBackgroundFromLexicaHardcoded();
+  }
+  let logoImage = payload.logo;
+  if (!logoImage) {
+    logoImage = await getRandomPortraitFromLexicaHardcoded();
+  }
+  let themeColor = payload.themeColor;
+  if (!themeColor || themeColor === DEFAULT_THEME_COLOR) {
+    themeColor = await retrieveRandomColor();
+  }
+  const trimmedName = name.replace(" ", "");
+  const impliedSymbol =
+    trimmedName.length < 12 ? trimmedName : trimmedName.slice(0, 12);
+  return {
+    lootboxDescription: payload.description || "",
+    backgroundImage: backgroundImage,
+    logoImage: logoImage,
+    themeColor: themeColor,
+    nftBountyValue: payload.nftBountyValue || "Prize",
+    maxTickets: payload.maxTickets || 30,
+    joinCommunityUrl: payload.joinCommunityUrl || undefined,
+    symbol: impliedSymbol,
+    creatorID: userIdpID as unknown as UserID,
+    lootboxName: name,
+    tournamentID: payload.tournamentID as TournamentID,
+    type: payload.type ? (payload.type as LootboxType) : undefined,
+    airdropMetadata: payload.airdropMetadata
+      ? (payload.airdropMetadata as AirdropMetadataCreateInput)
+      : undefined,
+  };
 };

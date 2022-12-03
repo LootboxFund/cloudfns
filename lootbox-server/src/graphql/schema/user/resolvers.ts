@@ -60,6 +60,7 @@ import { convertTournamentDBToGQL } from "../../../lib/tournament";
 import { formatEmail } from "../../../lib/utils";
 import { convertUserDBToGQL, isAnon } from "../../../lib/user";
 import { truncateEmail } from "../../../lib/email";
+import { getRandomUserName } from "../../../api/lexica-images";
 
 const UserResolvers = {
   Query: {
@@ -481,10 +482,14 @@ const UserResolvers = {
         // Update the idp username if needed
         // let updatedUserIdp: IIdpUser | undefined = undefined;
         if (!idpUser.username) {
+          const username = await getRandomUserName({
+            type: "user",
+            seedEmail: payload?.email || undefined,
+          });
           const updatedUserIdp = await identityProvider.updateUser(
             context.userId,
             {
-              username: generateUsername(),
+              username,
             }
           );
           idpUser = { ...updatedUserIdp };
@@ -509,7 +514,10 @@ const UserResolvers = {
     ): Promise<CreateUserResponse> => {
       try {
         // Create the user in the IDP
-        const username = generateUsername();
+        const username = await getRandomUserName({
+          type: "user",
+          seedEmail: payload.email,
+        });
         const idpUser = await identityProvider.createUser({
           email: formatEmail(`${payload.email}`),
           phoneNumber: payload.phoneNumber || undefined,
@@ -576,7 +584,10 @@ const UserResolvers = {
       }
 
       try {
-        const username = generateUsername();
+        const username = await getRandomUserName({
+          type: "user",
+          seedEmail: payload.email,
+        });
 
         // Create the user in the IDP
         const idpUser = await identityProvider.createUser({
