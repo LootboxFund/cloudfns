@@ -17,7 +17,7 @@
     "@graphql-tools/resolvers-composition": "^6.4.12",
     "@graphql-tools/schema": "^8.3.13",
     "@wormgraph/helpers": "0.7.4-prod",
-    "@wormgraph/manifest": "0.7.4-demo-16",
+    "@wormgraph/manifest": "0.7.4-prod-1",
     "apollo-server": "^3.8.1",
     "crypto": "^1.0.1",
     "dotenv": "^16.0.1",
