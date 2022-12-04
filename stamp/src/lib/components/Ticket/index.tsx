@@ -14,6 +14,7 @@ import {
 } from "@wormgraph/helpers";
 import { $Horizontal } from "../Generics";
 import ReactDOMServer from "react-dom/server";
+import { manifest } from "../../../manifest";
 
 export interface TicketProps {
   backgroundImage: Url;
@@ -89,7 +90,7 @@ export const Ticket = (props: TicketProps) => {
             {`Redeemable at`}
           </$Horizontal>
           <$Horizontal verticalCenter>
-            {`www.lootbox.fund/earn${
+            {`${manifest.microfrontends.webflow.cosmicLootboxPage}${
               props.lootboxID ? `?lid=${props.lootboxID}` : ""
             }`}
           </$Horizontal>
