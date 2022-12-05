@@ -3,6 +3,7 @@ import {
   AdvertiserID,
   AffiliateID,
   AffiliateType,
+  LootboxID,
   OfferID,
   TournamentID,
   UserID,
@@ -40,6 +41,10 @@ import {
   ReferrerClaimsForTournamentResponse,
   QueryCampaignClaimsForTournamentArgs,
   CampaignClaimsForTournamentResponse,
+  BaseClaimStatsForLootboxResponse,
+  QueryBaseClaimStatsForLootboxArgs,
+  ReferrerClaimsForLootboxResponse,
+  QueryReferrerClaimsForLootboxArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -52,6 +57,7 @@ import {
   referrerClaimsForTournament,
 } from "../../../api/analytics";
 import { manifest } from "../../../manifest";
+import * as analytics from "../../../service/analytics";
 
 const AnalyticsResolvers: Resolvers = {
   Query: {
@@ -547,6 +553,83 @@ const AnalyticsResolvers: Resolvers = {
         };
       }
     },
+
+    baseClaimStatsForLootbox: async (
+      _,
+      { lootboxID, tournamentID }: QueryBaseClaimStatsForLootboxArgs,
+      context: Context
+    ): Promise<BaseClaimStatsForLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const data = await analytics.baseClaimStatsForLootbox(
+          {
+            lootboxID: lootboxID as LootboxID,
+            eventID: tournamentID as TournamentID,
+          },
+          context.userId as unknown as UserID
+        );
+
+        return { stats: data };
+      } catch (err: any) {
+        console.error(
+          "Error in baseClaimStatsForLootbox fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
+
+    referrerClaimsForLootbox: async (
+      _,
+      { lootboxID, tournamentID }: QueryReferrerClaimsForLootboxArgs,
+      context: Context
+    ): Promise<ReferrerClaimsForLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const data = await analytics.lootboxReferrerStatistics(
+          {
+            lootboxID: lootboxID as LootboxID,
+            eventID: tournamentID as TournamentID,
+          },
+          context.userId as unknown as UserID
+        );
+
+        return { data };
+      } catch (err: any) {
+        console.error(
+          "Error in referrerClaimsForLootbox fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
   },
 
   ReportAdvertiserOfferPerformanceResponse: {
@@ -685,6 +768,32 @@ const AnalyticsResolvers: Resolvers = {
       return null;
     },
   },
+
+  BaseClaimStatsForLootboxResponse: {
+    __resolveType: (obj: BaseClaimStatsForLootboxResponse) => {
+      if ("stats" in obj) {
+        return "BaseClaimStatsForLootboxResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  ReferrerClaimsForLootboxResponse: {
+    __resolveType: (obj: ReferrerClaimsForLootboxResponse) => {
+      if ("data" in obj) {
+        return "ReferrerClaimsForLootboxResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const analyticsComposition = {
@@ -693,6 +802,7 @@ const analyticsComposition = {
   "Query.dailyClaimStatisticsForTournament": [isAuthenticated()],
   "Query.referrerClaimsForTournament": [isAuthenticated()],
   "Query.campaignClaimsForTournament": [isAuthenticated()],
+  "Query.baseClaimStatsForLootbox": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AnalyticsResolvers, analyticsComposition);

@@ -74,7 +74,8 @@ export const baseClaimStatisticsForTournament = async ({
           NULL
         END
           )) ) AS completionRate
-    FROM \`${table}\` where tournamentId = @eventID;
+    FROM \`${table}\` where tournamentId = @eventID
+    limit 1;
   `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query

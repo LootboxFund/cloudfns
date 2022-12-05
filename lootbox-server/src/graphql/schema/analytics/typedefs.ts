@@ -198,6 +198,39 @@ const AnalyticsTypeDefs = gql`
       CampaignClaimsForTournamentResponseSuccess
     | ResponseError
 
+  type BaseClaimStatsForLootbox {
+    totalClaimCount: Int!
+    completedClaimCount: Int!
+    viralClaimCount: Int!
+    bonusRewardClaimCount: Int!
+    oneTimeClaimCount: Int!
+    completionRate: Int!
+    maxTickets: Int!
+  }
+
+  type BaseClaimStatsForLootboxResponseSuccess {
+    stats: BaseClaimStatsForLootbox!
+  }
+
+  union BaseClaimStatsForLootboxResponse =
+      BaseClaimStatsForLootboxResponseSuccess
+    | ResponseError
+
+  type ReferrerClaimsForLootboxRow {
+    userName: String!
+    userAvatar: String!
+    userID: String!
+    claimCount: Int!
+  }
+
+  type ReferrerClaimsForLootboxResponseSuccess {
+    data: [ReferrerClaimsForLootboxRow!]!
+  }
+
+  union ReferrerClaimsForLootboxResponse =
+      ReferrerClaimsForLootboxResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -238,6 +271,14 @@ const AnalyticsTypeDefs = gql`
     campaignClaimsForTournament(
       tournamentID: ID!
     ): CampaignClaimsForTournamentResponse!
+    baseClaimStatsForLootbox(
+      lootboxID: ID!
+      tournamentID: ID
+    ): BaseClaimStatsForLootboxResponse!
+    referrerClaimsForLootbox(
+      lootboxID: ID!
+      tournamentID: ID
+    ): ReferrerClaimsForLootboxResponse!
   }
 `;
 
