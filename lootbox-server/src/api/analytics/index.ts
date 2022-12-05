@@ -63,11 +63,17 @@ export const baseClaimStatisticsForTournament = async ({
       COUNT(CASE WHEN status = 'complete' AND type = 'referral' THEN 1 ELSE null END) AS viralClaimCount,
       COUNT(CASE WHEN status = 'complete' AND type = 'reward' THEN 1 ELSE null END) AS bonusRewardClaimCount,
       COUNT(CASE WHEN status = 'complete' AND type = 'one_time' THEN 1 ELSE null END) AS oneTimeClaimCount,
-      ROUND(
-        100*
-        COUNT(CASE WHEN status = 'complete' AND NOT type = 'reward' THEN 1 ELSE null END) / 
-        COUNT(CASE WHEN not type = 'reward' THEN 1 ELSE null END)
-      ) as completionRate
+      ROUND( SAFE_DIVIDE(100* COUNT(CASE
+            WHEN status = 'complete' AND NOT type = 'reward' THEN 1
+          ELSE
+          NULL
+        END
+          ), COUNT(CASE
+            WHEN NOT type = 'reward' THEN 1
+          ELSE
+          NULL
+        END
+          )) ) AS completionRate
     FROM \`${table}\` where tournamentId = @eventID;
   `;
 
