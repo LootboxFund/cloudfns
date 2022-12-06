@@ -45,6 +45,8 @@ import {
   QueryBaseClaimStatsForLootboxArgs,
   ReferrerClaimsForLootboxResponse,
   QueryReferrerClaimsForLootboxArgs,
+  CampaignClaimsForLootboxResponse,
+  QueryCampaignClaimsForLootboxArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -630,6 +632,44 @@ const AnalyticsResolvers: Resolvers = {
         };
       }
     },
+
+    campaignClaimsForLootbox: async (
+      _,
+      { lootboxID, tournamentID }: QueryCampaignClaimsForLootboxArgs,
+      context: Context
+    ): Promise<CampaignClaimsForLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const { data } = await analytics.lootboxCampaignStatistics(
+          {
+            lootboxID: lootboxID as LootboxID,
+            eventID: tournamentID as TournamentID,
+          },
+          context.userId as unknown as UserID
+        );
+
+        return { data };
+      } catch (err: any) {
+        console.error(
+          "Error in campaignClaimsForLootbox fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
   },
 
   ReportAdvertiserOfferPerformanceResponse: {
@@ -786,6 +826,19 @@ const AnalyticsResolvers: Resolvers = {
     __resolveType: (obj: ReferrerClaimsForLootboxResponse) => {
       if ("data" in obj) {
         return "ReferrerClaimsForLootboxResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  CampaignClaimsForLootboxResponse: {
+    __resolveType: (obj: CampaignClaimsForLootboxResponse) => {
+      if ("data" in obj) {
+        return "CampaignClaimsForLootboxResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

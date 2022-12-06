@@ -6,6 +6,7 @@ import {
 import { LootboxID, TournamentID, UserID } from "@wormgraph/helpers";
 import {
   baseLootboxStatistics,
+  campaignClaimsForLootbox,
   referrerClaimsForLootbox,
 } from "../api/analytics/lootbox";
 import { manifest } from "../manifest";
@@ -118,6 +119,67 @@ export const lootboxReferrerStatistics = async (
     });
 
     return data;
+  } catch (err) {
+    console.error("error fetching referrer lootbox stats", err);
+    throw new Error("An error occurred");
+  }
+};
+
+interface LootboxCampaignStatisticsRequest {
+  lootboxID: LootboxID;
+  eventID: TournamentID;
+}
+interface LootboxCampaignStatisticsResponse {
+  data: {
+    referralCampaignName: string;
+    referralSlug: string;
+    userAvatar: string;
+    username: string;
+    userID: string;
+    claimCount: number;
+  }[];
+}
+export const lootboxCampaignStatistics = async (
+  request: LootboxCampaignStatisticsRequest,
+  callerUserID: UserID
+): Promise<LootboxCampaignStatisticsResponse> => {
+  const [lootbox, lootboxSnapshot, event] = await Promise.all([
+    getLootbox(request.lootboxID),
+    getLootboxTournamentSnapshotByLootboxID(request.eventID, request.lootboxID),
+    getTournamentById(request.eventID),
+  ]);
+
+  if (!lootbox || !!lootbox.timestamps.deletedAt) {
+    throw new Error("Lootbox not found");
+  }
+
+  if (!event || !!event.timestamps.deletedAt) {
+    throw new Error("Event not found");
+  }
+
+  if (!lootboxSnapshot || !!lootboxSnapshot.timestamps.deletedAt) {
+    throw new Error("Lootbox snapshot not found");
+  }
+
+  if (lootbox.creatorID !== callerUserID && event.creatorId !== callerUserID) {
+    // Only allow lootbox creator or event creator to view stats
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const { data } = await campaignClaimsForLootbox({
+      queryParams: {
+        lootboxID: request.lootboxID,
+        tournamentID: request.eventID,
+      },
+      claimTable: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+      userTable: manifest.bigQuery.datasets.firestoreExport.tables.user.id,
+      location: manifest.bigQuery.datasets.firestoreExport.location,
+    });
+
+    return {
+      data,
+    };
   } catch (err) {
     console.error("error fetching referrer lootbox stats", err);
     throw new Error("An error occurred");

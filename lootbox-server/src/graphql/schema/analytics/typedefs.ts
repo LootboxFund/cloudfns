@@ -231,6 +231,23 @@ const AnalyticsTypeDefs = gql`
       ReferrerClaimsForLootboxResponseSuccess
     | ResponseError
 
+  type CampaignClaimsForLootboxRow {
+    referralCampaignName: String!
+    referralSlug: String!
+    userAvatar: String!
+    username: String!
+    userID: String!
+    claimCount: Int!
+  }
+
+  type CampaignClaimsForLootboxResponseSuccess {
+    data: [CampaignClaimsForLootboxRow!]!
+  }
+
+  union CampaignClaimsForLootboxResponse =
+      CampaignClaimsForLootboxResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -279,6 +296,10 @@ const AnalyticsTypeDefs = gql`
       lootboxID: ID!
       tournamentID: ID
     ): ReferrerClaimsForLootboxResponse!
+    campaignClaimsForLootbox(
+      lootboxID: ID!
+      tournamentID: ID
+    ): CampaignClaimsForLootboxResponse!
   }
 `;
 

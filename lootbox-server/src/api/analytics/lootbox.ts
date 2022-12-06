@@ -278,3 +278,111 @@ export const referrerClaimsForLootbox = async ({
 
   return { data: rows.map(convertUserClaimStatisticsForLootboxRow) };
 };
+
+export interface CampaignClaimsForLootboxRequest {
+  queryParams: {
+    tournamentID: TournamentID;
+    lootboxID: LootboxID;
+  };
+  /** Like manifest.bigquery.tables.claim (i.e. ) */
+  claimTable: string;
+  userTable: string;
+  location: string; // Might be US or maybe the same location as the google cloud project
+}
+
+export interface CampaignClaimsForLootboxRow {
+  referralCampaignName: string;
+  referralSlug: string;
+  userAvatar: string;
+  username: string;
+  userID: string;
+  claimCount: number;
+}
+export interface CampaignClaimsForLootboxResponse {
+  data: CampaignClaimsForLootboxRow[];
+}
+
+const convertCampaignClaimsForLootboxRow = (
+  data: any
+): CampaignClaimsForLootboxRow => {
+  // Convert data into type T and return it
+  return {
+    referralCampaignName: data?.referralCampaignName || "",
+    referralSlug: data?.referralSlug || "",
+    userAvatar: data?.userAvatar || "",
+    username: data?.username || "",
+    userID: data?.userID || "",
+    claimCount: data?.claimCount || 0,
+  };
+};
+
+/**
+ * Fetches statistics for claims of a tournament
+ */
+export const campaignClaimsForLootbox = async ({
+  queryParams,
+  claimTable,
+  userTable,
+  location,
+}: ReferrerForLootboxRequest): Promise<CampaignClaimsForLootboxResponse> => {
+  console.log(
+    "Querying BigQuery (LOOTBOX CAMPAIGN CLAIMS)",
+    `
+
+    tournamentID: ${queryParams.tournamentID}
+    lootboxID: ${queryParams.lootboxID}
+    claimTable: ${claimTable}
+    userTable: ${userTable}
+    location: ${location}
+  
+  `
+  );
+
+  /**
+   * Queries the claim table to return base statistics about a tournament
+   * Use parameterized queries to prevent SQL injection attacks
+   * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+   */
+  const query = `
+    select 
+      referralCampaignName,
+      referralSlug,
+      avatar as userAvatar,
+      username,
+      users.id as userID,
+      COUNT(CASE WHEN claims.status = 'complete' THEN 1 ELSE null END) as claimCount
+    from \`${claimTable}\`  as claims
+    INNER JOIN 
+      \`${userTable}\` as users
+    ON claims.referrerId = users.id
+    WHERE claims.tournamentId = @eventID
+    AND claims.lootboxID = @lootboxID
+    GROUP BY
+      userID,
+      referralCampaignName,
+      referralSlug,
+      username,
+      avatar
+    ORDER BY claimCount DESC
+    limit 1000;
+  `;
+
+  // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+  const options = {
+    query: query,
+    // Location must match that of the dataset(s) referenced in the query.
+    location: location,
+    params: {
+      eventID: queryParams.tournamentID,
+      lootboxID: queryParams.lootboxID,
+    },
+  };
+
+  // Run the query as a job
+  const [job] = await bigquery.createQueryJob(options);
+
+  // Wait for the query to finish
+  const [rows] = await job.getQueryResults();
+
+  return { data: rows.map(convertCampaignClaimsForLootboxRow) };
+};
