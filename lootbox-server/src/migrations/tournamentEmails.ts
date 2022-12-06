@@ -8,7 +8,7 @@
  * to run:
  * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts [env] [tournamentID]
  *
- * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts prod I9CPcXHC5oKnxEyEmL9d
+ * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts prod IXU25LtCbCUzF62BSIWo
  *
  *
  * [env]            `prod` | `staging`
@@ -63,7 +63,7 @@ const run = async () => {
      Found ${claimUserIDs.length} unique claimer user IDs
  
      `);
-
+  console.log(claimUserIDs.join("\n"));
   for (const userID of claimUserIDs) {
     if (!userID || !!userMap[userID]) {
       continue;
@@ -90,10 +90,15 @@ const run = async () => {
 
   const userEmails = Object.values(userMap)
     .filter((user) => user.email)
-    .map((user) => user.email);
+    .map((user) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phoneNumber,
+    }));
 
   console.log(`User Emails: ${userEmails.length}`);
-  console.log(userEmails.join("\n"));
+  console.log(userEmails.map((u) => `${u.email} ${u.phone}`).join("\n"));
 };
 
 run().catch(console.error);

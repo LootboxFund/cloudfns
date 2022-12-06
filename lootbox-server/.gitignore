@@ -13,3 +13,5 @@ generated
 .secrets
 
 .env
+
+src/migrations/output
