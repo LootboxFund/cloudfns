@@ -3,10 +3,16 @@ import {
   getLootboxTournamentSnapshotByLootboxID,
   getTournamentById,
 } from "../api/firestore";
-import { LootboxID, TournamentID, UserID } from "@wormgraph/helpers";
+import {
+  ClaimType_Firestore,
+  LootboxID,
+  TournamentID,
+  UserID,
+} from "@wormgraph/helpers";
 import {
   baseLootboxStatistics,
   campaignClaimsForLootbox,
+  claimerStatsForLootboxTournament,
   referrerClaimsForLootbox,
 } from "../api/analytics/lootbox";
 import { claimerStatsForTournament } from "../api/analytics/tournament";
@@ -188,10 +194,12 @@ export const lootboxCampaignStatistics = async (
 };
 
 export interface ClaimerStatsForTournamentServiceRow {
-  claimerUserID: UserID;
+  claimerUserID: UserID | "";
   username: string;
   userAvatar: string;
   claimCount: number;
+  claimType: string;
+  totalUserClaimCount: number;
 }
 
 export interface ClaimerStatsForTournamentSeviceResponse {
@@ -224,6 +232,67 @@ export const claimerStatisticsForTournament = async (
 
     return {
       data,
+    };
+  } catch (err) {
+    console.error("error fetching claimer stats for event", err);
+    throw new Error("An error occurred");
+  }
+};
+
+export interface ClaimerStatsForLootboxTournamentServiceRow {
+  claimerUserID: UserID | "";
+  lootboxID: LootboxID;
+  username: string;
+  userAvatar: string;
+  claimCount: number;
+  claimType: string;
+  totalUserClaimCount: number;
+}
+
+export interface ClaimerStatsForLootboxTournamentSeviceResponse {
+  data: ClaimerStatsForLootboxTournamentServiceRow[];
+}
+
+export const claimerStatisticsForLootboxTournament = async (
+  request: { eventID: TournamentID; lootboxID: LootboxID },
+  callerUserID: UserID
+): Promise<ClaimerStatsForLootboxTournamentSeviceResponse> => {
+  const [tournament, lootbox] = await Promise.all([
+    getTournamentById(request.eventID),
+    getLootbox(request.lootboxID),
+  ]);
+
+  if (!tournament) {
+    throw new Error("Event not Found");
+  }
+
+  if (!lootbox) {
+    throw new Error("Lootbox not Found");
+  }
+
+  if (
+    tournament.creatorId !== callerUserID &&
+    callerUserID !== lootbox.creatorID
+  ) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const { data } = await claimerStatsForLootboxTournament({
+      queryParams: {
+        eventID: request.eventID,
+        lootboxID: request.lootboxID,
+      },
+      claimTable: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+      userTable: manifest.bigQuery.datasets.firestoreExport.tables.user.id,
+      location: manifest.bigQuery.datasets.firestoreExport.location,
+    });
+
+    return {
+      data: data.map((row) => ({
+        ...row,
+        lootboxID: request.lootboxID,
+      })),
     };
   } catch (err) {
     console.error("error fetching claimer stats for event", err);

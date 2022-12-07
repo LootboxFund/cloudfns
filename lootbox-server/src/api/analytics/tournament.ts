@@ -1,5 +1,10 @@
 import { BigQuery } from "@google-cloud/bigquery";
-import { LootboxID, TournamentID, UserID } from "@wormgraph/helpers";
+import {
+  ClaimType_Firestore,
+  LootboxID,
+  TournamentID,
+  UserID,
+} from "@wormgraph/helpers";
 
 const bigquery = new BigQuery();
 
@@ -603,10 +608,12 @@ export interface ClaimerStatsForTournamentRequest {
   location: string;
 }
 export interface ClaimerStatsForTournamentRow {
-  claimerUserID: UserID;
-  username: string;
-  userAvatar: string;
+  claimerUserID: UserID | "";
+  username: string | "";
+  userAvatar: string | "";
   claimCount: number;
+  claimType: ClaimType_Firestore | "";
+  totalUserClaimCount: number;
 }
 export interface ClaimerStatsForTournamentResponse {
   data: ClaimerStatsForTournamentRow[];
@@ -619,6 +626,8 @@ const convertClaimerStatsForTournamentRow = (
     username: data?.username || "",
     userAvatar: data?.userAvatar || "",
     claimCount: data?.claimCount || 0,
+    claimType: data?.claimType || "",
+    totalUserClaimCount: data?.totalUserClaimCount || 0,
   };
 };
 export const claimerStatsForTournament = async ({
@@ -649,10 +658,12 @@ export const claimerStatsForTournament = async ({
       claims.claimerUserId AS claimerUserID,
       users.username AS username,
       users.avatar AS userAvatar,
-      COUNT(*) AS claimCount
+      claims.type AS claimType,
+      COUNT(*) AS claimCount,
+      SUM(COUNT(claims.claimerUserId)) OVER (PARTITION BY claims.claimerUserId) AS totalUserClaimCount
     FROM
       \`${claimTable}\` AS claims
-    LEFT JOIN 
+    LEFT JOIN
       \`${userTable}\` AS users
     ON claims.claimerUserId = users.id
     WHERE
@@ -661,12 +672,13 @@ export const claimerStatsForTournament = async ({
     GROUP BY
       claims.claimerUserID,
       users.username,
-      users.avatar
+      users.avatar,
+      claims.type
     Order BY
-      claimCount DESC
+      totalUserClaimCount DESC
     LIMIT
-      1000;
-  `;
+      2000;
+    `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
   const options = {

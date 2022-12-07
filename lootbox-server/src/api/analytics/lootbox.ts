@@ -1,5 +1,10 @@
 import { BigQuery } from "@google-cloud/bigquery";
-import { LootboxID, TournamentID } from "@wormgraph/helpers";
+import {
+  ClaimType_Firestore,
+  LootboxID,
+  TournamentID,
+  UserID,
+} from "@wormgraph/helpers";
 
 const bigquery = new BigQuery();
 
@@ -386,4 +391,108 @@ export const campaignClaimsForLootbox = async ({
   const [rows] = await job.getQueryResults();
 
   return { data: rows.map(convertCampaignClaimsForLootboxRow) };
+};
+
+export interface ClaimerStatsForLootboxRequest {
+  queryParams: {
+    eventID: TournamentID;
+    lootboxID: LootboxID;
+  };
+  claimTable: string;
+  userTable: string;
+  location: string;
+}
+export interface ClaimerStatsForLootboxTournamentRow {
+  claimerUserID: UserID | "";
+  username: string | "";
+  userAvatar: string | "";
+  claimCount: number;
+  claimType: ClaimType_Firestore | "";
+  totalUserClaimCount: number;
+}
+export interface ClaimerStatsForLootboxTournamentResponse {
+  data: ClaimerStatsForLootboxTournamentRow[];
+}
+const convertClaimerStatsForLootboxTournamentRow = (
+  data: any
+): ClaimerStatsForLootboxTournamentRow => {
+  return {
+    claimerUserID: data?.claimerUserID || "",
+    username: data?.username || "",
+    userAvatar: data?.userAvatar || "",
+    claimCount: data?.claimCount || 0,
+    claimType: data?.claimType || "",
+    totalUserClaimCount: data?.totalUserClaimCount || 0,
+  };
+};
+export const claimerStatsForLootboxTournament = async ({
+  queryParams,
+  claimTable,
+  userTable,
+  location,
+}: ClaimerStatsForLootboxRequest): Promise<ClaimerStatsForLootboxTournamentResponse> => {
+  console.log(
+    "Querying BigQuery (LOOTBOX TOURNAMENT DAILY CLAIMS)",
+    `
+
+    tournamentID: ${queryParams.eventID}
+    lootboxID: ${queryParams.lootboxID}
+    claimTable: ${claimTable}
+    userTable: ${userTable}
+    location: ${location}
+  
+  `
+  );
+
+  /**
+   * Queries the claim table to return claims per day
+   * Use parameterized queries to prevent SQL injection attacks
+   * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+   */
+  const query = `
+    SELECT
+      claims.claimerUserId AS claimerUserID,
+      users.username AS username,
+      users.avatar AS userAvatar,
+      claims.type AS claimType,
+      COUNT(*) AS claimCount,
+      SUM(COUNT(claims.claimerUserId)) OVER (PARTITION BY claims.claimerUserId) AS totalUserClaimCount
+    FROM
+      \`${claimTable}\` AS claims
+    LEFT JOIN
+      \`${userTable}\` AS users
+    ON claims.claimerUserId = users.id
+    WHERE
+      claims.tournamentId = @eventID
+      AND claims.status = 'complete'
+      AND claims.lootboxID = @lootboxID
+    GROUP BY
+      claims.claimerUserID,
+      users.username,
+      users.avatar,
+      claims.type
+    Order BY
+      totalUserClaimCount DESC
+    LIMIT
+      2000;
+    `;
+
+  // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+  const options = {
+    query: query,
+    // Location must match that of the dataset(s) referenced in the query.
+    location: location,
+    params: {
+      eventID: queryParams.eventID,
+      lootboxID: queryParams.lootboxID,
+    },
+  };
+
+  // Run the query as a job
+  const [job] = await bigquery.createQueryJob(options);
+
+  // Wait for the query to finish
+  const [rows] = await job.getQueryResults();
+
+  return { data: rows.map(convertClaimerStatsForLootboxTournamentRow) };
 };

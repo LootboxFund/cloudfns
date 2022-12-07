@@ -253,6 +253,8 @@ const AnalyticsTypeDefs = gql`
     username: String!
     userAvatar: String!
     claimCount: Int!
+    claimType: String!
+    totalUserClaimCount: Int!
   }
 
   type ClaimerStatsForTournamentResponseSuccess {
@@ -261,6 +263,24 @@ const AnalyticsTypeDefs = gql`
 
   union ClaimerStatsForTournamentResponse =
       ClaimerStatsForTournamentResponseSuccess
+    | ResponseError
+
+  type ClaimerStatsForLootboxTournamentRow {
+    claimerUserID: String!
+    lootboxID: String!
+    username: String!
+    userAvatar: String!
+    claimCount: Int!
+    claimType: String!
+    totalUserClaimCount: Int!
+  }
+
+  type ClaimerStatsForLootboxTournamentResponseSuccess {
+    data: [ClaimerStatsForLootboxTournamentRow!]!
+  }
+
+  union ClaimerStatsForLootboxTournamentResponse =
+      ClaimerStatsForLootboxTournamentResponseSuccess
     | ResponseError
 
   extend type Query {
@@ -316,6 +336,10 @@ const AnalyticsTypeDefs = gql`
       tournamentID: ID
     ): CampaignClaimsForLootboxResponse!
     claimerStatsForTournament(eventID: ID!): ClaimerStatsForTournamentResponse!
+    claimerStatisticsForLootboxTournament(
+      lootboxID: ID!
+      tournamentID: ID!
+    ): ClaimerStatsForLootboxTournamentResponse!
   }
 `;
 

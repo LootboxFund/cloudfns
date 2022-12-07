@@ -49,6 +49,8 @@ import {
   QueryCampaignClaimsForLootboxArgs,
   ClaimerStatsForTournamentResponse,
   QueryClaimerStatsForTournamentArgs,
+  ClaimerStatsForLootboxTournamentResponse,
+  QueryClaimerStatisticsForLootboxTournamentArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -695,10 +697,74 @@ const AnalyticsResolvers: Resolvers = {
           context.userId as unknown as UserID
         );
 
-        return { data };
+        return {
+          data: data.map((row) => {
+            return {
+              claimerUserID: row.claimerUserID,
+              username: row.username,
+              userAvatar: row.userAvatar,
+              claimCount: row.claimCount,
+              claimType: row.claimType,
+              totalUserClaimCount: row.totalUserClaimCount,
+            };
+          }),
+        };
       } catch (err: any) {
         console.error(
           "Error in claimerStatsForTournament fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
+
+    claimerStatisticsForLootboxTournament: async (
+      _,
+      {
+        tournamentID: eventID,
+        lootboxID,
+      }: QueryClaimerStatisticsForLootboxTournamentArgs,
+      context: Context
+    ): Promise<ClaimerStatsForLootboxTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const { data } = await analytics.claimerStatisticsForLootboxTournament(
+          {
+            eventID: eventID as TournamentID,
+            lootboxID: lootboxID as LootboxID,
+          },
+          context.userId as unknown as UserID
+        );
+
+        return {
+          data: data.map((row) => {
+            return {
+              lootboxID: row.lootboxID,
+              claimerUserID: row.claimerUserID,
+              username: row.username,
+              userAvatar: row.userAvatar,
+              claimCount: row.claimCount,
+              claimType: row.claimType,
+              totalUserClaimCount: row.totalUserClaimCount,
+            };
+          }),
+        };
+      } catch (err: any) {
+        console.error(
+          "Error in claimerStatisticsForLootboxTournament fetching tournament",
           err
         );
         return {
@@ -899,6 +965,19 @@ const AnalyticsResolvers: Resolvers = {
       return null;
     },
   },
+
+  ClaimerStatsForLootboxTournamentResponse: {
+    __resolveType: (obj: ClaimerStatsForLootboxTournamentResponse) => {
+      if ("data" in obj) {
+        return "ClaimerStatsForLootboxTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const analyticsComposition = {
@@ -908,6 +987,10 @@ const analyticsComposition = {
   "Query.referrerClaimsForTournament": [isAuthenticated()],
   "Query.campaignClaimsForTournament": [isAuthenticated()],
   "Query.baseClaimStatsForLootbox": [isAuthenticated()],
+  "Query.referrerClaimsForLootbox": [isAuthenticated()],
+  "Query.campaignClaimsForLootbox": [isAuthenticated()],
+  "Query.claimerStatsForTournament": [isAuthenticated()],
+  "Query.claimerStatsForLootboxTournament": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AnalyticsResolvers, analyticsComposition);
