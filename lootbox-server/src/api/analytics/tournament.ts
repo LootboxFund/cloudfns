@@ -13,12 +13,27 @@ const convertBaseClaimStatisticsForTournamentRow = (
 ): BaseClaimStatisticsForTournamentResponse => {
   // Convert data into type T and return it
   return {
+    // totalClaimCount: data?.totalClaimCount || 0,
+    // completedClaimCount: data?.completedClaimCount || 0,
+    // viralClaimCount: data?.viralClaimCount || 0,
+    // bonusRewardClaimCount: data?.bonusRewardClaimCount || 0,
+    // oneTimeClaimCount: data?.oneTimeClaimCount || 0,
+    // completionRate: data?.completionRate || 0,
     totalClaimCount: data?.totalClaimCount || 0,
     completedClaimCount: data?.completedClaimCount || 0,
     viralClaimCount: data?.viralClaimCount || 0,
-    bonusRewardClaimCount: data?.bonusRewardClaimCount || 0,
-    oneTimeClaimCount: data?.oneTimeClaimCount || 0,
+    referralBonusClaimCount: data?.referralBonusClaimCount || 0,
+    participationRewardCount: data?.participationRewardCount || 0,
+    airdropClaimCount: data?.airdropClaimCount || 0,
+    pendingClaims: data?.pendingClaims || 0,
+    originalClaims: data?.originalClaims || 0,
+    impressions: data?.impressions || 0,
+    allFans: data?.allFans || 0,
+    originalFans: data?.originalFans || 0,
+    viralFans: data?.viralFans || 0,
     completionRate: data?.completionRate || 0,
+    airdropCompletionRate: data?.airdropCompletionRate || 0,
+    totalMaxTickets: data?.totalMaxTickets || 0,
   };
 };
 
@@ -27,24 +42,45 @@ export interface BaseClaimStatisticsForTournamentRequest {
     tournamentID: TournamentID;
   };
   /** Like manifest.bigquery.tables.claim (i.e. ) */
-  table: string;
+  claimTable: string;
+  lootboxTable: string;
+  lootboxTournamentSnapshotTable: string;
+  userTable: string;
   location: string; // Might be US or maybe the same location as the google cloud project
 }
 
 export interface BaseClaimStatisticsForTournamentResponse {
+  // totalClaimCount: number;
+  // completedClaimCount: number;
+  // viralClaimCount: number;
+  // bonusRewardClaimCount: number;
+  // oneTimeClaimCount: number;
+  // completionRate: number;
   totalClaimCount: number;
   completedClaimCount: number;
   viralClaimCount: number;
-  bonusRewardClaimCount: number;
-  oneTimeClaimCount: number;
+  referralBonusClaimCount: number;
+  participationRewardCount: number;
+  airdropClaimCount: number;
+  pendingClaims: number;
+  originalClaims: number;
+  impressions: number;
+  allFans: number;
+  originalFans: number;
+  viralFans: number;
   completionRate: number;
+  airdropCompletionRate: number;
+  totalMaxTickets: number;
 }
 /**
  * Fetches base statistics for claims of a tournament
  */
 export const baseClaimStatisticsForTournament = async ({
   queryParams,
-  table,
+  claimTable,
+  lootboxTable,
+  lootboxTournamentSnapshotTable,
+  userTable,
   location,
 }: BaseClaimStatisticsForTournamentRequest): Promise<BaseClaimStatisticsForTournamentResponse> => {
   console.log(
@@ -52,7 +88,10 @@ export const baseClaimStatisticsForTournament = async ({
     `
 
     tournamentID: ${queryParams.tournamentID}
-    table: ${table}
+    claimTable: ${claimTable}
+    lootboxTable: ${lootboxTable}
+    lootboxTournamentSnapshotTable: ${lootboxTournamentSnapshotTable}
+    userTable: ${userTable}
     location: ${location}
   
   `
@@ -61,26 +100,102 @@ export const baseClaimStatisticsForTournament = async ({
   // Queries the claim table to return base statistics about a tournament
   // Use parameterized queries to prevent SQL injection attacks
   // See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+  // const query = `
+  //   SELECT
+  //     COUNT(*) AS totalClaimCount,
+  //     COUNT(CASE WHEN status = 'complete' THEN 1 ELSE null END) AS completedClaimCount,
+  //     COUNT(CASE WHEN status = 'complete' AND type = 'referral' THEN 1 ELSE null END) AS viralClaimCount,
+  //     COUNT(CASE WHEN status = 'complete' AND type = 'reward' THEN 1 ELSE null END) AS bonusRewardClaimCount,
+  //     COUNT(CASE WHEN status = 'complete' AND type = 'one_time' THEN 1 ELSE null END) AS oneTimeClaimCount,
+  //     ROUND( SAFE_DIVIDE(100* COUNT(CASE
+  //           WHEN status = 'complete' AND NOT type = 'reward' THEN 1
+  //         ELSE
+  //         NULL
+  //       END
+  //         ), COUNT(CASE
+  //           WHEN NOT type = 'reward' THEN 1
+  //         ELSE
+  //         NULL
+  //       END
+  //         )) ) AS completionRate
+  //   FROM \`${table}\` where tournamentId = @eventID
+  //   limit 1;
+  // `;
+
   const query = `
+    WITH DataTable AS (
+      SELECT 
+        claim.status AS claimStatus,
+        claim.claimerUserId AS claimerUserID,
+        claim.referralType AS claimReferralType,
+        claim.type AS claimType,
+        claim.lootboxId AS claimLootboxID
+      FROM \`${claimTable}\` as claim
+      LEFT JOIN \`${userTable}\` as user
+      ON claim.claimerUserId = user.id
+      WHERE claim.tournamentId = @eventID
+    ), LootboxTable AS (
+      SELECT lootbox.id AS lootboxID,
+        lootbox.maxTickets AS lootboxMaxTickets
+        FROM \`${lootboxTournamentSnapshotTable}\` AS snapshot
+        INNER JOIN \`${lootboxTable}\` AS lootbox
+        ON lootbox.id = snapshot.lootboxId
+        WHERE snapshot.tournamentID = @eventID
+    )
     SELECT
       COUNT(*) AS totalClaimCount,
-      COUNT(CASE WHEN status = 'complete' THEN 1 ELSE null END) AS completedClaimCount,
-      COUNT(CASE WHEN status = 'complete' AND type = 'referral' THEN 1 ELSE null END) AS viralClaimCount,
-      COUNT(CASE WHEN status = 'complete' AND type = 'reward' THEN 1 ELSE null END) AS bonusRewardClaimCount,
-      COUNT(CASE WHEN status = 'complete' AND type = 'one_time' THEN 1 ELSE null END) AS oneTimeClaimCount,
+      SUM(CASE WHEN claimStatus = 'complete' THEN 1 ELSE 0 END) AS completedClaimCount,
+      SUM(CASE WHEN claimReferralType = 'viral' AND claimStatus = 'complete' AND claimType = 'referral' THEN 1 ELSE 0 END) AS viralClaimCount,
+      SUM(CASE WHEN claimReferralType = 'viral' AND claimStatus = 'complete' AND claimType = 'reward' THEN 1 ELSE 0 END) AS referralBonusClaimCount,
+      SUM(CASE WHEN claimReferralType = 'one_time' AND claimStatus = 'complete' AND claimType = 'one_time' THEN 1 ELSE 0 END) AS participationRewardCount,
+      SUM(CASE WHEN claimStatus = 'airdrop' AND claimType = 'complete' THEN 1 ELSE 0 END) AS airdropClaimCount,
+      SUM(CASE WHEN claimStatus = 'pending' THEN 1 ELSE 0 END) AS pendingClaims,
+      SUM(CASE WHEN claimReferralType = 'genesis' AND claimStatus = 'complete' AND claimType = 'referral' THEN 1 ELSE 0 END) AS originalClaims,
+      SUM(CASE WHEN claimType != 'reward' AND claimType != 'airdrop' THEN 1 ELSE 0 END) AS impressions,
+      -- allFans are those with pending tickets, verified tickets, anon users ETC
+      COUNT(DISTINCT(claimerUserID)) AS allFans,
+      -- originalFans are those with completed claim w genesis referral
+      (
+        SELECT COUNT(DISTINCT(claimerUserID)) 
+        FROM DataTable 
+        WHERE
+          claimReferralType = 'genesis' AND claimStatus = 'complete' AND claimType != 'airdrop'
+      ) as originalFans,
+      -- viralFans, those who have completed a "viral" referral link (AKA non-genesis, or reward for ex)
+      (
+        SELECT COUNT(DISTINCT(claimerUserID)) 
+        FROM DataTable 
+        WHERE
+          claimReferralType = 'viral' AND claimType = 'referral' AND claimStatus = 'complete'
+      ) as viralFans,
       ROUND( SAFE_DIVIDE(100* COUNT(CASE
-            WHEN status = 'complete' AND NOT type = 'reward' THEN 1
+            WHEN claimStatus = 'complete' AND NOT claimType = 'reward' AND claimType != 'airdrop' THEN 1
           ELSE
           NULL
         END
           ), COUNT(CASE
-            WHEN NOT type = 'reward' THEN 1
+            WHEN NOT claimType = 'reward' THEN 1
           ELSE
           NULL
         END
-          )) ) AS completionRate
-    FROM \`${table}\` where tournamentId = @eventID
-    limit 1;
+          )) ) AS completionRate,
+          ROUND( SAFE_DIVIDE(100* COUNT(CASE
+            WHEN claimStatus = 'complete' AND claimType = 'airdrop' THEN 1
+          ELSE
+          NULL
+        END
+          ), COUNT(CASE
+            WHEN NOT claimType = 'airdrop' THEN 1
+          ELSE
+          NULL
+        END
+          )) ) AS airdropCompletionRate,
+        (
+          SELECT 
+          SUM(lootboxMaxTickets) FROM LootboxTable WHERE LootboxTable.lootboxID IN (SELECT DataTable.claimLootboxID from DataTable)
+        )  as totalMaxTickets
+    FROM DataTable
+    LIMIT 1;
   `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
@@ -101,23 +216,6 @@ export const baseClaimStatisticsForTournament = async ({
 
   return convertBaseClaimStatisticsForTournamentRow(rows[0]);
 };
-
-export interface BaseClaimStatisticsForTournamentRequest {
-  queryParams: {
-    tournamentID: TournamentID;
-  };
-  /** Like manifest.bigquery.tables.claim (i.e. ) */
-  table: string;
-  location: string; // Might be US or maybe the same location as the google cloud project
-}
-
-export interface BaseClaimStatisticsForTournamentResponse {
-  totalClaimCount: number;
-  completedClaimCount: number;
-  viralClaimCount: number;
-  bonusRewardClaimCount: number;
-  oneTimeClaimCount: number;
-}
 
 export interface LootboxCompletedClaimsForTournamentRequest {
   queryParams: {

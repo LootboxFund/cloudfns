@@ -288,7 +288,15 @@ const AnalyticsResolvers: Resolvers = {
           queryParams: {
             tournamentID: tournamentID as TournamentID,
           },
-          table: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          // table: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          lootboxTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.lootbox.id,
+          claimTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          lootboxTournamentSnapshotTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.lootboxSnapshot
+              .id,
+          userTable: manifest.bigQuery.datasets.firestoreExport.tables.user.id,
           location: manifest.bigQuery.datasets.firestoreExport.location,
         });
 
