@@ -38,6 +38,23 @@ const CommonTypeDefs = gql`
     message: String!
   }
 
+  enum QuestionFieldType {
+    Text
+    Number
+    Phone
+    Email
+    Address
+    Date
+    Time
+    DateTime
+    Screenshot
+    Link
+    File
+    Range
+    SingleSelect
+    MultiSelect
+  }
+
   type Query {
     version: ID!
   }

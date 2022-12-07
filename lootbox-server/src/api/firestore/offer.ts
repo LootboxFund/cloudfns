@@ -89,6 +89,19 @@ export const createOffer = async (
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
   if (payload.airdropMetadata) {
+    const questions = await Promise.all(
+      payload.airdropMetadata.questions.map((q, i) => {
+        return createQuestion(
+          {
+            question: q.question,
+            type: q.type as QuestionFieldType,
+            offerID: offerRef.id as OfferID,
+            advertiserID: payload.advertiserID as AdvertiserID,
+          },
+          i
+        );
+      })
+    );
     offer.airdropMetadata = {
       offerID: offerRef.id as OfferID,
       title: payload.title,
@@ -96,23 +109,10 @@ export const createOffer = async (
       value: payload.airdropMetadata.value || "",
       instructionsLink: payload.airdropMetadata.instructionsLink || "",
       advertiserID: payload.advertiserID as AdvertiserID,
-      questions: [],
+      questions: questions.map((q) => q.id) || [],
       excludedOffers: payload.airdropMetadata.excludedOffers as OfferID[],
       batchCount: 0,
     };
-    const questions = await Promise.all(
-      payload.airdropMetadata.questions.map((q) => {
-        return createQuestion({
-          question: q.question,
-          type: q.type,
-          offerID: offerRef.id as OfferID,
-          advertiserID: payload.advertiserID as AdvertiserID,
-        });
-      })
-    );
-    // even when theres no questions we will push an empty question set
-    // because it makes editing easier due to stupid object to array conversion
-    offer.airdropMetadata.questions = questions.map((q) => q.id);
   }
   await offerRef.set(offer);
   return offer;
@@ -617,7 +617,8 @@ interface CreateQuestionPayload {
   advertiserID: AdvertiserID;
 }
 export const createQuestion = async (
-  payload: CreateQuestionPayload
+  payload: CreateQuestionPayload,
+  order?: Number
 ): Promise<QuestionAnswer_Firestore> => {
   const batchID = uuidv4();
   const questionRef = db
@@ -626,6 +627,7 @@ export const createQuestion = async (
   const questionCreatedObjectOfSchema: QuestionAnswer_Firestore = {
     id: questionRef.id as QuestionAnswerID,
     batch: batchID, // index
+    order,
     airdropMetadata: {
       offerID: payload.offerID,
       advertiserID: payload.advertiserID,

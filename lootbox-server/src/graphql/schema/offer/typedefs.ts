@@ -46,16 +46,6 @@ const OfferTypeDefs = gql`
     type: QuestionFieldType!
   }
 
-  enum QuestionFieldType {
-    Text
-    Number
-    Phone
-    Email
-    Address
-    Date
-    Screenshot
-  }
-
   enum OfferStrategyType {
     None
     Airdrop
@@ -295,7 +285,7 @@ const OfferTypeDefs = gql`
     excludedOffers: [ID!]!
     activeQuestions: [ID!]!
     inactiveQuestions: [ID!]!
-    newQuestions: [OfferAirdropQuestionCreateInput!]!
+    # newQuestions: [OfferAirdropQuestionCreateInput!]!
   }
   type EditOfferResponseSuccess {
     offer: Offer!

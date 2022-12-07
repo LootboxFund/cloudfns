@@ -183,6 +183,7 @@ const LootboxResolvers: Resolvers = {
         payload,
         context.userId
       );
+      console.log(fullPayload.airdropMetadata);
       try {
         const lootbox = await LootboxService.create({
           lootboxDescription: fullPayload.lootboxDescription,

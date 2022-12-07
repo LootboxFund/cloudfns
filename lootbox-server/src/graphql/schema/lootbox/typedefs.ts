@@ -240,7 +240,13 @@ const LootboxTypeDefs = gql`
     instructionsLink: String
     tournamentID: ID
     claimers: [ID!]!
+    # questions: [AirdropMetadataCreateQuestionInput!]!
   }
+
+  # input AirdropMetadataCreateQuestionInput {
+  #   question: String!
+  #   type: QuestionFieldType!
+  # }
 
   input EditLootboxPayload {
     lootboxID: ID!

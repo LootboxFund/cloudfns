@@ -100,7 +100,7 @@ export const listPotentialAirdropClaimers = async (
   // exclude the user who have received a past airdrop from the offer's airdrop exclusion list
   const airdropOffersToExclude = offer.airdropMetadata?.excludedOffers || [];
   const uniquePotentialUsers = uniqueUsers.filter((u) => {
-    if (!u.airdropsReceived) return true;
+    if (!u || !u.airdropsReceived) return true;
     return !u.airdropsReceived.some((r) => airdropOffersToExclude.includes(r));
   });
   const uniquePotentialClaimers = uniquePotentialUsers
