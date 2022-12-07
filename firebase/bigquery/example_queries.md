@@ -157,6 +157,45 @@ LIMIT
   1000;
 ```
 
+### Query Used for Shins Case Study
+
+```sql
+ WITH
+   TournamentIDs AS (
+   SELECT
+     DISTINCT keyTournamentID
+   FROM
+     UNNEST(["1qKLXgaRXviPP110", "1qKLXgaRXviPP110ZHLe", "1qKLXgaRXviPP110ZHLe", "C3msweDHfYCesJ2SWxeC"]) AS keyTournamentID )
+ SELECT
+   -- keyTournamentID
+   COUNT(DISTINCT(Claims.claimerUserId)) AS total_users,
+   COUNT(DISTINCT(Users.email)) AS users_with_email,
+   COUNT(DISTINCT(Users.phoneNumber)) AS users_with_phone,
+   ROUND( SAFE_DIVIDE(100* COUNT(CASE
+             WHEN Claims.status = 'complete' AND NOT Claims.type = 'reward' THEN 1
+           ELSE
+           NULL
+         END
+           ), COUNT(CASE
+             WHEN NOT Claims.type = 'reward' THEN 1
+           ELSE
+           NULL
+         END
+           )) ) AS completionRate,
+   SUM(CASE WHEN Claims.status != 'reward' THEN 1 ELSE 0 END) AS impressions,
+   SUM(CASE WHEN Claims.status = 'pending' THEN 1 ELSE 0 END) AS pendingClaims,
+   SUM(CASE WHEN Claims.status = 'complete' THEN 1 ELSE 0 END) AS completeClaims,
+   -- SUM(CASE WHEN Users.email IS NOT NULL THEN 1 ELSE 0 END) AS users_with_email,
+   -- SUM(CASE WHEN Users.phoneNumber IS NOT NULL THEN 1 ELSE 0 END) AS users_with_phone_number
+ FROM
+   TournamentIDs
+ LEFT JOIN `lootbox-fund-prod.firestore_export.claim_schema_claim_schema_latest` as Claims
+ ON Claims.tournamentId = keyTournamentID
+ LEFT JOIN `lootbox-fund-prod.firestore_export.user_schema_user_schema_latest` as Users
+ ON Users.id = Claims.claimerUserId
+ limit 100000
+```
+
 <!-- WITH
   DateTable AS (
   SELECT

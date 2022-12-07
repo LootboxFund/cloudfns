@@ -372,8 +372,6 @@ const ReferralResolvers: Resolvers = {
         };
       }
 
-      const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
-
       let tournament: Tournament_Firestore | undefined;
       let lootbox: Lootbox_Firestore | undefined;
       let lootboxTournamentSnapshot:
@@ -538,6 +536,9 @@ const ReferralResolvers: Resolvers = {
                 );
               }
             }
+
+            const campaignName =
+              payload.campaignName || `Campaign ${nanoid(5)}`;
 
             const res = await createReferral({
               slug,
