@@ -9,6 +9,7 @@ import {
   campaignClaimsForLootbox,
   referrerClaimsForLootbox,
 } from "../api/analytics/lootbox";
+import { claimerStatsForTournament } from "../api/analytics/tournament";
 import { manifest } from "../manifest";
 
 interface BaseClaimStatsForLootboxRequest {
@@ -182,6 +183,50 @@ export const lootboxCampaignStatistics = async (
     };
   } catch (err) {
     console.error("error fetching referrer lootbox stats", err);
+    throw new Error("An error occurred");
+  }
+};
+
+export interface ClaimerStatsForTournamentServiceRow {
+  claimerUserID: UserID;
+  username: string;
+  userAvatar: string;
+  claimCount: number;
+}
+
+export interface ClaimerStatsForTournamentSeviceResponse {
+  data: ClaimerStatsForTournamentServiceRow[];
+}
+
+export const claimerStatisticsForTournament = async (
+  request: { eventID: TournamentID },
+  callerUserID: UserID
+): Promise<ClaimerStatsForTournamentSeviceResponse> => {
+  const tournament = await getTournamentById(request.eventID);
+
+  if (!tournament) {
+    throw new Error("Event not Found");
+  }
+
+  if (tournament.creatorId !== callerUserID) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const { data } = await claimerStatsForTournament({
+      queryParams: {
+        eventID: request.eventID,
+      },
+      claimTable: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+      userTable: manifest.bigQuery.datasets.firestoreExport.tables.user.id,
+      location: manifest.bigQuery.datasets.firestoreExport.location,
+    });
+
+    return {
+      data,
+    };
+  } catch (err) {
+    console.error("error fetching claimer stats for event", err);
     throw new Error("An error occurred");
   }
 };

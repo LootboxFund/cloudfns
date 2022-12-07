@@ -1,5 +1,5 @@
 import { BigQuery } from "@google-cloud/bigquery";
-import { LootboxID, TournamentID } from "@wormgraph/helpers";
+import { LootboxID, TournamentID, UserID } from "@wormgraph/helpers";
 
 const bigquery = new BigQuery();
 
@@ -592,4 +592,97 @@ export const dailyClaimStatisticsForTournament = async ({
   const [rows] = await job.getQueryResults();
 
   return { data: rows.map(convertDailyClaimStatisticsForTournamentRow) };
+};
+
+export interface ClaimerStatsForTournamentRequest {
+  queryParams: {
+    eventID: TournamentID;
+  };
+  claimTable: string;
+  userTable: string;
+  location: string;
+}
+export interface ClaimerStatsForTournamentRow {
+  claimerUserID: UserID;
+  username: string;
+  userAvatar: string;
+  claimCount: number;
+}
+export interface ClaimerStatsForTournamentResponse {
+  data: ClaimerStatsForTournamentRow[];
+}
+const convertClaimerStatsForTournamentRow = (
+  data: any
+): ClaimerStatsForTournamentRow => {
+  return {
+    claimerUserID: data?.claimerUserID || "",
+    username: data?.username || "",
+    userAvatar: data?.userAvatar || "",
+    claimCount: data?.claimCount || 0,
+  };
+};
+export const claimerStatsForTournament = async ({
+  queryParams,
+  claimTable,
+  userTable,
+  location,
+}: ClaimerStatsForTournamentRequest): Promise<ClaimerStatsForTournamentResponse> => {
+  console.log(
+    "Querying BigQuery (TOURNAMENT DAILY CLAIMS)",
+    `
+
+    tournamentID: ${queryParams.eventID}
+    claimTable: ${claimTable}
+    userTable: ${userTable}
+    location: ${location}
+  
+  `
+  );
+
+  /**
+   * Queries the claim table to return claims per day
+   * Use parameterized queries to prevent SQL injection attacks
+   * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
+   */
+  const query = `
+    SELECT
+      claims.claimerUserId AS claimerUserID,
+      users.username AS username,
+      users.avatar AS userAvatar,
+      COUNT(*) AS claimCount
+    FROM
+      \`${claimTable}\` AS claims
+    LEFT JOIN 
+      \`${userTable}\` AS users
+    ON claims.claimerUserId = users.id
+    WHERE
+      claims.tournamentId = @eventID
+      AND claims.status = 'complete'
+    GROUP BY
+      claims.claimerUserID,
+      users.username,
+      users.avatar
+    Order BY
+      claimCount DESC
+    LIMIT
+      1000;
+  `;
+
+  // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+  const options = {
+    query: query,
+    // Location must match that of the dataset(s) referenced in the query.
+    location: location,
+    params: {
+      eventID: queryParams.eventID,
+    },
+  };
+
+  // Run the query as a job
+  const [job] = await bigquery.createQueryJob(options);
+
+  // Wait for the query to finish
+  const [rows] = await job.getQueryResults();
+
+  return { data: rows.map(convertClaimerStatsForTournamentRow) };
 };

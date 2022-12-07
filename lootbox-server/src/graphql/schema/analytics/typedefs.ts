@@ -248,6 +248,21 @@ const AnalyticsTypeDefs = gql`
       CampaignClaimsForLootboxResponseSuccess
     | ResponseError
 
+  type ClaimerStatsForTournamentRow {
+    claimerUserID: ID!
+    username: String!
+    userAvatar: String!
+    claimCount: Int!
+  }
+
+  type ClaimerStatsForTournamentResponseSuccess {
+    data: [ClaimerStatsForTournamentRow!]!
+  }
+
+  union ClaimerStatsForTournamentResponse =
+      ClaimerStatsForTournamentResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -300,6 +315,7 @@ const AnalyticsTypeDefs = gql`
       lootboxID: ID!
       tournamentID: ID
     ): CampaignClaimsForLootboxResponse!
+    claimerStatsForTournament(eventID: ID!): ClaimerStatsForTournamentResponse!
   }
 `;
 

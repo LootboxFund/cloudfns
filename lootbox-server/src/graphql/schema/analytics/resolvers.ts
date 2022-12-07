@@ -47,6 +47,8 @@ import {
   QueryReferrerClaimsForLootboxArgs,
   CampaignClaimsForLootboxResponse,
   QueryCampaignClaimsForLootboxArgs,
+  ClaimerStatsForTournamentResponse,
+  QueryClaimerStatsForTournamentArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -670,6 +672,43 @@ const AnalyticsResolvers: Resolvers = {
         };
       }
     },
+
+    claimerStatsForTournament: async (
+      _,
+      { eventID }: QueryClaimerStatsForTournamentArgs,
+      context: Context
+    ): Promise<ClaimerStatsForTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const { data } = await analytics.claimerStatisticsForTournament(
+          {
+            eventID: eventID as TournamentID,
+          },
+          context.userId as unknown as UserID
+        );
+
+        return { data };
+      } catch (err: any) {
+        console.error(
+          "Error in claimerStatsForTournament fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
   },
 
   ReportAdvertiserOfferPerformanceResponse: {
@@ -839,6 +878,19 @@ const AnalyticsResolvers: Resolvers = {
     __resolveType: (obj: CampaignClaimsForLootboxResponse) => {
       if ("data" in obj) {
         return "CampaignClaimsForLootboxResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  ClaimerStatsForTournamentResponse: {
+    __resolveType: (obj: ClaimerStatsForTournamentResponse) => {
+      if ("data" in obj) {
+        return "ClaimerStatsForTournamentResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
