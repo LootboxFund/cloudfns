@@ -363,6 +363,7 @@ export const campaignClaimsForLootbox = async ({
       referralSlug,
       username,
       avatar
+    HAVING claimCount > 0
     ORDER BY claimCount DESC
     limit 1000;
   `;

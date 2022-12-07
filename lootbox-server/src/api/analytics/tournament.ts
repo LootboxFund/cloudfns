@@ -429,6 +429,7 @@ export const campaignClaimsForTournament = async ({
       referralSlug,
       username,
       avatar
+    HAVING claimCount > 0
     ORDER BY claimCount DESC
     limit 1000;
   `;
