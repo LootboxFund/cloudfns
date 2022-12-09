@@ -203,6 +203,14 @@ const OfferTypeDefs = gql`
       ViewOfferDetailsAsEventAffiliateResponseSuccess
     | ResponseError
 
+  # --------- Check If User Answered Airdrop Questions ---------
+  type CheckIfUserAnsweredAirdropQuestionsResponseSuccess {
+    status: Boolean!
+  }
+  union CheckIfUserAnsweredAirdropQuestionsResponse =
+      CheckIfUserAnsweredAirdropQuestionsResponseSuccess
+    | ResponseError
+
   extend type Query {
     # view offers that an advertiser created
     listCreatedOffers(advertiserID: ID!): ListCreatedOffersResponse!
@@ -216,6 +224,10 @@ const OfferTypeDefs = gql`
     viewOfferDetailsAsAffiliate(
       payload: ViewOfferDetailsAsEventAffiliatePayload!
     ): ViewOfferDetailsAsEventAffiliateResponse!
+    # check if user answered airdrop questions
+    checkIfUserAnsweredAirdropQuestions(
+      lootboxID: ID!
+    ): CheckIfUserAnsweredAirdropQuestionsResponse!
     # view the performance of an offer in an event, as an affiliate
     # viewOfferEventAffiliatePerformance(
     #   offerID: ID!
@@ -339,7 +351,7 @@ const OfferTypeDefs = gql`
     answer: String!
   }
   type AnswerAirdropQuestionResponseSuccess {
-    lootboxID: ID!
+    answerIDs: [ID!]!
   }
   union AnswerAirdropQuestionResponse =
       AnswerAirdropQuestionResponseSuccess

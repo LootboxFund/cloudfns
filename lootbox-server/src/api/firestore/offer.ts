@@ -54,6 +54,7 @@ import { OrganizerOfferWhitelist_Firestore } from "./affiliate.type";
 import { getAdvertiser } from "./advertiser";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
+import { getLootbox } from "./lootbox";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -713,18 +714,29 @@ export const answerAirdropLootboxQuestion = async (
   payload: AnswerAirdropQuestionPayload,
   userID: UserIdpID
 ) => {
-  // const airdropMetadata = await getLootbox
+  console.log(`---- answerAirdropLootboxQuestion`);
+  const lootbox = await getLootbox(payload.lootboxID as LootboxID);
+  console.log(`lootbox ID = ${lootbox?.id}`);
+  if (!lootbox) {
+    throw Error(`No Lootbox of ID=${payload.lootboxID} found!`);
+  }
+  const airdropMetadata = {
+    lootboxID: lootbox.id,
+    tournamentID: lootbox.airdropMetadata?.tournamentID,
+    organizerID: lootbox.airdropMetadata?.organizerID,
+  };
+  console.log(airdropMetadata);
   const answers = await Promise.all(
     payload.answers.map((a) => {
       return createAnswer(
-        a.questionID,
-        userID as UserID,
+        a.questionID as QuestionAnswerID,
+        userID as unknown as UserID,
         a.answer,
         airdropMetadata
       );
     })
   );
-  return "";
+  return answers.map((a) => a.id);
 };
 
 export const createAnswer = async (
@@ -737,6 +749,7 @@ export const createAnswer = async (
     organizerID?: AffiliateID;
   }
 ): Promise<QuestionAnswer_Firestore> => {
+  console.log(`Creating answer...`);
   const questionRef = db
     .collection(Collection.QuestionAnswer)
     .doc(questionID) as DocumentReference<QuestionAnswer_Firestore>;
@@ -759,4 +772,28 @@ export const createAnswer = async (
   };
   await answerRef.set(answerCreatedObjectOfSchema);
   return answerCreatedObjectOfSchema;
+};
+
+export const checkIfUserAnsweredAirdropQuestions = async (
+  lootboxID: LootboxID,
+  userID: UserID
+) => {
+  const answersRef = db
+    .collection(Collection.QuestionAnswer)
+    .where(
+      "airdropMetadata.lootboxID",
+      "==",
+      lootboxID
+    ) as Query<QuestionAnswer_Firestore>;
+
+  const answerCollectionItems = await answersRef.get();
+
+  if (answerCollectionItems.empty) {
+    return [];
+  }
+  return answerCollectionItems.docs
+    .map((doc) => {
+      return doc.data();
+    })
+    .filter((a) => a && a.userID === userID);
 };

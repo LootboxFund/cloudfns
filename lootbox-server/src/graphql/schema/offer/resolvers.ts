@@ -3,7 +3,9 @@ import {
   ActivationID,
   AffiliateID,
   ClaimID,
+  LootboxID,
   OfferID,
+  UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
 import { AdvertiserID } from "@wormgraph/helpers";
@@ -33,6 +35,7 @@ import {
   MutationUpdateClaimAsRewardedArgs,
   UpdateClaimAsRewardedResponse,
   MutationAnswerAirdropQuestionArgs,
+  QueryCheckIfUserAnsweredAirdropQuestionsArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -41,6 +44,7 @@ import {
 } from "../../generated/types";
 import {
   answerAirdropLootboxQuestion,
+  checkIfUserAnsweredAirdropQuestions,
   createActivation,
   createOffer,
   editActivation,
@@ -62,6 +66,7 @@ import {
   viewOfferDetailsAsAffiliate,
 } from "../../../api/firestore/affiliate";
 import { updateClaimAsRewarded } from "../../../api/firestore/referral";
+import { CheckIfUserAnsweredAirdropQuestionsResponse } from "../../generated/types";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -189,6 +194,29 @@ const OfferResolvers: Resolvers = {
         }
         return {
           offer,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    checkIfUserAnsweredAirdropQuestions: async (
+      _,
+      { lootboxID }: QueryCheckIfUserAnsweredAirdropQuestionsArgs,
+      context: Context
+    ): Promise<CheckIfUserAnsweredAirdropQuestionsResponse> => {
+      try {
+        const answers = await checkIfUserAnsweredAirdropQuestions(
+          lootboxID as LootboxID,
+          (context.userId || "") as unknown as UserID
+        );
+        return {
+          status: answers.length > 0,
         };
       } catch (err) {
         console.error(err);
@@ -364,12 +392,13 @@ const OfferResolvers: Resolvers = {
       context: Context
     ): Promise<AnswerAirdropQuestionResponse> => {
       try {
-        const updatedLootboxID = await answerAirdropLootboxQuestion(
+        const answerIDs = await answerAirdropLootboxQuestion(
           payload,
           context.userId || ("" as UserIdpID)
         );
-
-        if (!updatedLootboxID) {
+        console.log(`answerIDs...`);
+        console.log(answerIDs);
+        if (!answerIDs) {
           return {
             error: {
               code: StatusCode.ServerError,
@@ -377,7 +406,7 @@ const OfferResolvers: Resolvers = {
             },
           };
         }
-        return { lootboxID: updatedLootboxID };
+        return { answerIDs };
       } catch (err) {
         return {
           error: {
@@ -536,8 +565,21 @@ const OfferResolvers: Resolvers = {
   },
   AnswerAirdropQuestionResponse: {
     __resolveType: (obj: AnswerAirdropQuestionResponse) => {
-      if ("lootboxID" in obj) {
+      if ("answerIDs" in obj) {
         return "AnswerAirdropQuestionResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  CheckIfUserAnsweredAirdropQuestionsResponse: {
+    __resolveType: (obj: CheckIfUserAnsweredAirdropQuestionsResponse) => {
+      if ("status" in obj) {
+        return "CheckIfUserAnsweredAirdropQuestionsResponseSuccess";
       }
 
       if ("error" in obj) {
