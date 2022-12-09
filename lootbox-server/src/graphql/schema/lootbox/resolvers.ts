@@ -24,6 +24,7 @@ import {
   LootboxTournamentSnapshotArgs,
   LootboxTournamentSnapshot,
   AirdropMetadataCreateInput,
+  LootboxAirdropMetadataQuestion,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -40,12 +41,15 @@ import {
   getLootboxTournamentSnapshot,
   getLootboxTournamentSnapshotByLootboxID,
   extractOrGenerateLootboxCreateInput,
+  getQuestion,
 } from "../../../api/firestore";
 import {
   Address,
   LootboxMintSignatureNonce,
   LootboxTicketID,
   LootboxType,
+  QuestionAnswerID,
+  QuestionAnswer_Firestore,
   TournamentID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
@@ -183,7 +187,7 @@ const LootboxResolvers: Resolvers = {
         payload,
         context.userId
       );
-      console.log(fullPayload.airdropMetadata);
+
       try {
         const lootbox = await LootboxService.create({
           lootboxDescription: fullPayload.lootboxDescription,
@@ -489,6 +493,24 @@ const LootboxResolvers: Resolvers = {
         pageInfo: response.pageInfo,
         edges: response.edges,
       };
+    },
+    airdropQuestions: async (
+      lootbox: Lootbox,
+      _,
+      context: Context
+    ): Promise<LootboxAirdropMetadataQuestion[]> => {
+      const questionIDs = (lootbox?.airdropMetadata?.questions ||
+        []) as QuestionAnswerID[];
+      const questions = (
+        await Promise.all(questionIDs.map((qid) => getQuestion(qid)))
+      ).filter((q) => q) as QuestionAnswer_Firestore[];
+      return questions.map((q) => ({
+        id: q.id,
+        batch: q.batch,
+        order: q.order,
+        question: q.question,
+        type: q.type,
+      }));
     },
 
     // mintWhitelistSignatures: async (

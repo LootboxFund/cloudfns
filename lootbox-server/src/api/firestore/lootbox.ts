@@ -49,6 +49,7 @@ import {
   getRandomUserName,
 } from "../lexica-images";
 import { getRandomBackgroundFromLexicaHardcoded } from "../lexica-images/index";
+import { getAdvertiser } from "./advertiser";
 const DEFAULT_THEME_COLOR = "#000001";
 
 export const getLootbox = async (
@@ -488,20 +489,27 @@ export const createLootbox = async (
           )
         : [],
     ]);
+    const advertiserInfo = offerInfo?.advertiserID
+      ? await getAdvertiser(offerInfo.advertiserID)
+      : undefined;
     const batchedName = `${payload.airdropMetadata.title} - Batch ${payload.airdropMetadata.batch}`;
     lootboxPayload.airdropMetadata = {
       batch: payload.airdropMetadata.batch,
-      instructionsLink: payload.airdropMetadata.instructionsLink || "",
+      instructionsLink: offerInfo?.airdropMetadata?.instructionsLink,
+      instructionsCallToAction:
+        offerInfo?.airdropMetadata?.instructionsCallToAction,
+      callToActionLink: offerInfo?.airdropMetadata?.callToActionLink,
       offerID: payload.airdropMetadata.offerID as OfferID,
-      oneLiner: payload.airdropMetadata.oneLiner || "",
+      oneLiner: offerInfo?.airdropMetadata?.oneLiner || "",
       title: batchedName,
       tournamentID: payload.airdropMetadata.tournamentID
         ? (payload.airdropMetadata.tournamentID as TournamentID)
         : undefined,
-      value: payload.airdropMetadata.value,
+      value: offerInfo?.airdropMetadata?.value || "Free Gift",
       lootboxID: lootboxRef.id as LootboxID,
       organizerID: tournamentInfo ? tournamentInfo.organizer : undefined,
       advertiserID: offerInfo?.advertiserID,
+      advertiserName: advertiserInfo ? advertiserInfo.name : "",
       questions: offerInfo?.airdropMetadata?.questions || [],
     };
     lootboxPayload.name = batchedName;

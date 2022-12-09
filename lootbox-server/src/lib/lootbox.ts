@@ -109,10 +109,14 @@ export const parseLootboxDB = (
       oneLiner: lootbox.airdropMetadata.oneLiner,
       value: lootbox.airdropMetadata.value,
       instructionsLink: lootbox.airdropMetadata.instructionsLink,
+      instructionsCallToAction:
+        lootbox.airdropMetadata.instructionsCallToAction,
+      callToActionLink: lootbox.airdropMetadata.callToActionLink,
       tournamentID: lootbox.airdropMetadata.tournamentID,
       organizerID: lootbox.airdropMetadata.organizerID,
       advertiserID: lootbox.airdropMetadata.advertiserID,
       questions: lootbox.airdropMetadata.questions,
+      advertiserName: lootbox.airdropMetadata.advertiserName,
     };
   }
   return lootboxDB;
@@ -219,9 +223,13 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
         oneLiner: lootbox.airdropMetadata.oneLiner,
         value: lootbox.airdropMetadata.value,
         instructionsLink: lootbox.airdropMetadata.instructionsLink,
+        instructionsCallToAction:
+          lootbox.airdropMetadata.instructionsCallToAction,
+        callToActionLink: lootbox.airdropMetadata.callToActionLink,
         tournamentID: lootbox.airdropMetadata.tournamentID,
         organizerID: lootbox.airdropMetadata.organizerID,
         advertiserID: lootbox.airdropMetadata.advertiserID,
+        advertiserName: lootbox.airdropMetadata.advertiserName,
         questions: lootbox.airdropMetadata.questions,
       };
     }

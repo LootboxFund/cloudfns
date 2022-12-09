@@ -34,6 +34,8 @@ const OfferTypeDefs = gql`
     oneLiner: String
     value: String!
     instructionsLink: String
+    instructionsCallToAction: String
+    callToActionLink: String
     questions: [QuestionAnswerPreview!]!
     excludedOffers: [ID!]!
     batchCount: Int
@@ -248,6 +250,8 @@ const OfferTypeDefs = gql`
     oneLiner: String
     value: String
     instructionsLink: String
+    instructionsCallToAction: String
+    callToActionLink: String
     questions: [OfferAirdropQuestionCreateInput!]!
     excludedOffers: [ID!]!
   }
@@ -279,12 +283,14 @@ const OfferTypeDefs = gql`
     #targetingTags: [AdTargetTag!]!
   }
   input OfferAirdropMetadataEditInput {
-    oneLiner: String!
+    oneLiner: String
     value: String
-    instructionsLink: String!
-    excludedOffers: [ID!]!
-    activeQuestions: [ID!]!
-    inactiveQuestions: [ID!]!
+    instructionsLink: String
+    instructionsCallToAction: String
+    callToActionLink: String
+    excludedOffers: [ID!]
+    activeQuestions: [ID!]
+    inactiveQuestions: [ID!]
     # newQuestions: [OfferAirdropQuestionCreateInput!]!
   }
   type EditOfferResponseSuccess {
@@ -322,6 +328,23 @@ const OfferTypeDefs = gql`
       UpdateClaimAsRewardedResponseSuccess
     | ResponseError
 
+  # --------- Answer Airdrop Question ---------
+  input AnswerAirdropQuestionPayload {
+    lootboxID: ID!
+    answers: [AnswerAirdropQuestionInput!]!
+  }
+  input AnswerAirdropQuestionInput {
+    questionID: ID!
+    lootboxID: ID!
+    answer: String!
+  }
+  type AnswerAirdropQuestionResponseSuccess {
+    lootboxID: ID!
+  }
+  union AnswerAirdropQuestionResponse =
+      AnswerAirdropQuestionResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     # Advertiser creates an offer
     createOffer(
@@ -338,6 +361,10 @@ const OfferTypeDefs = gql`
     editActivation(payload: EditActivationPayload!): EditActivationResponse!
     # Update claim status as rewarded
     updateClaimAsRewarded(claimID: ID!): UpdateClaimAsRewardedResponse!
+    #
+    answerAirdropQuestion(
+      payload: AnswerAirdropQuestionPayload!
+    ): AnswerAirdropQuestionResponse!
   }
 `;
 

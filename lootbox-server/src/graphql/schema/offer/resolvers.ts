@@ -32,6 +32,7 @@ import {
   AdSetStatus,
   MutationUpdateClaimAsRewardedArgs,
   UpdateClaimAsRewardedResponse,
+  MutationAnswerAirdropQuestionArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -39,6 +40,7 @@ import {
   AdSetPreview,
 } from "../../generated/types";
 import {
+  answerAirdropLootboxQuestion,
   createActivation,
   createOffer,
   editActivation,
@@ -49,7 +51,10 @@ import {
   listOffersAvailableForOrganizer,
   viewCreatedOffer,
 } from "../../../api/firestore/offer";
-import { CreateActivationResponse } from "../../generated/types";
+import {
+  CreateActivationResponse,
+  AnswerAirdropQuestionResponse,
+} from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import {
@@ -353,6 +358,35 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
+    answerAirdropQuestion: async (
+      _,
+      { payload }: MutationAnswerAirdropQuestionArgs,
+      context: Context
+    ): Promise<AnswerAirdropQuestionResponse> => {
+      try {
+        const updatedLootboxID = await answerAirdropLootboxQuestion(
+          payload,
+          context.userId || ("" as UserIdpID)
+        );
+
+        if (!updatedLootboxID) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not answer questions for airdrop lootbox ${payload.lootboxID}`,
+            },
+          };
+        }
+        return { lootboxID: updatedLootboxID };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   Offer: {
@@ -491,6 +525,19 @@ const OfferResolvers: Resolvers = {
     __resolveType: (obj: UpdateClaimAsRewardedResponse) => {
       if ("claimID" in obj) {
         return "UpdateClaimAsRewardedResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  AnswerAirdropQuestionResponse: {
+    __resolveType: (obj: AnswerAirdropQuestionResponse) => {
+      if ("lootboxID" in obj) {
+        return "AnswerAirdropQuestionResponseSuccess";
       }
 
       if ("error" in obj) {

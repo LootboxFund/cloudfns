@@ -20,11 +20,14 @@ import {
   QuestionAnswer_Firestore,
   QuestionAnswerID,
   QuestionAnswerStatus,
+  LootboxID,
+  TournamentID,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
   AdSetPreview,
+  AnswerAirdropQuestionPayload,
   CreateOfferPayload,
   CreateOfferResponse,
   EditActivationInput,
@@ -108,6 +111,9 @@ export const createOffer = async (
       oneLiner: payload.airdropMetadata.oneLiner || "",
       value: payload.airdropMetadata.value || "",
       instructionsLink: payload.airdropMetadata.instructionsLink || "",
+      instructionsCallToAction:
+        payload.airdropMetadata.instructionsCallToAction || "",
+      callToActionLink: payload.airdropMetadata.callToActionLink || "",
       advertiserID: payload.advertiserID as AdvertiserID,
       questions: questions.map((q) => q.id) || [],
       excludedOffers: payload.airdropMetadata.excludedOffers as OfferID[],
@@ -188,24 +194,32 @@ export const editOffer = async (
     if (payload.airdropMetadata.value) {
       updatePayload.airdropMetadata.value = payload.airdropMetadata.value;
     }
+    if (payload.airdropMetadata.instructionsCallToAction) {
+      updatePayload.airdropMetadata.instructionsCallToAction =
+        payload.airdropMetadata.instructionsCallToAction;
+    }
+    if (payload.airdropMetadata.callToActionLink) {
+      updatePayload.airdropMetadata.callToActionLink =
+        payload.airdropMetadata.callToActionLink;
+    }
     await Promise.all([
-      ...payload.airdropMetadata.inactiveQuestions.map((q) =>
+      ...(payload.airdropMetadata.activeQuestions || []).map((q) =>
         updateQuestionStatus(q as QuestionAnswerID, QuestionAnswerStatus.Active)
       ),
-      ...payload.airdropMetadata.inactiveQuestions.map((q) =>
+      ...(payload.airdropMetadata.inactiveQuestions || []).map((q) =>
         updateQuestionStatus(
           q as QuestionAnswerID,
           QuestionAnswerStatus.Inactive
         )
       ),
-      ...payload.airdropMetadata.newQuestions.map((q) =>
-        createQuestion({
-          question: q.question,
-          type: q.type,
-          offerID: offerRef.id as OfferID,
-          advertiserID: payload.advertiserID as AdvertiserID,
-        })
-      ),
+      // ...payload.airdropMetadata.newQuestions.map((q) =>
+      //   createQuestion({
+      //     question: q.question,
+      //     type: q.type,
+      //     offerID: offerRef.id as OfferID,
+      //     advertiserID: payload.advertiserID as AdvertiserID,
+      //   })
+      // ),
     ]);
   }
   // if (payload.targetingTags != undefined) {
@@ -425,6 +439,7 @@ export const viewCreatedOffer = async (
     .map((q: QuestionAnswer_Firestore) => ({
       id: q.id,
       batch: q.batch,
+      order: q.order,
       question: q.question,
       type: q.type,
     })) as QuestionAnswerPreview[];
@@ -433,6 +448,9 @@ export const viewCreatedOffer = async (
         oneLiner: offer.airdropMetadata.oneLiner,
         value: offer.airdropMetadata.value,
         instructionsLink: offer.airdropMetadata.instructionsLink,
+        instructionsCallToAction:
+          offer.airdropMetadata.instructionsCallToAction,
+        callToActionLink: offer.airdropMetadata.callToActionLink,
         excludedOffers: offer.airdropMetadata.excludedOffers,
         questions: questionsTrimmed,
       } as OfferAirdropMetadata)
@@ -618,7 +636,7 @@ interface CreateQuestionPayload {
 }
 export const createQuestion = async (
   payload: CreateQuestionPayload,
-  order?: Number
+  order?: number
 ): Promise<QuestionAnswer_Firestore> => {
   const batchID = uuidv4();
   const questionRef = db
@@ -673,4 +691,72 @@ export const getQuestionByID = async (
   } else {
     return questionSnapshot.data();
   }
+};
+
+export const getQuestion = async (
+  id: QuestionAnswerID
+): Promise<QuestionAnswer_Firestore | undefined> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc(id) as DocumentReference<QuestionAnswer_Firestore>;
+
+  const questionSnapshot = await questionRef.get();
+
+  if (!questionSnapshot.exists) {
+    return undefined;
+  } else {
+    return questionSnapshot.data();
+  }
+};
+
+export const answerAirdropLootboxQuestion = async (
+  payload: AnswerAirdropQuestionPayload,
+  userID: UserIdpID
+) => {
+  // const airdropMetadata = await getLootbox
+  const answers = await Promise.all(
+    payload.answers.map((a) => {
+      return createAnswer(
+        a.questionID,
+        userID as UserID,
+        a.answer,
+        airdropMetadata
+      );
+    })
+  );
+  return "";
+};
+
+export const createAnswer = async (
+  questionID: QuestionAnswerID,
+  userID: UserID,
+  answer: string,
+  airdropMetadata?: {
+    lootboxID?: LootboxID;
+    tournamentID?: TournamentID;
+    organizerID?: AffiliateID;
+  }
+): Promise<QuestionAnswer_Firestore> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc(questionID) as DocumentReference<QuestionAnswer_Firestore>;
+  const questionSnapshot = await questionRef.get();
+  const question = questionSnapshot.data() as QuestionAnswer_Firestore;
+  const answerRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc() as DocumentReference<QuestionAnswer_Firestore>;
+  const answerCreatedObjectOfSchema: QuestionAnswer_Firestore = {
+    ...question,
+    id: questionRef.id as QuestionAnswerID,
+    userID,
+    answer,
+    airdropMetadata: question.airdropMetadata
+      ? {
+          ...question.airdropMetadata,
+          ...airdropMetadata,
+        }
+      : undefined,
+  };
+  await answerRef.set(answerCreatedObjectOfSchema);
+  return answerCreatedObjectOfSchema;
 };
