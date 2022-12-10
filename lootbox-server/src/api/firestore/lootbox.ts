@@ -489,6 +489,20 @@ export const createLootbox = async (
           )
         : [],
     ]);
+    const lootboxTemplate = offerInfo?.airdropMetadata?.lootboxTemplateID
+      ? await getLootbox(offerInfo?.airdropMetadata?.lootboxTemplateID)
+      : undefined;
+    if (lootboxTemplate) {
+      lootboxPayload.stampImage = lootboxTemplate.stampImage;
+      lootboxPayload.logo = lootboxTemplate.logo;
+      lootboxPayload.name = lootboxTemplate.name;
+      lootboxPayload.description = lootboxTemplate.description;
+      lootboxPayload.symbol = lootboxTemplate.symbol;
+      lootboxPayload.backgroundImage = lootboxTemplate.backgroundImage;
+      lootboxPayload.themeColor = lootboxTemplate.themeColor;
+      lootboxPayload.joinCommunityUrl = lootboxTemplate.joinCommunityUrl;
+      lootboxPayload.nftBountyValue = lootboxTemplate.nftBountyValue;
+    }
     const advertiserInfo = offerInfo?.advertiserID
       ? await getAdvertiser(offerInfo.advertiserID)
       : undefined;

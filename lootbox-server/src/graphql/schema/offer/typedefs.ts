@@ -39,6 +39,8 @@ const OfferTypeDefs = gql`
     questions: [QuestionAnswerPreview!]!
     excludedOffers: [ID!]!
     batchCount: Int
+    lootboxTemplateID: ID!
+    lootboxTemplateStamp: String!
   }
 
   type QuestionAnswerPreview {
@@ -264,6 +266,7 @@ const OfferTypeDefs = gql`
     instructionsLink: String
     instructionsCallToAction: String
     callToActionLink: String
+    lootboxTemplateID: ID!
     questions: [OfferAirdropQuestionCreateInput!]!
     excludedOffers: [ID!]!
   }
@@ -292,6 +295,7 @@ const OfferTypeDefs = gql`
     endDate: Timestamp
     status: OfferStatus!
     airdropMetadata: OfferAirdropMetadataEditInput
+    lootboxTemplateID: ID
     #targetingTags: [AdTargetTag!]!
   }
   input OfferAirdropMetadataEditInput {
@@ -303,6 +307,7 @@ const OfferTypeDefs = gql`
     excludedOffers: [ID!]
     activeQuestions: [ID!]
     inactiveQuestions: [ID!]
+    questions: [OfferAirdropQuestionCreateInput!]
     # newQuestions: [OfferAirdropQuestionCreateInput!]!
   }
   type EditOfferResponseSuccess {

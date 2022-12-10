@@ -139,6 +139,8 @@ export const listPotentialAirdropClaimers = async (
       excludedOffers: offer.airdropMetadata?.excludedOffers || [],
       batchCount: offer.airdropMetadata?.batchCount,
       questions: questionsTrimmed,
+      lootboxTemplateID: offer.airdropMetadata?.lootboxTemplateID as LootboxID,
+      lootboxTemplateStamp: offer.airdropMetadata?.lootboxTemplateStamp || "",
     },
   };
   return {

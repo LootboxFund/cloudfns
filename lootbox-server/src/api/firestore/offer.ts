@@ -106,6 +106,14 @@ export const createOffer = async (
         );
       })
     );
+    const lootbox = await getLootbox(
+      payload.airdropMetadata.lootboxTemplateID as LootboxID
+    );
+    if (!lootbox) {
+      throw Error(
+        `No Lootbox with ID=${payload.airdropMetadata.lootboxTemplateID} found!`
+      );
+    }
     offer.airdropMetadata = {
       offerID: offerRef.id as OfferID,
       title: payload.title,
@@ -119,7 +127,10 @@ export const createOffer = async (
       questions: questions.map((q) => q.id) || [],
       excludedOffers: payload.airdropMetadata.excludedOffers as OfferID[],
       batchCount: 0,
+      lootboxTemplateID: payload.airdropMetadata.lootboxTemplateID as LootboxID,
+      lootboxTemplateStamp: lootbox.stampImage,
     };
+    offer.image = lootbox.stampImage;
   }
   await offerRef.set(offer);
   return offer;
@@ -454,6 +465,8 @@ export const viewCreatedOffer = async (
         callToActionLink: offer.airdropMetadata.callToActionLink,
         excludedOffers: offer.airdropMetadata.excludedOffers,
         questions: questionsTrimmed,
+        lootboxTemplateID: offer.airdropMetadata.lootboxTemplateID,
+        lootboxTemplateStamp: offer.airdropMetadata.lootboxTemplateStamp,
       } as OfferAirdropMetadata)
     : undefined;
   // check if user is allowed to run this operation
