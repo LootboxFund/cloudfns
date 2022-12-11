@@ -20,11 +20,15 @@ import {
   QuestionAnswer_Firestore,
   QuestionAnswerID,
   QuestionAnswerStatus,
+  LootboxID,
+  TournamentID,
+  ClaimID,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
   AdSetPreview,
+  AnswerAirdropQuestionPayload,
   CreateOfferPayload,
   CreateOfferResponse,
   EditActivationInput,
@@ -41,7 +45,10 @@ import {
   Offer,
   OrganizerOfferWhitelistStatus,
 } from "../../graphql/generated/types";
-import { CreateActivationPayload } from "../../graphql/generated/types";
+import {
+  CreateActivationPayload,
+  ClaimRedemptionStatus,
+} from "../../graphql/generated/types";
 import { OfferPreview, OfferPreviewForOrganizer } from "./offer.type";
 import * as moment from "moment";
 import * as _ from "lodash";
@@ -51,6 +58,8 @@ import { OrganizerOfferWhitelist_Firestore } from "./affiliate.type";
 import { getAdvertiser } from "./advertiser";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
+import { getLootbox } from "./lootbox";
+import { updateClaimRedemptionStatus } from "./referral";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -89,30 +98,44 @@ export const createOffer = async (
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
   if (payload.airdropMetadata) {
+    const questions = await Promise.all(
+      payload.airdropMetadata.questions.map((q, i) => {
+        return createQuestion(
+          {
+            question: q.question,
+            type: q.type as QuestionFieldType,
+            offerID: offerRef.id as OfferID,
+            advertiserID: payload.advertiserID as AdvertiserID,
+          },
+          i
+        );
+      })
+    );
+    const lootbox = await getLootbox(
+      payload.airdropMetadata.lootboxTemplateID as LootboxID
+    );
+    if (!lootbox) {
+      throw Error(
+        `No Lootbox with ID=${payload.airdropMetadata.lootboxTemplateID} found!`
+      );
+    }
     offer.airdropMetadata = {
       offerID: offerRef.id as OfferID,
       title: payload.title,
       oneLiner: payload.airdropMetadata.oneLiner || "",
       value: payload.airdropMetadata.value || "",
       instructionsLink: payload.airdropMetadata.instructionsLink || "",
+      instructionsCallToAction:
+        payload.airdropMetadata.instructionsCallToAction || "",
+      callToActionLink: payload.airdropMetadata.callToActionLink || "",
       advertiserID: payload.advertiserID as AdvertiserID,
-      questions: [],
+      questions: questions.map((q) => q.id) || [],
       excludedOffers: payload.airdropMetadata.excludedOffers as OfferID[],
       batchCount: 0,
+      lootboxTemplateID: payload.airdropMetadata.lootboxTemplateID as LootboxID,
+      lootboxTemplateStamp: lootbox.stampImage,
     };
-    const questions = await Promise.all(
-      payload.airdropMetadata.questions.map((q) => {
-        return createQuestion({
-          question: q.question,
-          type: q.type,
-          offerID: offerRef.id as OfferID,
-          advertiserID: payload.advertiserID as AdvertiserID,
-        });
-      })
-    );
-    // even when theres no questions we will push an empty question set
-    // because it makes editing easier due to stupid object to array conversion
-    offer.airdropMetadata.questions = questions.map((q) => q.id);
+    offer.image = lootbox.stampImage;
   }
   await offerRef.set(offer);
   return offer;
@@ -188,24 +211,32 @@ export const editOffer = async (
     if (payload.airdropMetadata.value) {
       updatePayload.airdropMetadata.value = payload.airdropMetadata.value;
     }
+    if (payload.airdropMetadata.instructionsCallToAction) {
+      updatePayload.airdropMetadata.instructionsCallToAction =
+        payload.airdropMetadata.instructionsCallToAction;
+    }
+    if (payload.airdropMetadata.callToActionLink) {
+      updatePayload.airdropMetadata.callToActionLink =
+        payload.airdropMetadata.callToActionLink;
+    }
     await Promise.all([
-      ...payload.airdropMetadata.inactiveQuestions.map((q) =>
+      ...(payload.airdropMetadata.activeQuestions || []).map((q) =>
         updateQuestionStatus(q as QuestionAnswerID, QuestionAnswerStatus.Active)
       ),
-      ...payload.airdropMetadata.inactiveQuestions.map((q) =>
+      ...(payload.airdropMetadata.inactiveQuestions || []).map((q) =>
         updateQuestionStatus(
           q as QuestionAnswerID,
           QuestionAnswerStatus.Inactive
         )
       ),
-      ...payload.airdropMetadata.newQuestions.map((q) =>
-        createQuestion({
-          question: q.question,
-          type: q.type,
-          offerID: offerRef.id as OfferID,
-          advertiserID: payload.advertiserID as AdvertiserID,
-        })
-      ),
+      // ...payload.airdropMetadata.newQuestions.map((q) =>
+      //   createQuestion({
+      //     question: q.question,
+      //     type: q.type,
+      //     offerID: offerRef.id as OfferID,
+      //     advertiserID: payload.advertiserID as AdvertiserID,
+      //   })
+      // ),
     ]);
   }
   // if (payload.targetingTags != undefined) {
@@ -425,6 +456,7 @@ export const viewCreatedOffer = async (
     .map((q: QuestionAnswer_Firestore) => ({
       id: q.id,
       batch: q.batch,
+      order: q.order,
       question: q.question,
       type: q.type,
     })) as QuestionAnswerPreview[];
@@ -433,8 +465,13 @@ export const viewCreatedOffer = async (
         oneLiner: offer.airdropMetadata.oneLiner,
         value: offer.airdropMetadata.value,
         instructionsLink: offer.airdropMetadata.instructionsLink,
+        instructionsCallToAction:
+          offer.airdropMetadata.instructionsCallToAction,
+        callToActionLink: offer.airdropMetadata.callToActionLink,
         excludedOffers: offer.airdropMetadata.excludedOffers,
         questions: questionsTrimmed,
+        lootboxTemplateID: offer.airdropMetadata.lootboxTemplateID,
+        lootboxTemplateStamp: offer.airdropMetadata.lootboxTemplateStamp,
       } as OfferAirdropMetadata)
     : undefined;
   // check if user is allowed to run this operation
@@ -617,7 +654,8 @@ interface CreateQuestionPayload {
   advertiserID: AdvertiserID;
 }
 export const createQuestion = async (
-  payload: CreateQuestionPayload
+  payload: CreateQuestionPayload,
+  order?: number
 ): Promise<QuestionAnswer_Firestore> => {
   const batchID = uuidv4();
   const questionRef = db
@@ -626,6 +664,7 @@ export const createQuestion = async (
   const questionCreatedObjectOfSchema: QuestionAnswer_Firestore = {
     id: questionRef.id as QuestionAnswerID,
     batch: batchID, // index
+    order,
     airdropMetadata: {
       offerID: payload.offerID,
       advertiserID: payload.advertiserID,
@@ -671,4 +710,125 @@ export const getQuestionByID = async (
   } else {
     return questionSnapshot.data();
   }
+};
+
+export const getQuestion = async (
+  id: QuestionAnswerID
+): Promise<QuestionAnswer_Firestore | undefined> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc(id) as DocumentReference<QuestionAnswer_Firestore>;
+
+  const questionSnapshot = await questionRef.get();
+
+  if (!questionSnapshot.exists) {
+    return undefined;
+  } else {
+    return questionSnapshot.data();
+  }
+};
+
+export const answerAirdropLootboxQuestion = async (
+  payload: AnswerAirdropQuestionPayload,
+  userID: UserIdpID
+) => {
+  const lootbox = await getLootbox(payload.lootboxID as LootboxID);
+
+  if (!lootbox) {
+    throw Error(`No Lootbox of ID=${payload.lootboxID} found!`);
+  }
+  const airdropMetadata = {
+    lootboxID: lootbox.id,
+    tournamentID: lootbox.airdropMetadata?.tournamentID,
+    organizerID: lootbox.airdropMetadata?.organizerID,
+  };
+
+  const answers = await Promise.all(
+    payload.answers.map((a) => {
+      return createAnswer(
+        a.questionID as QuestionAnswerID,
+        userID as unknown as UserID,
+        a.answer,
+        airdropMetadata
+      );
+    })
+  );
+  const answeredAllLootboxQuestions = lootbox.airdropMetadata?.questions.every(
+    (qid) => payload.answers.map((a) => a.questionID).includes(qid)
+  );
+  const answeredSomeLootboxQuestions = lootbox.airdropMetadata?.questions.some(
+    (qid) => payload.answers.map((a) => a.questionID).includes(qid)
+  );
+  if (answeredAllLootboxQuestions && payload.claimID) {
+    await updateClaimRedemptionStatus(
+      payload.claimID as ClaimID,
+      ClaimRedemptionStatus.Answered,
+      userID
+    );
+  } else if (answeredSomeLootboxQuestions) {
+    await updateClaimRedemptionStatus(
+      payload.claimID as ClaimID,
+      ClaimRedemptionStatus.InProgress,
+      userID
+    );
+  }
+  return answers.map((a) => a.id);
+};
+
+export const createAnswer = async (
+  questionID: QuestionAnswerID,
+  userID: UserID,
+  answer: string,
+  airdropMetadata?: {
+    lootboxID?: LootboxID;
+    tournamentID?: TournamentID;
+    organizerID?: AffiliateID;
+  }
+): Promise<QuestionAnswer_Firestore> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc(questionID) as DocumentReference<QuestionAnswer_Firestore>;
+  const questionSnapshot = await questionRef.get();
+  const question = questionSnapshot.data() as QuestionAnswer_Firestore;
+  const answerRef = db
+    .collection(Collection.QuestionAnswer)
+    .doc() as DocumentReference<QuestionAnswer_Firestore>;
+  const answerCreatedObjectOfSchema: QuestionAnswer_Firestore = {
+    ...question,
+    id: questionRef.id as QuestionAnswerID,
+    userID,
+    answer,
+    airdropMetadata: question.airdropMetadata
+      ? {
+          ...question.airdropMetadata,
+          ...airdropMetadata,
+        }
+      : undefined,
+  };
+  await answerRef.set(answerCreatedObjectOfSchema);
+  return answerCreatedObjectOfSchema;
+};
+
+export const checkIfUserAnsweredAirdropQuestions = async (
+  lootboxID: LootboxID,
+  userID: UserID
+) => {
+  const answersRef = db
+    .collection(Collection.QuestionAnswer)
+    .where(
+      "airdropMetadata.lootboxID",
+      "==",
+      lootboxID
+    ) as Query<QuestionAnswer_Firestore>;
+
+  const answerCollectionItems = await answersRef.get();
+
+  if (answerCollectionItems.empty) {
+    return [];
+  }
+  return answerCollectionItems.docs
+    .map((doc) => {
+      return doc.data();
+    })
+    .filter((a) => a && a.userID === userID);
 };

@@ -329,13 +329,11 @@ export const listAdsOfAdvertiser = async (
     .where("advertiserID", "==", advertiserID) as Query<Ad_Firestore>;
 
   const adCollectionItems = await AdRef.get();
-  console.log(`adCollectionItems`);
-  console.log(adCollectionItems.empty);
+
   if (adCollectionItems.empty) {
     return [];
   } else {
     return adCollectionItems.docs.map((doc) => {
-      console.log(doc.data());
       const data = doc.data();
       return data;
     });

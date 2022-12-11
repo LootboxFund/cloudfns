@@ -481,11 +481,11 @@ const UserResolvers = {
 
         // Update the idp username if needed
         // let updatedUserIdp: IIdpUser | undefined = undefined;
+        const username = await getRandomUserName({
+          type: "user",
+          seedEmail: payload?.email || undefined,
+        });
         if (!idpUser.username) {
-          const username = await getRandomUserName({
-            type: "user",
-            seedEmail: payload?.email || undefined,
-          });
           const updatedUserIdp = await identityProvider.updateUser(
             context.userId,
             {
@@ -496,7 +496,7 @@ const UserResolvers = {
         }
 
         // User does not exist in database, create it
-        const user = await createUser(createUserRequest);
+        const user = await createUser(createUserRequest, username);
 
         return { user };
       } catch (err) {

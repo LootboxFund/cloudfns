@@ -32,7 +32,6 @@ const ReferralTypeDefs = gql`
     unverified
     expired
     complete
-    rewarded
   }
 
   type Claim {

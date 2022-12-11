@@ -122,6 +122,7 @@ const LootboxTypeDefs = gql`
     # Lootbox Type
     type: LootboxType
     airdropMetadata: LootboxAirdropMetadata
+    airdropQuestions: [LootboxAirdropMetadataQuestion!]
 
     # GQL layer
     userClaims(
@@ -147,10 +148,21 @@ const LootboxTypeDefs = gql`
     oneLiner: String
     value: String
     instructionsLink: String
+    instructionsCallToAction: String
+    callToActionLink: String
     tournamentID: ID
     organizerID: ID
     advertiserID: ID!
     questions: [ID!]!
+    advertiserName: String
+  }
+
+  type LootboxAirdropMetadataQuestion {
+    id: ID!
+    batch: ID!
+    order: Int
+    question: String!
+    type: QuestionFieldType!
   }
 
   type LootboxSnapshotTimestamps {
@@ -235,12 +247,15 @@ const LootboxTypeDefs = gql`
     batch: Int!
     offerID: ID!
     title: String!
-    oneLiner: String
-    value: String!
-    instructionsLink: String
     tournamentID: ID
     claimers: [ID!]!
+    # questions: [AirdropMetadataCreateQuestionInput!]!
   }
+
+  # input AirdropMetadataCreateQuestionInput {
+  #   question: String!
+  #   type: QuestionFieldType!
+  # }
 
   input EditLootboxPayload {
     lootboxID: ID!
