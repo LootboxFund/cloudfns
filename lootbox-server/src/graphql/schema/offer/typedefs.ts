@@ -338,16 +338,21 @@ const OfferTypeDefs = gql`
   union EditActivationResponse = EditActivationResponseSuccess | ResponseError
 
   # --------- Update Claim as Rewarded ---------
-  type UpdateClaimAsRewardedResponseSuccess {
+  input UpdateClaimRedemptionStatusPayload {
+    claimID: ID!
+    status: ClaimRedemptionStatus!
+  }
+  type UpdateClaimRedemptionStatusResponseSuccess {
     claimID: ID!
   }
-  union UpdateClaimAsRewardedResponse =
-      UpdateClaimAsRewardedResponseSuccess
+  union UpdateClaimRedemptionStatusResponse =
+      UpdateClaimRedemptionStatusResponseSuccess
     | ResponseError
 
   # --------- Answer Airdrop Question ---------
   input AnswerAirdropQuestionPayload {
     lootboxID: ID!
+    claimID: ID
     answers: [AnswerAirdropQuestionInput!]!
   }
   input AnswerAirdropQuestionInput {
@@ -377,7 +382,9 @@ const OfferTypeDefs = gql`
     # Advertiser edits the activations in an offer including potential deletions
     editActivation(payload: EditActivationPayload!): EditActivationResponse!
     # Update claim status as rewarded
-    updateClaimAsRewarded(claimID: ID!): UpdateClaimAsRewardedResponse!
+    updateClaimRedemptionStatus(
+      payload: UpdateClaimRedemptionStatusPayload!
+    ): UpdateClaimRedemptionStatusResponse!
     #
     answerAirdropQuestion(
       payload: AnswerAirdropQuestionPayload!

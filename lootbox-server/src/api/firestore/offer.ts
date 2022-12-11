@@ -22,6 +22,7 @@ import {
   QuestionAnswerStatus,
   LootboxID,
   TournamentID,
+  ClaimID,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -44,7 +45,10 @@ import {
   Offer,
   OrganizerOfferWhitelistStatus,
 } from "../../graphql/generated/types";
-import { CreateActivationPayload } from "../../graphql/generated/types";
+import {
+  CreateActivationPayload,
+  ClaimRedemptionStatus,
+} from "../../graphql/generated/types";
 import { OfferPreview, OfferPreviewForOrganizer } from "./offer.type";
 import * as moment from "moment";
 import * as _ from "lodash";
@@ -55,6 +59,7 @@ import { getAdvertiser } from "./advertiser";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
 import { getLootbox } from "./lootbox";
+import { updateClaimRedemptionStatus } from "./referral";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -727,9 +732,8 @@ export const answerAirdropLootboxQuestion = async (
   payload: AnswerAirdropQuestionPayload,
   userID: UserIdpID
 ) => {
-  console.log(`---- answerAirdropLootboxQuestion`);
   const lootbox = await getLootbox(payload.lootboxID as LootboxID);
-  console.log(`lootbox ID = ${lootbox?.id}`);
+
   if (!lootbox) {
     throw Error(`No Lootbox of ID=${payload.lootboxID} found!`);
   }
@@ -738,7 +742,7 @@ export const answerAirdropLootboxQuestion = async (
     tournamentID: lootbox.airdropMetadata?.tournamentID,
     organizerID: lootbox.airdropMetadata?.organizerID,
   };
-  console.log(airdropMetadata);
+
   const answers = await Promise.all(
     payload.answers.map((a) => {
       return createAnswer(
@@ -749,6 +753,25 @@ export const answerAirdropLootboxQuestion = async (
       );
     })
   );
+  const answeredAllLootboxQuestions = lootbox.airdropMetadata?.questions.every(
+    (qid) => payload.answers.map((a) => a.questionID).includes(qid)
+  );
+  const answeredSomeLootboxQuestions = lootbox.airdropMetadata?.questions.some(
+    (qid) => payload.answers.map((a) => a.questionID).includes(qid)
+  );
+  if (answeredAllLootboxQuestions && payload.claimID) {
+    await updateClaimRedemptionStatus(
+      payload.claimID as ClaimID,
+      ClaimRedemptionStatus.Answered,
+      userID
+    );
+  } else if (answeredSomeLootboxQuestions) {
+    await updateClaimRedemptionStatus(
+      payload.claimID as ClaimID,
+      ClaimRedemptionStatus.InProgress,
+      userID
+    );
+  }
   return answers.map((a) => a.id);
 };
 
@@ -762,7 +785,6 @@ export const createAnswer = async (
     organizerID?: AffiliateID;
   }
 ): Promise<QuestionAnswer_Firestore> => {
-  console.log(`Creating answer...`);
   const questionRef = db
     .collection(Collection.QuestionAnswer)
     .doc(questionID) as DocumentReference<QuestionAnswer_Firestore>;

@@ -1,6 +1,5 @@
 import {
   AffiliateID,
-  AirdropUserClaimStatus,
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
@@ -34,6 +33,7 @@ import {
 } from "../../graphql/generated/types";
 import { getTournamentById } from "./tournament";
 import { _createAirdropClaim, _createClaim } from "./referral";
+import { ClaimRedemptionStatus } from "../../graphql/generated/types";
 
 export const listPotentialAirdropClaimers = async (
   {
@@ -123,7 +123,7 @@ export const listPotentialAirdropClaimers = async (
         offerID: offerID,
       };
       if (claimForUser && claimForUser.airdropMetadata) {
-        potentialClaimer.status = claimForUser.airdropMetadata.claimStatus;
+        potentialClaimer.status = claimForUser.redemptionStatus;
         potentialClaimer.lootboxID = claimForUser.airdropMetadata.lootboxID;
         potentialClaimer.lootboxAddress =
           claimForUser.airdropMetadata.lootboxAddress;
@@ -213,7 +213,6 @@ export const createAirdropClaim = async (
       offerID: offerID,
       // @ts-ignore
       batchAlias: `Batch ${airdropLootbox.airdropMetadata.batch}`,
-      claimStatus: AirdropUserClaimStatus.Awaiting,
       answers: [],
     },
   });

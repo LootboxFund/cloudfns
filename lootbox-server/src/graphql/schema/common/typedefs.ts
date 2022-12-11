@@ -55,6 +55,14 @@ const CommonTypeDefs = gql`
     MultiSelect
   }
 
+  enum MeasurementPartnerType {
+    Appsflyer
+    GoogleTagManager
+    ServerToServer
+    LootboxAppWebsiteVisit
+    Manual
+  }
+
   type Query {
     version: ID!
   }

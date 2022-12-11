@@ -5,6 +5,7 @@ import {
   ClaimPageInfo,
   User,
   LootboxTournamentSnapshot,
+  ClaimRedemptionStatus,
 } from "../../graphql/generated/types";
 import {
   ClaimID,
@@ -24,7 +25,6 @@ import {
   AffiliateID,
   ClaimTimestamps_Firestore,
   OfferID,
-  AirdropUserClaimStatus,
   QuestionAnswerID,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
@@ -277,7 +277,6 @@ interface CreateAirdropClaimCall extends CreateClaimCall {
     lootboxAddress?: Address;
     offerID: OfferID;
     batchAlias: string;
-    claimStatus: AirdropUserClaimStatus;
     answers: QuestionAnswerID[];
   };
 }
@@ -300,6 +299,7 @@ export const _createAirdropClaim = async (
     referralSlug: req.referralSlug,
     referralCampaignName: req.referralCampaignName,
     status: req.status,
+    redemptionStatus: ClaimRedemptionStatus.Awaiting,
     type: req.type,
     referralType: req.referralType,
     whitelistId: null,
@@ -1117,8 +1117,9 @@ export const getUnverifiedClaimsForUser = async (
   }
 };
 
-export const updateClaimAsRewarded = async (
+export const updateClaimRedemptionStatus = async (
   claimID: ClaimID,
+  status: ClaimRedemptionStatus,
   userIdpID: UserIdpID
 ) => {
   const claimsRef = db
@@ -1154,17 +1155,12 @@ export const updateClaimAsRewarded = async (
     .collection(Collection.Claim)
     .doc(claim.id) as DocumentReference<Claim_Firestore>;
 
-  const updatePayload: Partial<Claim_Firestore> = {};
-  // updatePayload.status = ClaimStatus_Firestore.rewarded;
-  // repeat
-  if (claim.airdropMetadata && claim.type === ClaimType_Firestore.airdrop) {
-    updatePayload.airdropMetadata = {
-      ...claim.airdropMetadata,
-      claimStatus: AirdropUserClaimStatus.Completed,
-    };
+  if (checkIfClaimRedemptionStatusIsSenior(status, claim.redemptionStatus)) {
+    const updatePayload: Partial<Claim_Firestore> = {};
+    updatePayload.redemptionStatus = status;
+    // until done
+    await claimRef.update(updatePayload);
   }
-  // until done
-  await claimRef.update(updatePayload);
   return claim.id;
 };
 
@@ -1202,5 +1198,23 @@ export const getLootboxOptionsForTournament = async (
           d.type !== LootboxType.Airdrop
         );
       }) as unknown[] as LootboxTournamentSnapshot[];
+  }
+};
+
+export const checkIfClaimRedemptionStatusIsSenior = (
+  newStatus: ClaimRedemptionStatus,
+  currentStatus?: ClaimRedemptionStatus
+) => {
+  const ranking = {
+    None: 0,
+    [ClaimRedemptionStatus.Awaiting]: 1,
+    [ClaimRedemptionStatus.Started]: 2,
+    [ClaimRedemptionStatus.InProgress]: 3,
+    [ClaimRedemptionStatus.Answered]: 4,
+    [ClaimRedemptionStatus.Rewarded]: 5,
+    [ClaimRedemptionStatus.Revoked]: 6,
+  };
+  if (ranking[newStatus] > ranking[currentStatus || "None"]) {
+    return true;
   }
 };

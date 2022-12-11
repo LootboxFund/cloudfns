@@ -32,10 +32,10 @@ import {
   ViewOfferDetailsAsEventAffiliateResponse,
   QueryViewOfferDetailsAsAffiliateArgs,
   AdSetStatus,
-  MutationUpdateClaimAsRewardedArgs,
-  UpdateClaimAsRewardedResponse,
   MutationAnswerAirdropQuestionArgs,
   QueryCheckIfUserAnsweredAirdropQuestionsArgs,
+  UpdateClaimRedemptionStatusResponse,
+  MutationUpdateClaimRedemptionStatusArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -65,7 +65,7 @@ import {
   getActivationsWithRateQuoteForAffiliate,
   viewOfferDetailsAsAffiliate,
 } from "../../../api/firestore/affiliate";
-import { updateClaimAsRewarded } from "../../../api/firestore/referral";
+import { updateClaimRedemptionStatus } from "../../../api/firestore/referral";
 import { CheckIfUserAnsweredAirdropQuestionsResponse } from "../../generated/types";
 
 const OfferResolvers: Resolvers = {
@@ -357,14 +357,16 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
-    updateClaimAsRewarded: async (
+    updateClaimRedemptionStatus: async (
       _,
-      { claimID }: MutationUpdateClaimAsRewardedArgs,
+      { payload }: MutationUpdateClaimRedemptionStatusArgs,
       context: Context
-    ): Promise<UpdateClaimAsRewardedResponse> => {
+    ): Promise<UpdateClaimRedemptionStatusResponse> => {
+      const { claimID, status } = payload;
       try {
-        const updatedClaimID = await updateClaimAsRewarded(
+        const updatedClaimID = await updateClaimRedemptionStatus(
           claimID as ClaimID,
+          status,
           context.userId || ("" as UserIdpID)
         );
 
@@ -550,10 +552,10 @@ const OfferResolvers: Resolvers = {
       return null;
     },
   },
-  UpdateClaimAsRewardedResponse: {
-    __resolveType: (obj: UpdateClaimAsRewardedResponse) => {
+  UpdateClaimRedemptionStatusResponse: {
+    __resolveType: (obj: UpdateClaimRedemptionStatusResponse) => {
       if ("claimID" in obj) {
-        return "UpdateClaimAsRewardedResponseSuccess";
+        return "UpdateClaimRedemptionStatusResponseSuccess";
       }
 
       if ("error" in obj) {
