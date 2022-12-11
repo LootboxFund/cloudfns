@@ -6,6 +6,7 @@ import {
   getUser,
 } from "../api/firestore";
 import {
+  AffiliateID,
   ClaimType_Firestore,
   Claim_Firestore,
   LootboxID,
@@ -28,6 +29,8 @@ import {
   ViewAdResponseSuccess,
 } from "../graphql/generated/types";
 import * as _ from "lodash";
+import { checkIfUserIdpMatchesAffiliate } from "../api/identityProvider/firebase";
+import { UserIdpID } from "@wormgraph/helpers";
 
 interface BaseClaimStatsForLootboxRequest {
   lootboxID: LootboxID;
@@ -313,8 +316,24 @@ export const claimerStatisticsForLootboxTournament = async (
 
 export const fansListForTournament = async (
   payload: QueryFansListForTournamentArgs,
-  userID: UserID
+  userID: UserIdpID
 ) => {
+  const tournament = await getTournamentById(
+    payload.tournamentID as TournamentID
+  );
+  if (!tournament || !tournament.organizer) {
+    throw new Error("Tournament not found");
+  }
+  // only allow the tournament owner to view this data
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userID,
+    tournament.organizer as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions to get analytics for this tournament`
+    );
+  }
   // get all claims for tournament
   const claims = await getAllClaimsForTournament(
     payload.tournamentID as TournamentID

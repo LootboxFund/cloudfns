@@ -783,19 +783,19 @@ const AnalyticsResolvers: Resolvers = {
       { tournamentID }: QueryFansListForTournamentArgs,
       context: Context
     ): Promise<FansListForTournamentResponse> => {
-      // if (!context.userId) {
-      //   return {
-      //     error: {
-      //       code: StatusCode.Unauthorized,
-      //       message: "Unauthorized",
-      //     },
-      //   };
-      // }
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
 
       try {
         const fans = await analytics.fansListForTournament(
           { tournamentID },
-          context.userId as unknown as UserID
+          context.userId
         );
 
         return {
