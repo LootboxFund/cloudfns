@@ -472,9 +472,6 @@ export const createLootbox = async (
     lootboxPayload.type = payload.type;
   }
   if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
-    console.log(
-      `Airdrop on tournament = ${payload.airdropMetadata.tournamentID} with claimers = ${payload.airdropMetadata.claimers.length}`
-    );
     const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([
       getOffer(payload.airdropMetadata.offerID as OfferID),
       payload.airdropMetadata.tournamentID
@@ -527,10 +524,13 @@ export const createLootbox = async (
       questions: offerInfo?.airdropMetadata?.questions || [],
     };
     lootboxPayload.name = batchedName;
-    console.log(`Got airdrop claimers: ${airdropClaimers.length}`);
+    // create the lootbox first because the claims creation depends on existence of a lootbox
+    // creating a claim will trigger a firestore function to increment the lootbox.runningClaimAmount
+    await lootboxRef.set(lootboxPayload);
+
     await Promise.all(
-      airdropClaimers.map((claim) => {
-        return createAirdropClaim(
+      airdropClaimers.map(async (claim) => {
+        return await createAirdropClaim(
           claim,
           lootboxPayload,
           // @ts-ignore
@@ -538,10 +538,10 @@ export const createLootbox = async (
         );
       })
     );
-    lootboxPayload.runningCompletedClaims = airdropClaimers.length;
     await updateOfferBatchCount(payload.airdropMetadata.offerID as OfferID);
+  } else {
+    await lootboxRef.set(lootboxPayload);
   }
-  await lootboxRef.set(lootboxPayload);
   return lootboxPayload;
 };
 
