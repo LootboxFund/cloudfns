@@ -1,6 +1,6 @@
 {
   "name": "lootbox-server",
-  "version": "0.7.4c-prod-autogen-lootbox",
+  "version": "0.7.4d-prod-airdrop-1.1",
   "main": "dist/server.js",
   "license": "MIT",
   "scripts": {
