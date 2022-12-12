@@ -8,7 +8,7 @@
  * to run:
  * npx ts-node --script-mode ./src/migrations/getEmailsOfLootbox.ts [env] [tournamentID] [lootboxID]
  *
- * npx ts-node --script-mode ./src/migrations/getEmailsOfLootbox.ts prod IXU25LtCbCUzF62BSIWo RR1yAMWoIbYADPu8R6Dh
+ * npx ts-node --script-mode ./src/migrations/getEmailsOfLootbox.ts prod CC2kzXEKGYC8Cq5IExTm vhvgFKDbhrK485dKrFxy
  *
  *
  * [env]            `prod` | `staging`
@@ -24,6 +24,7 @@ import {
 import { getAllClaimsForTournament } from "../api/firestore";
 import { db } from "../api/firebase";
 import { DocumentReference } from "firebase-admin/firestore";
+import { logWrite } from "./log-helper";
 
 /**
  * Main function run in this script
@@ -41,22 +42,34 @@ const run = async () => {
     throw new Error("No Tournament specified");
   }
 
-  console.log(`
-    
-        Fetching user emails...
-    
-            tournamentID: ${tournamentID}
-    
-        `);
+  const fileName = `src/migrations/output/getEmailsOfLootbox-${new Date()}.txt`;
+
+  logWrite(
+    fileName,
+    true,
+    `
+  
+  Running Query getEmailsOfLootbox.ts
+  Datestamp: ${new Date()}
+
+  tournamentID: ${tournamentID}
+  lootboxID: ${lootboxID}
+
+  `
+  );
 
   const claimsForTournament = await getAllClaimsForTournament(
     tournamentID as TournamentID
   );
-  console.log(`
+  logWrite(
+    fileName,
+    true,
+    `
  
      Found ${claimsForTournament.length} claims for tournament ${tournamentID}
  
-    `);
+    `
+  );
 
   const userMap: { [key: string]: User_Firestore } = {};
 
@@ -68,11 +81,15 @@ const run = async () => {
 
   const claimUserIDs = claimUserIDsAll.filter((v, i, a) => a.indexOf(v) === i);
 
-  console.log(`
+  logWrite(
+    fileName,
+    true,
+    `
  
      Found ${claimUserIDs.length} unique claimer user IDs
  
-     `);
+     `
+  );
 
   for (const userID of claimUserIDs) {
     if (!userID || !!userMap[userID]) {
@@ -92,23 +109,40 @@ const run = async () => {
     }
   }
 
-  console.log(`
+  logWrite(
+    fileName,
+    true,
+    `
 
      Printing User Emails
 
-     `);
+     `
+  );
 
   const userEmails = Object.values(userMap)
     .filter((user) => user.email)
     .map((user) => ({
+      id: user.id,
       email: user.email,
       count: claimUserIDsAll.filter((c) => c === user.id).length,
     }));
 
-  console.log(`User Emails: ${userEmails.length}`);
-  console.log(
-    userEmails.map((em) => `${em.email} - ${em.count} tickets`).join("\n")
+  logWrite(fileName, true, `User Emails: ${userEmails.length} \n`);
+  let ticketCount = 0;
+  logWrite(
+    fileName,
+    true,
+    `Number, User ID, Email, Ticket Count, Ticket Count \n`
   );
+  userEmails.forEach((em, i) => {
+    ticketCount = ticketCount + em.count;
+    logWrite(
+      fileName,
+      true,
+      `#${i + 1}, ${em.id}, ${em.email}, ${em.count}, ${em.count} tickets \n`
+    );
+  });
+  logWrite(fileName, true, `Total ${ticketCount}`);
 };
 
 run().catch(console.error);

@@ -60,7 +60,7 @@ export const listPotentialAirdropClaimers = async (
     throw new Error("Offer not found");
   }
   if (!tournament || !tournament.organizer) {
-    throw new Error("Tournament not found bruh");
+    throw new Error("Tournament not found");
   }
   // only allow the tournament owner to view this data
   const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
