@@ -51,6 +51,8 @@ import {
   QueryClaimerStatsForTournamentArgs,
   ClaimerStatsForLootboxTournamentResponse,
   QueryClaimerStatisticsForLootboxTournamentArgs,
+  FansListForTournamentResponse,
+  QueryFansListForTournamentArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -785,6 +787,44 @@ const AnalyticsResolvers: Resolvers = {
         };
       }
     },
+
+    fansListForTournament: async (
+      _,
+      { tournamentID }: QueryFansListForTournamentArgs,
+      context: Context
+    ): Promise<FansListForTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const fans = await analytics.fansListForTournament(
+          { tournamentID },
+          context.userId
+        );
+
+        return {
+          tournamentID: tournamentID,
+          fans,
+        };
+      } catch (err: any) {
+        console.error(
+          "Error in claimerStatisticsForLootboxTournament fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
   },
 
   ReportAdvertiserOfferPerformanceResponse: {
@@ -894,6 +934,18 @@ const AnalyticsResolvers: Resolvers = {
         return "ResponseError";
       }
 
+      return null;
+    },
+  },
+
+  FansListForTournamentResponse: {
+    __resolveType: (obj: FansListForTournamentResponse) => {
+      if ("fans" in obj && "tournamentID" in obj) {
+        return "FansListForTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
       return null;
     },
   },

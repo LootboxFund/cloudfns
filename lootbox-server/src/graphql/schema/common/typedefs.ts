@@ -38,6 +38,31 @@ const CommonTypeDefs = gql`
     message: String!
   }
 
+  enum QuestionFieldType {
+    Text
+    Number
+    Phone
+    Email
+    Address
+    Date
+    Time
+    DateTime
+    Screenshot
+    Link
+    File
+    Range
+    SingleSelect
+    MultiSelect
+  }
+
+  enum MeasurementPartnerType {
+    Appsflyer
+    GoogleTagManager
+    ServerToServer
+    LootboxAppWebsiteVisit
+    Manual
+  }
+
   type Query {
     version: ID!
   }

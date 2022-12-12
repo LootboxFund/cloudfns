@@ -318,19 +318,19 @@ const TournamentTypeDefs = gql`
   union ListPotentialAirdropClaimersResponse =
       ListPotentialAirdropClaimersResponseSuccess
     | ResponseError
-  enum AirdropUserClaimStatus {
-    Completed
-    Submitted
-    InProgress
-    Pending
-    Awaiting
+  enum ClaimRedemptionStatus {
     Revoked
+    Rewarded
+    Answered
+    InProgress
+    Started
+    Awaiting
   }
   type PotentialAirdropClaimer {
     userID: ID!
     username: String!
     avatar: String
-    status: AirdropUserClaimStatus
+    status: ClaimRedemptionStatus
     lootboxID: ID
     lootboxAddress: String
     batchAlias: String

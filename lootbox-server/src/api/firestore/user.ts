@@ -14,7 +14,10 @@ import {
 } from "@wormgraph/helpers";
 import { getRandomPortraitFromLexicaHardcoded } from "../lexica-images";
 
-export const createUser = async (idpUser: IIdpUser): Promise<User> => {
+export const createUser = async (
+  idpUser: IIdpUser,
+  aliasUsername?: string
+): Promise<User> => {
   const userRef = db
     .collection(Collection.User)
     .doc(idpUser.id) as DocumentReference<User>;
@@ -34,8 +37,8 @@ export const createUser = async (idpUser: IIdpUser): Promise<User> => {
     user.phoneNumber = idpUser.phoneNumber;
   }
 
-  if (!!idpUser.username) {
-    user.username = idpUser.username;
+  if (!!idpUser.username || !!aliasUsername) {
+    user.username = idpUser.username || aliasUsername;
   }
 
   const initialAvatar = await getRandomPortraitFromLexicaHardcoded();

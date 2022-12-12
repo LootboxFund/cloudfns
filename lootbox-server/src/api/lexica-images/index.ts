@@ -59,6 +59,7 @@ export const getRandomUserName = async (nameConfig?: RandomNameConfig) => {
       nameConfig.seedEmail,
       nameConfig.type
     );
+
     if (generatedUsername) return generatedUsername;
   }
   // otherwise generate from random library
@@ -90,6 +91,7 @@ export const getRandomUserName = async (nameConfig?: RandomNameConfig) => {
     style: "capital",
   };
   const randomName = uniqueNamesGenerator(config);
+
   return randomName;
 };
 

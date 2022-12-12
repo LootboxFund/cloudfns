@@ -34,7 +34,6 @@ import { getRandomUserName } from "../lexica-images/index";
 export const upgradeToAdvertiser = async (
   userIdpID: UserIdpID
 ): Promise<Advertiser_Firestore | undefined> => {
-  console.log(`userIdpID: ${userIdpID}`);
   const existingAdvertiserRef = db
     .collection(Collection.Advertiser)
     .where("userID", "==", userIdpID);

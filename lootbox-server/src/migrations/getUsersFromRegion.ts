@@ -24,28 +24,9 @@ import {
   Collection,
   User_Firestore,
 } from "@wormgraph/helpers";
-const fs = require("fs");
 import { Query, QuerySnapshot } from "firebase-admin/firestore";
 import { db } from "../api/firebase";
-
-function logWrite(filePath, consoleLog, text) {
-  // Create the folder if it doesn't exist
-  const folderPath = filePath.substring(0, filePath.lastIndexOf("/"));
-  if (!fs.existsSync(folderPath)) {
-    fs.mkdirSync(folderPath);
-  }
-  if (consoleLog) {
-    console.log(text);
-  }
-  // Check if the file exists
-  if (fs.existsSync(filePath)) {
-    // Append the text to the file
-    fs.appendFileSync(filePath, text);
-  } else {
-    // Write the text to the file
-    fs.writeFileSync(filePath, text);
-  }
-}
+import { logWrite } from "./log-helper";
 
 function checkMatchCountryCode(phoneNumber: string, countryCode: string) {
   return phoneNumber.indexOf(`+${countryCode}`) === 0;
