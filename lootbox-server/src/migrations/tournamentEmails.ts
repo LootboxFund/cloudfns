@@ -8,7 +8,7 @@
  * to run:
  * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts [env] [tournamentID]
  *
- * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts prod IXU25LtCbCUzF62BSIWo
+ * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts prod CC2kzXEKGYC8Cq5IExTm
  *
  *
  * [env]            `prod` | `staging`
@@ -18,6 +18,7 @@ import { Collection, TournamentID, User_Firestore } from "@wormgraph/helpers";
 import { getAllClaimsForTournament } from "../api/firestore";
 import { db } from "../api/firebase";
 import { DocumentReference } from "firebase-admin/firestore";
+import { logWrite } from "./log-helper";
 
 /**
  * Main function run in this script
@@ -25,6 +26,8 @@ import { DocumentReference } from "firebase-admin/firestore";
 const run = async () => {
   const env = process.argv[2];
   const tournamentID = process.argv[3];
+
+  const fileName = `./output/tournamentEmails-${new Date()}.txt`;
 
   if (!env) {
     throw new Error("Environment specified");
@@ -34,22 +37,31 @@ const run = async () => {
     throw new Error("No Tournament specified");
   }
 
-  console.log(`
+  logWrite(
+    fileName,
+    true,
+    `
     
-        Fetching user emails...
-    
-            tournamentID: ${tournamentID}
-    
-        `);
+    Fetching user emails...
+    Datestamp: ${new Date()}
+
+        tournamentID: ${tournamentID}
+
+    `
+  );
 
   const claimsForTournament = await getAllClaimsForTournament(
     tournamentID as TournamentID
   );
-  console.log(`
+  logWrite(
+    fileName,
+    true,
+    `
  
      Found ${claimsForTournament.length} claims for tournament ${tournamentID}
  
-    `);
+    `
+  );
 
   const userMap: { [key: string]: User_Firestore } = {};
 
@@ -58,11 +70,15 @@ const run = async () => {
     .map((claim) => claim.claimerUserId)
     .filter((v, i, a) => a.indexOf(v) === i);
 
-  console.log(`
+  logWrite(
+    fileName,
+    true,
+    `
  
      Found ${claimUserIDs.length} unique claimer user IDs
  
-     `);
+     `
+  );
   console.log(claimUserIDs.join("\n"));
   for (const userID of claimUserIDs) {
     if (!userID || !!userMap[userID]) {
@@ -74,7 +90,14 @@ const run = async () => {
         .doc(userID) as DocumentReference<User_Firestore>;
       const userDoc = await userRef.get();
       const _user = userDoc.data() as User_Firestore | undefined;
-      if (_user) {
+      let count = 0;
+      if (_user && !userMap[userID]) {
+        count++;
+        logWrite(
+          fileName,
+          true,
+          `${count}, ${_user.id}, ${_user.email}, ${_user.phoneNumber}`
+        );
         userMap[userID] = _user;
       }
     } catch (err) {
@@ -82,23 +105,40 @@ const run = async () => {
     }
   }
 
-  console.log(`
+  logWrite(
+    fileName,
+    true,
+    `
+  
+  
+    --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+    `
+  );
+
+  logWrite(
+    fileName,
+    true,
+    `
  
      Printing User Emails 
  
-     `);
+     `
+  );
 
-  const userEmails = Object.values(userMap)
-    .filter((user) => user.email)
-    .map((user) => ({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      phone: user.phoneNumber,
-    }));
+  // const userEmails = Object.values(userMap)
+  //   .filter((user) => user.email)
+  //   .map((user) => ({
+  //     id: user.id,
+  //     username: user.username,
+  //     email: user.email,
+  //     phone: user.phoneNumber,
+  //   }));
 
-  console.log(`User Emails: ${userEmails.length}`);
-  console.log(userEmails.map((u) => `${u.email} ${u.phone}`).join("\n"));
+  // logWrite(fileName, true, `User Emails: ${userEmails.length}`);
+  // userEmails.forEach((u) =>
+  //   logWrite(fileName, true, `${u.id}, ${u.email}, ${u.phone} \n`)
+  // );
 };
 
 run().catch(console.error);

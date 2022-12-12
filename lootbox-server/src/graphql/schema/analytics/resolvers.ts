@@ -51,6 +51,8 @@ import {
   QueryClaimerStatsForTournamentArgs,
   ClaimerStatsForLootboxTournamentResponse,
   QueryClaimerStatisticsForLootboxTournamentArgs,
+  FansListForTournamentResponse,
+  QueryFansListForTournamentArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -288,7 +290,15 @@ const AnalyticsResolvers: Resolvers = {
           queryParams: {
             tournamentID: tournamentID as TournamentID,
           },
-          table: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          // table: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          lootboxTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.lootbox.id,
+          claimTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+          lootboxTournamentSnapshotTable:
+            manifest.bigQuery.datasets.firestoreExport.tables.lootboxSnapshot
+              .id,
+          userTable: manifest.bigQuery.datasets.firestoreExport.tables.user.id,
           location: manifest.bigQuery.datasets.firestoreExport.location,
         });
 
@@ -706,6 +716,7 @@ const AnalyticsResolvers: Resolvers = {
               claimCount: row.claimCount,
               claimType: row.claimType,
               totalUserClaimCount: row.totalUserClaimCount,
+              referralType: row.referralType,
             };
           }),
         };
@@ -759,8 +770,47 @@ const AnalyticsResolvers: Resolvers = {
               claimCount: row.claimCount,
               claimType: row.claimType,
               totalUserClaimCount: row.totalUserClaimCount,
+              referralType: row.referralType,
             };
           }),
+        };
+      } catch (err: any) {
+        console.error(
+          "Error in claimerStatisticsForLootboxTournament fetching tournament",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
+
+    fansListForTournament: async (
+      _,
+      { tournamentID }: QueryFansListForTournamentArgs,
+      context: Context
+    ): Promise<FansListForTournamentResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const fans = await analytics.fansListForTournament(
+          { tournamentID },
+          context.userId
+        );
+
+        return {
+          tournamentID: tournamentID,
+          fans,
         };
       } catch (err: any) {
         console.error(
@@ -884,6 +934,18 @@ const AnalyticsResolvers: Resolvers = {
         return "ResponseError";
       }
 
+      return null;
+    },
+  },
+
+  FansListForTournamentResponse: {
+    __resolveType: (obj: FansListForTournamentResponse) => {
+      if ("fans" in obj && "tournamentID" in obj) {
+        return "FansListForTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
       return null;
     },
   },

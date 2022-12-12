@@ -196,6 +196,87 @@ LIMIT
  limit 100000
 ```
 
+### Query for analytics on tournament
+
+```sql
+WITH DataTable AS (
+  SELECT
+    claim.status AS claimStatus,
+    claim.claimerUserId AS claimerUserID,
+    claim.referralType AS claimReferralType,
+    claim.type AS claimType,
+    claim.lootboxId AS claimLootboxID
+  FROM `lootbox-fund-prod.firestore_export.claim_schema_claim_schema_latest` as claim
+  LEFT JOIN `lootbox-fund-prod.firestore_export.user_schema_user_schema_latest` as user
+  ON claim.claimerUserId = user.id
+  WHERE claim.tournamentId = 'CC2kzXEKGYC8Cq5IExTm'
+), LootboxTable AS (
+  SELECT lootbox.id AS lootboxID,
+    lootbox.maxTickets AS lootboxMaxTickets
+    FROM `lootbox-fund-prod.firestore_export.lootbox_tournament_snapshot_schema_lootbox_snapshot_schema_latest` as snapshot
+    INNER JOIN `lootbox-fund-prod.firestore_export.lootbox_schema_lootbox_schema_latest` as lootbox
+    on lootbox.id = snapshot.lootboxId
+)
+SELECT
+  COUNT(*) AS totalClaimCount,
+  SUM(CASE WHEN claimStatus = 'complete' THEN 1 ELSE 0 END) AS completedClaimCount,
+  SUM(CASE WHEN claimReferralType = 'viral' AND claimStatus = 'complete' AND claimType = 'referral' THEN 1 ELSE 0 END) AS viralClaimCount,
+  SUM(CASE WHEN claimReferralType = 'viral' AND claimStatus = 'complete' AND claimType = 'reward' THEN 1 ELSE 0 END) AS referralBonusClaimCount,
+  SUM(CASE WHEN claimReferralType = 'one_time' AND claimStatus = 'complete' AND claimType = 'one_time' THEN 1 ELSE 0 END) AS participationRewardCount,
+  SUM(CASE WHEN claimStatus = 'airdrop' AND claimType = 'complete' THEN 1 ELSE 0 END) AS airdropClaimCount,
+  SUM(CASE WHEN claimStatus = 'pending' THEN 1 ELSE 0 END) AS pendingClaims,
+  SUM(CASE WHEN claimReferralType = 'genesis' AND claimStatus = 'complete' AND claimType = 'referral' THEN 1 ELSE 0 END) AS originalClaims,
+  SUM(CASE WHEN claimType != 'reward' AND claimType != 'airdrop' THEN 1 ELSE 0 END) AS impressions,
+  -- allFans are those with pending tickets, verified tickets, anon users ETC
+  COUNT(DISTINCT(claimerUserID)) AS allFans,
+  -- originalFans are those with completed claim w genesis referral
+  (
+    SELECT COUNT(DISTINCT(claimerUserID))
+    FROM DataTable
+    WHERE
+      claimReferralType = 'genesis' AND claimStatus = 'complete' AND claimType != 'airdrop'
+  ) as originalFans,
+  -- viralFans, those who have completed a "viral" referral link (AKA non-genesis, or reward for ex)
+  (
+    SELECT COUNT(DISTINCT(claimerUserID))
+    FROM DataTable
+    WHERE
+      claimReferralType = 'viral' AND claimType = 'referral' AND claimStatus = 'complete'
+  ) as viralFans,
+  -- (
+  --   SELECT SUM(lootboxMaxTickets), lootboxID
+  --   FROM DataTable
+  --   GROUP BY lootboxID
+  -- ) as totalMaxTickets,
+  ROUND( SAFE_DIVIDE(100* COUNT(CASE
+        WHEN claimStatus = 'complete' AND NOT claimType = 'reward' AND claimType != 'airdrop' THEN 1
+      ELSE
+      NULL
+    END
+      ), COUNT(CASE
+        WHEN NOT claimType = 'reward' THEN 1
+      ELSE
+      NULL
+    END
+      )) ) AS completionRate,
+      ROUND( SAFE_DIVIDE(100* COUNT(CASE
+        WHEN claimStatus = 'complete' AND claimType = 'airdrop' THEN 1
+      ELSE
+      NULL
+    END
+      ), COUNT(CASE
+        WHEN NOT claimType = 'airdrop' THEN 1
+      ELSE
+      NULL
+    END
+      )) ) AS airdropCompletionRate,
+    (
+      SELECT
+      SUM(lootboxMaxTickets) FROM LootboxTable WHERE LootboxTable.lootboxID IN (SELECT DataTable.claimLootboxID from DataTable)
+    )  as totalMaxTickets
+FROM DataTable;
+```
+
 <!-- WITH
   DateTable AS (
   SELECT

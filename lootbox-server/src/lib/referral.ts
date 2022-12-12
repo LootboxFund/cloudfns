@@ -77,8 +77,6 @@ export const convertClaimStatusDBToGQL = (
       return ClaimStatus.Expired;
     case ClaimStatus_Firestore.complete:
       return ClaimStatus.Complete;
-    case ClaimStatus_Firestore.rewarded:
-      return ClaimStatus.Rewarded;
     default:
       throw new Error(`Unknown claim status: ${status}`);
   }

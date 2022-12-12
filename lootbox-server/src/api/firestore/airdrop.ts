@@ -1,6 +1,5 @@
 import {
   AffiliateID,
-  AirdropUserClaimStatus,
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
@@ -13,6 +12,7 @@ import {
   ReferralType_Firestore,
   TournamentID,
   UserID,
+  User_Firestore,
 } from "@wormgraph/helpers";
 import { Query } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -33,6 +33,7 @@ import {
 } from "../../graphql/generated/types";
 import { getTournamentById } from "./tournament";
 import { _createAirdropClaim, _createClaim } from "./referral";
+import { ClaimRedemptionStatus } from "../../graphql/generated/types";
 
 export const listPotentialAirdropClaimers = async (
   {
@@ -44,7 +45,6 @@ export const listPotentialAirdropClaimers = async (
   },
   userIdpID: UserIdpID
 ): Promise<Omit<ListPotentialAirdropClaimersResponseSuccess, "__typename">> => {
-  console.log(`... listPotentialAirdropClaimers`);
   // get all claims from tournament
   // get the offer details
   // get the tournament details
@@ -55,12 +55,12 @@ export const listPotentialAirdropClaimers = async (
       getOffer(offerID),
       listClaimsOfAirdropOffer(offerID),
     ]);
-  console.log(claimsOfThisAirdropOffer.length);
+
   if (!offer) {
     throw new Error("Offer not found");
   }
   if (!tournament || !tournament.organizer) {
-    throw new Error("Tournament not found bruh");
+    throw new Error("Tournament not found");
   }
   // only allow the tournament owner to view this data
   const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
@@ -78,9 +78,9 @@ export const listPotentialAirdropClaimers = async (
       .filter((c) => c.claimerUserId)
       .map((c) => c.claimerUserId)
   );
-  const uniqueUsers = await Promise.all(
-    uniqueClaimersByUserID.map((u) => getUser(u))
-  );
+  const uniqueUsers = (
+    await Promise.all(uniqueClaimersByUserID.map((u) => getUser(u)))
+  ).filter((u) => u) as User_Firestore[];
   const questionsFilled = offer.airdropMetadata
     ? await Promise.all(
         offer.airdropMetadata.questions.map((qid) =>
@@ -98,16 +98,22 @@ export const listPotentialAirdropClaimers = async (
       type: q.type,
     })) as QuestionAnswerPreview[];
   // exclude the user who have received a past airdrop from the offer's airdrop exclusion list
-  const airdropOffersToExclude = offer.airdropMetadata?.excludedOffers || [];
-  const uniquePotentialUsers = uniqueUsers.filter((u) => {
-    if (!u.airdropsReceived) return true;
-    return !u.airdropsReceived.some((r) => airdropOffersToExclude.includes(r));
-  });
+  // const airdropOffersToExclude = offer.airdropMetadata?.excludedOffers || [];
+  // const uniquePotentialUsers = uniqueUsers.filter((u) => {
+  //   if (!u || !u.airdropsReceived) return true;
+  //   return !u.airdropsReceived.some((r) => airdropOffersToExclude.includes(r));
+  // });
+  const uniquePotentialUsers = uniqueUsers;
   const uniquePotentialClaimers = uniquePotentialUsers
     .map((u) => {
-      const claimForUser = claimsOfThisAirdropOffer.find(
+      const firstClaimForUser = claimsOfThisAirdropOffer.find(
         (c) => c.claimerUserId === u.id
       );
+      const airdroppedClaimForUser = claimsOfThisAirdropOffer.find(
+        (c) =>
+          c.claimerUserId === u.id && c.airdropMetadata?.offerID === offerID
+      );
+      const claimForUser = airdroppedClaimForUser || firstClaimForUser;
       const potentialClaimer: PotentialAirdropClaimer = {
         userID: u.id,
         username: u.username || "Anon User",
@@ -117,7 +123,7 @@ export const listPotentialAirdropClaimers = async (
         offerID: offerID,
       };
       if (claimForUser && claimForUser.airdropMetadata) {
-        potentialClaimer.status = claimForUser.airdropMetadata.claimStatus;
+        potentialClaimer.status = claimForUser.redemptionStatus;
         potentialClaimer.lootboxID = claimForUser.airdropMetadata.lootboxID;
         potentialClaimer.lootboxAddress =
           claimForUser.airdropMetadata.lootboxAddress;
@@ -139,6 +145,8 @@ export const listPotentialAirdropClaimers = async (
       excludedOffers: offer.airdropMetadata?.excludedOffers || [],
       batchCount: offer.airdropMetadata?.batchCount,
       questions: questionsTrimmed,
+      lootboxTemplateID: offer.airdropMetadata?.lootboxTemplateID as LootboxID,
+      lootboxTemplateStamp: offer.airdropMetadata?.lootboxTemplateStamp || "",
     },
   };
   return {
@@ -179,9 +187,6 @@ export const createAirdropClaim = async (
   airdropLootbox: Lootbox_Firestore,
   offerID: OfferID
 ): Promise<Claim_Firestore> => {
-  console.log(
-    `Creating airdrop claim for ${req.claimerUserId} on referral ${req.referralId} with claimID = ${req.id}`
-  );
   return await _createAirdropClaim({
     referralId: req.referralId,
     tournamentId: req.tournamentId,
@@ -208,7 +213,6 @@ export const createAirdropClaim = async (
       offerID: offerID,
       // @ts-ignore
       batchAlias: `Batch ${airdropLootbox.airdropMetadata.batch}`,
-      claimStatus: AirdropUserClaimStatus.Awaiting,
       answers: [],
     },
   });
@@ -219,15 +223,12 @@ export const determineAirdropClaimWithReferrerCredit = async (
   tournamentID?: TournamentID
 ): Promise<Claim_Firestore[]> => {
   if (tournamentID) {
-    console.log(`Given claimers = ${claimers.length}`);
     const claimsOfThisTournament = await listClaimsInTournament(tournamentID);
+
     // get unique users from list of tournament claims
     const uniqueClaimsByUserID = _.uniq(
       claimsOfThisTournament.filter((c) => c.claimerUserId)
     ) as Claim_Firestore[];
-    console.log(
-      `Found uniqueClaimsByUserID in tournament = ${uniqueClaimsByUserID.length}`
-    );
     const usersHashMap = claimers.reduce((acc, curr: UserID) => {
       return {
         ...acc,
@@ -239,12 +240,13 @@ export const determineAirdropClaimWithReferrerCredit = async (
         usersHashMap[c.claimerUserId] = c;
       }
     });
-    console.log(Object.keys(usersHashMap).map((u) => usersHashMap[u]));
+
     const claimersWithReferrerCredit = Object.keys(usersHashMap)
       .map((u) => usersHashMap[u])
       .filter(
         (u) => u.referralId && claimers.includes(u.claimerUserId)
       ) as Claim_Firestore[];
+
     return claimersWithReferrerCredit;
   }
   return [];

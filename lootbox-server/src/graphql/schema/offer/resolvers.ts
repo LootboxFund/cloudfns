@@ -3,7 +3,9 @@ import {
   ActivationID,
   AffiliateID,
   ClaimID,
+  LootboxID,
   OfferID,
+  UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
 import { AdvertiserID } from "@wormgraph/helpers";
@@ -30,8 +32,10 @@ import {
   ViewOfferDetailsAsEventAffiliateResponse,
   QueryViewOfferDetailsAsAffiliateArgs,
   AdSetStatus,
-  MutationUpdateClaimAsRewardedArgs,
-  UpdateClaimAsRewardedResponse,
+  MutationAnswerAirdropQuestionArgs,
+  QueryCheckIfUserAnsweredAirdropQuestionsArgs,
+  UpdateClaimRedemptionStatusResponse,
+  MutationUpdateClaimRedemptionStatusArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -39,6 +43,8 @@ import {
   AdSetPreview,
 } from "../../generated/types";
 import {
+  answerAirdropLootboxQuestion,
+  checkIfUserAnsweredAirdropQuestions,
   createActivation,
   createOffer,
   editActivation,
@@ -49,14 +55,18 @@ import {
   listOffersAvailableForOrganizer,
   viewCreatedOffer,
 } from "../../../api/firestore/offer";
-import { CreateActivationResponse } from "../../generated/types";
+import {
+  CreateActivationResponse,
+  AnswerAirdropQuestionResponse,
+} from "../../generated/types";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import {
   getActivationsWithRateQuoteForAffiliate,
   viewOfferDetailsAsAffiliate,
 } from "../../../api/firestore/affiliate";
-import { updateClaimAsRewarded } from "../../../api/firestore/referral";
+import { updateClaimRedemptionStatus } from "../../../api/firestore/referral";
+import { CheckIfUserAnsweredAirdropQuestionsResponse } from "../../generated/types";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -184,6 +194,29 @@ const OfferResolvers: Resolvers = {
         }
         return {
           offer,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    checkIfUserAnsweredAirdropQuestions: async (
+      _,
+      { lootboxID }: QueryCheckIfUserAnsweredAirdropQuestionsArgs,
+      context: Context
+    ): Promise<CheckIfUserAnsweredAirdropQuestionsResponse> => {
+      try {
+        const answers = await checkIfUserAnsweredAirdropQuestions(
+          lootboxID as LootboxID,
+          (context.userId || "") as unknown as UserID
+        );
+        return {
+          status: answers.length > 0,
         };
       } catch (err) {
         console.error(err);
@@ -324,14 +357,16 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
-    updateClaimAsRewarded: async (
+    updateClaimRedemptionStatus: async (
       _,
-      { claimID }: MutationUpdateClaimAsRewardedArgs,
+      { payload }: MutationUpdateClaimRedemptionStatusArgs,
       context: Context
-    ): Promise<UpdateClaimAsRewardedResponse> => {
+    ): Promise<UpdateClaimRedemptionStatusResponse> => {
+      const { claimID, status } = payload;
       try {
-        const updatedClaimID = await updateClaimAsRewarded(
+        const updatedClaimID = await updateClaimRedemptionStatus(
           claimID as ClaimID,
+          status,
           context.userId || ("" as UserIdpID)
         );
 
@@ -344,6 +379,36 @@ const OfferResolvers: Resolvers = {
           };
         }
         return { claimID: updatedClaimID };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    answerAirdropQuestion: async (
+      _,
+      { payload }: MutationAnswerAirdropQuestionArgs,
+      context: Context
+    ): Promise<AnswerAirdropQuestionResponse> => {
+      try {
+        const answerIDs = await answerAirdropLootboxQuestion(
+          payload,
+          context.userId || ("" as UserIdpID)
+        );
+        console.log(`answerIDs...`);
+        console.log(answerIDs);
+        if (!answerIDs) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not answer questions for airdrop lootbox ${payload.lootboxID}`,
+            },
+          };
+        }
+        return { answerIDs };
       } catch (err) {
         return {
           error: {
@@ -487,10 +552,36 @@ const OfferResolvers: Resolvers = {
       return null;
     },
   },
-  UpdateClaimAsRewardedResponse: {
-    __resolveType: (obj: UpdateClaimAsRewardedResponse) => {
+  UpdateClaimRedemptionStatusResponse: {
+    __resolveType: (obj: UpdateClaimRedemptionStatusResponse) => {
       if ("claimID" in obj) {
-        return "UpdateClaimAsRewardedResponseSuccess";
+        return "UpdateClaimRedemptionStatusResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  AnswerAirdropQuestionResponse: {
+    __resolveType: (obj: AnswerAirdropQuestionResponse) => {
+      if ("answerIDs" in obj) {
+        return "AnswerAirdropQuestionResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  CheckIfUserAnsweredAirdropQuestionsResponse: {
+    __resolveType: (obj: CheckIfUserAnsweredAirdropQuestionsResponse) => {
+      if ("status" in obj) {
+        return "CheckIfUserAnsweredAirdropQuestionsResponseSuccess";
       }
 
       if ("error" in obj) {

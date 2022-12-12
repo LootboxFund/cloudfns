@@ -1,0 +1,16 @@
+
+    
+    Fetching user emails...
+    Datestamp: Wed Dec 07 2022 12:38:45 GMT+0700 (Indochina Time)
+
+        tournamentID: CC2kzXEKGYC8Cq5IExTm
+
+    
+ 
+     Found 8010 claims for tournament CC2kzXEKGYC8Cq5IExTm
+ 
+    
+ 
+     Found 2991 unique claimer user IDs
+ 
+     

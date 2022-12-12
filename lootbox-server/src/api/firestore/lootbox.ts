@@ -49,6 +49,7 @@ import {
   getRandomUserName,
 } from "../lexica-images";
 import { getRandomBackgroundFromLexicaHardcoded } from "../lexica-images/index";
+import { getAdvertiser } from "./advertiser";
 const DEFAULT_THEME_COLOR = "#000001";
 
 export const getLootbox = async (
@@ -471,9 +472,6 @@ export const createLootbox = async (
     lootboxPayload.type = payload.type;
   }
   if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
-    console.log(
-      `Airdrop on tournament = ${payload.airdropMetadata.tournamentID} with claimers = ${payload.airdropMetadata.claimers.length}`
-    );
     const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([
       getOffer(payload.airdropMetadata.offerID as OfferID),
       payload.airdropMetadata.tournamentID
@@ -488,27 +486,51 @@ export const createLootbox = async (
           )
         : [],
     ]);
+    const lootboxTemplate = offerInfo?.airdropMetadata?.lootboxTemplateID
+      ? await getLootbox(offerInfo?.airdropMetadata?.lootboxTemplateID)
+      : undefined;
+    if (lootboxTemplate) {
+      lootboxPayload.stampImage = lootboxTemplate.stampImage;
+      lootboxPayload.logo = lootboxTemplate.logo;
+      lootboxPayload.name = lootboxTemplate.name;
+      lootboxPayload.description = lootboxTemplate.description;
+      lootboxPayload.symbol = lootboxTemplate.symbol;
+      lootboxPayload.backgroundImage = lootboxTemplate.backgroundImage;
+      lootboxPayload.themeColor = lootboxTemplate.themeColor;
+      lootboxPayload.joinCommunityUrl = lootboxTemplate.joinCommunityUrl;
+      lootboxPayload.nftBountyValue = lootboxTemplate.nftBountyValue;
+    }
+    const advertiserInfo = offerInfo?.advertiserID
+      ? await getAdvertiser(offerInfo.advertiserID)
+      : undefined;
     const batchedName = `${payload.airdropMetadata.title} - Batch ${payload.airdropMetadata.batch}`;
     lootboxPayload.airdropMetadata = {
       batch: payload.airdropMetadata.batch,
-      instructionsLink: payload.airdropMetadata.instructionsLink || "",
+      instructionsLink: offerInfo?.airdropMetadata?.instructionsLink,
+      instructionsCallToAction:
+        offerInfo?.airdropMetadata?.instructionsCallToAction,
+      callToActionLink: offerInfo?.airdropMetadata?.callToActionLink,
       offerID: payload.airdropMetadata.offerID as OfferID,
-      oneLiner: payload.airdropMetadata.oneLiner || "",
+      oneLiner: offerInfo?.airdropMetadata?.oneLiner || "",
       title: batchedName,
       tournamentID: payload.airdropMetadata.tournamentID
         ? (payload.airdropMetadata.tournamentID as TournamentID)
         : undefined,
-      value: payload.airdropMetadata.value,
+      value: offerInfo?.airdropMetadata?.value || "Free Gift",
       lootboxID: lootboxRef.id as LootboxID,
       organizerID: tournamentInfo ? tournamentInfo.organizer : undefined,
       advertiserID: offerInfo?.advertiserID,
+      advertiserName: advertiserInfo ? advertiserInfo.name : "",
       questions: offerInfo?.airdropMetadata?.questions || [],
     };
     lootboxPayload.name = batchedName;
-    console.log(`Got airdrop claimers: ${airdropClaimers.length}`);
+    // create the lootbox first because the claims creation depends on existence of a lootbox
+    // creating a claim will trigger a firestore function to increment the lootbox.runningClaimAmount
+    await lootboxRef.set(lootboxPayload);
+
     await Promise.all(
-      airdropClaimers.map((claim) => {
-        return createAirdropClaim(
+      airdropClaimers.map(async (claim) => {
+        return await createAirdropClaim(
           claim,
           lootboxPayload,
           // @ts-ignore
@@ -516,10 +538,10 @@ export const createLootbox = async (
         );
       })
     );
-    lootboxPayload.runningCompletedClaims = airdropClaimers.length;
     await updateOfferBatchCount(payload.airdropMetadata.offerID as OfferID);
+  } else {
+    await lootboxRef.set(lootboxPayload);
   }
-  await lootboxRef.set(lootboxPayload);
   return lootboxPayload;
 };
 

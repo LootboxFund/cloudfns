@@ -34,9 +34,13 @@ const OfferTypeDefs = gql`
     oneLiner: String
     value: String!
     instructionsLink: String
+    instructionsCallToAction: String
+    callToActionLink: String
     questions: [QuestionAnswerPreview!]!
     excludedOffers: [ID!]!
     batchCount: Int
+    lootboxTemplateID: ID!
+    lootboxTemplateStamp: String!
   }
 
   type QuestionAnswerPreview {
@@ -44,16 +48,6 @@ const OfferTypeDefs = gql`
     batch: ID!
     question: String!
     type: QuestionFieldType!
-  }
-
-  enum QuestionFieldType {
-    Text
-    Number
-    Phone
-    Email
-    Address
-    Date
-    Screenshot
   }
 
   enum OfferStrategyType {
@@ -211,6 +205,14 @@ const OfferTypeDefs = gql`
       ViewOfferDetailsAsEventAffiliateResponseSuccess
     | ResponseError
 
+  # --------- Check If User Answered Airdrop Questions ---------
+  type CheckIfUserAnsweredAirdropQuestionsResponseSuccess {
+    status: Boolean!
+  }
+  union CheckIfUserAnsweredAirdropQuestionsResponse =
+      CheckIfUserAnsweredAirdropQuestionsResponseSuccess
+    | ResponseError
+
   extend type Query {
     # view offers that an advertiser created
     listCreatedOffers(advertiserID: ID!): ListCreatedOffersResponse!
@@ -224,6 +226,10 @@ const OfferTypeDefs = gql`
     viewOfferDetailsAsAffiliate(
       payload: ViewOfferDetailsAsEventAffiliatePayload!
     ): ViewOfferDetailsAsEventAffiliateResponse!
+    # check if user answered airdrop questions
+    checkIfUserAnsweredAirdropQuestions(
+      lootboxID: ID!
+    ): CheckIfUserAnsweredAirdropQuestionsResponse!
     # view the performance of an offer in an event, as an affiliate
     # viewOfferEventAffiliatePerformance(
     #   offerID: ID!
@@ -258,6 +264,9 @@ const OfferTypeDefs = gql`
     oneLiner: String
     value: String
     instructionsLink: String
+    instructionsCallToAction: String
+    callToActionLink: String
+    lootboxTemplateID: ID!
     questions: [OfferAirdropQuestionCreateInput!]!
     excludedOffers: [ID!]!
   }
@@ -286,16 +295,20 @@ const OfferTypeDefs = gql`
     endDate: Timestamp
     status: OfferStatus!
     airdropMetadata: OfferAirdropMetadataEditInput
+    lootboxTemplateID: ID
     #targetingTags: [AdTargetTag!]!
   }
   input OfferAirdropMetadataEditInput {
-    oneLiner: String!
+    oneLiner: String
     value: String
-    instructionsLink: String!
-    excludedOffers: [ID!]!
-    activeQuestions: [ID!]!
-    inactiveQuestions: [ID!]!
-    newQuestions: [OfferAirdropQuestionCreateInput!]!
+    instructionsLink: String
+    instructionsCallToAction: String
+    callToActionLink: String
+    excludedOffers: [ID!]
+    activeQuestions: [ID!]
+    inactiveQuestions: [ID!]
+    questions: [OfferAirdropQuestionCreateInput!]
+    # newQuestions: [OfferAirdropQuestionCreateInput!]!
   }
   type EditOfferResponseSuccess {
     offer: Offer!
@@ -325,11 +338,33 @@ const OfferTypeDefs = gql`
   union EditActivationResponse = EditActivationResponseSuccess | ResponseError
 
   # --------- Update Claim as Rewarded ---------
-  type UpdateClaimAsRewardedResponseSuccess {
+  input UpdateClaimRedemptionStatusPayload {
+    claimID: ID!
+    status: ClaimRedemptionStatus!
+  }
+  type UpdateClaimRedemptionStatusResponseSuccess {
     claimID: ID!
   }
-  union UpdateClaimAsRewardedResponse =
-      UpdateClaimAsRewardedResponseSuccess
+  union UpdateClaimRedemptionStatusResponse =
+      UpdateClaimRedemptionStatusResponseSuccess
+    | ResponseError
+
+  # --------- Answer Airdrop Question ---------
+  input AnswerAirdropQuestionPayload {
+    lootboxID: ID!
+    claimID: ID
+    answers: [AnswerAirdropQuestionInput!]!
+  }
+  input AnswerAirdropQuestionInput {
+    questionID: ID!
+    lootboxID: ID!
+    answer: String!
+  }
+  type AnswerAirdropQuestionResponseSuccess {
+    answerIDs: [ID!]!
+  }
+  union AnswerAirdropQuestionResponse =
+      AnswerAirdropQuestionResponseSuccess
     | ResponseError
 
   extend type Mutation {
@@ -347,7 +382,13 @@ const OfferTypeDefs = gql`
     # Advertiser edits the activations in an offer including potential deletions
     editActivation(payload: EditActivationPayload!): EditActivationResponse!
     # Update claim status as rewarded
-    updateClaimAsRewarded(claimID: ID!): UpdateClaimAsRewardedResponse!
+    updateClaimRedemptionStatus(
+      payload: UpdateClaimRedemptionStatusPayload!
+    ): UpdateClaimRedemptionStatusResponse!
+    #
+    answerAirdropQuestion(
+      payload: AnswerAirdropQuestionPayload!
+    ): AnswerAirdropQuestionResponse!
   }
 `;
 
