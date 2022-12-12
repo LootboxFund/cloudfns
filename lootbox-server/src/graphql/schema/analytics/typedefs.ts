@@ -112,12 +112,28 @@ const AnalyticsTypeDefs = gql`
     | ResponseError
 
   type BaseClaimStatsForTournament {
+    # totalClaimCount: Int!
+    # completedClaimCount: Int!
+    # viralClaimCount: Int!
+    # bonusRewardClaimCount: Int!
+    # oneTimeClaimCount: Int!
+    # completionRate: Int!
     totalClaimCount: Int!
     completedClaimCount: Int!
     viralClaimCount: Int!
-    bonusRewardClaimCount: Int!
-    oneTimeClaimCount: Int!
+    referralBonusClaimCount: Int!
+    participationRewardCount: Int!
+    airdropClaimCount: Int!
+    pendingClaims: Int!
+    originalClaims: Int!
+    impressions: Int!
+    allFans: Int!
+    originalFans: Int!
+    viralFans: Int!
     completionRate: Int!
+    airdropCompletionRate: Int!
+    totalMaxTickets: Int!
+    participationFans: Int!
   }
   type BaseClaimStatsForTournamentResponseSuccess {
     stats: BaseClaimStatsForTournament!
@@ -255,6 +271,7 @@ const AnalyticsTypeDefs = gql`
     claimCount: Int!
     claimType: String!
     totalUserClaimCount: Int!
+    referralType: String!
   }
 
   type ClaimerStatsForTournamentResponseSuccess {
@@ -273,6 +290,7 @@ const AnalyticsTypeDefs = gql`
     claimCount: Int!
     claimType: String!
     totalUserClaimCount: Int!
+    referralType: String!
   }
 
   type ClaimerStatsForLootboxTournamentResponseSuccess {

@@ -2,6 +2,7 @@ import { BigQuery } from "@google-cloud/bigquery";
 import {
   ClaimType_Firestore,
   LootboxID,
+  ReferralType_Firestore,
   TournamentID,
   UserID,
 } from "@wormgraph/helpers";
@@ -408,6 +409,7 @@ export interface ClaimerStatsForLootboxTournamentRow {
   userAvatar: string | "";
   claimCount: number;
   claimType: ClaimType_Firestore | "";
+  referralType: ReferralType_Firestore | "";
   totalUserClaimCount: number;
 }
 export interface ClaimerStatsForLootboxTournamentResponse {
@@ -423,6 +425,7 @@ const convertClaimerStatsForLootboxTournamentRow = (
     claimCount: data?.claimCount || 0,
     claimType: data?.claimType || "",
     totalUserClaimCount: data?.totalUserClaimCount || 0,
+    referralType: data?.referralType || "",
   };
 };
 export const claimerStatsForLootboxTournament = async ({
@@ -455,6 +458,7 @@ export const claimerStatsForLootboxTournament = async ({
       users.username AS username,
       users.avatar AS userAvatar,
       claims.type AS claimType,
+      claims.referralType AS referralType,
       COUNT(*) AS claimCount,
       SUM(COUNT(claims.claimerUserId)) OVER (PARTITION BY claims.claimerUserId) AS totalUserClaimCount
     FROM
@@ -470,7 +474,8 @@ export const claimerStatsForLootboxTournament = async ({
       claims.claimerUserID,
       users.username,
       users.avatar,
-      claims.type
+      claims.type,
+      claims.referralType
     Order BY
       totalUserClaimCount DESC
     LIMIT
