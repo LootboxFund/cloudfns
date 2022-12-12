@@ -714,6 +714,7 @@ const AnalyticsResolvers: Resolvers = {
               claimCount: row.claimCount,
               claimType: row.claimType,
               totalUserClaimCount: row.totalUserClaimCount,
+              referralType: row.referralType,
             };
           }),
         };
@@ -767,6 +768,7 @@ const AnalyticsResolvers: Resolvers = {
               claimCount: row.claimCount,
               claimType: row.claimType,
               totalUserClaimCount: row.totalUserClaimCount,
+              referralType: row.referralType,
             };
           }),
         };

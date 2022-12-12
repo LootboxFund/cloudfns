@@ -200,6 +200,7 @@ export interface ClaimerStatsForTournamentServiceRow {
   claimCount: number;
   claimType: string;
   totalUserClaimCount: number;
+  referralType: string;
 }
 
 export interface ClaimerStatsForTournamentSeviceResponse {
@@ -247,6 +248,7 @@ export interface ClaimerStatsForLootboxTournamentServiceRow {
   claimCount: number;
   claimType: string;
   totalUserClaimCount: number;
+  referralType: string;
 }
 
 export interface ClaimerStatsForLootboxTournamentSeviceResponse {

@@ -2,6 +2,7 @@ import { BigQuery } from "@google-cloud/bigquery";
 import {
   ClaimType_Firestore,
   LootboxID,
+  ReferralType_Firestore,
   TournamentID,
   UserID,
 } from "@wormgraph/helpers";
@@ -34,6 +35,7 @@ const convertBaseClaimStatisticsForTournamentRow = (
     completionRate: data?.completionRate || 0,
     airdropCompletionRate: data?.airdropCompletionRate || 0,
     totalMaxTickets: data?.totalMaxTickets || 0,
+    participationFans: data?.participationFans || 0,
   };
 };
 
@@ -71,6 +73,7 @@ export interface BaseClaimStatisticsForTournamentResponse {
   completionRate: number;
   airdropCompletionRate: number;
   totalMaxTickets: number;
+  participationFans: number;
 }
 /**
  * Fetches base statistics for claims of a tournament
@@ -168,6 +171,12 @@ export const baseClaimStatisticsForTournament = async ({
         WHERE
           claimReferralType = 'viral' AND claimType = 'referral' AND claimStatus = 'complete'
       ) as viralFans,
+      (
+        SELECT COUNT(DISTINCT(claimerUserID)) 
+        FROM DataTable 
+        WHERE
+          claimReferralType = 'one_time' AND claimType = 'one_time' AND claimStatus = 'complete'
+      ) as participationFans,
       ROUND( SAFE_DIVIDE(100* COUNT(CASE
             WHEN claimStatus = 'complete' AND NOT claimType = 'reward' AND claimType != 'airdrop' THEN 1
           ELSE
@@ -192,7 +201,7 @@ export const baseClaimStatisticsForTournament = async ({
           )) ) AS airdropCompletionRate,
         (
           SELECT 
-          SUM(lootboxMaxTickets) FROM LootboxTable WHERE LootboxTable.lootboxID IN (SELECT DataTable.claimLootboxID from DataTable)
+          SUM(lootboxMaxTickets) FROM LootboxTable -- WHERE LootboxTable.lootboxID IN (SELECT DataTable.claimLootboxID from DataTable)
         )  as totalMaxTickets
     FROM DataTable
     LIMIT 1;
@@ -712,6 +721,7 @@ export interface ClaimerStatsForTournamentRow {
   claimCount: number;
   claimType: ClaimType_Firestore | "";
   totalUserClaimCount: number;
+  referralType: ReferralType_Firestore | "";
 }
 export interface ClaimerStatsForTournamentResponse {
   data: ClaimerStatsForTournamentRow[];
@@ -726,6 +736,7 @@ const convertClaimerStatsForTournamentRow = (
     claimCount: data?.claimCount || 0,
     claimType: data?.claimType || "",
     totalUserClaimCount: data?.totalUserClaimCount || 0,
+    referralType: data?.referralType || "",
   };
 };
 export const claimerStatsForTournament = async ({
@@ -757,6 +768,7 @@ export const claimerStatsForTournament = async ({
       users.username AS username,
       users.avatar AS userAvatar,
       claims.type AS claimType,
+      claims.referralType AS referralType,
       COUNT(*) AS claimCount,
       SUM(COUNT(claims.claimerUserId)) OVER (PARTITION BY claims.claimerUserId) AS totalUserClaimCount
     FROM
@@ -771,7 +783,8 @@ export const claimerStatsForTournament = async ({
       claims.claimerUserID,
       users.username,
       users.avatar,
-      claims.type
+      claims.type,
+      claims.referralType
     Order BY
       totalUserClaimCount DESC
     LIMIT

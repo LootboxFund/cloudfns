@@ -133,6 +133,7 @@ const AnalyticsTypeDefs = gql`
     completionRate: Int!
     airdropCompletionRate: Int!
     totalMaxTickets: Int!
+    participationFans: Int!
   }
   type BaseClaimStatsForTournamentResponseSuccess {
     stats: BaseClaimStatsForTournament!
@@ -270,6 +271,7 @@ const AnalyticsTypeDefs = gql`
     claimCount: Int!
     claimType: String!
     totalUserClaimCount: Int!
+    referralType: String!
   }
 
   type ClaimerStatsForTournamentResponseSuccess {
@@ -288,6 +290,7 @@ const AnalyticsTypeDefs = gql`
     claimCount: Int!
     claimType: String!
     totalUserClaimCount: Int!
+    referralType: String!
   }
 
   type ClaimerStatsForLootboxTournamentResponseSuccess {
