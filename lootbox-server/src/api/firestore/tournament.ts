@@ -30,6 +30,7 @@ import {
   LootboxID,
   LootboxTournamentStatus_Firestore,
   LootboxType,
+  TournamentPrivacyScope,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -343,6 +344,7 @@ export interface CreateTournamentArgs {
   tournamentDate: number;
   communityURL?: string | null;
   organizer?: AffiliateID;
+  privacyScope?: TournamentPrivacyScope[];
 }
 export const createTournament = async ({
   title,
@@ -354,6 +356,7 @@ export const createTournament = async ({
   tournamentDate,
   communityURL,
   organizer,
+  privacyScope,
 }: CreateTournamentArgs): Promise<Tournament_Firestore> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -368,6 +371,7 @@ export const createTournament = async ({
     creatorId: creatorId as UserID,
     isPostCosmic: true,
     coverPhoto: coverPhoto || placeholderImageTournament,
+    privacyScope: privacyScope || [],
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -446,6 +450,10 @@ export const updateTournament = async (
 
   if (payload.communityURL != undefined) {
     updatePayload.communityURL = payload.communityURL;
+  }
+
+  if (payload.privacyScope != undefined) {
+    updatePayload.privacyScope = payload.privacyScope;
   }
 
   await tournamentRef.update(updatePayload);

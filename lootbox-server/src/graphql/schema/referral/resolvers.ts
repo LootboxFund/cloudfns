@@ -186,12 +186,14 @@ const ReferralResolvers: Resolvers = {
       { tournamentID }: QueryListAvailableLootboxesForClaimArgs
     ): Promise<ListAvailableLootboxesForClaimResponse> => {
       try {
-        const lootboxOptions = await getLootboxOptionsForTournament(
-          tournamentID as TournamentID
-        );
+        const { termsOfService, lootboxOptions } =
+          await getLootboxOptionsForTournament(tournamentID as TournamentID);
         console.log(`Lootbox Options = `);
         console.log(lootboxOptions.map((l) => l.id));
-        return { lootboxOptions: lootboxOptions };
+        return {
+          termsOfService: termsOfService,
+          lootboxOptions: lootboxOptions,
+        };
       } catch (err) {
         return {
           error: {
