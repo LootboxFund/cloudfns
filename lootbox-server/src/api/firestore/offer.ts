@@ -824,11 +824,15 @@ export const checkIfUserAnsweredAirdropQuestions = async (
   const answerCollectionItems = await answersRef.get();
 
   if (answerCollectionItems.empty) {
-    return [];
+    return { passed: true, answers: [] };
   }
-  return answerCollectionItems.docs
+  const ans = answerCollectionItems.docs
     .map((doc) => {
       return doc.data();
     })
     .filter((a) => a && a.userID === userID);
+  return {
+    passed: ans.length > 0,
+    answers: ans,
+  };
 };
