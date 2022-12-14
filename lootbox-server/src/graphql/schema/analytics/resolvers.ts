@@ -66,6 +66,10 @@ import {
 } from "../../../api/analytics";
 import { manifest } from "../../../manifest";
 import * as analytics from "../../../service/analytics";
+import {
+  FansListForLootboxResponse,
+  QueryFansListForLootboxArgs,
+} from "../../generated/types";
 
 const AnalyticsResolvers: Resolvers = {
   Query: {
@@ -813,10 +817,42 @@ const AnalyticsResolvers: Resolvers = {
           fans,
         };
       } catch (err: any) {
-        console.error(
-          "Error in claimerStatisticsForLootboxTournament fetching tournament",
-          err
+        console.error("Error in fansListForTournament fetching fans list", err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
+
+    fansListForLootbox: async (
+      _,
+      { lootboxID }: QueryFansListForLootboxArgs,
+      context: Context
+    ): Promise<FansListForLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const fans = await analytics.fansListForLootbox(
+          { lootboxID },
+          context.userId
         );
+
+        return {
+          lootboxID: lootboxID,
+          fans,
+        };
+      } catch (err: any) {
+        console.error("Error in fansListForLootbox fetching fans list", err);
         return {
           error: {
             code: StatusCode.ServerError,
@@ -942,6 +978,18 @@ const AnalyticsResolvers: Resolvers = {
     __resolveType: (obj: FansListForTournamentResponse) => {
       if ("fans" in obj && "tournamentID" in obj) {
         return "FansListForTournamentResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+      return null;
+    },
+  },
+
+  FansListForLootboxResponse: {
+    __resolveType: (obj: FansListForLootboxResponse) => {
+      if ("fans" in obj && "lootboxID" in obj) {
+        return "FansListForLootboxResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";

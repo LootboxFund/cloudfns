@@ -86,6 +86,7 @@ export const create = async (
       logo: request.logoImage,
       symbol: request.symbol,
       name: request.lootboxName,
+      tournamentID: request.tournamentID,
       description: request.lootboxDescription,
       nftBountyValue: request.nftBountyValue,
       maxTickets: request.maxTickets,

@@ -90,6 +90,7 @@ export const parseLootboxDB = (
     symbol: lootbox.symbol,
     baseTokenURI: lootbox.baseTokenURI,
     creationNonce: lootbox.creationNonce || null,
+    tournamentID: lootbox.tournamentID,
     timestamps: {
       createdAt: lootbox.timestamps.createdAt,
       updatedAt: lootbox.timestamps.updatedAt,

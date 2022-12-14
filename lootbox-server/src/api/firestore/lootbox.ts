@@ -416,6 +416,7 @@ interface CreateLootboxPayloadLocalType {
   nftBountyValue: string;
   themeColor: string;
   joinCommunityUrl?: string;
+  tournamentID?: TournamentID;
   variant: LootboxVariant_Firestore;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
@@ -451,6 +452,7 @@ export const createLootbox = async (
     name: payload.name,
     description: payload.description,
     nftBountyValue: payload.nftBountyValue,
+    tournamentID: payload.tournamentID,
     joinCommunityUrl: payload.joinCommunityUrl || "",
     status: LootboxStatus_Firestore.active,
     maxTickets: payload.maxTickets,

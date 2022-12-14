@@ -71,6 +71,7 @@ const TournamentTypeDefs = gql`
     dealConfigs: [DealConfigTournament!]!
     runningCompletedClaims: Int!
     privacyScope: [TournamentPrivacyScope!]
+    playbookUrl: String
     # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
@@ -283,6 +284,7 @@ const TournamentTypeDefs = gql`
     prize: String
     communityURL: String
     tournamentDate: Timestamp
+    playbookUrl: String
     privacyScope: [TournamentPrivacyScope!]
   }
 
