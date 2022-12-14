@@ -1,4 +1,5 @@
 import {
+  getAllClaimsForLootbox,
   getAllClaimsForTournament,
   getLootbox,
   getLootboxTournamentSnapshotByLootboxID,
@@ -24,7 +25,9 @@ import {
 import { claimerStatsForTournament } from "../api/analytics/tournament";
 import { manifest } from "../manifest";
 import {
+  FanListRowForLootbox,
   FanListRowForTournament,
+  QueryFansListForLootboxArgs,
   QueryFansListForTournamentArgs,
   ViewAdResponseSuccess,
 } from "../graphql/generated/types";
@@ -544,5 +547,165 @@ export const fansListForTournament = async (
       return fanRow;
     })
     .filter((c) => c) as FanListRowForTournament[];
+  return rows;
+};
+
+export const fansListForLootbox = async (
+  payload: QueryFansListForLootboxArgs,
+  userID: UserIdpID
+) => {
+  const lootbox = await getLootbox(payload.lootboxID as LootboxID);
+  if (!lootbox) {
+    throw new Error("Lootbox not found");
+  }
+  if (!lootbox.tournamentID) {
+    throw Error(
+      `This old lootbox ${lootbox.id} does not have an associated tournamentID and thus cannot render a fan list. Try with a newer lootbox`
+    );
+  }
+  const tournament = await getTournamentById(
+    lootbox.tournamentID as TournamentID
+  );
+  if (!tournament || !tournament.organizer) {
+    throw new Error("Tournament not found");
+  }
+  // only allow the tournament owner to view this data
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    userID,
+    tournament.organizer as AffiliateID
+  );
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions to get analytics for this tournament`
+    );
+  }
+  // get all claims for tournament
+  const claims = await getAllClaimsForLootbox(payload.lootboxID as LootboxID);
+  claims.forEach((c) => console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`));
+  // console.log(`claims count = ${claims.length}`);
+  // get unique users
+  const recentSortedClaims = claims
+    .sort((a, b) => a.timestamps.createdAt - b.timestamps.createdAt)
+    .filter((c) => c.claimerUserId);
+  // console.log(`recentSortedClaims count = ${recentSortedClaims.length}`);
+  const uniqueClaimersSortedByDate: Claim_Firestore[] = _.uniqBy(
+    recentSortedClaims,
+    "claimerUserId"
+  );
+  // console.log(`uniqueClaimersSortedByDate`);
+  // console.log(uniqueClaimersSortedByDate.map((c) => c.claimerUserId));
+  // console.log(`usersByLootboxCount`);
+  // console.log(usersByLootboxCount);
+  // console.log(
+  //   `uniqueClaimersSortedByDate count = ${uniqueClaimersSortedByDate.length}`
+  // );
+  console.log(`
+  
+  -
+  -
+  -
+  -
+  -
+  
+  `);
+  // uniqueClaimersSortedByDate.forEach((c) =>
+  //   console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`)
+  // );
+  const users = (
+    await Promise.all(
+      uniqueClaimersSortedByDate.map((claim) => {
+        // @ts-ignore
+        return getUser(claim.claimerUserId);
+      })
+    )
+  )
+    .map((u) => {
+      // console.log(`u = ${u?.username}`);
+      return u;
+    })
+    .filter((u) => u) as User_Firestore[];
+  // console.log(`users count = ${users.length}`);
+  const usersMap = users.reduce((acc, curr) => {
+    return {
+      ...acc,
+      [curr.id]: curr,
+    };
+  }, {} as Record<UserID, User_Firestore>);
+  // convert it into rows data format
+  let count = 0;
+  const claimsBreakdown = uniqueClaimersSortedByDate.reduce((acc, claim) => {
+    count++;
+    // console.log(
+    //   `#${count} - breakdown c = ${
+    //     claim.id
+    //   }, !claim.claimerUserId = ${!claim.claimerUserId}`
+    // );
+    if (!claim.claimerUserId) return acc;
+    const accCurr = acc[claim.claimerUserId]
+      ? acc[claim.claimerUserId]
+      : {
+          userID: claim.claimerUserId,
+          claimsCount: 0,
+          referralsCount: 0,
+          participationRewardsCount: 0,
+        };
+    const incrClaimsCount = claim.claimerUserId === accCurr.userID ? 1 : 0;
+    const incrReferralsCount =
+      claim.referrerId === accCurr.userID &&
+      claim.type === ClaimType_Firestore.referral
+        ? 1
+        : 0;
+    const incrParticipationRewardsCount =
+      claim.claimerUserId === accCurr.userID &&
+      claim.type === ClaimType_Firestore.reward
+        ? 1
+        : 0;
+    return {
+      ...acc,
+      [claim.claimerUserId]: {
+        ...accCurr,
+        userID: claim.claimerUserId,
+        claimsCount: accCurr.claimsCount + incrClaimsCount,
+        referralsCount: accCurr.referralsCount + incrReferralsCount,
+        participationRewardsCount:
+          accCurr.participationRewardsCount + incrParticipationRewardsCount,
+      },
+    };
+  }, {} as Record<UserID, FanRowStatSum>);
+  // console.log(claimsBreakdown);
+  // console.log(Object.keys(claimsBreakdown));
+  type FanRowStatSum = {
+    userID: UserID;
+    claimsCount: number;
+    referralsCount: number;
+    participationRewardsCount: number;
+  };
+
+  // console.log(`claimsBreakdown count = ${Object.keys(claimsBreakdown).length}`);
+  const rows = uniqueClaimersSortedByDate
+    .filter((c) => c.claimerUserId && usersMap[c.claimerUserId])
+    .map((claim) => {
+      // console.log(`}} claim === ${claim.id}`);
+      if (!claim.claimerUserId) return null;
+      // console.log(`}} --> a`);
+      const earliestClaim = claim;
+      if (!earliestClaim) return null;
+      // console.log(`}} --> b`);
+      const user = usersMap[claim.claimerUserId];
+      if (!user) return null;
+
+      const fanRow: FanListRowForLootbox = {
+        userID: claim.claimerUserId,
+        username: user.username || "",
+        avatar: user.avatar || "",
+        claimsCount: claimsBreakdown[claim.claimerUserId].claimsCount,
+        referralsCount: claimsBreakdown[claim.claimerUserId].referralsCount,
+        participationRewardsCount:
+          claimsBreakdown[claim.claimerUserId].participationRewardsCount,
+        joinedDate: earliestClaim.timestamps.createdAt,
+      };
+      return fanRow;
+    })
+    .filter((c) => c) as FanListRowForLootbox[];
   return rows;
 };

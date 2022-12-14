@@ -786,6 +786,22 @@ export const getAllClaimsForTournament = async (
   }
 };
 
+export const getAllClaimsForLootbox = async (
+  lootboxID: LootboxID
+): Promise<Claim_Firestore[]> => {
+  let claimQuery = db
+    .collectionGroup(Collection.Claim)
+    .where("lootboxID", "==", lootboxID) as Query<Claim_Firestore>;
+
+  const claimsSnapshot = await claimQuery.get();
+
+  if (claimsSnapshot.empty) {
+    return [];
+  } else {
+    return claimsSnapshot.docs.map((doc) => doc.data());
+  }
+};
+
 export const getClaimsCsvData = async (
   tournamentId: TournamentID
 ): Promise<ClaimsCsvRow[]> => {

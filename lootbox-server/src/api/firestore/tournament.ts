@@ -372,6 +372,7 @@ export const createTournament = async ({
     isPostCosmic: true,
     coverPhoto: coverPhoto || placeholderImageTournament,
     privacyScope: privacyScope || [],
+    playbookUrl: "https://lootbox.fyi/playbook",
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -450,6 +451,10 @@ export const updateTournament = async (
 
   if (payload.communityURL != undefined) {
     updatePayload.communityURL = payload.communityURL;
+  }
+
+  if (payload.playbookUrl != undefined) {
+    updatePayload.playbookUrl = payload.playbookUrl;
   }
 
   if (payload.privacyScope != undefined) {
