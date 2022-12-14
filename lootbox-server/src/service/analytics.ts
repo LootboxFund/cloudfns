@@ -347,11 +347,13 @@ export const fansListForTournament = async (
     .sort((a, b) => a.timestamps.createdAt - b.timestamps.createdAt)
     .filter((c) => c.claimerUserId);
   // console.log(`recentSortedClaims count = ${recentSortedClaims.length}`);
-  const uniqueClaimersSortedByDate: Claim_Firestore[] = _.uniq(
+  const uniqueClaimersSortedByDate: Claim_Firestore[] = _.uniqBy(
     recentSortedClaims,
     "claimerUserId"
   );
-  const uniqueClaimsByLootbox: Claim_Firestore[] = _.uniq(
+  console.log(`uniqueClaimersSortedByDate`);
+  console.log(uniqueClaimersSortedByDate.map((c) => c.claimerUserId));
+  const uniqueClaimsByLootbox: Claim_Firestore[] = _.uniqBy(
     claims,
     "lootboxID"
   ).filter((c) => c.lootboxID);
