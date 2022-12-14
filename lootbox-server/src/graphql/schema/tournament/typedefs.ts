@@ -70,6 +70,7 @@ const TournamentTypeDefs = gql`
     promoters: [ID!]
     dealConfigs: [DealConfigTournament!]!
     runningCompletedClaims: Int!
+    privacyScope: [TournamentPrivacyScope!]
     # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
@@ -264,6 +265,12 @@ const TournamentTypeDefs = gql`
     communityURL: String
     streams: [StreamInput!]
     organizer: ID
+    privacyScope: [TournamentPrivacyScope!]
+  }
+
+  enum TournamentPrivacyScope {
+    MarketingEmails
+    DataSharing
   }
 
   input EditTournamentPayload {
@@ -276,6 +283,7 @@ const TournamentTypeDefs = gql`
     prize: String
     communityURL: String
     tournamentDate: Timestamp
+    privacyScope: [TournamentPrivacyScope!]
   }
 
   input AddStreamPayload {

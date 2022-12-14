@@ -40,7 +40,7 @@ import {
   Query,
   Timestamp,
 } from "firebase-admin/firestore";
-import { Address, Collection } from "@wormgraph/helpers";
+import { Address, Collection, Tournament_Firestore } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
 import { getUser } from "./user";
 import { getUserWallets } from "./wallet";
@@ -1182,12 +1182,28 @@ export const getLootboxOptionsForTournament = async (
       "desc"
     ) as Query<LootboxTournamentSnapshot_Firestore>;
 
-  const collectionSnapshot = await query.get();
+  // query for tournament
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .doc(tournamentID) as DocumentReference<Tournament_Firestore>;
+
+  const [collectionSnapshot, tournamentSnapshot] = await Promise.all([
+    query.get(),
+    tournamentRef.get(),
+  ]);
+
+  if (!tournamentSnapshot.exists) {
+    throw Error(`Tournament ${tournamentID} does not exist`);
+  }
+  const tournament = tournamentSnapshot.data();
 
   if (collectionSnapshot.empty) {
-    return [] as LootboxTournamentSnapshot[];
+    return {
+      termsOfService: tournament?.privacyScope || [],
+      lootboxOptions: [] as LootboxTournamentSnapshot[],
+    };
   } else {
-    return collectionSnapshot.docs
+    const lootboxOptions = collectionSnapshot.docs
       .map((doc) => {
         const data = doc.data();
         return parseLootboxTournamentSnapshotDB(data);
@@ -1198,6 +1214,10 @@ export const getLootboxOptionsForTournament = async (
           d.type !== LootboxType.Airdrop
         );
       }) as unknown[] as LootboxTournamentSnapshot[];
+    return {
+      termsOfService: tournament?.privacyScope || [],
+      lootboxOptions,
+    };
   }
 };
 

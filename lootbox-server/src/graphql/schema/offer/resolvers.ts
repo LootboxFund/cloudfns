@@ -211,12 +211,12 @@ const OfferResolvers: Resolvers = {
       context: Context
     ): Promise<CheckIfUserAnsweredAirdropQuestionsResponse> => {
       try {
-        const answers = await checkIfUserAnsweredAirdropQuestions(
+        const result = await checkIfUserAnsweredAirdropQuestions(
           lootboxID as LootboxID,
           (context.userId || "") as unknown as UserID
         );
         return {
-          status: answers.length > 0,
+          status: result.passed,
         };
       } catch (err) {
         console.error(err);
