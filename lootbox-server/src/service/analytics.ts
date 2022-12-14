@@ -349,8 +349,7 @@ export const fansListForTournament = async (
   // console.log(`recentSortedClaims count = ${recentSortedClaims.length}`);
   const uniqueClaimersSortedByDate: Claim_Firestore[] = _.uniq(
     recentSortedClaims,
-    "lootboxID"
-    // "claimerUserId"
+    "claimerUserId"
   );
   const uniqueClaimsByLootbox: Claim_Firestore[] = _.uniq(
     claims,
