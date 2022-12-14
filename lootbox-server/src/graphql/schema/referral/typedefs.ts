@@ -210,6 +210,7 @@ const ReferralTypeDefs = gql`
   union ClaimByIDResponse = ClaimByIDResponseSuccess | ResponseError
 
   type ListAvailableLootboxesForClaimResponseSuccess {
+    termsOfService: [TournamentPrivacyScope!]!
     lootboxOptions: [LootboxTournamentSnapshot!]
   }
   union ListAvailableLootboxesForClaimResponse =

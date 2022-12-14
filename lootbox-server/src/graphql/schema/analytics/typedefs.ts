@@ -326,6 +326,24 @@ const AnalyticsTypeDefs = gql`
       FansListForTournamentResponseSuccess
     | ResponseError
 
+  # -------------------- Fans List For Lootbox Analytics --------------------
+  type FanListRowForLootbox {
+    userID: ID!
+    username: String!
+    avatar: String!
+    claimsCount: Int!
+    referralsCount: Int!
+    participationRewardsCount: Int!
+    joinedDate: Timestamp!
+  }
+  type FansListForLootboxResponseSuccess {
+    lootboxID: ID!
+    fans: [FanListRowForLootbox!]!
+  }
+  union FansListForLootboxResponse =
+      FansListForLootboxResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -384,6 +402,7 @@ const AnalyticsTypeDefs = gql`
       tournamentID: ID!
     ): ClaimerStatsForLootboxTournamentResponse!
     fansListForTournament(tournamentID: ID!): FansListForTournamentResponse!
+    fansListForLootbox(lootboxID: ID!): FansListForLootboxResponse!
   }
 `;
 
