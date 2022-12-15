@@ -53,6 +53,7 @@ const OfferTypeDefs = gql`
   enum OfferStrategyType {
     None
     Airdrop
+    AfterTicketClaim
   }
 
   type OfferAffiliateView {
