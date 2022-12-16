@@ -330,7 +330,7 @@ const TournamentResolvers = {
       let title = payload.title;
       if (!title) {
         title = await getRandomUserName({
-          type: "lootbox",
+          type: "event",
         });
       }
 
