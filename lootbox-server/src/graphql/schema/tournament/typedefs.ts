@@ -257,7 +257,7 @@ const TournamentTypeDefs = gql`
     | ResponseError
 
   input CreateTournamentPayload {
-    title: String!
+    title: String
     description: String
     tournamentLink: String
     coverPhoto: String

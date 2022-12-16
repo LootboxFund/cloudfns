@@ -102,6 +102,7 @@ import {
 } from "../../../lib/tournament";
 import { convertLootboxDBToGQL } from "../../../lib/lootbox";
 import { listPotentialAirdropClaimers } from "../../../api/firestore/airdrop";
+import { getRandomUserName } from "../../../api/lexica-images";
 
 const TournamentResolvers = {
   Query: {
@@ -323,9 +324,17 @@ const TournamentResolvers = {
           },
         };
       }
+
+      let title = payload.title;
+      if (!title) {
+        title = await getRandomUserName({
+          type: "lootbox",
+        });
+      }
+
       try {
         const tournamentDB = await createTournament({
-          title: payload.title,
+          title,
           description: payload.description || "",
           tournamentLink: payload.tournamentLink,
           creatorId: context.userId as unknown as UserID,
