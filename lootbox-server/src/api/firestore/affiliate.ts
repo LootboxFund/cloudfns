@@ -1091,11 +1091,17 @@ export const viewTournamentAsOrganizer = async (
     return undefined;
   }
   const tournament = tournamentSnapshot.data();
+
+  if (!tournament?.organizer) {
+    throw Error(`Unauthorized. User do not have permissions for this event`);
+  }
+
   // check if user is allowed to run this operation
   const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
     userIdpID,
-    tournament?.organizer as AffiliateID
+    tournament.organizer as AffiliateID
   );
+
   if (!isValidUserAffiliate) {
     throw Error(
       `Unauthorized. User do not have permissions for this affiliate`

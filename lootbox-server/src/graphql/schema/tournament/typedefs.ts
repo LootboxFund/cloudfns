@@ -266,6 +266,9 @@ const TournamentTypeDefs = gql`
     communityURL: String
     streams: [StreamInput!]
     organizer: ID
+      @deprecated(
+        reason: "Use this will be inferred from the user context ID passed in"
+      )
     privacyScope: [TournamentPrivacyScope!]
   }
 
