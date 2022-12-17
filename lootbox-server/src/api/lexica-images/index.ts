@@ -47,7 +47,7 @@ const customDictionaries = {
   advertisers: ["Ads", "Marketing", "Sales"],
   organizers: ["Events", "Experiences", "Festival", "Tournament", "Hosting"],
 };
-type nameType = "advertiser" | "user" | "lootbox" | "organizer";
+type nameType = "advertiser" | "user" | "lootbox" | "organizer" | "event";
 interface RandomNameConfig {
   type?: nameType;
   seedEmail?: string;
@@ -83,6 +83,9 @@ export const getRandomUserName = async (nameConfig?: RandomNameConfig) => {
       customDictionaries.organizers,
       customDictionaries.corporations,
     ];
+  }
+  if (nameConfig?.type === "event") {
+    dictionaries = [adjectives, names, customDictionaries.organizers];
   }
   const config: Config = {
     dictionaries,

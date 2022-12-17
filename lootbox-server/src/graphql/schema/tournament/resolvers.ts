@@ -40,6 +40,7 @@ import {
   removePromoterFromTournament,
   renderDealConfigsOfTournament,
   getAffiliate,
+  getAffiliateByUserIdpID,
 } from "../../../api/firestore/affiliate";
 import { isAuthenticated } from "../../../lib/permissionGuard";
 import { StreamID, TournamentID } from "@wormgraph/helpers";
@@ -102,6 +103,8 @@ import {
 } from "../../../lib/tournament";
 import { convertLootboxDBToGQL } from "../../../lib/lootbox";
 import { listPotentialAirdropClaimers } from "../../../api/firestore/airdrop";
+import { getRandomUserName } from "../../../api/lexica-images";
+import { Affiliate_Firestore } from "../../../api/firestore/affiliate.type";
 
 const TournamentResolvers = {
   Query: {
@@ -323,9 +326,29 @@ const TournamentResolvers = {
           },
         };
       }
+
+      let title = payload.title;
+      if (!title) {
+        title = await getRandomUserName({
+          type: "event",
+        });
+      }
+
+      let affiliate: Affiliate_Firestore | undefined;
+      try {
+        affiliate = await getAffiliateByUserIdpID(context.userId);
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.Forbidden,
+            message: `You must be an affiliate to create a tournament`,
+          },
+        };
+      }
+
       try {
         const tournamentDB = await createTournament({
-          title: payload.title,
+          title,
           description: payload.description || "",
           tournamentLink: payload.tournamentLink,
           creatorId: context.userId as unknown as UserID,
@@ -333,7 +356,8 @@ const TournamentResolvers = {
           prize: payload.prize,
           tournamentDate: payload.tournamentDate,
           communityURL: payload.communityURL,
-          organizer: (payload.organizer || "") as AffiliateID,
+          // organizer: (payload.organizer || "") as AffiliateID,
+          organizer: affiliate.id,
           privacyScope: payload.privacyScope || [],
         });
 

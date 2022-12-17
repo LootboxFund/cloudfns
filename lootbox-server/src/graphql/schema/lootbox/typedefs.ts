@@ -306,19 +306,48 @@ const LootboxTypeDefs = gql`
   union GetWhitelistSignaturesResponse =
       GetWhitelistSignaturesResponseSuccess
     | ResponseError
-  # union BulkMintWhitelistResponse =
-  #     BulkMintWhitelistResponseSuccess
-  #   | ResponseError
+
+  input BulkCreateLootboxBodyPayload {
+    name: String
+    description: String
+    logo: String
+    backgroundImage: String
+    nftBountyValue: String
+    joinCommunityUrl: String
+    maxTickets: Int
+    themeColor: String
+    tournamentID: String!
+    type: LootboxType
+    airdropMetadata: AirdropMetadataCreateInput
+  }
+
+  input BulkCreateLootboxPayload {
+    lootboxes: [BulkCreateLootboxBodyPayload!]!
+  }
+
+  type BulkLootboxCreatedPartialError {
+    index: Int!
+    error: String!
+  }
+
+  type BulkCreateLootboxResponseSuccess {
+    lootboxes: [Lootbox!]!
+    partialErrors: [BulkLootboxCreatedPartialError!]
+  }
+
+  union BulkCreateLootboxResponse =
+      BulkCreateLootboxResponseSuccess
+    | ResponseError
 
   extend type Mutation {
     createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
+    bulkCreateLootbox(
+      payload: BulkCreateLootboxPayload!
+    ): BulkCreateLootboxResponse!
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
     whitelistMyLootboxClaims(
       payload: WhitelistMyLootboxClaimsPayload!
     ): WhitelistMyLootboxClaimsResponse!
-    # bulkMintWhitelist(
-    #   payload: BulkMintWhitelistPayload!
-    # ): BulkMintWhitelistResponse!
   }
 
   # -------------- DEPRECATED SHIT --------------

@@ -25,6 +25,9 @@ import {
   LootboxTournamentSnapshot,
   AirdropMetadataCreateInput,
   LootboxAirdropMetadataQuestion,
+  BulkCreateLootboxResponse,
+  MutationBulkCreateLootboxArgs,
+  BulkLootboxCreatedPartialError,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -48,6 +51,7 @@ import {
   LootboxMintSignatureNonce,
   LootboxTicketID,
   LootboxType,
+  Lootbox_Firestore,
   QuestionAnswerID,
   QuestionAnswer_Firestore,
   TournamentID,
@@ -218,6 +222,77 @@ const LootboxResolvers: Resolvers = {
           },
         };
       }
+    },
+    bulkCreateLootbox: async (
+      _,
+      { payload }: MutationBulkCreateLootboxArgs,
+      context: Context
+    ): Promise<BulkCreateLootboxResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      if (payload.lootboxes.length > 30) {
+        return {
+          error: {
+            code: StatusCode.BadRequest,
+            message: "Must be less than 30 lootboxes",
+          },
+        };
+      }
+
+      const createdLootboxes: Lootbox_Firestore[] = [];
+      const partialErrors: BulkLootboxCreatedPartialError[] = [];
+
+      for (let idx = 0; idx < payload.lootboxes.length; idx++) {
+        const lootboxPayload = payload.lootboxes[idx];
+
+        try {
+          const fullPayload = await extractOrGenerateLootboxCreateInput(
+            lootboxPayload,
+            context.userId
+          );
+
+          const lootbox = await LootboxService.create({
+            lootboxDescription: fullPayload.lootboxDescription,
+            backgroundImage: fullPayload.backgroundImage,
+            logoImage: fullPayload.logoImage,
+            themeColor: fullPayload.themeColor,
+            nftBountyValue: fullPayload.nftBountyValue,
+            maxTickets: fullPayload.maxTickets,
+            joinCommunityUrl: fullPayload.joinCommunityUrl || undefined,
+            symbol: fullPayload.symbol,
+            creatorID: fullPayload.creatorID,
+            lootboxName: fullPayload.lootboxName,
+            tournamentID: fullPayload.tournamentID,
+            type: fullPayload.type
+              ? (fullPayload.type as LootboxType)
+              : undefined,
+            airdropMetadata: fullPayload.airdropMetadata
+              ? (fullPayload.airdropMetadata as AirdropMetadataCreateInput)
+              : undefined,
+          });
+
+          createdLootboxes.push(lootbox);
+        } catch (err) {
+          console.log("Partial Error creating Lootbox!");
+          console.error(err);
+          partialErrors.push({
+            index: idx,
+            error: "An error occurred creating this lootbox",
+          });
+        }
+      }
+
+      return {
+        lootboxes: createdLootboxes.map(convertLootboxDBToGQL),
+        partialErrors,
+      };
     },
     editLootbox: async (
       _,
@@ -651,6 +726,20 @@ const LootboxResolvers: Resolvers = {
       return null;
     },
   },
+
+  BulkCreateLootboxResponse: {
+    __resolveType: (obj: BulkCreateLootboxResponse) => {
+      if ("lootboxes" in obj) {
+        return "BulkCreateLootboxResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const lootboxResolverComposition = {
@@ -662,6 +751,7 @@ const lootboxResolverComposition = {
   "Mutation.mintLootboxTicket": [isAuthenticated()],
   "Mutation.createLootbox": [isAuthenticated()],
   "Mutation.whitelistMyLootboxClaims": [isAuthenticated()],
+  "Mutation.bulkCreateLootbox": [isAuthenticated()],
 };
 
 const lootboxResolvers = composeResolvers(
