@@ -42,7 +42,10 @@ import {
   CreateAdSetResponse,
   EditAdSetResponse,
 } from "../../generated/types";
-import { decideAdToServe } from "../../../api/firestore/decision";
+import {
+  decideAdToServe,
+  getQuestionsForAd,
+} from "../../../api/firestore/decision";
 import { AdSetID, UserIdpID } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -271,6 +274,7 @@ const AdResolvers: Resolvers = {
     ): Promise<DecisionAdApiBetaV2Response> => {
       try {
         const ad = await decideAdToServe(payload);
+        const questions = await getQuestionsForAd(ad);
         if (!ad) {
           return {
             error: {
@@ -279,7 +283,7 @@ const AdResolvers: Resolvers = {
             },
           };
         }
-        return { ad };
+        return { ad, questions };
       } catch (err) {
         // console.error(err);
         return {

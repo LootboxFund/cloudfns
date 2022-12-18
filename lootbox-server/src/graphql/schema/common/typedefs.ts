@@ -53,6 +53,7 @@ const CommonTypeDefs = gql`
     Range
     SingleSelect
     MultiSelect
+    Checkbox
   }
 
   enum MeasurementPartnerType {

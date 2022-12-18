@@ -398,8 +398,6 @@ const OfferResolvers: Resolvers = {
           payload,
           context.userId || ("" as UserIdpID)
         );
-        console.log(`answerIDs...`);
-        console.log(answerIDs);
         if (!answerIDs) {
           return {
             error: {

@@ -27,6 +27,7 @@ const OfferTypeDefs = gql`
     adSetPreviews: [AdSetPreview!]!
     #targetingTags: [AdTargetTag!]!
     airdropMetadata: OfferAirdropMetadata
+    afterTicketClaimMetadata: OfferAfterTicketClaimMetadata
     strategy: OfferStrategyType!
   }
 
@@ -43,11 +44,17 @@ const OfferTypeDefs = gql`
     lootboxTemplateStamp: String!
   }
 
+  type OfferAfterTicketClaimMetadata {
+    questions: [QuestionAnswerPreview!]!
+  }
+
   type QuestionAnswerPreview {
     id: ID!
     batch: ID!
     question: String!
     type: QuestionFieldType!
+    mandatory: Boolean
+    options: String
   }
 
   enum OfferStrategyType {
@@ -260,6 +267,7 @@ const OfferTypeDefs = gql`
     #targetingTags: [AdTargetTag!]!
     strategy: OfferStrategyType
     airdropMetadata: OfferAirdropMetadataCreateInput
+    afterTicketClaimMetadata: OfferAfterTicketClaimMetadataCreateInput
   }
   input OfferAirdropMetadataCreateInput {
     oneLiner: String
@@ -268,12 +276,17 @@ const OfferTypeDefs = gql`
     instructionsCallToAction: String
     callToActionLink: String
     lootboxTemplateID: ID!
-    questions: [OfferAirdropQuestionCreateInput!]!
+    questions: [QuestionCreateInput!]!
     excludedOffers: [ID!]!
   }
-  input OfferAirdropQuestionCreateInput {
+  input OfferAfterTicketClaimMetadataCreateInput {
+    questions: [QuestionCreateInput!]!
+  }
+  input QuestionCreateInput {
     question: String!
     type: QuestionFieldType!
+    mandatory: Boolean
+    options: String
   }
   enum QuestionAnswerStatus {
     Active
@@ -296,6 +309,7 @@ const OfferTypeDefs = gql`
     endDate: Timestamp
     status: OfferStatus!
     airdropMetadata: OfferAirdropMetadataEditInput
+    afterTicketClaimMetadata: OfferAfterTicketClaimMetadataEditInput
     lootboxTemplateID: ID
     #targetingTags: [AdTargetTag!]!
   }
@@ -308,8 +322,11 @@ const OfferTypeDefs = gql`
     excludedOffers: [ID!]
     activeQuestions: [ID!]
     inactiveQuestions: [ID!]
-    questions: [OfferAirdropQuestionCreateInput!]
-    # newQuestions: [OfferAirdropQuestionCreateInput!]!
+    questions: [QuestionCreateInput!]
+    # newQuestions: [QuestionCreateInput!]!
+  }
+  input OfferAfterTicketClaimMetadataEditInput {
+    questions: [QuestionCreateInput!]
   }
   type EditOfferResponseSuccess {
     offer: Offer!
