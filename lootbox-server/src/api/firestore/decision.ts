@@ -425,13 +425,15 @@ export const getQuestionsForAd = async (
   const questions = questionCollectionItems.docs.map((doc) => {
     return doc.data();
   });
-  return questions.map((q) => ({
-    id: q.id,
-    batch: q.batch,
-    order: q.order,
-    question: q.question,
-    type: q.type,
-    mandatory: q.mandatory || false,
-    options: q.options || "",
-  }));
+  return questions
+    .filter((q) => !q.answer && q.isOriginal)
+    .map((q) => ({
+      id: q.id,
+      batch: q.batch,
+      order: q.order,
+      question: q.question,
+      type: q.type,
+      mandatory: q.mandatory || false,
+      options: q.options || "",
+    }));
 };

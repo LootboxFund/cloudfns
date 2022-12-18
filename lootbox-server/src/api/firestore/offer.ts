@@ -24,11 +24,14 @@ import {
   TournamentID,
   ClaimID,
   Offer_AfterTicketClaimMetadata,
+  ReferralID,
+  AdSetID,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
   AdSetPreview,
+  AfterTicketClaimQuestionPayload,
   AnswerAirdropQuestionPayload,
   CreateOfferPayload,
   CreateOfferResponse,
@@ -61,7 +64,10 @@ import { getAdvertiser } from "./advertiser";
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
 import { getLootbox } from "./lootbox";
-import { updateClaimRedemptionStatus } from "./referral";
+import { updateClaimRedemptionStatus, getReferralById } from "./referral";
+import { getTournamentByID } from "../../../../firebase/functions/src/api/firestore/tournament";
+import { getTournamentById } from "./tournament";
+import { getAdSet } from "./ad";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
@@ -728,6 +734,7 @@ export const createQuestion = async (
       offerID: payload.offerID,
       advertiserID: payload.advertiserID,
     },
+    isOriginal: true,
     status: QuestionAnswerStatus.Active,
     question: payload.question,
     mandatory: payload.mandatory || false,
@@ -789,6 +796,31 @@ export const getQuestion = async (
   }
 };
 
+export const getQuestionsForOffer = async (
+  offerID: OfferID
+): Promise<QuestionAnswer_Firestore[]> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .where(
+      "metadata.offerID",
+      "==",
+      offerID
+    ) as Query<QuestionAnswer_Firestore>;
+
+  const questionsCollectionItems = await questionRef.get();
+
+  if (questionsCollectionItems.empty) {
+    return [];
+  } else {
+    return questionsCollectionItems.docs
+      .map((doc) => {
+        const data = doc.data();
+        return data;
+      })
+      .filter((d) => d && d.isOriginal);
+  }
+};
+
 export const answerAirdropLootboxQuestion = async (
   payload: AnswerAirdropQuestionPayload,
   userID: UserIdpID
@@ -844,6 +876,86 @@ export const answerAirdropLootboxQuestion = async (
   return answers.map((a) => a.id);
 };
 
+export const answerAfterTicketClaimQuestion = async (
+  payload: AfterTicketClaimQuestionPayload,
+  userID: UserIdpID
+) => {
+  console.log(
+    `payload.answers`,
+    payload.answers.map((q) => q.questionID)
+  );
+  const [referral, adSet] = await Promise.all([
+    getReferralById(payload.referralID as ReferralID),
+    getAdSet(payload.adSetID as AdSetID),
+  ]);
+  console.log(`referral`, referral?.campaignName);
+  console.log(`adSet`, adSet?.id);
+  if (!referral) {
+    throw Error(`No Referral of ID=${payload.referralID} found!`);
+  }
+  if (!adSet) {
+    throw Error(`No AdSet of ID=${payload.adSetID} found!`);
+  }
+  const [tournament, allQuestions] = await Promise.all([
+    getTournamentById(referral.tournamentId),
+    adSet.offerIDs[0] ? getQuestionsForOffer(adSet.offerIDs[0] as OfferID) : [],
+  ]);
+  console.log(`tournament`, tournament?.id);
+  console.log(
+    `allQuestions`,
+    allQuestions.map((q) => q.id)
+  );
+  if (!tournament) {
+    throw Error(`No Tournament of ID=${referral.tournamentId} found!`);
+  }
+
+  const metadata = {
+    tournamentID: referral.tournamentId,
+    organizerID: tournament.organizer,
+    adSetID: payload.adSetID as AdSetID,
+    referralID: payload.referralID as ReferralID,
+    claimID: payload.claimID as ClaimID,
+  };
+
+  const answers = await Promise.all(
+    payload.answers.map((a) => {
+      return createAnswer(
+        a.questionID as QuestionAnswerID,
+        userID as unknown as UserID,
+        a.answer,
+        metadata
+      );
+    })
+  );
+
+  // ------------------------------
+  // remove this code if we allow a multi-question UX flow
+  // currently it is assumed that a claim has only one question set, either AfterTicketClaim or BeforeAirdropRedeem
+  // however we may want to allow a claim to have multiple question sets, in which case we need to upgrade from a singular ClaimRedemptionStatus
+  const answeredAllMandatoryLootboxQuestions = allQuestions
+    .filter((q) => q.mandatory)
+    .map((q) => q.id)
+    .every((qid) => payload.answers.map((a) => a.questionID).includes(qid));
+  const answeredSomeLootboxQuestions = allQuestions
+    .map((q) => q.id)
+    .some((qid) => payload.answers.map((a) => a.questionID).includes(qid));
+  if (answeredAllMandatoryLootboxQuestions && payload.claimID) {
+    await updateClaimRedemptionStatus(
+      payload.claimID as ClaimID,
+      ClaimRedemptionStatus.Answered,
+      userID
+    );
+  } else if (answeredSomeLootboxQuestions) {
+    await updateClaimRedemptionStatus(
+      payload.claimID as ClaimID,
+      ClaimRedemptionStatus.InProgress,
+      userID
+    );
+  }
+  // ------------------------------
+  return answers.map((a) => a.id);
+};
+
 export const createAnswer = async (
   questionID: QuestionAnswerID,
   userID: UserID,
@@ -852,6 +964,9 @@ export const createAnswer = async (
     lootboxID?: LootboxID;
     tournamentID?: TournamentID;
     organizerID?: AffiliateID;
+    adSetID?: AdSetID;
+    referralID?: ReferralID;
+    claimID?: ClaimID;
   }
 ): Promise<QuestionAnswer_Firestore> => {
   const questionRef = db
@@ -859,6 +974,9 @@ export const createAnswer = async (
     .doc(questionID) as DocumentReference<QuestionAnswer_Firestore>;
   const questionSnapshot = await questionRef.get();
   const question = questionSnapshot.data() as QuestionAnswer_Firestore;
+  if (!question) {
+    throw Error(`No question with ID=${questionID} found!`);
+  }
   const answerRef = db
     .collection(Collection.QuestionAnswer)
     .doc() as DocumentReference<QuestionAnswer_Firestore>;

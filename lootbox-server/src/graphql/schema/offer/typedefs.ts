@@ -385,6 +385,24 @@ const OfferTypeDefs = gql`
       AnswerAirdropQuestionResponseSuccess
     | ResponseError
 
+  # --------- Answer AfterTicketClaim Question ---------
+  input AfterTicketClaimQuestionPayload {
+    adSetID: ID!
+    referralID: ID!
+    claimID: ID
+    answers: [AfterTicketClaimQuestionInput!]!
+  }
+  input AfterTicketClaimQuestionInput {
+    questionID: ID!
+    answer: String!
+  }
+  type AfterTicketClaimQuestionResponseSuccess {
+    answerIDs: [ID!]!
+  }
+  union AfterTicketClaimQuestionResponse =
+      AfterTicketClaimQuestionResponseSuccess
+    | ResponseError
+
   extend type Mutation {
     # Advertiser creates an offer
     createOffer(
@@ -407,6 +425,10 @@ const OfferTypeDefs = gql`
     answerAirdropQuestion(
       payload: AnswerAirdropQuestionPayload!
     ): AnswerAirdropQuestionResponse!
+    #
+    answerAfterTicketClaimQuestion(
+      payload: AfterTicketClaimQuestionPayload!
+    ): AfterTicketClaimQuestionResponse!
   }
 `;
 
