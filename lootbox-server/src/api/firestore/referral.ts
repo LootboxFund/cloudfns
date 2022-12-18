@@ -1145,6 +1145,9 @@ export const updateClaimRedemptionStatus = async (
   const claimsCollectionItems = await claimsRef.get();
 
   if (claimsCollectionItems.empty) {
+    if (claimID === "no-claim-id") {
+      throw Error(`You do not have a Claim. Did you verify your account yet?`);
+    }
     throw Error(`This claim ${claimID} has no matching database entries`);
   }
   const claim = claimsCollectionItems.docs.map((doc) => doc.data())[0];

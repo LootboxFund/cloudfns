@@ -36,6 +36,7 @@ import {
   QueryCheckIfUserAnsweredAirdropQuestionsArgs,
   UpdateClaimRedemptionStatusResponse,
   MutationUpdateClaimRedemptionStatusArgs,
+  MutationAnswerAfterTicketClaimQuestionArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -43,6 +44,7 @@ import {
   AdSetPreview,
 } from "../../generated/types";
 import {
+  answerAfterTicketClaimQuestion,
   answerAirdropLootboxQuestion,
   checkIfUserAnsweredAirdropQuestions,
   createActivation,
@@ -66,7 +68,10 @@ import {
   viewOfferDetailsAsAffiliate,
 } from "../../../api/firestore/affiliate";
 import { updateClaimRedemptionStatus } from "../../../api/firestore/referral";
-import { CheckIfUserAnsweredAirdropQuestionsResponse } from "../../generated/types";
+import {
+  CheckIfUserAnsweredAirdropQuestionsResponse,
+  AfterTicketClaimQuestionResponse,
+} from "../../generated/types";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -398,13 +403,39 @@ const OfferResolvers: Resolvers = {
           payload,
           context.userId || ("" as UserIdpID)
         );
-        console.log(`answerIDs...`);
-        console.log(answerIDs);
         if (!answerIDs) {
           return {
             error: {
               code: StatusCode.ServerError,
               message: `Could not answer questions for airdrop lootbox ${payload.lootboxID}`,
+            },
+          };
+        }
+        return { answerIDs };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    answerAfterTicketClaimQuestion: async (
+      _,
+      { payload }: MutationAnswerAfterTicketClaimQuestionArgs,
+      context: Context
+    ): Promise<AfterTicketClaimQuestionResponse> => {
+      try {
+        const answerIDs = await answerAfterTicketClaimQuestion(
+          payload,
+          context.userId || ("" as UserIdpID)
+        );
+        if (!answerIDs) {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: `Could not answer questions for referral ${payload.referralID}`,
             },
           };
         }
@@ -582,6 +613,19 @@ const OfferResolvers: Resolvers = {
     __resolveType: (obj: CheckIfUserAnsweredAirdropQuestionsResponse) => {
       if ("status" in obj) {
         return "CheckIfUserAnsweredAirdropQuestionsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  AfterTicketClaimQuestionResponse: {
+    __resolveType: (obj: AfterTicketClaimQuestionResponse) => {
+      if ("answerIDs" in obj) {
+        return "AfterTicketClaimQuestionResponseSuccess";
       }
 
       if ("error" in obj) {

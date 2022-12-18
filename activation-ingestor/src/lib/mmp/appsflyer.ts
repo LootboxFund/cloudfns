@@ -23,6 +23,8 @@ import { TournamentID } from "@wormgraph/helpers";
 //  *
 //  * // All the same af_adset, ad_ad, c, af_siteid, af_sub_siteid params are returned back to us https://support.appsflyer.com/hc/en-us/articles/207273946-Available-Macros-on-AppsFlyer-sPostbacks
 //  * // but not af_sub[n]
+//  * https://activation-ingestor-qrmywylbhq-as.a.run.app/appsflyer?af_ad={af_ad}&af_adset={af_adset}&af_adset_id={af_adset_id}&c={c}&af_c_id={af_c_id}&af_siteid={af_siteid}&af_subsite_id={af_subsite_id}&af_ad_type={af_ad_type}&imei={imei}&oaid={oaid}&idfv={idfv}&idfa={idfa}&event_name={event_name}&event_time={event_time}&event_value={event_value}&is_primary_attribution={is_primary_attribution}&is_retargeting={is_retargeting}&is_attributed={is_attributed}&blocked_reason={blocked_reason}&country_code={country_code}&language={language}&platform={platform}&attributed_touch_type={attributed_touch_type}&appsflyer_id={appsflyer_id}&app_name={app_name}
+//  * https://activation-ingestor-qrmywylbhq-as.a.run.app/appsflyer?af_ad=(af_ad)&af_adset=(af_adset)&af_adset_id=(af_adset_id)&c=(c)&af_c_id=(af_c_id)&af_siteid=(af_siteid)&af_subsite_id=(af_subsite_id)&af_ad_type=(af_ad_type)&imei=(imei)&oaid=(oaid)&idfv=(idfv)&idfa=(idfa)&event_name=(event_name)&event_time=(event_time)&event_value=(event_value)&is_primary_attribution=(is_primary_attribution)&is_retargeting=(is_retargeting)&is_attributed=(is_attributed)&blocked_reason=(blocked_reason)&country_code=(country_code)&language=(language)&platform=(platform)&attributed_touch_type=(attributed_touch_type)&appsflyer_id=(appsflyer_id)&app_name=(app_name)
 //  *
 export const trackAppsFlyerActivation = async (
   req: Request
