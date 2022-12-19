@@ -165,6 +165,17 @@ const AdTypeDefs = gql`
 
   type DecisionAdApiBetaV2ResponseSuccess {
     ad: AdServed
+    questions: [AdOfferQuestion!]
+  }
+
+  type AdOfferQuestion {
+    id: ID!
+    batch: ID!
+    order: Int
+    question: String!
+    type: QuestionFieldType!
+    mandatory: Boolean
+    options: String
   }
 
   union DecisionAdApiBetaV2Response =

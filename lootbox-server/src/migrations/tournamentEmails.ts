@@ -96,7 +96,7 @@ const run = async () => {
         logWrite(
           fileName,
           true,
-          `${count}, ${_user.id}, ${_user.email}, ${_user.phoneNumber}`
+          `${count}, ${_user.id}, ${_user.email}, ${_user.phoneNumber} \n`
         );
         userMap[userID] = _user;
       }

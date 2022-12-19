@@ -585,6 +585,8 @@ const LootboxResolvers: Resolvers = {
         order: q.order,
         question: q.question,
         type: q.type,
+        mandatory: q.mandatory || false,
+        options: q.options || "",
       }));
     },
 

@@ -163,6 +163,8 @@ const LootboxTypeDefs = gql`
     order: Int
     question: String!
     type: QuestionFieldType!
+    mandatory: Boolean
+    options: String
   }
 
   type LootboxSnapshotTimestamps {

@@ -19,6 +19,7 @@ import {
   OfferID,
   Offer_Firestore,
   Placement,
+  QuestionAnswer_Firestore,
   SessionID,
   TournamentID,
   Tournament_Firestore,
@@ -30,6 +31,7 @@ import { craftAffiliateAttributionUrl } from "../mmp/mmp";
 import { getOffer } from "./offer";
 import { manifest } from "../../manifest";
 import { AdFlight_Firestore } from "@wormgraph/helpers";
+import { AdOfferQuestion } from "../../graphql/generated/types";
 
 const env = process.env.NODE_ENV || "development";
 
@@ -402,4 +404,36 @@ export const getExistingFlightsForSession = async (
       return doc.data();
     });
   }
+};
+
+export const getQuestionsForAd = async (
+  ad: AdServed
+): Promise<AdOfferQuestion[]> => {
+  const questionRef = db
+    .collection(Collection.QuestionAnswer)
+    .where(
+      "metadata.offerID",
+      "==",
+      ad.offerID
+    ) as Query<QuestionAnswer_Firestore>;
+
+  const questionCollectionItems = await questionRef.get();
+
+  if (questionCollectionItems.empty) {
+    return [];
+  }
+  const questions = questionCollectionItems.docs.map((doc) => {
+    return doc.data();
+  });
+  return questions
+    .filter((q) => !q.answer && q.isOriginal)
+    .map((q) => ({
+      id: q.id,
+      batch: q.batch,
+      order: q.order,
+      question: q.question,
+      type: q.type,
+      mandatory: q.mandatory || false,
+      options: q.options || "",
+    }));
 };
