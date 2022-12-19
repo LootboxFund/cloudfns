@@ -8,7 +8,7 @@
  * to run:
  * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts [env] [tournamentID]
  *
- * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts prod CC2kzXEKGYC8Cq5IExTm
+ * npx ts-node --script-mode ./src/migrations/tournamentEmails.ts prod m36QEQdnoFP1WzQhlC7K
  *
  *
  * [env]            `prod` | `staging`
@@ -27,7 +27,7 @@ const run = async () => {
   const env = process.argv[2];
   const tournamentID = process.argv[3];
 
-  const fileName = `./output/tournamentEmails-${new Date()}.txt`;
+  const fileName = `./lootbox-server/src/migrations/output/tournamentEmails-${new Date()}.txt`;
 
   if (!env) {
     throw new Error("Environment specified");
