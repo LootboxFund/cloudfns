@@ -725,14 +725,8 @@ export const depositVoucherRewards = async (
 export const parseVoucherRewardsList = (
   bulkString: string
 ): { url: string; code: string }[] => {
-  console.log(`Bulk String = 
-  
-  ${bulkString}
-  
-  `);
   const parsedList = bulkString.split(/[\n\r]/);
-  console.log(`parsedList.length = ${parsedList.length}`);
-  console.log(parsedList);
+
   const splitList = parsedList
     .filter((v) => v)
     .map((v) => {
@@ -749,8 +743,6 @@ export const parseVoucherRewardsList = (
       }
       return data;
     });
-  console.log(`splitList.length = ${splitList.length}`);
-  console.log(splitList.map((v) => `${v.code} at ${v.url} \n`));
   return splitList;
 };
 
