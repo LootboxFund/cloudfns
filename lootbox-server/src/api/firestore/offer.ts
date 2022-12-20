@@ -65,7 +65,6 @@ import { Advertiser_Firestore } from "./advertiser.type";
 import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
 import { getLootbox } from "./lootbox";
 import { updateClaimRedemptionStatus, getReferralById } from "./referral";
-import { getTournamentByID } from "../../../../firebase/functions/src/api/firestore/tournament";
 import { getTournamentById } from "./tournament";
 import { getAdSet } from "./ad";
 
