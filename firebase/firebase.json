@@ -32,10 +32,7 @@
           "source": "/host/**",
           "destination": "/host/index.html"
         },
-        {
-          "source": "/profile",
-          "destination": "/profile.html"
-        },
+        { "source": "/profile", "destination": "/profile.html" },
         {
           "source": "/earn",
           "destination": "/redeemCosmicLootbox.html"
@@ -68,11 +65,20 @@
       "ignore": [
         "firebase.json",
         "functions/**",
+        "bigquery/**",
         "**/.*",
         "**/node_modules/**"
       ],
       "project": "lootbox-fund-prod",
       "rewrites": [
+        {
+          "source": "/host",
+          "destination": "/host/index.html"
+        },
+        {
+          "source": "/host/**",
+          "destination": "/host/index.html"
+        },
         {
           "source": "/profile",
           "destination": "/profile.html"
