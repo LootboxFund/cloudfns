@@ -26,11 +26,11 @@
       "rewrites": [
         {
           "source": "/host",
-          "destination": "/host-build/index.html"
+          "destination": "/host/index.html"
         },
         {
           "source": "/host/**",
-          "destination": "/host-build/index.html"
+          "destination": "/host/index.html"
         },
         {
           "source": "/profile",
