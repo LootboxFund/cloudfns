@@ -341,15 +341,40 @@ const LootboxTypeDefs = gql`
       BulkCreateLootboxResponseSuccess
     | ResponseError
 
+  # -------------- DEPOSIT VOUCHER REWARDS --------------
+  input DepositVoucherRewardsPayload {
+    title: String!
+    lootboxID: ID!
+    reuseableVoucher: String
+    oneTimeVouchers: String
+    offerID: ID
+  }
+
+  type DepositVoucherRewardsResponseSuccess {
+    depositID: ID!
+  }
+
+  union DepositVoucherRewardsResponse =
+      DepositVoucherRewardsResponseSuccess
+    | ResponseError
+
   extend type Mutation {
+    #
     createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
+    #
     bulkCreateLootbox(
       payload: BulkCreateLootboxPayload!
     ): BulkCreateLootboxResponse!
+    #
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
+    #
     whitelistMyLootboxClaims(
       payload: WhitelistMyLootboxClaimsPayload!
     ): WhitelistMyLootboxClaimsResponse!
+    #
+    depositVoucherRewards(
+      payload: DepositVoucherRewardsPayload!
+    ): DepositVoucherRewardsResponse!
   }
 
   # -------------- DEPRECATED SHIT --------------

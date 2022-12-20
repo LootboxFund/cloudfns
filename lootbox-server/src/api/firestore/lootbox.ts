@@ -10,6 +10,7 @@ import {
   LootboxFeedResponseSuccess,
   AirdropMetadataCreateInput,
   CreateLootboxPayload,
+  DepositVoucherRewardsPayload,
 } from "../../graphql/generated/types";
 import {
   Address,
@@ -33,6 +34,12 @@ import {
   ClaimStatus_Firestore,
   LootboxType,
   OfferID,
+  VoucherRewardID,
+  VoucherRewardType,
+  VoucherReward_Firestore,
+  VoucherRewardStatus,
+  Deposit_Firestore,
+  DepositID,
 } from "@wormgraph/helpers";
 import { LootboxID, UserIdpID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -663,4 +670,165 @@ export const extractOrGenerateLootboxCreateInput = async (
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)
       : undefined,
   };
+};
+
+export const depositVoucherRewards = async (
+  payload: DepositVoucherRewardsPayload,
+  userIdpID: UserIdpID
+): Promise<DepositID> => {
+  const lootbox = await getLootbox(payload.lootboxID as LootboxID);
+  if (!lootbox) {
+    throw new Error(`Lootbox ${payload.lootboxID} does not exist`);
+  }
+  const tournament = await getTournamentById(
+    lootbox.tournamentID as TournamentID
+  );
+  if (!tournament) {
+    throw new Error(`Tournament ${lootbox.tournamentID} does not exist`);
+  }
+  const parsedReuseableVouchers = parseVoucherRewardsList(
+    payload.reuseableVoucher || ""
+  );
+  const parsedOneTimeVouchers = parseVoucherRewardsList(
+    payload.oneTimeVouchers || ""
+  );
+  const deposit = await createVoucherDeposit({
+    depositerID: userIdpID as unknown as UserID,
+    lootboxID: payload.lootboxID as LootboxID,
+    maxTicketSnapshot: lootbox.maxTickets,
+    tournamentID: tournament.id,
+    hasReuseableVoucher: parsedReuseableVouchers.length > 0,
+    oneTimeVouchersCount: parsedOneTimeVouchers.length,
+    voucherTitle: payload.title,
+  });
+  const baseMetadata = {
+    title: payload.title,
+    lootboxID: payload.lootboxID as LootboxID,
+    depositedBy: userIdpID as unknown as UserID,
+    tournamentID: tournament.id,
+    offerID: payload.offerID as OfferID,
+    depositID: deposit.id,
+  };
+  const [reuseableVoucher, ...oneTimeVouchers] = await Promise.all([
+    createVoucher(parsedReuseableVouchers[0] || { url: "", code: "" }, {
+      ...baseMetadata,
+      type: VoucherRewardType.ReusableSource,
+    }),
+    ...parsedOneTimeVouchers.map((v) =>
+      createVoucher(v, { ...baseMetadata, type: VoucherRewardType.OneTime })
+    ),
+  ]);
+  return deposit.id;
+};
+
+export const parseVoucherRewardsList = (
+  bulkString: string
+): { url: string; code: string }[] => {
+  console.log(`Bulk String = 
+  
+  ${bulkString}
+  
+  `);
+  const parsedList = bulkString.split(/[\n\r]/);
+  console.log(`parsedList.length = ${parsedList.length}`);
+  console.log(parsedList);
+  const splitList = parsedList
+    .filter((v) => v)
+    .map((v) => {
+      const info = v.split(",");
+      const data = {
+        url: "",
+        code: "",
+      };
+      if (info[0] && isValidUrl(info[0])) {
+        data["url"] = info[0];
+      }
+      if (info[1]) {
+        data["code"] = info[1];
+      }
+      return data;
+    });
+  console.log(`splitList.length = ${splitList.length}`);
+  console.log(splitList.map((v) => `${v.code} at ${v.url} \n`));
+  return splitList;
+};
+
+export const createVoucher = async (
+  voucher: {
+    url: string;
+    code: string;
+  },
+  metadata: {
+    title: string;
+    type: VoucherRewardType;
+    lootboxID: LootboxID;
+    depositedBy: UserID;
+    tournamentID?: TournamentID;
+    offerID?: OfferID;
+    depositID: DepositID;
+  }
+): Promise<VoucherReward_Firestore | undefined> => {
+  if (!voucher.url && !voucher.code) return;
+  const voucherRewardRef = db
+    .collection(Collection.VoucherReward)
+    .doc() as DocumentReference<VoucherReward_Firestore>;
+  const voucherCreatedObjectOfSchema: VoucherReward_Firestore = {
+    id: voucherRewardRef.id as VoucherRewardID,
+    title: metadata.title,
+    status: VoucherRewardStatus.Available,
+    url: voucher.url,
+    code: voucher.code,
+    type: metadata.type,
+    lootboxID: metadata.lootboxID,
+    depositedBy: metadata.depositedBy,
+    depositedDate: new Date().getTime() / 1000,
+    tournamentID: metadata.tournamentID,
+    offerID: metadata.offerID,
+    depositID: metadata.depositID,
+  };
+  await voucherRewardRef.set(voucherCreatedObjectOfSchema);
+  return voucherCreatedObjectOfSchema;
+};
+
+const isValidUrl = (urlString) => {
+  var urlPattern = new RegExp(
+    "^(https?:\\/\\/)?" + // validate protocol
+      "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // validate domain name
+      "((\\d{1,3}\\.){3}\\d{1,3}))" + // validate OR ip (v4) address
+      "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // validate port and path
+      "(\\?[;&a-z\\d%_.~+=-]*)?" + // validate query string
+      "(\\#[-a-z\\d_]*)?$",
+    "i"
+  ); // validate fragment locator
+  return !!urlPattern.test(urlString);
+};
+
+export const createVoucherDeposit = async (payload: {
+  depositerID: UserID;
+  lootboxID: LootboxID;
+  maxTicketSnapshot: number;
+  tournamentID?: TournamentID;
+  hasReuseableVoucher: boolean;
+  oneTimeVouchersCount: number;
+  voucherTitle: string;
+}): Promise<Deposit_Firestore> => {
+  const depositRef = db
+    .collection(Collection.Deposit)
+    .doc() as DocumentReference<Deposit_Firestore>;
+  const depositCreatedObjectOfSchema: Deposit_Firestore = {
+    id: depositRef.id as DepositID,
+    depositerID: payload.depositerID,
+    lootboxID: payload.lootboxID,
+    maxTicketSnapshot: payload.maxTicketSnapshot,
+    tournamentID: payload.tournamentID,
+    voucherMetadata: {
+      hasReuseableVoucher: payload.hasReuseableVoucher,
+      oneTimeVouchersCount: payload.oneTimeVouchersCount,
+      voucherTitle: payload.voucherTitle,
+    },
+    createdAt: new Date().getTime() / 1000,
+    updatedAt: new Date().getTime() / 1000,
+  };
+  await depositRef.set(depositCreatedObjectOfSchema);
+  return depositCreatedObjectOfSchema;
 };

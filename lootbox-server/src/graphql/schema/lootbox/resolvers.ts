@@ -28,6 +28,7 @@ import {
   BulkCreateLootboxResponse,
   MutationBulkCreateLootboxArgs,
   BulkLootboxCreatedPartialError,
+  MutationDepositVoucherRewardsArgs,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -45,6 +46,7 @@ import {
   getLootboxTournamentSnapshotByLootboxID,
   extractOrGenerateLootboxCreateInput,
   getQuestion,
+  depositVoucherRewards,
 } from "../../../api/firestore";
 import {
   Address,
@@ -71,6 +73,7 @@ import { batcher } from "../../../lib/utils";
 import { ethers } from "ethers";
 import { getWhitelisterPrivateKey } from "../../../api/secrets";
 import { convertLootboxTournamentSnapshotDBToGQL } from "../../../lib/tournament";
+import { DepositVoucherRewardsResponse } from "../../generated/types";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -476,6 +479,33 @@ const LootboxResolvers: Resolvers = {
         };
       }
     },
+    depositVoucherRewards: async (
+      _,
+      { payload }: MutationDepositVoucherRewardsArgs,
+      context: Context
+    ): Promise<DepositVoucherRewardsResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "User is not authenticated",
+          },
+        };
+      }
+
+      try {
+        const depositID = await depositVoucherRewards(payload, context.userId);
+        return { depositID };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   MintWhitelistSignature: {
@@ -733,6 +763,20 @@ const LootboxResolvers: Resolvers = {
     __resolveType: (obj: BulkCreateLootboxResponse) => {
       if ("lootboxes" in obj) {
         return "BulkCreateLootboxResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  DepositVoucherRewardsResponse: {
+    __resolveType: (obj: DepositVoucherRewardsResponse) => {
+      if ("depositID" in obj) {
+        return "DepositVoucherRewardsResponseSuccess";
       }
 
       if ("error" in obj) {
