@@ -224,11 +224,34 @@ const LootboxTypeDefs = gql`
 
   union LootboxFeedResponse = LootboxFeedResponseSuccess | ResponseError
 
+  # --------------- Get Lootbox Deposits ---------------
+  type GetLootboxDepositsResponseSuccess {
+    deposits: [LootboxVoucherDeposits!]!
+  }
+
+  type LootboxVoucherDeposits {
+    id: ID!
+    title: String!
+    createdAt: Timestamp!
+    oneTimeVouchersCount: Int!
+    hasReuseableVoucher: Boolean!
+  }
+
+  union GetLootboxDepositsResponse =
+      GetLootboxDepositsResponseSuccess
+    | ResponseError
+
   extend type Query {
+    #
     myLootboxByNonce(nonce: ID!): MyLootboxByNonceResponse!
+    #
     getLootboxByID(id: ID!): GetLootboxByIDResponse!
+    #
     getLootboxByAddress(address: ID!): GetLootboxByAddressResponse!
+    #
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
+    #
+    getLootboxDeposits(lootboxID: ID!): GetLootboxDepositsResponse!
   }
 
   input CreateLootboxPayload {
@@ -341,15 +364,40 @@ const LootboxTypeDefs = gql`
       BulkCreateLootboxResponseSuccess
     | ResponseError
 
+  # -------------- DEPOSIT VOUCHER REWARDS --------------
+  input DepositVoucherRewardsPayload {
+    title: String!
+    lootboxID: ID!
+    reuseableVoucher: String
+    oneTimeVouchers: String
+    offerID: ID
+  }
+
+  type DepositVoucherRewardsResponseSuccess {
+    depositID: ID!
+  }
+
+  union DepositVoucherRewardsResponse =
+      DepositVoucherRewardsResponseSuccess
+    | ResponseError
+
   extend type Mutation {
+    #
     createLootbox(payload: CreateLootboxPayload!): CreateLootboxResponse!
+    #
     bulkCreateLootbox(
       payload: BulkCreateLootboxPayload!
     ): BulkCreateLootboxResponse!
+    #
     editLootbox(payload: EditLootboxPayload!): EditLootboxResponse!
+    #
     whitelistMyLootboxClaims(
       payload: WhitelistMyLootboxClaimsPayload!
     ): WhitelistMyLootboxClaimsResponse!
+    #
+    depositVoucherRewards(
+      payload: DepositVoucherRewardsPayload!
+    ): DepositVoucherRewardsResponse!
   }
 
   # -------------- DEPRECATED SHIT --------------

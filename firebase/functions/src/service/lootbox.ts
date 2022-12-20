@@ -33,8 +33,8 @@ import {
     getWhitelistByDigest,
     associateWeb3Lootbox,
     associateLootboxSnapshotsToWeb3,
-    // createDeposit,
-    // getLootboxDeposit,
+    // createDeposit_Deprecated,
+    // getLootboxDeposit_Deprecated,
 } from "../api/firestore/lootbox";
 import { stampNewLootbox, stampNewTicket } from "../api/stamp";
 import { convertLootboxToTicketMetadata } from "../lib/lootbox";
@@ -351,13 +351,13 @@ export const onDeployed = async (lootbox: Lootbox_Firestore): Promise<void> => {
 //         throw new Error("Lootbox not found");
 //     }
 
-//     const _deposit = await getLootboxDeposit(lootbox.id, params.depositID);
+//     const _deposit = await getLootboxDeposit_Deprecated(lootbox.id, params.depositID);
 //     if (_deposit) {
 //         logger.error("Deposit already created", { depositID: params.depositID, deposit: _deposit });
 //         throw new Error("Deposit already exists");
 //     }
 
-//     const deposit = await createDeposit({
+//     const deposit = await createDeposit_Deprecated({
 //         lootboxID: lootbox.id,
 //         erc20Amount: params.erc20Amount,
 //         nativeAmount: params.nativeAmount,
