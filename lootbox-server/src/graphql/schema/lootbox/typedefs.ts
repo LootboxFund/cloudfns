@@ -224,11 +224,34 @@ const LootboxTypeDefs = gql`
 
   union LootboxFeedResponse = LootboxFeedResponseSuccess | ResponseError
 
+  # --------------- Get Lootbox Deposits ---------------
+  type GetLootboxDepositsResponseSuccess {
+    deposits: [LootboxVoucherDeposits!]!
+  }
+
+  type LootboxVoucherDeposits {
+    id: ID!
+    title: String!
+    createdAt: Timestamp!
+    oneTimeVouchersCount: Int!
+    hasReuseableVoucher: Boolean!
+  }
+
+  union GetLootboxDepositsResponse =
+      GetLootboxDepositsResponseSuccess
+    | ResponseError
+
   extend type Query {
+    #
     myLootboxByNonce(nonce: ID!): MyLootboxByNonceResponse!
+    #
     getLootboxByID(id: ID!): GetLootboxByIDResponse!
+    #
     getLootboxByAddress(address: ID!): GetLootboxByAddressResponse!
+    #
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
+    #
+    getLootboxDeposits(lootboxID: ID!): GetLootboxDepositsResponse!
   }
 
   input CreateLootboxPayload {

@@ -47,6 +47,7 @@ import {
   extractOrGenerateLootboxCreateInput,
   getQuestion,
   depositVoucherRewards,
+  getDepositsOfLootbox,
 } from "../../../api/firestore";
 import {
   Address,
@@ -73,7 +74,11 @@ import { batcher } from "../../../lib/utils";
 import { ethers } from "ethers";
 import { getWhitelisterPrivateKey } from "../../../api/secrets";
 import { convertLootboxTournamentSnapshotDBToGQL } from "../../../lib/tournament";
-import { DepositVoucherRewardsResponse } from "../../generated/types";
+import { QueryGetLootboxDepositsArgs } from "../../generated/types";
+import {
+  DepositVoucherRewardsResponse,
+  GetLootboxDepositsResponse,
+} from "../../generated/types";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -172,6 +177,20 @@ const LootboxResolvers: Resolvers = {
 
       return {
         lootbox: convertLootboxDBToGQL(lootbox),
+      };
+    },
+    getLootboxDeposits: async (
+      _,
+      { lootboxID }: QueryGetLootboxDepositsArgs,
+      context: Context
+    ): Promise<GetLootboxDepositsResponse> => {
+      const deposits = await getDepositsOfLootbox(
+        lootboxID as LootboxID,
+        context.userId as unknown as UserID
+      );
+
+      return {
+        deposits,
       };
     },
   },
@@ -786,9 +805,24 @@ const LootboxResolvers: Resolvers = {
       return null;
     },
   },
+
+  GetLootboxDepositsResponse: {
+    __resolveType: (obj: GetLootboxDepositsResponse) => {
+      if ("deposits" in obj) {
+        return "GetLootboxDepositsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const lootboxResolverComposition = {
+  "Query.getLootboxDeposits": [isAuthenticated()],
   "Mutation.createPartyBasket": [isAuthenticated()],
   "Mutation.bulkWhitelist": [isAuthenticated()],
   "Mutation.editPartyBasket": [isAuthenticated()],

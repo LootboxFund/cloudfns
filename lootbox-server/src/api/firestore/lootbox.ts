@@ -57,6 +57,7 @@ import {
 } from "../lexica-images";
 import { getRandomBackgroundFromLexicaHardcoded } from "../lexica-images/index";
 import { getAdvertiser } from "./advertiser";
+import { LootboxVoucherDeposits } from "../../graphql/generated/types";
 const DEFAULT_THEME_COLOR = "#000001";
 
 export const getLootbox = async (
@@ -826,9 +827,35 @@ export const createVoucherDeposit = async (payload: {
       oneTimeVouchersCount: payload.oneTimeVouchersCount,
       voucherTitle: payload.voucherTitle,
     },
-    createdAt: new Date().getTime() / 1000,
-    updatedAt: new Date().getTime() / 1000,
+    createdAt: new Date().getTime(),
+    updatedAt: new Date().getTime(),
   };
   await depositRef.set(depositCreatedObjectOfSchema);
   return depositCreatedObjectOfSchema;
+};
+
+export const getDepositsOfLootbox = async (
+  lootboxID: LootboxID,
+  userID: UserID
+): Promise<LootboxVoucherDeposits[]> => {
+  const depositsRef = db
+    .collection(Collection.Deposit)
+    .where("lootboxID", "==", lootboxID) as Query<Deposit_Firestore>;
+
+  const depositCollectionItems = await depositsRef.get();
+
+  if (depositCollectionItems.empty) {
+    return [];
+  } else {
+    return depositCollectionItems.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        title: data.voucherMetadata?.voucherTitle || "",
+        createdAt: data.createdAt,
+        oneTimeVouchersCount: data.voucherMetadata?.oneTimeVouchersCount || 0,
+        hasReuseableVoucher: data.voucherMetadata?.hasReuseableVoucher || false,
+      };
+    });
+  }
 };
