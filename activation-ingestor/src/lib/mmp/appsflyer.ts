@@ -105,6 +105,7 @@ export const trackAppsFlyerActivation = async (
           sessionID: flight.sessionID,
           campaignID: flight.campaignID,
           flightID: flight.id,
+          userID: flight.userID,
           action: AdEventAction.Activation,
           advertiserID: flight.advertiserID,
           claimID: flight.claimID,

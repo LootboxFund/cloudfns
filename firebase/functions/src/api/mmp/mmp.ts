@@ -1,4 +1,4 @@
-import { AdFlight_Firestore, AdEvent_Firestore, MeasurementPartnerType, OfferID } from "@wormgraph/helpers";
+import { MeasurementPartnerType, OfferID } from "@wormgraph/helpers";
 import { listActivationsForOffer } from "../firestore";
 
 /**

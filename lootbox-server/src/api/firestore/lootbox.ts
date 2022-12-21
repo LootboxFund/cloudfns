@@ -50,7 +50,7 @@ import {
   determineAirdropClaimWithReferrerCredit,
 } from "./airdrop";
 import { CreateLootboxRequest } from "../../service/lootbox";
-import { retrieveRandomImage, retrieveRandomColor } from "../storage";
+import { retrieveRandomColor } from "../storage";
 import {
   getRandomPortraitFromLexicaHardcoded,
   getRandomUserName,

@@ -1,19 +1,17 @@
 import * as functions from "firebase-functions";
 import {
     ActivationIngestorRoute_LootboxAppActivation_Body,
-    AdEvent_Firestore,
     AdFlight_Firestore,
     AdID,
     MeasurementPartnerType,
     tableActivationIngestorRoutes,
 } from "@wormgraph/helpers";
-import { getAdEventsBySessionId, updateAdCounts, getAdEventsByNonce, getFlightById } from "../api/firestore";
+import { updateAdCounts, getAdEventsByNonce, getFlightById } from "../api/firestore";
 import { checkIfOfferIncludesLootboxAppDefaultActivations } from "../api/mmp/mmp";
 import axios from "axios";
 import { manifest } from "../manifest";
 import { extractURLStatePixelTracking } from "../lib/url";
 import { Message } from "firebase-functions/v1/pubsub";
-import { FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Ad, AdEventAction } from "../api/graphql/generated/types";
 
@@ -75,7 +73,7 @@ export const pubsubPixelTracking = functions
             flightID,
             eventAction,
             nonce,
-            timeElapsed,
+            // timeElapsed,
         } = extractURLStatePixelTracking(url);
 
         // get for existing flight
@@ -108,7 +106,7 @@ export const pubsubPixelTracking = functions
 
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {
-            updateRequest.impressions = FieldValue.increment(1) as unknown as number;
+            // updateRequest.impressions = FieldValue.increment(1) as unknown as number;
             // Check if any of the activations are type of "ClickToWebsite"
             const { id, mmpAlias } = adView;
             if (id && mmpAlias) {
@@ -129,19 +127,19 @@ export const pubsubPixelTracking = functions
 
         if (eventAction === AdEventAction.Click) {
             // Update clicks
-            updateRequest.clicks = FieldValue.increment(1) as unknown as number;
+            // updateRequest.clicks = FieldValue.increment(1) as unknown as number;
 
             // Check if unique click by session id
             // A unique click is counted when only one click adEvent exists for a given sessionId
             try {
-                const sessionAdEvents = await getAdEventsBySessionId(flight.adID, flight.sessionID, {
-                    actionType: AdEventAction.Click,
-                    limit: 2,
-                });
-                if (sessionAdEvents.length === 1) {
-                    // Recall, we previously just made an ad event so there should be one
-                    updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
-                }
+                // const sessionAdEvents = await getAdEventsBySessionId(flight.adID, flight.sessionID, {
+                //     actionType: AdEventAction.Click,
+                //     limit: 2,
+                // });
+                // if (sessionAdEvents.length === 1) {
+                //     // Recall, we previously just made an ad event so there should be one
+                //     updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
+                // }
 
                 // Check if any of the activations are type of "ClickToWebsite"
                 const { id, mmpAlias } = websiteVisit;

@@ -4,7 +4,6 @@ import {
   CreateAdSetPayload,
   EditAdPayload,
   EditAdSetPayload,
-  EditAdSetResponse,
 } from "../../graphql/generated/types";
 import { AdID, AdvertiserID } from "@wormgraph/helpers";
 import { db } from "../firebase";
@@ -15,7 +14,7 @@ import {
   Ad_Firestore,
   CreativeType,
 } from "./ad.types";
-import { v4 as uuidv4 } from "uuid";
+
 import {
   AdSetID,
   Collection,

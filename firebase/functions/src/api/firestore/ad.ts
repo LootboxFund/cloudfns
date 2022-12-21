@@ -1,9 +1,8 @@
 import { db } from "../firebase";
 import { Ad, AdEventAction } from "../graphql/generated/types";
-import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
-import { logger } from "firebase-functions";
+import { DocumentReference, Query } from "firebase-admin/firestore";
+
 import {
-    AdEventID,
     AdEvent_Firestore,
     AdFlight_Firestore,
     FlightID,

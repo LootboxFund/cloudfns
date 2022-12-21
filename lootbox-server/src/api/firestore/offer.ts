@@ -179,7 +179,7 @@ export const createOffer = async (
   // view + click + (question answer if applicable)
   const defaultActivations = [
     {
-      name: "View",
+      name: "View Ad",
       description:
         "Viewed the Ad. This is a default activation that you can modify or remove.",
       pricing: 0,
