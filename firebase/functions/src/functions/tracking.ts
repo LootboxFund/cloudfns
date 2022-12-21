@@ -1,25 +1,17 @@
 import * as functions from "firebase-functions";
 import {
-    AdEvent_Firestore,
+    ActivationIngestorRoute_LootboxAppActivation_Body,
     AdFlight_Firestore,
     AdID,
     MeasurementPartnerType,
     tableActivationIngestorRoutes,
-    ActivationIngestorRoute_LootboxAppWebsiteVisit_Body,
 } from "@wormgraph/helpers";
-import {
-    createAdEvent,
-    getAdEventsBySessionId,
-    updateAdCounts,
-    getAdEventsByNonce,
-    getFlightById,
-} from "../api/firestore";
-import { checkIfOfferIncludesLootboxAppWebsiteVisit, reportViewToMMP } from "../api/mmp/mmp";
+import { updateAdCounts, getAdEventsByNonce, getFlightById } from "../api/firestore";
+import { checkIfOfferIncludesLootboxAppDefaultActivations } from "../api/mmp/mmp";
 import axios from "axios";
 import { manifest } from "../manifest";
 import { extractURLStatePixelTracking } from "../lib/url";
 import { Message } from "firebase-functions/v1/pubsub";
-import { FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { Ad, AdEventAction } from "../api/graphql/generated/types";
 
@@ -81,12 +73,11 @@ export const pubsubPixelTracking = functions
             flightID,
             eventAction,
             nonce,
-            timeElapsed,
+            // timeElapsed,
         } = extractURLStatePixelTracking(url);
 
         // get for existing flight
         let flight: AdFlight_Firestore;
-        let createdEvent: AdEvent_Firestore;
 
         try {
             if (!flightID || !eventAction || !nonce) {
@@ -107,47 +98,53 @@ export const pubsubPixelTracking = functions
                 logger.error("Nonce already used", { adId: flight.adID, nonce });
                 return;
             }
-
-            // Now write the AdEvent subcollection document
-            createdEvent = await createAdEvent({
-                action: eventAction,
-                flight,
-                nonce,
-                timeElapsed,
-            });
-            logger.info("Successfully created ad event", { id: createdEvent.id, ad: flight.adID });
         } catch (err) {
             logger.error("Pubsub error", err);
             return;
         }
+        const { adView, websiteVisit } = await checkIfOfferIncludesLootboxAppDefaultActivations(flight.offerID);
 
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {
-            updateRequest.impressions = FieldValue.increment(1) as unknown as number;
-            // Report to the MMP
-            await reportViewToMMP(flight, createdEvent);
+            // updateRequest.impressions = FieldValue.increment(1) as unknown as number;
+            // Check if any of the activations are type of "ClickToWebsite"
+            const { id, mmpAlias } = adView;
+            if (id && mmpAlias) {
+                const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
+                    flightID: flight.id,
+                    activationID: id,
+                    mmpAlias,
+                };
+                await axios({
+                    method: "post",
+                    url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+                        tableActivationIngestorRoutes[MeasurementPartnerType.LootboxAppAdView].path
+                    }`,
+                    data: info,
+                });
+            }
         }
 
         if (eventAction === AdEventAction.Click) {
             // Update clicks
-            updateRequest.clicks = FieldValue.increment(1) as unknown as number;
+            // updateRequest.clicks = FieldValue.increment(1) as unknown as number;
 
             // Check if unique click by session id
             // A unique click is counted when only one click adEvent exists for a given sessionId
             try {
-                const sessionAdEvents = await getAdEventsBySessionId(flight.adID, flight.sessionID, {
-                    actionType: AdEventAction.Click,
-                    limit: 2,
-                });
-                if (sessionAdEvents.length === 1) {
-                    // Recall, we previously just made an ad event so there should be one
-                    updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
-                }
+                // const sessionAdEvents = await getAdEventsBySessionId(flight.adID, flight.sessionID, {
+                //     actionType: AdEventAction.Click,
+                //     limit: 2,
+                // });
+                // if (sessionAdEvents.length === 1) {
+                //     // Recall, we previously just made an ad event so there should be one
+                //     updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
+                // }
 
                 // Check if any of the activations are type of "ClickToWebsite"
-                const { id, mmpAlias } = await checkIfOfferIncludesLootboxAppWebsiteVisit(flight.offerID);
+                const { id, mmpAlias } = websiteVisit;
                 if (id && mmpAlias) {
-                    const info: ActivationIngestorRoute_LootboxAppWebsiteVisit_Body = {
+                    const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
                         flightID: flight.id,
                         activationID: id,
                         mmpAlias,

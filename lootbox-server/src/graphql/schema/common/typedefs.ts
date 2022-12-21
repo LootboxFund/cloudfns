@@ -60,8 +60,11 @@ const CommonTypeDefs = gql`
     Appsflyer
     GoogleTagManager
     ServerToServer
-    LootboxAppWebsiteVisit
     Manual
+    None
+    LootboxAppAdView
+    LootboxAppAnswerQuestions
+    LootboxAppWebsiteVisit
   }
 
   type Query {

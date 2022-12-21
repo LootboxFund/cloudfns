@@ -29,6 +29,7 @@ import { TournamentID } from "@wormgraph/helpers";
 export const trackAppsFlyerActivation = async (
   req: Request
 ): Promise<AdEvent_Firestore> => {
+  console.log(req.query);
   // get appsflyer params
   const extraData = {
     appsflyer_advertising_id: req.query.advertising_id,
@@ -104,6 +105,7 @@ export const trackAppsFlyerActivation = async (
           sessionID: flight.sessionID,
           campaignID: flight.campaignID,
           flightID: flight.id,
+          userID: flight.userID,
           action: AdEventAction.Activation,
           advertiserID: flight.advertiserID,
           claimID: flight.claimID,

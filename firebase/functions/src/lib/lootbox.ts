@@ -4,7 +4,6 @@ import {
     ChainIDHex,
     LootboxTicketID_Web3,
     LootboxTicketMetadataV2_Firestore,
-    LootboxVariant_Firestore,
     Lootbox_Firestore,
 } from "@wormgraph/helpers";
 import { manifest } from "../manifest";
@@ -13,10 +12,7 @@ export const convertLootboxToTicketMetadata = (
     ticketID: LootboxTicketID_Web3,
     lootboxFragment: Omit<Lootbox_Firestore, "metadataV2">
 ): LootboxTicketMetadataV2_Firestore => {
-    const lootboxExternalURL =
-        lootboxFragment.variant === LootboxVariant_Firestore.cosmic
-            ? `${manifest.microfrontends.webflow.cosmicLootboxPage}?lootbox=${lootboxFragment.address}`
-            : `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${lootboxFragment.address}`;
+    const lootboxExternalURL = `${manifest.microfrontends.webflow.cosmicLootboxPage}?lid=${lootboxFragment.id}`;
 
     const res: LootboxTicketMetadataV2_Firestore = {
         // points to stamp image - opensea compatible
