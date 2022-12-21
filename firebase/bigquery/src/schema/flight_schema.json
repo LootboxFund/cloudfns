@@ -1,0 +1,81 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "userID",
+      "type": "string"
+    },
+    {
+      "name": "adID",
+      "type": "string"
+    },
+    {
+      "name": "adSetID",
+      "type": "string"
+    },
+    {
+      "name": "offerID",
+      "type": "string"
+    },
+    {
+      "name": "placement",
+      "type": "string"
+    },
+    {
+      "name": "sessionID",
+      "type": "string"
+    },
+    {
+      "name": "claimID",
+      "type": "string"
+    },
+    {
+      "name": "campaignID",
+      "type": "string"
+    },
+    {
+      "name": "tournamentID",
+      "type": "string"
+    },
+    {
+      "name": "organizerID",
+      "type": "string"
+    },
+    {
+      "name": "promoterID",
+      "type": "string"
+    },
+    {
+      "name": "advertiserID",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "string",
+      "column_name": "timestamp_1"
+    },
+    {
+      "name": "pixelUrl",
+      "type": "string"
+    },
+    {
+      "name": "clickUrl",
+      "type": "string"
+    },
+    {
+      "name": "affiliateBaseLink",
+      "type": "string"
+    },
+    {
+      "name": "mmp",
+      "type": "string"
+    },
+    {
+      "name": "destinationUrl",
+      "type": "string"
+    }
+  ]
+}
