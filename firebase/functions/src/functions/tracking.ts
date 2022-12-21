@@ -1,20 +1,14 @@
 import * as functions from "firebase-functions";
 import {
+    ActivationIngestorRoute_LootboxAppActivation_Body,
     AdEvent_Firestore,
     AdFlight_Firestore,
     AdID,
     MeasurementPartnerType,
     tableActivationIngestorRoutes,
-    ActivationIngestorRoute_LootboxAppWebsiteVisit_Body,
 } from "@wormgraph/helpers";
-import {
-    createAdEvent,
-    getAdEventsBySessionId,
-    updateAdCounts,
-    getAdEventsByNonce,
-    getFlightById,
-} from "../api/firestore";
-import { checkIfOfferIncludesLootboxAppWebsiteVisit, reportViewToMMP } from "../api/mmp/mmp";
+import { getAdEventsBySessionId, updateAdCounts, getAdEventsByNonce, getFlightById } from "../api/firestore";
+import { checkIfOfferIncludesLootboxAppDefaultActivations } from "../api/mmp/mmp";
 import axios from "axios";
 import { manifest } from "../manifest";
 import { extractURLStatePixelTracking } from "../lib/url";
@@ -86,7 +80,6 @@ export const pubsubPixelTracking = functions
 
         // get for existing flight
         let flight: AdFlight_Firestore;
-        let createdEvent: AdEvent_Firestore;
 
         try {
             if (!flightID || !eventAction || !nonce) {
@@ -107,25 +100,31 @@ export const pubsubPixelTracking = functions
                 logger.error("Nonce already used", { adId: flight.adID, nonce });
                 return;
             }
-
-            // Now write the AdEvent subcollection document
-            createdEvent = await createAdEvent({
-                action: eventAction,
-                flight,
-                nonce,
-                timeElapsed,
-            });
-            logger.info("Successfully created ad event", { id: createdEvent.id, ad: flight.adID });
         } catch (err) {
             logger.error("Pubsub error", err);
             return;
         }
+        const { adView, websiteVisit } = await checkIfOfferIncludesLootboxAppDefaultActivations(flight.offerID);
 
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {
             updateRequest.impressions = FieldValue.increment(1) as unknown as number;
-            // Report to the MMP
-            await reportViewToMMP(flight, createdEvent);
+            // Check if any of the activations are type of "ClickToWebsite"
+            const { id, mmpAlias } = adView;
+            if (id && mmpAlias) {
+                const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
+                    flightID: flight.id,
+                    activationID: id,
+                    mmpAlias,
+                };
+                await axios({
+                    method: "post",
+                    url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+                        tableActivationIngestorRoutes[MeasurementPartnerType.LootboxAppAdView].path
+                    }`,
+                    data: info,
+                });
+            }
         }
 
         if (eventAction === AdEventAction.Click) {
@@ -145,9 +144,9 @@ export const pubsubPixelTracking = functions
                 }
 
                 // Check if any of the activations are type of "ClickToWebsite"
-                const { id, mmpAlias } = await checkIfOfferIncludesLootboxAppWebsiteVisit(flight.offerID);
+                const { id, mmpAlias } = websiteVisit;
                 if (id && mmpAlias) {
-                    const info: ActivationIngestorRoute_LootboxAppWebsiteVisit_Body = {
+                    const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
                         flightID: flight.id,
                         activationID: id,
                         mmpAlias,

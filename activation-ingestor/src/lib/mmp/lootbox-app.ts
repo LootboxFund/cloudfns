@@ -1,5 +1,5 @@
 import {
-  ActivationIngestorRoute_LootboxAppWebsiteVisit_Body,
+  ActivationIngestorRoute_LootboxAppActivation_Body,
   AdEventAction,
   AdEventID,
   AdEvent_Firestore,
@@ -10,8 +10,8 @@ import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 import { db } from "../../api/firebase";
 import { notifyPubSubOfBillableActivation } from "../../api/pubsub/notify";
 
-export const trackLootboxAppWebsiteVisitActivation = async (
-  body: ActivationIngestorRoute_LootboxAppWebsiteVisit_Body
+export const trackLootboxAppActivation = async (
+  body: ActivationIngestorRoute_LootboxAppActivation_Body
 ): Promise<AdEvent_Firestore | undefined> => {
   // get the standard params from manual entry
   let flightID = body.flightID;

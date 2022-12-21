@@ -26,6 +26,9 @@ import {
   Offer_AfterTicketClaimMetadata,
   ReferralID,
   AdSetID,
+  tableActivationIngestorRoutes,
+  ActivationIngestorRoute_LootboxAppActivation_Body,
+  FlightID,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -67,10 +70,13 @@ import { getLootbox } from "./lootbox";
 import { updateClaimRedemptionStatus, getReferralById } from "./referral";
 import { getTournamentById } from "./tournament";
 import { getAdSet } from "./ad";
+import axios from "axios";
+import { manifest } from "../../manifest";
 
 export const createOffer = async (
   advertiserID: AdvertiserID,
-  payload: Omit<CreateOfferPayload, "id">
+  payload: Omit<CreateOfferPayload, "id">,
+  userIdpID: UserIdpID
 ): Promise<Offer_Firestore> => {
   const placeholderImageOffer =
     await getRandomAdOfferCoverFromLexicaHardcoded();
@@ -169,6 +175,57 @@ export const createOffer = async (
     };
   }
   await offerRef.set(offer);
+  // always create 2-3 activations for each offer
+  // view + click + (question answer if applicable)
+  const defaultActivations = [
+    {
+      name: "View",
+      description:
+        "Viewed the Ad. This is a default activation that you can modify or remove.",
+      pricing: 0,
+      status: ActivationStatus.Active,
+      mmp: MeasurementPartnerType.LootboxAppAdView,
+      mmpAlias: "ad_view",
+      offerID: offerRef.id as OfferID,
+      order: 0,
+      isDefault: true,
+    },
+  ];
+  if (
+    (payload.airdropMetadata && payload.airdropMetadata.questions.length > 0) ||
+    (payload.afterTicketClaimMetadata &&
+      payload.afterTicketClaimMetadata.questions.length > 0)
+  ) {
+    defaultActivations.push({
+      name: "Answered Questions",
+      description:
+        "Answered the Offer Questions. This is a default activation that you can modify or remove.",
+      pricing: 0,
+      status: ActivationStatus.Active,
+      mmp: MeasurementPartnerType.LootboxAppAnswerQuestions,
+      mmpAlias: "answer_questions",
+      offerID: offerRef.id as OfferID,
+      order: defaultActivations.length,
+      isDefault: true,
+    });
+  }
+  defaultActivations.push({
+    name: "Click Button",
+    description:
+      "Clicked the call to action button on ad to visit a url. This is a default activation that you can modify or remove.",
+    pricing: 0,
+    status: ActivationStatus.Active,
+    mmp: MeasurementPartnerType.LootboxAppWebsiteVisit,
+    mmpAlias: "clicked_button",
+    offerID: offerRef.id as OfferID,
+    order: defaultActivations.length,
+    isDefault: true,
+  });
+  await Promise.all(
+    defaultActivations.map((actv) =>
+      createActivation(offerRef.id as OfferID, actv, userIdpID)
+    )
+  );
   return offer;
 };
 
@@ -305,9 +362,12 @@ export const updateOfferBatchCount = async (id: OfferID) => {
 };
 
 // add activations to offer
+interface ICreateActivation extends CreateActivationInput {
+  isDefault?: boolean;
+}
 export const createActivation = async (
   id: OfferID,
-  payload: CreateActivationInput,
+  payload: ICreateActivation,
   userIdpID: UserIdpID
 ): Promise<Activation_Firestore> => {
   if (Object.keys(payload).length === 0) {
@@ -350,6 +410,7 @@ export const createActivation = async (
     offerID: payload.offerID as OfferID,
     order: payload.order || 9,
     advertiserID: existingOffer.advertiserID,
+    isDefault: payload.isDefault || false,
   };
 
   try {
@@ -371,7 +432,6 @@ export const editActivation = async (
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
   }
-
   const activationRef = db
     .collection(Collection.Activation)
     .doc(id) as DocumentReference<Activation_Firestore>;
@@ -408,7 +468,7 @@ export const editActivation = async (
   if (actInput && actInput.pricing) {
     updatePayload.pricing = actInput.pricing;
   }
-  if (actInput && actInput.status) {
+  if (actInput && actInput.status && !existingObj.isDefault) {
     updatePayload.status = actInput.status as ActivationStatus;
   }
   if (actInput && actInput.order) {
@@ -820,6 +880,33 @@ export const getQuestionsForOffer = async (
   }
 };
 
+export const checkIfOfferIncludesLootboxAppDefaultActivations = async (
+  offerID: OfferID
+) => {
+  const activations = await listActivationsForOffer(offerID);
+  const firstLootboxAppAdViewMmp = activations.find(
+    (activation) => activation.mmp === MeasurementPartnerType.LootboxAppAdView
+  );
+  const firstLootboxAppAnswerQuestionsMmp = activations.find(
+    (activation) =>
+      activation.mmp === MeasurementPartnerType.LootboxAppAnswerQuestions
+  );
+  const firstLootboxAppWebsiteVisitMmp = activations.find(
+    (activation) =>
+      activation.mmp === MeasurementPartnerType.LootboxAppWebsiteVisit
+  );
+  const adView = firstLootboxAppAdViewMmp || { id: null, mmpAlias: null };
+  const answerQuestions = firstLootboxAppAnswerQuestionsMmp || {
+    id: null,
+    mmpAlias: null,
+  };
+  const websiteVisit = firstLootboxAppWebsiteVisitMmp || {
+    id: null,
+    mmpAlias: null,
+  };
+  return { adView, answerQuestions, websiteVisit };
+};
+
 export const answerAirdropLootboxQuestion = async (
   payload: AnswerAirdropQuestionPayload,
   userID: UserIdpID
@@ -872,6 +959,30 @@ export const answerAirdropLootboxQuestion = async (
       userID
     );
   }
+  if (lootbox.airdropMetadata?.offerID && payload.flightID) {
+    const { answerQuestions } =
+      await checkIfOfferIncludesLootboxAppDefaultActivations(
+        lootbox.airdropMetadata.offerID
+      );
+    const { id, mmpAlias } = answerQuestions;
+    if (id && mmpAlias) {
+      const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
+        flightID: payload.flightID as FlightID,
+        activationID: id,
+        mmpAlias,
+      };
+      await axios({
+        method: "post",
+        url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+          tableActivationIngestorRoutes[
+            MeasurementPartnerType.LootboxAppAnswerQuestions
+          ].path
+        }`,
+        data: info,
+      });
+    }
+  }
+
   return answers.map((a) => a.id);
 };
 
@@ -952,6 +1063,28 @@ export const answerAfterTicketClaimQuestion = async (
     );
   }
   // ------------------------------
+  const offerID = adSet.offerIDs[0];
+  if (offerID && payload.flightID) {
+    const { answerQuestions } =
+      await checkIfOfferIncludesLootboxAppDefaultActivations(offerID);
+    const { id, mmpAlias } = answerQuestions;
+    if (id && mmpAlias) {
+      const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
+        flightID: payload.flightID as FlightID,
+        activationID: id,
+        mmpAlias,
+      };
+      await axios({
+        method: "post",
+        url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+          tableActivationIngestorRoutes[
+            MeasurementPartnerType.LootboxAppAnswerQuestions
+          ].path
+        }`,
+        data: info,
+      });
+    }
+  }
   return answers.map((a) => a.id);
 };
 

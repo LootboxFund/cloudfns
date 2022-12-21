@@ -43,51 +43,53 @@ export const getFlightById = async (id: FlightID): Promise<AdFlight_Firestore> =
     return flight;
 };
 
-interface CreateAdEventRequest {
-    action: AdEventAction;
-    nonce: AdEventNonce;
-    flight: AdFlight_Firestore;
-    timeElapsed?: number | null;
-}
-export const createAdEvent = async ({
-    action,
-    flight,
-    nonce,
-    timeElapsed,
-}: CreateAdEventRequest): Promise<AdEvent_Firestore> => {
-    const documentWithoutId: Omit<AdEvent_Firestore, "id"> = {
-        timestamp: Timestamp.now().toMillis(),
-        adID: flight.adID,
-        adSetID: flight.adSetID,
-        sessionID: flight.sessionID,
-        campaignID: flight.campaignID,
-        flightID: flight.id,
-        action: action,
-        claimID: flight.claimID,
-        offerID: flight.offerID,
-        advertiserID: flight.advertiserID,
-        nonce,
-        metadata: {
-            clickRedirectUrl: flight.clickUrl,
-            pixelUrl: flight.pixelUrl,
-            timeElapsed: timeElapsed || undefined,
-        },
-        affiliateAttribution: {
-            organizerID: flight.organizerID,
-            promoterID: flight.promoterID,
-        },
-    };
+// We are deprecating this because it was only used for ad views, but now that will be handled automatically via the baseline activations per offer
+//
+// interface CreateAdEventRequest {
+//     action: AdEventAction;
+//     nonce: AdEventNonce;
+//     flight: AdFlight_Firestore;
+//     timeElapsed?: number | null;
+// }
+// export const createAdEvent = async ({
+//     action,
+//     flight,
+//     nonce,
+//     timeElapsed,
+// }: CreateAdEventRequest): Promise<AdEvent_Firestore> => {
+//     const documentWithoutId: Omit<AdEvent_Firestore, "id"> = {
+//         timestamp: Timestamp.now().toMillis(),
+//         adID: flight.adID,
+//         adSetID: flight.adSetID,
+//         sessionID: flight.sessionID,
+//         campaignID: flight.campaignID,
+//         flightID: flight.id,
+//         action: action,
+//         claimID: flight.claimID,
+//         offerID: flight.offerID,
+//         advertiserID: flight.advertiserID,
+//         nonce,
+//         metadata: {
+//             clickRedirectUrl: flight.clickUrl,
+//             pixelUrl: flight.pixelUrl,
+//             timeElapsed: timeElapsed || undefined,
+//         },
+//         affiliateAttribution: {
+//             organizerID: flight.organizerID,
+//             promoterID: flight.promoterID,
+//         },
+//     };
 
-    const adEventRef = db.collection(Collection.AdEvent).doc() as DocumentReference<AdEvent_Firestore>;
+//     const adEventRef = db.collection(Collection.AdEvent).doc() as DocumentReference<AdEvent_Firestore>;
 
-    const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: adEventRef.id as AdEventID };
+//     const documentWithId: AdEvent_Firestore = { ...documentWithoutId, id: adEventRef.id as AdEventID };
 
-    logger.log("about to make ad event  ", documentWithId);
+//     logger.log("about to make ad event  ", documentWithId);
 
-    await adEventRef.set(documentWithId);
+//     await adEventRef.set(documentWithId);
 
-    return documentWithId;
-};
+//     return documentWithId;
+// };
 
 interface GetAdEventsBySessionIdOptions {
     actionType?: AdEventAction;
@@ -163,6 +165,8 @@ export const listActivationsForOffer = async (offerID: OfferID): Promise<Activat
 
     const activeActivations = activationItems.docs.map((doc) => {
         const data = doc.data();
+        // if you plan to modify this to only show active activations, then be sure to still keep any activation.isDefault = true
+        // users might deactivate the default activations (view, click, answer questions), but we still want to track them for ourselves
         return data;
     });
     return activeActivations;
