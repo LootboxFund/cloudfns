@@ -892,19 +892,15 @@ const convertClaimToCsvRow = (
     lootboxAddress: claim.lootboxAddress || "",
     lootboxName: claim.lootboxName || "",
     lootboxLink: claim.lootboxAddress
-      ? `${manifest.microfrontends.webflow.lootboxUrl}?lootbox=${claim.lootboxAddress}`
+      ? `${manifest.microfrontends.webflow.cosmicLootboxPage}?lid=${claim.lootboxID}`
       : "",
     originPartyBasketId: claim.originPartyBasketId || "",
     partyBasketNFTBountyValue: claim.chosenPartyBasketNFTBountyValue || "",
     partyBasketAddress: claim.chosenPartyBasketAddress || "",
     partyBasketId: claim.chosenPartyBasketId || "",
     partyBasketName: claim.chosenPartyBasketName || "",
-    partyBasketManageLink: claim.chosenPartyBasketAddress
-      ? `${manifest.microfrontends.webflow.basketManagePage}?basket=${claim.chosenPartyBasketAddress}`
-      : "",
-    partyBasketRedeemLink: claim.chosenPartyBasketAddress
-      ? `${manifest.microfrontends.webflow.basketRedeemPage}?basket=${claim.chosenPartyBasketAddress}`
-      : "",
+    partyBasketManageLink: "",
+    partyBasketRedeemLink: "",
     claimCreatedAt: claim.timestamps.createdAt,
     claimUpdatedAt: claim.timestamps.updatedAt,
 
