@@ -25,6 +25,7 @@ import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
 import { db, fun } from "../api/firebase";
 import { manifest, SecretName } from "../manifest";
 import * as lootboxService from "../service/lootbox";
+import { retrieveRandomColor } from "./util";
 
 const REGION = manifest.cloudFunctions.region;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -924,7 +925,7 @@ export const onLootboxWrite = functions
                 lootboxID: newLootbox.id,
                 backgroundImage: newLootbox.backgroundImage,
                 logoImage: newLootbox.logo,
-                themeColor: newLootbox.themeColor,
+                themeColor: newLootbox.themeColor || retrieveRandomColor(),
                 name: newLootbox.name,
                 lootboxAddress: newLootbox.address,
                 chainIdHex: newLootbox.chainIdHex,
@@ -933,7 +934,7 @@ export const onLootboxWrite = functions
                 await lootboxService.updateCallback(newLootbox.id, {
                     backgroundImage: newLootbox.backgroundImage,
                     logoImage: newLootbox.logo,
-                    themeColor: newLootbox.themeColor,
+                    themeColor: newLootbox.themeColor || retrieveRandomColor(),
                     name: newLootbox.name,
                     lootboxAddress: newLootbox.address,
                     chainIdHex: newLootbox.chainIdHex,

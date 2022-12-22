@@ -1140,7 +1140,18 @@ export const checkIfUserAnsweredAirdropQuestions = async (
       lootboxID
     ) as Query<QuestionAnswer_Firestore>;
 
-  const answerCollectionItems = await answersRef.get();
+  const [answerCollectionItems, lootbox] = await Promise.all([
+    answersRef.get(),
+    getLootbox(lootboxID),
+  ]);
+  if (
+    lootbox &&
+    lootbox.airdropMetadata &&
+    lootbox.airdropMetadata.questions &&
+    lootbox.airdropMetadata.questions.length === 0
+  ) {
+    return { passed: true, answers: [] };
+  }
   if (answerCollectionItems.empty) {
     return { passed: false, answers: [] };
   }

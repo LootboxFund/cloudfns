@@ -168,3 +168,8 @@ export const mp4_to_webm = functions
 //         createJobFromPreset();
 //     });
 // });
+
+export const retrieveRandomColor = () => {
+    const randomHexColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+    return randomHexColor;
+};
