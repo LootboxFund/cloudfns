@@ -25,6 +25,7 @@ import {
 } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
+import { retrieveRandomColor } from "../storage";
 
 // export const getAdById = async (adId: AdID): Promise<Ad | undefined> => {
 //   const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
@@ -62,7 +63,7 @@ export const createAd = async (
       thumbnail: payload.creative.thumbnail,
       infographicLink: payload.creative.infographicLink || "",
       aspectRatio: payload.creative.aspectRatio,
-      themeColor: payload.creative.themeColor || "",
+      themeColor: payload.creative.themeColor || retrieveRandomColor(),
     },
     events: [],
     timestamps: {

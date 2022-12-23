@@ -54,6 +54,7 @@ const CommonTypeDefs = gql`
     SingleSelect
     MultiSelect
     Checkbox
+    Consent
   }
 
   enum MeasurementPartnerType {
@@ -61,7 +62,6 @@ const CommonTypeDefs = gql`
     GoogleTagManager
     ServerToServer
     Manual
-    None
     LootboxAppAdView
     LootboxAppAnswerQuestions
     LootboxAppWebsiteVisit

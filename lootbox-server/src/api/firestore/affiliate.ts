@@ -67,6 +67,7 @@ import {
   getRandomPortraitFromLexicaHardcoded,
   getRandomUserName,
 } from "../lexica-images";
+import { retrieveRandomColor } from "../storage";
 
 export const upgradeToAffiliate = async (
   userIdpID: UserIdpID
@@ -740,7 +741,7 @@ export const renderDealConfigsOfTournament = async (
             creativeLinks: ad.creative.creativeLinks || [],
             callToAction: ad.creative.callToAction || "",
             aspectRatio: ad.creative.aspectRatio || "",
-            themeColor: ad.creative.themeColor || "",
+            themeColor: ad.creative.themeColor || retrieveRandomColor(),
           };
         }
         return adSetToReturn;
