@@ -121,6 +121,12 @@ export const getRandomAdOfferCoverFromLexicaHardcoded = async () => {
   return randomFromArray(abstractObjects.images.map((i) => i.src));
 };
 
+// export const getRandomLootboxImagePairingFromLexica = async () => {
+//   const randomLootboxImagePairs = [
+//     { logo: [] background: [] },
+//   ]
+// }
+
 export const randomImages: string[] = Object.values(allLexicaImageSets).reduce(
   (acc, curr) => {
     if (curr && curr.images) {
