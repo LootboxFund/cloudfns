@@ -107,7 +107,8 @@ export const createOffer = async (
     affiliateBaseLink: payload.affiliateBaseLink || "",
     mmp: (payload.mmp || "Manual") as MeasurementPartnerType,
     adSets: [],
-    strategy: (payload.strategy || OfferStrategy.None) as OfferStrategy,
+    strategy: (payload.strategy ||
+      OfferStrategy.AfterTicketClaim) as OfferStrategy,
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
   if (payload.airdropMetadata) {

@@ -309,6 +309,7 @@ const AnalyticsTypeDefs = gql`
     claimsCount: Int!
     referralsCount: Int!
     participationRewardsCount: Int!
+    expiredClaimsCount: Int!
     joinedDate: Timestamp!
     favoriteLootbox: FansListFavoriteLootbox
   }
@@ -335,6 +336,7 @@ const AnalyticsTypeDefs = gql`
     referralsCount: Int!
     participationRewardsCount: Int!
     joinedDate: Timestamp!
+    expiredClaimsCount: Int!
   }
   type FansListForLootboxResponseSuccess {
     lootboxID: ID!

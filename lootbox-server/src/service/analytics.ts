@@ -9,6 +9,7 @@ import {
 } from "../api/firestore";
 import {
   AffiliateID,
+  ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
   LootboxID,
@@ -438,7 +439,7 @@ export const fansListForTournament = async (
   }, {} as Record<UserID, User_Firestore>);
   // convert it into rows data format
   let count = 0;
-  const claimsBreakdown = uniqueClaimersSortedByDate.reduce((acc, claim) => {
+  const claimsBreakdown = claims.reduce((acc, claim) => {
     count++;
     // console.log(
     //   `#${count} - breakdown c = ${
@@ -453,6 +454,7 @@ export const fansListForTournament = async (
           claimsCount: 0,
           referralsCount: 0,
           participationRewardsCount: 0,
+          expiredClaimsCount: 0,
         };
     const incrClaimsCount = claim.claimerUserId === accCurr.userID ? 1 : 0;
     const incrReferralsCount =
@@ -465,6 +467,11 @@ export const fansListForTournament = async (
       claim.type === ClaimType_Firestore.reward
         ? 1
         : 0;
+    const incrExpiredClaimsCount =
+      claim.claimerUserId === accCurr.userID &&
+      claim.status === ClaimStatus_Firestore.expired
+        ? 1
+        : 0;
     return {
       ...acc,
       [claim.claimerUserId]: {
@@ -474,6 +481,7 @@ export const fansListForTournament = async (
         referralsCount: accCurr.referralsCount + incrReferralsCount,
         participationRewardsCount:
           accCurr.participationRewardsCount + incrParticipationRewardsCount,
+        expiredClaimsCount: accCurr.expiredClaimsCount + incrExpiredClaimsCount,
       },
     };
   }, {} as Record<UserID, FanRowStatSum>);
@@ -484,6 +492,7 @@ export const fansListForTournament = async (
     claimsCount: number;
     referralsCount: number;
     participationRewardsCount: number;
+    expiredClaimsCount: number;
   };
 
   // console.log(`claimsBreakdown count = ${Object.keys(claimsBreakdown).length}`);
@@ -541,6 +550,8 @@ export const fansListForTournament = async (
         referralsCount: claimsBreakdown[claim.claimerUserId].referralsCount,
         participationRewardsCount:
           claimsBreakdown[claim.claimerUserId].participationRewardsCount,
+        expiredClaimsCount:
+          claimsBreakdown[claim.claimerUserId].expiredClaimsCount,
         joinedDate: earliestClaim.timestamps.createdAt,
         favoriteLootbox: favoriteLootbox
           ? {
@@ -640,7 +651,7 @@ export const fansListForLootbox = async (
   }, {} as Record<UserID, User_Firestore>);
   // convert it into rows data format
   let count = 0;
-  const claimsBreakdown = uniqueClaimersSortedByDate.reduce((acc, claim) => {
+  const claimsBreakdown = claims.reduce((acc, claim) => {
     count++;
     // console.log(
     //   `#${count} - breakdown c = ${
@@ -655,6 +666,7 @@ export const fansListForLootbox = async (
           claimsCount: 0,
           referralsCount: 0,
           participationRewardsCount: 0,
+          expiredClaimsCount: 0,
         };
     const incrClaimsCount = claim.claimerUserId === accCurr.userID ? 1 : 0;
     const incrReferralsCount =
@@ -667,6 +679,11 @@ export const fansListForLootbox = async (
       claim.type === ClaimType_Firestore.reward
         ? 1
         : 0;
+    const incrExpiredClaimsCount =
+      claim.claimerUserId === accCurr.userID &&
+      claim.status === ClaimStatus_Firestore.expired
+        ? 1
+        : 0;
     return {
       ...acc,
       [claim.claimerUserId]: {
@@ -676,6 +693,7 @@ export const fansListForLootbox = async (
         referralsCount: accCurr.referralsCount + incrReferralsCount,
         participationRewardsCount:
           accCurr.participationRewardsCount + incrParticipationRewardsCount,
+        expiredClaimsCount: accCurr.expiredClaimsCount + incrExpiredClaimsCount,
       },
     };
   }, {} as Record<UserID, FanRowStatSum>);
@@ -686,6 +704,7 @@ export const fansListForLootbox = async (
     claimsCount: number;
     referralsCount: number;
     participationRewardsCount: number;
+    expiredClaimsCount: number;
   };
 
   // console.log(`claimsBreakdown count = ${Object.keys(claimsBreakdown).length}`);
@@ -709,6 +728,8 @@ export const fansListForLootbox = async (
         referralsCount: claimsBreakdown[claim.claimerUserId].referralsCount,
         participationRewardsCount:
           claimsBreakdown[claim.claimerUserId].participationRewardsCount,
+        expiredClaimsCount:
+          claimsBreakdown[claim.claimerUserId].expiredClaimsCount,
         joinedDate: earliestClaim.timestamps.createdAt,
       };
       return fanRow;

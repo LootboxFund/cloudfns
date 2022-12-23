@@ -160,11 +160,17 @@ export const editAd = async (
 export const createAdSet = async (
   payload: CreateAdSetPayload
 ): Promise<AdSet_Firestore> => {
-  const placeholderImageAdSet =
-    await getRandomAdOfferCoverFromLexicaHardcoded();
+  let placeholderImageAdSet = await getRandomAdOfferCoverFromLexicaHardcoded();
   const adSetRef = db
     .collection(Collection.AdSet)
     .doc() as DocumentReference<AdSet_Firestore>;
+  const firstAdID = payload.adIDs[0];
+  if (!payload.thumbnail && firstAdID) {
+    const ad = await getAd(firstAdID as AdID);
+    if (ad) {
+      placeholderImageAdSet = ad.creative.thumbnail;
+    }
+  }
   const newAdSet: AdSet_Firestore = {
     id: adSetRef.id as AdSetID,
     name: payload.name,

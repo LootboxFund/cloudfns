@@ -647,6 +647,11 @@ export const extractOrGenerateLootboxCreateInput = async (
   if (!logoImage) {
     logoImage = await getRandomPortraitFromLexicaHardcoded();
   }
+  // if (!payload.logo && !payload.backgroundImage) {
+  //   const { logo, background } = await getRandomLootboxImagePairingFromLexica();
+  //   logoImage = logo;
+  //   backgroundImage = background;
+  // }
   let themeColor = payload.themeColor;
   if (!themeColor || themeColor === DEFAULT_THEME_COLOR) {
     themeColor = await retrieveRandomColor();
