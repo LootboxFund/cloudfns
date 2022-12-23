@@ -1,0 +1,49 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "name": "pricing",
+      "type": "number"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "mmpAlias",
+      "type": "string"
+    },
+    {
+      "name": "mmp",
+      "type": "string"
+    },
+    {
+      "name": "offerID",
+      "type": "string"
+    },
+    {
+      "name": "count",
+      "type": "number"
+    },
+    {
+      "name": "order",
+      "type": "number",
+      "column_name": "order_database_alias"
+    },
+    {
+      "name": "advertiserID",
+      "type": "string"
+    }
+  ]
+}
