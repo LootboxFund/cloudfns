@@ -1,4 +1,3 @@
-import { BigQuery } from "@google-cloud/bigquery";
 import {
   ClaimType_Firestore,
   LootboxID,
@@ -6,8 +5,7 @@ import {
   TournamentID,
   UserID,
 } from "@wormgraph/helpers";
-
-const bigquery = new BigQuery();
+import { bigquery } from "./client";
 
 const convertBaseClaimStatisticsForTournamentRow = (
   data: any

@@ -53,6 +53,10 @@ import {
   QueryClaimerStatisticsForLootboxTournamentArgs,
   FansListForTournamentResponse,
   QueryFansListForTournamentArgs,
+  QueryOfferActivationsForEventArgs,
+  OfferActivationsForEventResponse,
+  OfferActivationsResponse,
+  QueryOfferActivationsArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import { isAuthenticated } from "../../../lib/permissionGuard";
@@ -861,6 +865,80 @@ const AnalyticsResolvers: Resolvers = {
         };
       }
     },
+
+    offerActivationsForEvent: async (
+      _,
+      { payload }: QueryOfferActivationsForEventArgs,
+      context: Context
+    ): Promise<OfferActivationsForEventResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+      try {
+        const data = await analytics.offerActivationsForEvent({
+          eventID: payload.eventID as TournamentID,
+          offerID: payload.offerID as OfferID,
+          callerUserID: context.userId as unknown as UserID,
+        });
+
+        return {
+          data,
+        };
+      } catch (err: any) {
+        console.error(
+          "Error in offerActivationsForEvent fetching activations",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
+
+    offerActivations: async (
+      _,
+      { payload }: QueryOfferActivationsArgs,
+      context: Context
+    ): Promise<OfferActivationsResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const rows = await analytics.offerActivations({
+          offerID: payload.offerID as OfferID,
+          callerUserID: context.userId as unknown as UserID,
+        });
+
+        return {
+          data: rows,
+        };
+      } catch (err: any) {
+        console.error(
+          "Error in offerActivationsForEvent fetching activations",
+          err
+        );
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err?.message || "An error occured",
+          },
+        };
+      }
+    },
   },
 
   ReportAdvertiserOfferPerformanceResponse: {
@@ -1088,6 +1166,32 @@ const AnalyticsResolvers: Resolvers = {
       return null;
     },
   },
+
+  OfferActivationsForEventResponse: {
+    __resolveType: (obj: OfferActivationsForEventResponse) => {
+      if ("data" in obj) {
+        return "OfferActivationsForEventResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  OfferActivationsResponse: {
+    __resolveType: (obj: OfferActivationsResponse) => {
+      if ("data" in obj) {
+        return "OfferActivationsResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const analyticsComposition = {
@@ -1101,6 +1205,7 @@ const analyticsComposition = {
   "Query.campaignClaimsForLootbox": [isAuthenticated()],
   "Query.claimerStatsForTournament": [isAuthenticated()],
   "Query.claimerStatsForLootboxTournament": [isAuthenticated()],
+  "Query.offerActivationsForEvent": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(AnalyticsResolvers, analyticsComposition);

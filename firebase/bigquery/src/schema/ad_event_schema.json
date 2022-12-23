@@ -1,0 +1,101 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "number",
+      "column_name": "timestamp_1"
+    },
+    {
+      "name": "adID",
+      "type": "string"
+    },
+    {
+      "name": "adSetID",
+      "type": "string"
+    },
+    {
+      "name": "sessionID",
+      "type": "string"
+    },
+    {
+      "name": "campaignID",
+      "type": "string"
+    },
+    {
+      "name": "flightID",
+      "type": "string"
+    },
+    {
+      "name": "action",
+      "type": "string"
+    },
+    {
+      "name": "claimID",
+      "type": "string"
+    },
+    {
+      "name": "activationEventMmpAlias",
+      "type": "string"
+    },
+    {
+      "name": "activationID",
+      "type": "string"
+    },
+    {
+      "name": "offerID",
+      "type": "string"
+    },
+    {
+      "name": "advertiserID",
+      "type": "string"
+    },
+    {
+      "fields": [
+        {
+          "name": "clickRedirectUrl",
+          "type": "string"
+        },
+        {
+          "name": "pixelUrl",
+          "type": "string"
+        },
+        {
+          "name": "timeElapsed",
+          "type": "number"
+        }
+      ],
+      "name": "metadata",
+      "type": "map"
+    },
+    {
+      "fields": [
+        {
+          "name": "organizerID",
+          "type": "string"
+        },
+        {
+          "name": "promoterID",
+          "type": "string"
+        },
+        {
+          "name": "userID",
+          "type": "string"
+        },
+        {
+          "name": "tournamentID",
+          "type": "string"
+        }
+      ],
+      "name": "affiliateAttribution",
+      "type": "map"
+    },
+    {
+      "name": "nonce",
+      "type": "string"
+    }
+  ]
+}

@@ -346,6 +346,45 @@ const AnalyticsTypeDefs = gql`
       FansListForLootboxResponseSuccess
     | ResponseError
 
+  input OfferActivationsForEventPayload {
+    eventID: ID!
+    offerID: ID!
+  }
+
+  type OfferActivationsForEventRow {
+    activationName: String!
+    adEventCount: Int!
+    activationDescription: String!
+    activationID: String!
+  }
+
+  type OfferActivationsForEventResponseSuccess {
+    data: [OfferActivationsForEventRow!]!
+  }
+
+  union OfferActivationsForEventResponse =
+      OfferActivationsForEventResponseSuccess
+    | ResponseError
+
+  type OfferActivationsRow {
+    activationName: String!
+    adEventCount: Int!
+    activationDescription: String!
+    activationID: String!
+  }
+
+  input OfferActivationsPayload {
+    offerID: ID!
+  }
+
+  type OfferActivationsResponseSuccess {
+    data: [OfferActivationsRow!]!
+  }
+
+  union OfferActivationsResponse =
+      OfferActivationsResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -405,6 +444,12 @@ const AnalyticsTypeDefs = gql`
     ): ClaimerStatsForLootboxTournamentResponse!
     fansListForTournament(tournamentID: ID!): FansListForTournamentResponse!
     fansListForLootbox(lootboxID: ID!): FansListForLootboxResponse!
+    offerActivationsForEvent(
+      payload: OfferActivationsForEventPayload!
+    ): OfferActivationsForEventResponse!
+    offerActivations(
+      payload: OfferActivationsPayload!
+    ): OfferActivationsResponse!
   }
 `;
 
