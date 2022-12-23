@@ -174,6 +174,8 @@ const LootboxTypeDefs = gql`
   }
 
   type LootboxSnapshot {
+    id: ID!
+
     address: ID
     issuer: ID
     description: String!

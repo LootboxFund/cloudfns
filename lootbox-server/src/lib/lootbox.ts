@@ -305,6 +305,7 @@ export const convertLootboxToSnapshot = (
   if (lootbox.variant === LootboxVariant_Firestore.cosmic) {
     lootbox = lootbox as Lootbox_Firestore;
     return {
+      id: lootbox.id,
       address: lootbox.address,
       issuer: lootbox.creatorAddress,
       name: lootbox.name,
@@ -330,6 +331,7 @@ const convertLootboxToSnapshotOld = (
   data: LootboxDeprecated_Firestore
 ): LootboxSnapshot => {
   return {
+    id: data.id,
     address: data.address,
     issuer: data.issuer,
     name: data.name,

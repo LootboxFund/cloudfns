@@ -8,6 +8,7 @@ import {
   LootboxMetadata_Firestore,
   LootboxSocials_Firestore,
   LootboxSnapshotTimestamps,
+  LootboxID,
 } from "@wormgraph/helpers";
 
 // export type MintWhitelistSignature_Firestore = {
@@ -24,6 +25,8 @@ import {
 // };
 
 export interface LootboxSnapshot {
+  id: LootboxID;
+
   address: Address;
   issuer: Address;
   description: string;
@@ -40,6 +43,7 @@ export interface LootboxSnapshot {
 
 /** @deprecated will eventually be removed after cosmic */
 export type LootboxDeprecated_Firestore = {
+  id: LootboxID;
   address: Address;
   factory: Address;
   tournamentId: TournamentID;
