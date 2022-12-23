@@ -122,14 +122,6 @@ const OfferTypeDefs = gql`
     Archived
   }
 
-  enum MeasurementPartnerType {
-    Appsflyer
-    GoogleTagManager
-    ServerToServer
-    LootboxAppWebsiteVisit
-    Manual
-  }
-
   input CreateActivationInput {
     name: String!
     description: String
@@ -372,6 +364,7 @@ const OfferTypeDefs = gql`
     lootboxID: ID!
     claimID: ID
     answers: [AnswerAirdropQuestionInput!]!
+    flightID: ID
   }
   input AnswerAirdropQuestionInput {
     questionID: ID!
@@ -391,6 +384,7 @@ const OfferTypeDefs = gql`
     referralID: ID!
     claimID: ID
     answers: [AfterTicketClaimQuestionInput!]!
+    flightID: ID
   }
   input AfterTicketClaimQuestionInput {
     questionID: ID!

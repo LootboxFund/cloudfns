@@ -1,7 +1,8 @@
 import * as express from "express";
 import { trackAppsFlyerActivation } from "./lib/mmp/appsflyer";
 import { trackManualActivation } from "./lib/mmp/manual";
-import { trackLootboxAppWebsiteVisitActivation } from "./lib/mmp/lootbox-app";
+import { trackLootboxAppActivation } from "./lib/mmp/lootbox-app";
+import { ActivationIngestorRoute_LootboxAppActivation_Body } from "@wormgraph/helpers";
 const app = express();
 const bodyParser = require("body-parser");
 const url = require("url");
@@ -34,22 +35,16 @@ app.get("/", (req, res) => {
   res.send("LOOTBOX Activation Event Ingestor");
 });
 
-app.post("/lootbox-app/website-visit", async (req, res) => {
-  // import { ActivationIngestorRoute_Manual_Body } from "@wormgraph/helpers"
-  // interface ActivationIngestorRoute_LootboxAppWebsiteVisit_Body {
-  //   flightID: FlightID
-  //   mmpAlias: string
-  //   activationID: ActivationID
-  // }
-
-  const trackedEvent = await trackLootboxAppWebsiteVisitActivation(req.body);
+app.post("/lootbox-app", async (req, res) => {
+  const body = req.body as ActivationIngestorRoute_LootboxAppActivation_Body;
+  const trackedEvent = await trackLootboxAppActivation(body);
   if (trackedEvent) {
     res.json({
-      message: `Successfully received activation event of Lootbox App Website Visit with flightID=${trackedEvent.flightID} and AdEventID=${trackedEvent.id}`,
+      message: `Successfully received activation event of Lootbox App with flightID=${trackedEvent.flightID} and AdEventID=${trackedEvent.id} for Activation=${body.activationID}`,
     });
   } else {
     res.json({
-      message: `Failed to track activation event for flight ${req.body.flightID}`,
+      message: `Failed to track Lootbox App activation event ${body.activationID}  for flight ${req.body.flightID}`,
     });
   }
 });

@@ -54,14 +54,17 @@ const CommonTypeDefs = gql`
     SingleSelect
     MultiSelect
     Checkbox
+    Consent
   }
 
   enum MeasurementPartnerType {
     Appsflyer
     GoogleTagManager
     ServerToServer
-    LootboxAppWebsiteVisit
     Manual
+    LootboxAppAdView
+    LootboxAppAnswerQuestions
+    LootboxAppWebsiteVisit
   }
 
   type Query {

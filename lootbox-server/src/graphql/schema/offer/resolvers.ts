@@ -240,6 +240,14 @@ const OfferResolvers: Resolvers = {
       { advertiserID, payload }: MutationCreateOfferArgs,
       context: Context
     ): Promise<CreateOfferResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
       // check if user making request is the actual advertiser
       const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
         context.userId || ("" as UserIdpID),
@@ -254,7 +262,11 @@ const OfferResolvers: Resolvers = {
         };
       }
       try {
-        const offer = await createOffer(advertiserID as AdvertiserID, payload);
+        const offer = await createOffer(
+          advertiserID as AdvertiserID,
+          payload,
+          context.userId
+        );
         if (!offer) {
           return {
             error: {

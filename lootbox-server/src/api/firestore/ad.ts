@@ -4,7 +4,6 @@ import {
   CreateAdSetPayload,
   EditAdPayload,
   EditAdSetPayload,
-  EditAdSetResponse,
 } from "../../graphql/generated/types";
 import { AdID, AdvertiserID } from "@wormgraph/helpers";
 import { db } from "../firebase";
@@ -15,7 +14,7 @@ import {
   Ad_Firestore,
   CreativeType,
 } from "./ad.types";
-import { v4 as uuidv4 } from "uuid";
+
 import {
   AdSetID,
   Collection,
@@ -26,6 +25,7 @@ import {
 } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { getRandomAdOfferCoverFromLexicaHardcoded } from "../lexica-images";
+import { retrieveRandomColor } from "../storage";
 
 // export const getAdById = async (adId: AdID): Promise<Ad | undefined> => {
 //   const adRef = db.collection(Collection.Ad).doc(adId) as DocumentReference<Ad>;
@@ -63,7 +63,7 @@ export const createAd = async (
       thumbnail: payload.creative.thumbnail,
       infographicLink: payload.creative.infographicLink || "",
       aspectRatio: payload.creative.aspectRatio,
-      themeColor: payload.creative.themeColor || "",
+      themeColor: payload.creative.themeColor || retrieveRandomColor(),
     },
     events: [],
     timestamps: {

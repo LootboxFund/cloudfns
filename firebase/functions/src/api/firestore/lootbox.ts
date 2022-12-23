@@ -19,9 +19,6 @@ import {
     ChainIDDecimal,
     LootboxCreatedNonce,
     LootboxTimestamps,
-    DepositID,
-    Deposit_Firestore,
-    DepositID_Web3,
     TournamentID,
     LootboxSnapshotTimestamps,
 } from "@wormgraph/helpers";

@@ -1,4 +1,4 @@
-import { AdFlight_Firestore, AdEvent_Firestore, MeasurementPartnerType, OfferID } from "@wormgraph/helpers";
+import { MeasurementPartnerType, OfferID } from "@wormgraph/helpers";
 import { listActivationsForOffer } from "../firestore";
 
 /**
@@ -15,21 +15,22 @@ import { listActivationsForOffer } from "../firestore";
  *
  */
 
-export const reportViewToMMP = async (flight: AdFlight_Firestore, adEvent: AdEvent_Firestore) => {
-    if (flight.mmp === MeasurementPartnerType.Appsflyer) {
-        return await reportViewToAppsflyer(flight, adEvent);
-    }
-    return `No MMP for OfferID=${flight.offerID} on FlightID=${flight.id}`;
-};
-
-export const reportViewToAppsflyer = async (flight: AdFlight_Firestore, adEvent: AdEvent_Firestore) => {
-    return `Successfully reported view to MMP=${MeasurementPartnerType.Appsflyer} for OfferID=${flight.offerID} on FlightID=${flight.id} for ad event = ${adEvent.id}`;
-};
-
-export const checkIfOfferIncludesLootboxAppWebsiteVisit = async (offerID: OfferID) => {
+export const checkIfOfferIncludesLootboxAppDefaultActivations = async (offerID: OfferID) => {
     const activations = await listActivationsForOffer(offerID);
+    const firstLootboxAppAdViewMmp = activations.find(
+        (activation) => activation.mmp === MeasurementPartnerType.LootboxAppAdView
+    );
+    const firstLootboxAppAnswerQuestionsMmp = activations.find(
+        (activation) => activation.mmp === MeasurementPartnerType.LootboxAppAnswerQuestions
+    );
     const firstLootboxAppWebsiteVisitMmp = activations.find(
         (activation) => activation.mmp === MeasurementPartnerType.LootboxAppWebsiteVisit
     );
-    return firstLootboxAppWebsiteVisitMmp || { id: null, mmpAlias: null };
+    const adView = firstLootboxAppAdViewMmp || { id: null, mmpAlias: null };
+    const answerQuestions = firstLootboxAppAnswerQuestionsMmp || {
+        id: null,
+        mmpAlias: null,
+    };
+    const websiteVisit = firstLootboxAppWebsiteVisitMmp || { id: null, mmpAlias: null };
+    return { adView, answerQuestions, websiteVisit };
 };
