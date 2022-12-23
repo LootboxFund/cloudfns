@@ -352,6 +352,8 @@ const AnalyticsTypeDefs = gql`
   type OfferActivationsForEventRow {
     activationName: String!
     adEventCount: Int!
+    activationDescription: String!
+    activationID: String!
   }
 
   type OfferActivationsForEventResponseSuccess {
@@ -360,6 +362,25 @@ const AnalyticsTypeDefs = gql`
 
   union OfferActivationsForEventResponse =
       OfferActivationsForEventResponseSuccess
+    | ResponseError
+
+  type OfferActivationsRow {
+    activationName: String!
+    adEventCount: Int!
+    activationDescription: String!
+    activationID: String!
+  }
+
+  input OfferActivationsPayload {
+    offerID: ID!
+  }
+
+  type OfferActivationsResponseSuccess {
+    data: [OfferActivationsRow!]!
+  }
+
+  union OfferActivationsResponse =
+      OfferActivationsResponseSuccess
     | ResponseError
 
   extend type Query {
@@ -424,6 +445,9 @@ const AnalyticsTypeDefs = gql`
     offerActivationsForEvent(
       payload: OfferActivationsForEventPayload!
     ): OfferActivationsForEventResponse!
+    offerActivations(
+      payload: OfferActivationsPayload!
+    ): OfferActivationsResponse!
   }
 `;
 

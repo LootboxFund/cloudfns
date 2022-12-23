@@ -3,6 +3,7 @@ import {
   getAllClaimsForTournament,
   getLootbox,
   getLootboxTournamentSnapshotByLootboxID,
+  getOffer,
   getTournamentById,
   getUser,
 } from "../api/firestore";
@@ -24,6 +25,7 @@ import {
   referrerClaimsForLootbox,
   claimerStatsForTournament,
   getOfferEventActivations,
+  getOfferActivations,
 } from "../api/analytics";
 import { manifest } from "../manifest";
 import {
@@ -34,7 +36,10 @@ import {
   ViewAdResponseSuccess,
 } from "../graphql/generated/types";
 import * as _ from "lodash";
-import { checkIfUserIdpMatchesAffiliate } from "../api/identityProvider/firebase";
+import {
+  checkIfUserIdpMatchesAdvertiser,
+  checkIfUserIdpMatchesAffiliate,
+} from "../api/identityProvider/firebase";
 import { UserIdpID } from "@wormgraph/helpers";
 
 interface BaseClaimStatsForLootboxRequest {
@@ -714,6 +719,8 @@ export const fansListForLootbox = async (
 interface OfferEventActivationsServiceRow {
   activationName: string;
   adEventCount: number;
+  activationDescription: string;
+  activationID: string;
 }
 export interface OfferActivationsForEventServiceRequest {
   eventID: TournamentID;
@@ -743,6 +750,45 @@ export const offerActivationsForEvent = async (
 
   const data = await getOfferEventActivations({
     queryParams: { eventID: payload.eventID, offerID: payload.offerID },
+    activationTable:
+      manifest.bigQuery.datasets.firestoreExport.tables.activation.id,
+    adEventTable: manifest.bigQuery.datasets.firestoreExport.tables.adEvent.id,
+    flightTable: manifest.bigQuery.datasets.firestoreExport.tables.flight.id,
+    location: manifest.bigQuery.datasets.firestoreExport.location,
+  });
+
+  return data;
+};
+
+interface OfferActivationsServiceRow {
+  activationName: string;
+  adEventCount: number;
+  activationDescription: string;
+  activationID: string;
+}
+
+export interface OfferActivationsServiceRequest {
+  offerID: OfferID;
+  callerUserID: UserID;
+}
+export const offerActivations = async (
+  payload: OfferActivationsServiceRequest
+): Promise<OfferActivationsServiceRow[]> => {
+  const offer = await getOffer(payload.offerID);
+  if (!offer) {
+    throw new Error("Offer not found");
+  }
+  // check if user is allowed to run this operation
+  const isValidUserAdvertiser = await checkIfUserIdpMatchesAdvertiser(
+    payload.callerUserID as unknown as UserIdpID,
+    offer.advertiserID
+  );
+  if (!isValidUserAdvertiser) {
+    throw Error(`Unauthorized. User do not have permissions for this offer`);
+  }
+
+  const data = await getOfferActivations({
+    queryParams: { offerID: payload.offerID },
     activationTable:
       manifest.bigQuery.datasets.firestoreExport.tables.activation.id,
     adEventTable: manifest.bigQuery.datasets.firestoreExport.tables.adEvent.id,
