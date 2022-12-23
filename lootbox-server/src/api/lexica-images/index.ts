@@ -11,6 +11,7 @@ import heroPortraits from "./sets/lex-set-hero-portraits";
 import epicBackgrounds from "./sets/lex-set-epic-backgrounds";
 import eventScenes from "./sets/lex-set-event-scenes";
 import abstractObjects from "./sets/lex-set-abstract-objects";
+import animeScene from "./sets/lex-set-anime-backgrounds";
 
 const customDictionaries = {
   corporations: [
@@ -111,7 +112,9 @@ export const getRandomBackgroundFromLexicaHardcoded = async () => {
 };
 
 export const getRandomEventCoverFromLexicaHardcoded = async () => {
-  return randomFromArray(eventScenes.images.map((i) => i.src));
+  return randomFromArray(
+    eventScenes.images.concat(animeScene.images).map((i) => i.src)
+  );
 };
 
 export const getRandomAdOfferCoverFromLexicaHardcoded = async () => {
