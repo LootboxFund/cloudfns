@@ -1,4 +1,3 @@
-import { BigQuery } from "@google-cloud/bigquery";
 import {
   ClaimType_Firestore,
   LootboxID,
@@ -6,8 +5,7 @@ import {
   TournamentID,
   UserID,
 } from "@wormgraph/helpers";
-
-const bigquery = new BigQuery();
+import { bigquery } from "./client";
 
 const convertBaseLootboxStatistics = (
   data: any
@@ -117,58 +115,6 @@ export const baseLootboxStatistics = async ({
   const [rows] = await job.getQueryResults();
 
   return convertBaseLootboxStatistics(rows[0]);
-};
-
-export interface BaseClaimStatisticsForTournamentRequest {
-  queryParams: {
-    tournamentID: TournamentID;
-  };
-  /** Like manifest.bigquery.tables.claim (i.e. ) */
-  table: string;
-  location: string; // Might be US or maybe the same location as the google cloud project
-}
-
-export interface BaseClaimStatisticsForTournamentResponse {
-  totalClaimCount: number;
-  completedClaimCount: number;
-  viralClaimCount: number;
-  bonusRewardClaimCount: number;
-  oneTimeClaimCount: number;
-}
-
-export interface LootboxCompletedClaimsForTournamentRequest {
-  queryParams: {
-    tournamentID: TournamentID;
-  };
-  /** Like manifest.bigquery.tables.claim (i.e. ) */
-  claimTable: string;
-  lootboxTable: string;
-  lootboxSnapshotTable: string;
-  location: string; // Might be US or maybe the same location as the google cloud project
-}
-
-export interface LootboxCompletedClaimsForTournamentRow {
-  lootboxID: LootboxID;
-  lootboxName: string;
-  maxTickets: number;
-  lootboxImg: string;
-  claimCount: number;
-}
-export interface LootboxCompletedClaimsForTournamentResponse {
-  data: LootboxCompletedClaimsForTournamentRow[];
-}
-
-const convertCompletedClaimStatisticsForTournamentRow = (
-  data: any
-): LootboxCompletedClaimsForTournamentRow => {
-  // Convert data into type T and return it
-  return {
-    lootboxID: data?.lootboxID || "",
-    lootboxName: data?.lootboxName || "",
-    maxTickets: data?.maxTickets || 0,
-    lootboxImg: data?.lootboxImg || "",
-    claimCount: data?.claimCount || 0,
-  };
 };
 
 export interface ReferrerForLootboxRequest {

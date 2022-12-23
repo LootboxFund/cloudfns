@@ -12,6 +12,7 @@ import {
   Claim_Firestore,
   LootboxID,
   Lootbox_Firestore,
+  OfferID,
   TournamentID,
   UserID,
   User_Firestore,
@@ -21,8 +22,9 @@ import {
   campaignClaimsForLootbox,
   claimerStatsForLootboxTournament,
   referrerClaimsForLootbox,
-} from "../api/analytics/lootbox";
-import { claimerStatsForTournament } from "../api/analytics/tournament";
+  claimerStatsForTournament,
+  getOfferEventActivations,
+} from "../api/analytics";
 import { manifest } from "../manifest";
 import {
   FanListRowForLootbox,
@@ -708,4 +710,45 @@ export const fansListForLootbox = async (
     })
     .filter((c) => c) as FanListRowForLootbox[];
   return rows;
+};
+interface OfferEventActivationsServiceRow {
+  activationName: string;
+  adEventCount: number;
+}
+export interface OfferActivationsForEventServiceRequest {
+  eventID: TournamentID;
+  offerID: OfferID;
+  callerUserID: UserID;
+}
+export const offerActivationsForEvent = async (
+  payload: OfferActivationsForEventServiceRequest
+): Promise<OfferEventActivationsServiceRow[]> => {
+  const tournament = await getTournamentById(payload.eventID);
+
+  if (!tournament || !tournament.organizer) {
+    throw new Error("Tournament not found");
+  }
+
+  // only allow the tournament owner to view this data
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    payload.callerUserID as unknown as UserIdpID,
+    tournament.organizer as AffiliateID
+  );
+
+  if (!isValidUserAffiliate) {
+    throw Error(
+      `Unauthorized. User do not have permissions to get analytics for this tournament`
+    );
+  }
+
+  const data = await getOfferEventActivations({
+    queryParams: { eventID: payload.eventID, offerID: payload.offerID },
+    activationTable:
+      manifest.bigQuery.datasets.firestoreExport.tables.activation.id,
+    adEventTable: manifest.bigQuery.datasets.firestoreExport.tables.adEvent.id,
+    flightTable: manifest.bigQuery.datasets.firestoreExport.tables.flight.id,
+    location: manifest.bigQuery.datasets.firestoreExport.location,
+  });
+
+  return data;
 };

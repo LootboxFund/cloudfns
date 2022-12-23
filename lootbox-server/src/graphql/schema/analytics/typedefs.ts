@@ -344,6 +344,24 @@ const AnalyticsTypeDefs = gql`
       FansListForLootboxResponseSuccess
     | ResponseError
 
+  input OfferActivationsForEventPayload {
+    eventID: ID!
+    offerID: ID!
+  }
+
+  type OfferActivationsForEventRow {
+    activationName: String!
+    adEventCount: Int!
+  }
+
+  type OfferActivationsForEventResponseSuccess {
+    data: [OfferActivationsForEventRow!]!
+  }
+
+  union OfferActivationsForEventResponse =
+      OfferActivationsForEventResponseSuccess
+    | ResponseError
+
   extend type Query {
     # advertiser to see how an offer performs across all tournaments & affiliates
     reportAdvertiserOfferPerformance(
@@ -403,6 +421,9 @@ const AnalyticsTypeDefs = gql`
     ): ClaimerStatsForLootboxTournamentResponse!
     fansListForTournament(tournamentID: ID!): FansListForTournamentResponse!
     fansListForLootbox(lootboxID: ID!): FansListForLootboxResponse!
+    offerActivationsForEvent(
+      payload: OfferActivationsForEventPayload!
+    ): OfferActivationsForEventResponse!
   }
 `;
 
