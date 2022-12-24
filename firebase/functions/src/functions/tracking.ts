@@ -102,7 +102,7 @@ export const pubsubPixelTracking = functions
             logger.error("Pubsub error", err);
             return;
         }
-        const { adView, websiteVisit } = await checkIfOfferIncludesLootboxAppDefaultActivations(flight.offerID);
+        const { adView } = await checkIfOfferIncludesLootboxAppDefaultActivations(flight.offerID);
 
         const updateRequest: Partial<Ad> = {};
         if (eventAction === AdEventAction.View) {
@@ -124,6 +124,116 @@ export const pubsubPixelTracking = functions
                 });
             }
         }
+
+        // if (eventAction === AdEventAction.Click) {
+        //     // Update clicks
+        //     // updateRequest.clicks = FieldValue.increment(1) as unknown as number;
+
+        //     // Check if unique click by session id
+        //     // A unique click is counted when only one click adEvent exists for a given sessionId
+        //     try {
+        //         // const sessionAdEvents = await getAdEventsBySessionId(flight.adID, flight.sessionID, {
+        //         //     actionType: AdEventAction.Click,
+        //         //     limit: 2,
+        //         // });
+        //         // if (sessionAdEvents.length === 1) {
+        //         //     // Recall, we previously just made an ad event so there should be one
+        //         //     updateRequest.uniqueClicks = FieldValue.increment(1) as unknown as number;
+        //         // }
+
+        //         // Check if any of the activations are type of "ClickToWebsite"
+        //         const { id, mmpAlias } = websiteVisit;
+        //         if (id && mmpAlias) {
+        //             const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
+        //                 flightID: flight.id,
+        //                 activationID: id,
+        //                 mmpAlias,
+        //             };
+        //             await axios({
+        //                 method: "post",
+        //                 url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+        //                     tableActivationIngestorRoutes[MeasurementPartnerType.LootboxAppWebsiteVisit].path
+        //                 }`,
+        //                 data: info,
+        //             });
+        //         }
+        //     } catch (err) {
+        //         logger.error(err);
+        //         // Just fail silently
+        //     }
+        // }
+
+        if (Object.keys(updateRequest).length === 0) {
+            // Nothing to update
+            return;
+        }
+
+        try {
+            await updateAdCounts(flight.adID, updateRequest);
+        } catch (err) {
+            logger.error("Error updating ad counts...", err);
+        }
+
+        return;
+    });
+
+export const pubsubPixelTrackingClick = functions
+    .region(REGION)
+    .pubsub.topic(manifest.cloudFunctions.pubsubClickRedirectTracking.topic)
+    .onPublish(async (message: Message) => {
+        logger.log("PUB SUB TRIGGERED", { topic: manifest.cloudFunctions.pubsubClickRedirectTracking.topic, message });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let jsonData: any;
+        try {
+            jsonData = message.json;
+        } catch (e) {
+            logger.error("PubSub message was not JSON", e);
+            return;
+        }
+
+        const url = jsonData?.httpRequest?.requestUrl;
+
+        if (!url) {
+            logger.error("URL not in payload");
+            return;
+        }
+
+        const {
+            // userId,
+            // adId,
+            // adSetId,
+            // offerId,
+            // claimId,
+            // campaignId,
+            // tournamentId,
+            // organizerID,
+            // promoterID,
+            // sessionId,
+            flightID,
+            eventAction,
+            // nonce,
+            // timeElapsed,
+        } = extractURLStatePixelTracking(url);
+
+        // get for existing flight
+        let flight: AdFlight_Firestore;
+
+        try {
+            if (!flightID) {
+                logger.error("Malformed URL", url);
+                return;
+            }
+
+            flight = await getFlightById(flightID);
+        } catch (err) {
+            logger.error("Pubsub error", err);
+            return;
+        }
+
+        const { websiteVisit } = await checkIfOfferIncludesLootboxAppDefaultActivations(flight.offerID);
+
+        const updateRequest: Partial<Ad> = {};
 
         if (eventAction === AdEventAction.Click) {
             // Update clicks

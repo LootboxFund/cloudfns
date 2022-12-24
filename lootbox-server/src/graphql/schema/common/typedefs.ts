@@ -62,6 +62,7 @@ const CommonTypeDefs = gql`
     GoogleTagManager
     ServerToServer
     Manual
+    None
     LootboxAppAdView
     LootboxAppAnswerQuestions
     LootboxAppWebsiteVisit
