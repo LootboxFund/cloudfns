@@ -6,6 +6,7 @@ import {
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
+  AdEventAction,
   AdID,
   AdSetID,
   AdSetInTournamentStatus,
@@ -232,7 +233,9 @@ export const generateClickUrl = (
 
   const clickUrl = `${manifest.storage.buckets.redirectPage.accessUrl}/${
     manifest.storage.buckets.redirectPage.files.page
-  }?flightID=${flight.id}&destination=${encodeURIComponent(destinationUrl)}`;
+  }?flightID=${flight.id}&destination=${encodeURIComponent(
+    destinationUrl
+  )}&eventAction=${AdEventAction.Click}`;
 
   return {
     clickUrl,
