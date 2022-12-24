@@ -76,6 +76,8 @@ export const pubsubPixelTracking = functions
             // timeElapsed,
         } = extractURLStatePixelTracking(url);
 
+        console.log(`Got a hit! flightID=${flightID} and eventAction=${eventAction}`);
+
         // get for existing flight
         let flight: AdFlight_Firestore;
 
@@ -212,16 +214,22 @@ export const pubsubPixelTrackingClick = functions
             // sessionId,
             flightID,
             eventAction,
-            // nonce,
             // timeElapsed,
         } = extractURLStatePixelTracking(url);
+
+        console.log(`Got a hit! flightID=${flightID} and eventAction=${eventAction}`);
 
         // get for existing flight
         let flight: AdFlight_Firestore;
 
         try {
-            if (!flightID) {
+            if (!flightID || !eventAction) {
                 logger.error("Malformed URL", url);
+                return;
+            }
+
+            if (!Object.values(AdEventAction).includes(eventAction as AdEventAction)) {
+                logger.error("Invalid event Action provided...");
                 return;
             }
 
@@ -230,7 +238,6 @@ export const pubsubPixelTrackingClick = functions
             logger.error("Pubsub error", err);
             return;
         }
-
         const { websiteVisit } = await checkIfOfferIncludesLootboxAppDefaultActivations(flight.offerID);
 
         const updateRequest: Partial<Ad> = {};
