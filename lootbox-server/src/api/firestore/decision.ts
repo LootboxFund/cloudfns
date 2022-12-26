@@ -174,16 +174,15 @@ export const decideAirdropAdToServe = async (
   { lootboxID, placement, sessionID }: DecisionAdAirdropV1Payload,
   userID: UserIdpID
 ): Promise<AdServed> => {
-  console.log(`Milestone 1 ----- lootboxID ${lootboxID}`);
   const lootbox = await getLootbox(lootboxID as LootboxID);
-  console.log(`Milestone 2 ----- lootbox ${lootbox?.id}`);
+
   if (!lootbox || !lootbox.airdropMetadata) {
     throw Error(
       `Lootbox with id ${lootboxID} and airdropMetadat does not exist in the database`
     );
   }
   const { tournamentID } = lootbox;
-  console.log(`Milestone 3 ----- tournamentID ${tournamentID}`);
+
   const tournament = await getTournamentById(tournamentID as TournamentID);
   if (!tournament) {
     throw Error(
@@ -191,18 +190,17 @@ export const decideAirdropAdToServe = async (
     );
   }
   const { offerID } = lootbox.airdropMetadata || {};
-  console.log(`Milestone 4 ----- offerID ${offerID}`);
+
   const adSets = (tournament.offers || {})[offerID]?.adSets || {};
-  console.log(`Milestone 5 ----- adSets ${JSON.stringify(adSets)}`);
+
   const adSetIDs = Object.keys(adSets).reduce((acc, curr) => {
-    console.log(`curr = ${curr}`);
     const relevantAdSets: AdSetID[] = [];
     if (adSets[curr] === AdSetInTournamentStatus.Active) {
       relevantAdSets.push(curr as AdSetID);
     }
     return [...acc, ...relevantAdSets];
   }, [] as AdSetID[]);
-  console.log(`Milestone 6 ----- adSetIDs ${JSON.stringify(adSetIDs)}}`);
+
   const adSetsData = (
     await Promise.all(
       adSetIDs.map((asid) => {
@@ -210,7 +208,7 @@ export const decideAirdropAdToServe = async (
       })
     )
   ).filter((ads) => ads) as AdSet_Firestore[];
-  console.log(`Milestone 7 ----- ${adSetsData.length}`);
+
   const matchingAdSetsForPlacement = adSetsData
     .filter((adst) => {
       return adst.placement === placement;
@@ -223,42 +221,31 @@ export const decideAirdropAdToServe = async (
         adSetID: adset.id,
       };
     });
-  console.log(`Milestone 8 ----- ${matchingAdSetsForPlacement.length}`);
-  const match = matchingAdSetsForPlacement[0];
-  console.log(`Milestone 9 ----- ${match.adID} & ${match.adSetID}}`);
-  const defaultAirdropAdSet = adSetsData.find((a) => a.id === match.adSetID);
-  console.log(
-    `Milestone 10 ----- defaultAirdropAdSet = ${defaultAirdropAdSet?.id}`
-  );
-  console.log(`
 
-  !defaultAirdropAdSet = ${!defaultAirdropAdSet}
-  || !match = ${!match}
-  || !match.adID  = ${!match.adID}
-  || !match.adSetID = ${!match.adSetID}
-  
-  `);
+  const match = matchingAdSetsForPlacement[0];
+
+  const defaultAirdropAdSet = adSetsData.find((a) => a.id === match.adSetID);
   if (!defaultAirdropAdSet || !match || !match.adID || !match.adSetID) {
     throw Error(
       `No default ad found for lootbox ${lootboxID} with offer ${lootbox.airdropMetadata.offerID} and placement ${placement}`
     );
   }
-  console.log(`Milestone 11 -----`);
+
   const [ad, claims] = await Promise.all([
     getAd(match.adID),
     getClaimsOfUserInTournament(userID as unknown as UserID, tournament.id),
   ]);
-  console.log(`Milestone 12 -----`);
+
   const earliestClaim = claims.sort((a, b) => {
     return a.timestamps.createdAt - b.timestamps.createdAt;
   })[0];
-  console.log(`Milestone 13 -----`);
+
   if (!ad) {
     throw Error(
       `No ad found for adSet ${match.adSetID} in tournament ${tournamentID}`
     );
   }
-  console.log(`Milestone 14 -----`);
+
   const flight = await createFlight({
     userID: userID as unknown as UserID,
     adID: match.adID,
@@ -272,7 +259,7 @@ export const decideAirdropAdToServe = async (
     sessionId: sessionID as SessionID,
     referrerID: earliestClaim?.referrerId || undefined,
   });
-  console.log(`Milestone 15 -----`);
+
   const info = {
     adID: match.adID,
     adSetID: defaultAirdropAdSet.id,
