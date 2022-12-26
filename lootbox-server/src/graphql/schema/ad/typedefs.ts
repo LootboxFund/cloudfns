@@ -151,6 +151,14 @@ const AdTypeDefs = gql`
     placement: Placement!
     pixelUrl: String!
     clickDestination: String!
+    inheritedClaim: InheritedClaimForAd
+  }
+
+  type InheritedClaimForAd {
+    claimID: ID
+    promoterID: ID
+    referrerID: ID
+    tournamentID: ID
   }
 
   # -------- Decision Ad API Beta V2 --------
@@ -184,16 +192,14 @@ const AdTypeDefs = gql`
 
   # -------- Decision Ad Airdrop V1 --------
   input DecisionAdAirdropV1Payload {
-    userID: ID!
     lootboxID: ID!
     placement: Placement!
     sessionID: ID!
-    claimID: ID!
   }
 
   type DecisionAdAirdropV1ResponseSuccess {
-    ad: AdServed
-    questions: [AdOfferQuestion!]
+    ad: AdServed!
+    questions: [AdOfferQuestion!]!
   }
 
   union DecisionAdAirdropV1Response =

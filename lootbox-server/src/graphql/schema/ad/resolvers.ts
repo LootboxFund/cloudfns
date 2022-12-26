@@ -370,8 +370,12 @@ const AdResolvers: Resolvers = {
         };
       }
       try {
+        console.log(`Retrieving ad for user ${context.userId}`);
+        console.log(payload);
         const ad = await decideAirdropAdToServe(payload, context.userId);
+        console.log(`Got ad... ${ad.adID}`);
         const questions = await getQuestionsForAd(ad);
+        console.log(`questions.legnth = ${questions.length}}`);
         if (!ad) {
           return {
             error: {
