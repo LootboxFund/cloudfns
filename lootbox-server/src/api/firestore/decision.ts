@@ -3,6 +3,7 @@ import {
   DecisionAdApiBetaV2Payload,
   AdServed,
   OfferInTournamentStatus,
+  DecisionAdAirdropV1Payload,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
@@ -14,8 +15,10 @@ import {
   AffiliateID,
   CampaignID,
   ClaimID,
+  Claim_Firestore,
   Collection,
   FlightID,
+  LootboxID,
   MeasurementPartnerType,
   OfferID,
   Offer_Firestore,
@@ -31,8 +34,12 @@ import { Advertiser_Firestore } from "./advertiser.type";
 import { craftAffiliateAttributionUrl } from "../mmp/mmp";
 import { getOffer } from "./offer";
 import { manifest } from "../../manifest";
-import { AdFlight_Firestore } from "@wormgraph/helpers";
+import { AdFlight_Firestore, UserIdpID } from "@wormgraph/helpers";
 import { AdOfferQuestion } from "../../graphql/generated/types";
+import { getLootbox } from "./lootbox";
+import { getTournamentById } from "./tournament";
+import { getAd, getAdSet } from "./ad";
+import { getClaimById } from "./referral";
 
 const env = process.env.NODE_ENV || "development";
 
@@ -49,7 +56,11 @@ export const decideAdToServe = async ({
   const tournamentRef = db
     .collection(Collection.Tournament)
     .doc(tournamentID) as DocumentReference<Tournament_Firestore>;
-  const tournamentSnapshot = await tournamentRef.get();
+
+  const [tournamentSnapshot, claim] = await Promise.all([
+    tournamentRef.get(),
+    getClaimById(claimID as ClaimID),
+  ]);
   if (!tournamentSnapshot.exists) {
     throw Error(
       `Tournament with id ${tournamentID} does not exist in the database`
@@ -58,6 +69,9 @@ export const decideAdToServe = async ({
   const tournament = tournamentSnapshot.data();
   if (tournament === undefined) {
     throw Error(`Tournament with id ${tournamentID} could not be compiled`);
+  }
+  if (!claim) {
+    throw Error(`Claim with id ${claimID} does not exist in the database`);
   }
 
   // filter out to get only the ads that fit this placement
@@ -125,6 +139,7 @@ export const decideAdToServe = async ({
       promoterID: promoterID as AffiliateID,
       claimID: claimID as ClaimID,
       sessionId: sessionID as SessionID,
+      referrerID: claim.referrerId || undefined,
     });
   } else {
     flight = existingFlightsForSession[0];
@@ -155,6 +170,117 @@ export const decideAdToServe = async ({
   };
 };
 
+export const decideAirdropAdToServe = async (
+  { lootboxID, placement, sessionID }: DecisionAdAirdropV1Payload,
+  userID: UserIdpID
+): Promise<AdServed> => {
+  const lootbox = await getLootbox(lootboxID as LootboxID);
+
+  if (!lootbox || !lootbox.airdropMetadata) {
+    throw Error(
+      `Lootbox with id ${lootboxID} and airdropMetadat does not exist in the database`
+    );
+  }
+  const { tournamentID } = lootbox;
+
+  const tournament = await getTournamentById(tournamentID as TournamentID);
+  if (!tournament) {
+    throw Error(
+      `Tournament with id ${tournamentID} does not exist in the database`
+    );
+  }
+  const { offerID } = lootbox.airdropMetadata || {};
+
+  const adSets = (tournament.offers || {})[offerID]?.adSets || {};
+
+  const adSetIDs = Object.keys(adSets).reduce((acc, curr) => {
+    const relevantAdSets: AdSetID[] = [];
+    if (adSets[curr] === AdSetInTournamentStatus.Active) {
+      relevantAdSets.push(curr as AdSetID);
+    }
+    return [...acc, ...relevantAdSets];
+  }, [] as AdSetID[]);
+
+  const adSetsData = (
+    await Promise.all(
+      adSetIDs.map((asid) => {
+        return getAdSet(asid);
+      })
+    )
+  ).filter((ads) => ads) as AdSet_Firestore[];
+
+  const matchingAdSetsForPlacement = adSetsData
+    .filter((adst) => {
+      return adst.placement === placement;
+    })
+    .filter((adst) => adst.adIDs[0])
+    .map((adset) => {
+      const aid = adset.adIDs[0] || "";
+      return {
+        adID: aid as AdID,
+        adSetID: adset.id,
+      };
+    });
+
+  const match = matchingAdSetsForPlacement[0];
+
+  const defaultAirdropAdSet = adSetsData.find((a) => a.id === match.adSetID);
+  if (!defaultAirdropAdSet || !match || !match.adID || !match.adSetID) {
+    throw Error(
+      `No default ad found for lootbox ${lootboxID} with offer ${lootbox.airdropMetadata.offerID} and placement ${placement}`
+    );
+  }
+
+  const [ad, claims] = await Promise.all([
+    getAd(match.adID),
+    getClaimsOfUserInTournament(userID as unknown as UserID, tournament.id),
+  ]);
+
+  const earliestClaim = claims.sort((a, b) => {
+    return a.timestamps.createdAt - b.timestamps.createdAt;
+  })[0];
+
+  if (!ad) {
+    throw Error(
+      `No ad found for adSet ${match.adSetID} in tournament ${tournamentID}`
+    );
+  }
+
+  const flight = await createFlight({
+    userID: userID as unknown as UserID,
+    adID: match.adID,
+    adSetID: defaultAirdropAdSet.id,
+    offerID: offerID,
+    placement: ad.placement,
+    tournamentID: tournament.id,
+    organizerID: tournament.organizer,
+    promoterID: earliestClaim?.promoterId,
+    claimID: earliestClaim?.id as ClaimID,
+    sessionId: sessionID as SessionID,
+    referrerID: earliestClaim?.referrerId || undefined,
+  });
+
+  const info = {
+    adID: match.adID,
+    adSetID: defaultAirdropAdSet.id,
+    advertiserID: defaultAirdropAdSet.advertiserID,
+    advertiserName: lootbox.airdropMetadata?.advertiserName || "",
+    clickDestination: flight.clickUrl,
+    creative: ad.creative,
+    flightID: flight.id,
+    offerID: offerID,
+    pixelUrl: flight.pixelUrl,
+    placement: ad.placement,
+    inheritedClaim: {
+      claimID: earliestClaim?.id,
+      promoterID: earliestClaim?.promoterId,
+      referrerID: earliestClaim?.referrerId,
+      tournamentID: earliestClaim?.tournamentId,
+    },
+  };
+  return info;
+};
+
 export interface CreateFlightArgs {
   userID: UserID;
   adID: AdID;
@@ -166,6 +292,7 @@ export interface CreateFlightArgs {
   tournamentID?: TournamentID;
   organizerID?: AffiliateID;
   promoterID?: AffiliateID;
+  referrerID?: UserID;
   sessionId: SessionID;
 }
 export const createFlight = async (
@@ -203,6 +330,7 @@ export const createFlight = async (
     claimID: payload.claimID,
     organizerID: payload.organizerID,
     promoterID: payload.promoterID,
+    referrerID: payload.referrerID,
     mmp: offer.mmp,
     affiliateBaseLink: offer.affiliateBaseLink,
     timestamp: new Date().getTime() / 1000,
@@ -439,4 +567,21 @@ export const getQuestionsForAd = async (
       mandatory: q.mandatory || false,
       options: q.options || "",
     }));
+};
+
+export const getClaimsOfUserInTournament = async (userID, tournamentID) => {
+  const claimsRef = db
+    .collection(Collection.Claim)
+    .where("claimerUserId", "==", userID)
+    .where("tournamentID", "==", tournamentID) as Query<Claim_Firestore>;
+
+  const claimsCollectionItems = await claimsRef.get();
+
+  if (claimsCollectionItems.empty) {
+    return [];
+  } else {
+    return claimsCollectionItems.docs.map((doc) => {
+      return doc.data();
+    });
+  }
 };

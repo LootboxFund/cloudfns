@@ -169,8 +169,6 @@ export const createOffer = async (
         );
       })
     );
-    console.log(`==== questions ====`);
-    console.log(questions.map((q) => q.id));
     offer.afterTicketClaimMetadata = {
       questions: questions.map((q) => q.id) || [],
     };
@@ -917,6 +915,7 @@ export const answerAirdropLootboxQuestion = async (
   if (!lootbox) {
     throw Error(`No Lootbox of ID=${payload.lootboxID} found!`);
   }
+
   const metadata = {
     lootboxID: lootbox.id,
     tournamentID: lootbox.airdropMetadata?.tournamentID,
@@ -933,6 +932,31 @@ export const answerAirdropLootboxQuestion = async (
       );
     })
   );
+
+  // ------------------------------
+  const offerID = lootbox.airdropMetadata?.offerID;
+  if (offerID && payload.flightID) {
+    const { answerQuestions } =
+      await checkIfOfferIncludesLootboxAppDefaultActivations(offerID);
+    const { id, mmpAlias } = answerQuestions;
+    if (id && mmpAlias) {
+      const info: ActivationIngestorRoute_LootboxAppActivation_Body = {
+        flightID: payload.flightID as FlightID,
+        activationID: id,
+        mmpAlias,
+      };
+      await axios({
+        method: "post",
+        url: `${manifest.cloudRun.containers.activationIngestor.fullRoute}${
+          tableActivationIngestorRoutes[
+            MeasurementPartnerType.LootboxAppAnswerQuestions
+          ].path
+        }`,
+        data: info,
+      });
+    }
+  }
+  // ------------------------------
   const allQuestions = (
     await Promise.all(
       (lootbox.airdropMetadata?.questions || []).map((q) => {
@@ -983,7 +1007,6 @@ export const answerAirdropLootboxQuestion = async (
       });
     }
   }
-
   return answers.map((a) => a.id);
 };
 
@@ -991,16 +1014,10 @@ export const answerAfterTicketClaimQuestion = async (
   payload: AfterTicketClaimQuestionPayload,
   userID: UserIdpID
 ) => {
-  console.log(
-    `payload.answers`,
-    payload.answers.map((q) => q.questionID)
-  );
   const [referral, adSet] = await Promise.all([
     getReferralById(payload.referralID as ReferralID),
     getAdSet(payload.adSetID as AdSetID),
   ]);
-  console.log(`referral`, referral?.campaignName);
-  console.log(`adSet`, adSet?.id);
   if (!referral) {
     throw Error(`No Referral of ID=${payload.referralID} found!`);
   }
@@ -1011,11 +1028,6 @@ export const answerAfterTicketClaimQuestion = async (
     getTournamentById(referral.tournamentId),
     adSet.offerIDs[0] ? getQuestionsForOffer(adSet.offerIDs[0] as OfferID) : [],
   ]);
-  console.log(`tournament`, tournament?.id);
-  console.log(
-    `allQuestions`,
-    allQuestions.map((q) => q.id)
-  );
   if (!tournament) {
     throw Error(`No Tournament of ID=${referral.tournamentId} found!`);
   }
@@ -1115,6 +1127,7 @@ export const createAnswer = async (
     .doc() as DocumentReference<QuestionAnswer_Firestore>;
   const answerCreatedObjectOfSchema: QuestionAnswer_Firestore = {
     ...question,
+    isOriginal: false,
     id: answerRef.id as QuestionAnswerID,
     userID,
     answer,
