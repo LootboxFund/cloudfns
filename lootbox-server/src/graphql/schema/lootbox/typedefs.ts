@@ -243,6 +243,20 @@ const LootboxTypeDefs = gql`
       GetLootboxDepositsResponseSuccess
     | ResponseError
 
+  # --------------- Get Lootbox Voucher Deposit For User Ticket ---------------
+  input GetVouchersRewardsForUserTicketsPayload {
+    lootboxID: ID!
+    ticketIDs: [ID!]!
+  }
+
+  type GetVouchersRewardsForUserTicketsResponseSuccess {
+    vouchers: [LootboxVoucherDeposits!]!
+  }
+
+  union GetVouchersRewardsForUserTicketsResponse =
+      GetVouchersRewardsForUserTicketsResponseSuccess
+    | ResponseError
+
   extend type Query {
     #
     myLootboxByNonce(nonce: ID!): MyLootboxByNonceResponse!
@@ -254,6 +268,10 @@ const LootboxTypeDefs = gql`
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
     #
     getLootboxDeposits(lootboxID: ID!): GetLootboxDepositsResponse!
+    #
+    getVoucherRewardsForUserTickets(
+      payload: GetVouchersRewardsForUserTicketsPayload!
+    ): GetVouchersRewardsForUserTicketsResponse!
   }
 
   input CreateLootboxPayload {

@@ -29,6 +29,8 @@ import {
   MutationBulkCreateLootboxArgs,
   BulkLootboxCreatedPartialError,
   MutationDepositVoucherRewardsArgs,
+  GetVouchersRewardsForUserTicketsResponse,
+  QueryGetVoucherRewardsForUserTicketsArgs,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -48,6 +50,7 @@ import {
   getQuestion,
   depositVoucherRewards,
   getDepositsOfLootbox,
+  getVoucherRewardsForUserTicket,
 } from "../../../api/firestore";
 import {
   Address,
@@ -191,6 +194,22 @@ const LootboxResolvers: Resolvers = {
 
       return {
         deposits,
+      };
+    },
+    getVoucherRewardsForUserTickets: async (
+      _,
+      { payload }: QueryGetVoucherRewardsForUserTicketsArgs,
+      context: Context
+    ): Promise<GetVouchersRewardsForUserTicketsResponse> => {
+      const { lootboxID, ticketIDs } = payload;
+      const vouchers = await getVoucherRewardsForUserTicket({
+        lootboxID: lootboxID as LootboxID,
+        ticketIDs: ticketIDs as LootboxTicketID,
+        userID: context.userId as unknown as UserID,
+      });
+
+      return {
+        vouchers,
       };
     },
   },
@@ -810,6 +829,19 @@ const LootboxResolvers: Resolvers = {
     __resolveType: (obj: GetLootboxDepositsResponse) => {
       if ("deposits" in obj) {
         return "GetLootboxDepositsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  GetVouchersRewardsForUserTicketsResponse: {
+    __resolveType: (obj: GetVouchersRewardsForUserTicketsResponse) => {
+      if ("vouchers" in obj) {
+        return "GetVouchersRewardsForUserTicketsResponseSuccess";
       }
 
       if ("error" in obj) {

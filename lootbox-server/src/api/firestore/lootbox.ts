@@ -856,3 +856,92 @@ export const getDepositsOfLootbox = async (
     });
   }
 };
+
+export const getVoucherRewardsForUserTicket = async ({
+  lootboxID,
+  ticketIDs,
+  userID,
+}: {
+  lootboxID: LootboxID;
+  ticketIDs: [LootboxTicketID];
+  userID: UserID;
+}): Promise<VoucherReward_Firestore[]> => {
+  // 0. Verify that the user owns the stated ticketIDs
+
+  // 1. query the deposits of this lootbox
+  const depositsRef = db
+    .collection(Collection.Deposit)
+    .where("lootboxID", "==", lootboxID) as Query<Deposit_Firestore>;
+
+  const depositCollectionItems = await depositsRef.get();
+
+  if (depositCollectionItems.empty) {
+    return [];
+  }
+  const deposits = depositCollectionItems.docs
+    .map((doc) => doc.data())
+    .filter((d) => d);
+  // 2. for each deposit, query for rewardvouchers
+  const vouchersOfDeposits = await Promise.all(
+    deposits.map(async (deposit) => {
+      const voucherRef = db
+        .collection(Collection.VoucherReward)
+        .where("depositID", "==", deposit.id)
+        .where("redeemedBy", "==", userID) as Query<VoucherReward_Firestore>;
+      const voucherCollectionItems = await voucherRef.get();
+      if (voucherCollectionItems.empty) {
+        return {
+          depositID: deposit.id,
+          vouchers: [],
+        };
+      }
+      const vouchers = voucherCollectionItems.docs
+        .map((doc) => doc.data())
+        .filter((d) => d);
+      return {
+        depositID: deposit.id,
+        vouchers,
+      };
+    })
+  );
+
+  // 3. check if any of the reward vouchers have a matching ticket in this lootbox
+  // by seeing in RewardVoucher[status|redeemedBy|lootboxID|depositID|ticketID]
+
+  // 4. if yes, return the voucher rewards with RewardVoucher.status = Available
+
+  return [];
+};
+
+export const getLootboxClaimsFromFirestore = async (
+  lootboxID: LootboxID,
+  userID: UserID
+): Promise<___Schema | undefined> => {
+  const ___Ref = db
+    .collection(Collection.___)
+    .doc(parentID)
+    .collection(Collection.___)
+    .where("creatorId", "==", userId)
+    .orderBy("timestamps.createdAt", "desc") as Query<___Schema>;
+
+  const __collectionItems = await ___Ref.get();
+
+  if (__collectionItems.empty) {
+    return [];
+  } else {
+    return __collectionItems.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        somevar: data.somevar,
+        timestamps: {
+          createdAt: data.timestamps.createdAt,
+          updatedAt: data.timestamps.updatedAt,
+          ...(data.timestamps.deletedAt && {
+            deletedAt: data.timestamps.deletedAt,
+          }),
+        },
+      };
+    });
+  }
+};
