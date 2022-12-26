@@ -182,6 +182,24 @@ const AdTypeDefs = gql`
       DecisionAdApiBetaV2ResponseSuccess
     | ResponseError
 
+  # -------- Decision Ad Airdrop V1 --------
+  input DecisionAdAirdropV1Payload {
+    userID: ID!
+    lootboxID: ID!
+    placement: Placement!
+    sessionID: ID!
+    claimID: ID!
+  }
+
+  type DecisionAdAirdropV1ResponseSuccess {
+    ad: AdServed
+    questions: [AdOfferQuestion!]
+  }
+
+  union DecisionAdAirdropV1Response =
+      DecisionAdAirdropV1ResponseSuccess
+    | ResponseError
+
   # -------- List Ads of Advertiser --------
   type ListAdsOfAdvertiserResponseSuccess {
     ads: [Ad!]!
@@ -211,9 +229,15 @@ const AdTypeDefs = gql`
   # -------- View Ad --------
 
   extend type Query {
+    #
     decisionAdApiBetaV2(
       payload: DecisionAdApiBetaV2Payload!
     ): DecisionAdApiBetaV2Response!
+    #
+    decisionAdAirdropV1(
+      payload: DecisionAdAirdropV1Payload!
+    ): DecisionAdAirdropV1Response!
+    #
     listAdsOfAdvertiser(advertiserID: ID!): ListAdsOfAdvertiserResponse!
     listAdSetsOfAdvertiser(advertiserID: ID!): ListAdSetsOfAdvertiserResponse!
     viewAdSet(adSetID: ID!): ViewAdSetResponse!

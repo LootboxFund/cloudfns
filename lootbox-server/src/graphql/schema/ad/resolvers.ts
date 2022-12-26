@@ -44,11 +44,16 @@ import {
 } from "../../generated/types";
 import {
   decideAdToServe,
+  decideAirdropAdToServe,
   getQuestionsForAd,
 } from "../../../api/firestore/decision";
 import { AdSetID, UserIdpID } from "@wormgraph/helpers";
 import { checkIfUserIdpMatchesAdvertiser } from "../../../api/identityProvider/firebase";
 import { isAuthenticated } from "../../../lib/permissionGuard";
+import {
+  QueryDecisionAdAirdropV1Args,
+  DecisionAdAirdropV1Response,
+} from "../../generated/types";
 
 const AdResolvers: Resolvers = {
   Mutation: {
@@ -267,33 +272,6 @@ const AdResolvers: Resolvers = {
         };
       }
     },
-    decisionAdApiBetaV2: async (
-      _,
-      { payload }: QueryDecisionAdApiBetaV2Args,
-      context: Context
-    ): Promise<DecisionAdApiBetaV2Response> => {
-      try {
-        const ad = await decideAdToServe(payload);
-        const questions = await getQuestionsForAd(ad);
-        if (!ad) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "No Ad could be served",
-            },
-          };
-        }
-        return { ad, questions };
-      } catch (err) {
-        // console.error(err);
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-    },
     viewAdSet: async (
       _,
       { adSetID }: QueryViewAdSetArgs,
@@ -342,6 +320,69 @@ const AdResolvers: Resolvers = {
         };
       } catch (err) {
         console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    // Ad Decision API
+    decisionAdApiBetaV2: async (
+      _,
+      { payload }: QueryDecisionAdApiBetaV2Args,
+      context: Context
+    ): Promise<DecisionAdApiBetaV2Response> => {
+      try {
+        const ad = await decideAdToServe(payload);
+        const questions = await getQuestionsForAd(ad);
+        if (!ad) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "No Ad could be served",
+            },
+          };
+        }
+        return { ad, questions };
+      } catch (err) {
+        // console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    decisionAdAirdropV1: async (
+      _,
+      { payload }: QueryDecisionAdAirdropV1Args,
+      context: Context
+    ): Promise<DecisionAdAirdropV1Response> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized. User ID not found",
+          },
+        };
+      }
+      try {
+        const ad = await decideAirdropAdToServe(payload, context.userId);
+        const questions = await getQuestionsForAd(ad);
+        if (!ad) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "No Ad could be served",
+            },
+          };
+        }
+        return { ad, questions };
+      } catch (err) {
+        // console.error(err);
         return {
           error: {
             code: StatusCode.ServerError,
@@ -486,6 +527,18 @@ const AdResolvers: Resolvers = {
     __resolveType: (obj: DecisionAdApiBetaV2Response) => {
       if ("ad" in obj) {
         return "DecisionAdApiBetaV2ResponseSuccess";
+      }
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+  DecisionAdAirdropV1Response: {
+    __resolveType: (obj: DecisionAdAirdropV1Response) => {
+      if ("ad" in obj) {
+        return "DecisionAdAirdropV1ResponseSuccess";
       }
       if ("error" in obj) {
         return "ResponseError";
