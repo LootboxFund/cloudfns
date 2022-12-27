@@ -8,7 +8,6 @@ import {
     LootboxTicketID_Web3,
     LootboxMintWhitelistID,
     ClaimID,
-    LootboxTicket_Firestore,
     LootboxTicketDigest,
     LootboxMintSignatureNonce,
     LootboxCreatedNonce,
@@ -19,8 +18,6 @@ import {
     LootboxTimestamps,
     LootboxVariant_Firestore,
     LootboxTicketID,
-    // Deposit_Firestore,
-    // DepositID_Web3,
 } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
 import { db } from "../api/firebase";
@@ -36,8 +33,6 @@ import {
     associateLootboxSnapshotsToWeb3,
     getTicketByID,
     finalizeMintV2,
-    // createDeposit_Deprecated,
-    // getLootboxDeposit_Deprecated,
 } from "../api/firestore/lootbox";
 import { stampNewLootbox, stampNewTicket } from "../api/stamp";
 import { convertLootboxToTicketMetadata } from "../lib/lootbox";
