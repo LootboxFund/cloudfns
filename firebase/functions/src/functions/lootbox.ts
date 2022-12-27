@@ -19,6 +19,8 @@ import {
     LootboxStatus_Firestore,
     Collection,
     Lootbox_Firestore,
+    LootboxTicketID,
+    LootboxTicket_Firestore,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
@@ -26,6 +28,7 @@ import { db, fun } from "../api/firebase";
 import { manifest, SecretName } from "../manifest";
 import * as lootboxService from "../service/lootbox";
 import { retrieveRandomColor } from "./util";
+import { getTicketByID } from "../api/firestore";
 
 const REGION = manifest.cloudFunctions.region;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -341,6 +344,8 @@ interface IndexLootboxOnMintTaskRequest {
         nonce: LootboxMintSignatureNonce;
         userID: UserID;
         digest: LootboxTicketDigest;
+        /** new flow: updates existing ticket instead of creating new one */
+        ticketID?: LootboxTicketID;
     };
     filter: {
         fromBlock: number;
@@ -455,6 +460,7 @@ export const indexLootboxOnMint = functions
                         minterAddress: minter,
                         digest: digest,
                         nonce: eventNonce,
+                        ticketWeb2ID: data.payload.ticketID,
                     });
 
                     return;
@@ -540,6 +546,7 @@ export const indexLootboxOnMint = functions
                             minterAddress: minter,
                             digest: digest,
                             nonce: eventNonce,
+                            ticketWeb2ID: data.payload.ticketID,
                         });
 
                         provider.removeAllListeners(lootboxEventFilter);
@@ -579,6 +586,28 @@ export const enqueueLootboxOnMint = functions
             throw new functions.https.HttpsError("invalid-argument", "Invalid chain");
         }
 
+        if (data.ticketID) {
+            let ticket: LootboxTicket_Firestore | undefined;
+            try {
+                ticket = await getTicketByID(data.ticketID);
+                if (!ticket) {
+                    throw new Error("Not found");
+                }
+            } catch (err) {
+                logger.error("Could not find ticket", { ticketID: data.ticketID });
+                throw new functions.https.HttpsError("unauthenticated", "Invalid ticket");
+            }
+
+            if (ticket.ownerUserID !== context.auth.uid) {
+                logger.error("Ticket does not belong to user", {
+                    ticketID: data.ticketID,
+                    ownerUserID: ticket?.ownerUserID,
+                    userID: context.auth.uid,
+                });
+                throw new functions.https.HttpsError("unauthenticated", "You do not own this ticket");
+            }
+        }
+
         const taskData: IndexLootboxOnMintTaskRequest = {
             chain,
             payload: {
@@ -586,6 +615,7 @@ export const enqueueLootboxOnMint = functions
                 lootboxAddress: data.lootboxAddress,
                 userID: context.auth.uid as UserID,
                 digest: data.digest,
+                ticketID: data.ticketID,
             },
             filter: {
                 fromBlock: data.fromBlock,

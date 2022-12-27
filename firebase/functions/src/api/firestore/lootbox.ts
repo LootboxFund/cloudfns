@@ -21,11 +21,8 @@ import {
     LootboxTimestamps,
     TournamentID,
     LootboxSnapshotTimestamps,
-    ReferralID,
-    ClaimID,
-    Tournament_Firestore,
 } from "@wormgraph/helpers";
-import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
+import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
@@ -331,23 +328,21 @@ export const finalizeMintV2 = async (payload: FinalizeMintV2Request): Promise<Lo
     return ticket.data()!;
 };
 
-export const getTicketByID = async (
-    lootboxID: LootboxID,
-    ticketID: LootboxTicketID
-): Promise<LootboxTicket_Firestore | undefined> => {
-    const ref = db
-        .collection(Collection.Lootbox)
-        .doc(lootboxID)
-        .collection(Collection.LootboxTicket)
-        .doc(ticketID) as DocumentReference<LootboxTicket_Firestore>;
+export const getTicketByID = async (ticketID: LootboxTicketID): Promise<LootboxTicket_Firestore | undefined> => {
+    const idFieldName: keyof LootboxTicket_Firestore = "id";
+    const collectionRef = db
+        .collectionGroup(Collection.LootboxTicket)
+        .where(idFieldName, "==", ticketID)
+        .limit(1) as Query<LootboxTicket_Firestore>;
 
-    const query = await ref.get();
+    const query = await collectionRef.get();
 
-    if (!query.exists) {
+    if (query.empty) {
         return undefined;
     }
 
-    return query.data();
+    const doc = query.docs[0];
+    return doc.data();
 };
 
 export const getTicketByDigest = async (

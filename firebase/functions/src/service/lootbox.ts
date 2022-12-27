@@ -141,7 +141,7 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
         getWhitelistByDigest(lootbox.id, params.digest),
         getTicketByDigest(lootbox.id, params.digest),
         getTicketByWeb3ID(lootbox.id, params.ticketID),
-        params.ticketWeb2ID ? getTicketByID(lootbox.id, params.ticketWeb2ID) : null,
+        params.ticketWeb2ID ? getTicketByID(params.ticketWeb2ID) : null,
     ]);
 
     if (existingTicketByDigest || existingTicketByID) {
@@ -162,6 +162,8 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
             throw new Error("Ticket already minted");
         } else if (existingWeb2Ticket.ownerUserID !== params.minterUserID) {
             throw new Error("Unauthorized");
+        } else if (existingWeb2Ticket.lootboxID !== lootbox.id) {
+            throw new Error("Invalid ticket");
         }
     }
 
