@@ -18,6 +18,7 @@ import {
     LootboxSnapshotTimestamps,
     LootboxTimestamps,
     LootboxVariant_Firestore,
+    LootboxTicketID,
     // Deposit_Firestore,
     // DepositID_Web3,
 } from "@wormgraph/helpers";
@@ -33,6 +34,8 @@ import {
     getWhitelistByDigest,
     associateWeb3Lootbox,
     associateLootboxSnapshotsToWeb3,
+    getTicketByID,
+    finalizeMintV2,
     // createDeposit_Deprecated,
     // getLootboxDeposit_Deprecated,
 } from "../api/firestore/lootbox";
@@ -112,6 +115,8 @@ export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo
 };
 
 interface MintNewTicketCallbackRequest {
+    /** If included - it uses an existing web2 ticketID - otherwise, it creates a new web2 ticket */
+    ticketWeb2ID?: LootboxTicketID;
     lootboxAddress: Address;
     chainIDHex: string;
     minterUserID: UserID;
@@ -121,8 +126,7 @@ interface MintNewTicketCallbackRequest {
     nonce: LootboxMintSignatureNonce;
     claimID?: ClaimID;
 }
-export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest): Promise<LootboxTicket_Firestore> => {
-    // const lootbox = await getLootbox(params.lootboxID);
+export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest): Promise<void> => {
     const lootbox = await getLootboxByChainAddress(params.lootboxAddress, params.chainIDHex);
 
     if (!lootbox) {
@@ -133,14 +137,32 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
         throw new Error("Lootbox has not been deployed");
     }
 
-    const [whitelistObject, existingTicketByDigest, existingTicketByID] = await Promise.all([
+    const [whitelistObject, existingTicketByDigest, existingTicketByID, existingWeb2Ticket] = await Promise.all([
         getWhitelistByDigest(lootbox.id, params.digest),
         getTicketByDigest(lootbox.id, params.digest),
         getTicketByWeb3ID(lootbox.id, params.ticketID),
+        params.ticketWeb2ID ? getTicketByID(lootbox.id, params.ticketWeb2ID) : null,
     ]);
 
     if (existingTicketByDigest || existingTicketByID) {
         throw new Error("Ticket already minted");
+    }
+
+    if (params.ticketWeb2ID) {
+        // Validates new flow that updates existing web 2 ticket:
+
+        if (!existingWeb2Ticket) {
+            throw new Error("Ticket does not exist");
+        } else if (
+            existingWeb2Ticket.isMinted ||
+            existingWeb2Ticket.nonce ||
+            existingWeb2Ticket.ticketID ||
+            existingWeb2Ticket.digest
+        ) {
+            throw new Error("Ticket already minted");
+        } else if (existingWeb2Ticket.ownerUserID !== params.minterUserID) {
+            throw new Error("Unauthorized");
+        }
     }
 
     if (!whitelistObject) {
@@ -169,21 +191,38 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
         metadataURL = "";
     }
 
-    const ticketDB = await finalizeMint({
-        minterUserID: params.minterUserID,
-        lootboxID: lootbox.id as LootboxID,
-        lootboxAddress: lootbox.address as Address,
-        ticketID: params.ticketID as LootboxTicketID_Web3,
-        minterAddress: params.minterAddress as Address,
-        mintWhitelistID: whitelistObject.id as LootboxMintWhitelistID,
-        stampImage: stampURL,
-        metadataURL: metadataURL,
-        digest: params.digest,
-        nonce: params.nonce,
-        whitelist: whitelistObject,
-    });
+    if (existingWeb2Ticket) {
+        await finalizeMintV2({
+            minterUserID: params.minterUserID,
+            lootboxID: lootbox.id as LootboxID,
+            lootboxAddress: lootbox.address as Address,
+            ticketID: params.ticketID as LootboxTicketID_Web3,
+            minterAddress: params.minterAddress as Address,
+            mintWhitelistID: whitelistObject.id as LootboxMintWhitelistID,
+            stampImage: stampURL,
+            metadataURL: metadataURL,
+            digest: params.digest,
+            nonce: params.nonce,
+            whitelist: whitelistObject,
+            ticketWeb2ID: existingWeb2Ticket.id,
+        });
+    } else {
+        await finalizeMint({
+            minterUserID: params.minterUserID,
+            lootboxID: lootbox.id as LootboxID,
+            lootboxAddress: lootbox.address as Address,
+            ticketID: params.ticketID as LootboxTicketID_Web3,
+            minterAddress: params.minterAddress as Address,
+            mintWhitelistID: whitelistObject.id as LootboxMintWhitelistID,
+            stampImage: stampURL,
+            metadataURL: metadataURL,
+            digest: params.digest,
+            nonce: params.nonce,
+            whitelist: whitelistObject,
+        });
+    }
 
-    return ticketDB;
+    return;
 };
 
 interface UpdateCallbackRequest {
