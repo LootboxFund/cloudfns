@@ -831,7 +831,7 @@ const ReferralResolvers: Resolvers = {
           isPostCosmic: !!referral.isPostCosmic,
           privacyScope: tournament?.privacyScope
             ? convertClaimPrivacyScopeGQLToDB(tournament.privacyScope)
-            : {},
+            : [],
         });
 
         return {

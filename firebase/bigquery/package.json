@@ -8,6 +8,7 @@
     "deploy:schema:prod": "yarn deploy:schema:claim:prod && yarn deploy:schema:lootbox:prod && yarn deploy:schema:lootboxsnapshot:prod && yarn deploy:schema:user:prod",
     "backfill:staging": "yarn deploy:schema:claim:staging && yarn deploy:schema:lootbox:staging && yarn deploy:schema:lootboxsnapshot:staging && yarn deploy:schema:user:staging",
     "deploy:schema:claim:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export  --table-name-prefix=claim --schema-files=./src/schema/claim_schema.json",
+    "deploy:schema:claimprivacy:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export  --table-name-prefix=claim --schema-files=./src/schema/claim_privacy_scope_schema.json",
     "deploy:schema:lootbox:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --table-name-prefix=lootbox --schema-files=./src/schema/lootbox_schema.json",
     "deploy:schema:lootboxsnapshot:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --table-name-prefix=lootbox_tournament_snapshot --schema-files=./src/schema/lootbox_snapshot_schema.json",
     "deploy:schema:user:staging": "npx @firebaseextensions/fs-bq-schema-views --non-interactive --project=lootbox-fund-staging --dataset=firestore_export --table-name-prefix=user --schema-files=./src/schema/user_schema.json",
