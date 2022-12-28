@@ -595,7 +595,7 @@ export const enqueueLootboxOnMint = functions
                 }
             } catch (err) {
                 logger.error("Could not find ticket", { ticketID: data.ticketID });
-                throw new functions.https.HttpsError("unauthenticated", "Invalid ticket");
+                throw new functions.https.HttpsError("unauthenticated", "Ticket not found");
             }
 
             if (ticket.ownerUserID !== context.auth.uid) {
