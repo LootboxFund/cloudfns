@@ -1,5 +1,4 @@
 import {
-  ClaimPrivacyScope_Firestore,
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
@@ -7,7 +6,6 @@ import {
   Referral_Firestore,
   TournamentPrivacyScope,
 } from "@wormgraph/helpers";
-import { getPartyBasketById } from "../api/firestore";
 import {
   Claim,
   ClaimStatus,
@@ -102,7 +100,7 @@ export const convertClaimTypeDBToGQL = (
 };
 
 export const convertClaimPrivacyScopeDBToGQL = (
-  privacyScope: ClaimPrivacyScope_Firestore
+  privacyScope: TournamentPrivacyScope[]
 ): TournamentPrivacyScope[] => {
   return Object.keys(privacyScope).filter(
     (key) => privacyScope[key]
@@ -111,14 +109,8 @@ export const convertClaimPrivacyScopeDBToGQL = (
 
 export const convertClaimPrivacyScopeGQLToDB = (
   privacyScope: TournamentPrivacyScope[]
-): ClaimPrivacyScope_Firestore => {
-  return privacyScope.reduce(
-    (acc, curr) => ({
-      ...acc,
-      [curr]: true,
-    }),
-    {} as ClaimPrivacyScope_Firestore
-  );
+): TournamentPrivacyScope[] => {
+  return privacyScope;
 };
 
 export const convertClaimDBToGQL = (claim: Claim_Firestore): Claim => {

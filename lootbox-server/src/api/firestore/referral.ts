@@ -30,7 +30,6 @@ import {
   LootboxTournamentStatus_Firestore,
   LootboxType,
   TournamentPrivacyScope,
-  ClaimPrivacyScope_Firestore,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -162,7 +161,7 @@ interface CreateClaimCall {
 
   isPostCosmic: boolean;
 
-  privacyScope: ClaimPrivacyScope_Firestore;
+  privacyScope: TournamentPrivacyScope[];
 
   /** @deprecated use lootbox */
   originPartyBasketId?: PartyBasketID;
@@ -374,7 +373,7 @@ interface CreateCreateClaimReq {
   claimType: ClaimType_Firestore;
   originLootboxID?: LootboxID;
   isPostCosmic: boolean;
-  privacyScope: ClaimPrivacyScope_Firestore;
+  privacyScope: TournamentPrivacyScope[];
   /** @deprecated */
   originPartyBasketId?: PartyBasketID;
 }
@@ -444,7 +443,7 @@ export const createRewardClaim = async (
     referrerId: null,
     completed: true,
     isPostCosmic: req.isPostCosmic,
-    privacyScope: {},
+    privacyScope: [],
   });
 };
 
