@@ -101,20 +101,6 @@
       "type": "string"
     },
     {
-      "name": "privacyScope",
-      "type": "map",
-      "fields": [
-        {
-          "name": "MarketingEmails",
-          "type": "boolean"
-        },
-        {
-          "name": "DataSharing",
-          "type": "boolean"
-        }
-      ]
-    },
-    {
       "name": "timestamps",
       "type": "map",
       "fields": [

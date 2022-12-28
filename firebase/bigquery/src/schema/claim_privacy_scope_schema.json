@@ -1,0 +1,13 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "column_name": "claimID"
+    },
+    {
+      "name": "privacyScope",
+      "type": "array"
+    }
+  ]
+}
