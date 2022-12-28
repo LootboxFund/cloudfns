@@ -29,6 +29,8 @@ import {
   MutationBulkCreateLootboxArgs,
   BulkLootboxCreatedPartialError,
   MutationDepositVoucherRewardsArgs,
+  GetVoucherOfDepositForFanResponse,
+  QueryGetVoucherOfDepositForFanArgs,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -48,15 +50,18 @@ import {
   getQuestion,
   depositVoucherRewards,
   getDepositsOfLootbox,
+  getVoucherForDepositForFan,
 } from "../../../api/firestore";
 import {
   Address,
+  DepositID,
   LootboxMintSignatureNonce,
   LootboxTicketID,
   LootboxType,
   Lootbox_Firestore,
   QuestionAnswerID,
   QuestionAnswer_Firestore,
+  TicketID,
   TournamentID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
@@ -192,6 +197,39 @@ const LootboxResolvers: Resolvers = {
       return {
         deposits,
       };
+    },
+    getVoucherOfDepositForFan: async (
+      _,
+      { payload }: QueryGetVoucherOfDepositForFanArgs,
+      context: Context
+    ): Promise<GetVoucherOfDepositForFanResponse> => {
+      const { depositID, ticketID } = payload;
+      try {
+        const voucher = await getVoucherForDepositForFan({
+          depositID: depositID as DepositID,
+          ticketID: ticketID as TicketID,
+          userID: context.userId as unknown as UserID,
+        });
+        if (!voucher) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: "Voucher not found",
+            },
+          };
+        }
+        return {
+          voucher,
+        };
+      } catch (err) {
+        console.error(err);
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
     },
   },
 
@@ -810,6 +848,20 @@ const LootboxResolvers: Resolvers = {
     __resolveType: (obj: GetLootboxDepositsResponse) => {
       if ("deposits" in obj) {
         return "GetLootboxDepositsResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  GetVoucherOfDepositForFanResponse: {
+    __resolveType: (obj: GetVoucherOfDepositForFanResponse) => {
+      if ("voucher" in obj) {
+        return "GetVoucherOfDepositForFanResponseSuccess";
       }
 
       if ("error" in obj) {
