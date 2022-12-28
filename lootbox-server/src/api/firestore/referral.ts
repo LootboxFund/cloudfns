@@ -30,6 +30,7 @@ import {
   LootboxTournamentStatus_Firestore,
   LootboxType,
   TournamentPrivacyScope,
+  ClaimPrivacyScope_Firestore,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -47,6 +48,7 @@ import { getUser } from "./user";
 import { getUserWallets } from "./wallet";
 import {
   convertClaimDBToGQL,
+  convertClaimPrivacyScopeGQLToDB,
   convertClaimStatusDBToGQL,
   convertClaimTypeDBToGQL,
 } from "../../lib/referral";
@@ -160,7 +162,7 @@ interface CreateClaimCall {
 
   isPostCosmic: boolean;
 
-  privacyScope: TournamentPrivacyScope[];
+  privacyScope: ClaimPrivacyScope_Firestore;
 
   /** @deprecated use lootbox */
   originPartyBasketId?: PartyBasketID;
@@ -199,7 +201,7 @@ export const _createClaim = async (
     isPostCosmic: req.isPostCosmic,
     ticketID: null,
     ticketWeb3ID: null,
-    privacyScope: req.privacyScope || [],
+    privacyScope: req.privacyScope,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -312,7 +314,7 @@ export const _createAirdropClaim = async (
     ticketID: null,
     ticketWeb3ID: null,
     claimerUserId: req.claimerUserId,
-    privacyScope: req.privacyScope || [],
+    privacyScope: req.privacyScope || {},
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -371,10 +373,10 @@ interface CreateCreateClaimReq {
   referralType: ReferralType_Firestore;
   claimType: ClaimType_Firestore;
   originLootboxID?: LootboxID;
+  isPostCosmic: boolean;
+  privacyScope: ClaimPrivacyScope_Firestore;
   /** @deprecated */
   originPartyBasketId?: PartyBasketID;
-  isPostCosmic: boolean;
-  privacyScope: TournamentPrivacyScope[];
 }
 export const createStartingClaim = async (
   req: CreateCreateClaimReq
@@ -442,7 +444,7 @@ export const createRewardClaim = async (
     referrerId: null,
     completed: true,
     isPostCosmic: req.isPostCosmic,
-    privacyScope: [],
+    privacyScope: {},
   });
 };
 

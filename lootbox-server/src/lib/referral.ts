@@ -1,9 +1,11 @@
 import {
+  ClaimPrivacyScope_Firestore,
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
   ReferralType_Firestore,
   Referral_Firestore,
+  TournamentPrivacyScope,
 } from "@wormgraph/helpers";
 import { getPartyBasketById } from "../api/firestore";
 import {
@@ -99,6 +101,26 @@ export const convertClaimTypeDBToGQL = (
   }
 };
 
+export const convertClaimPrivacyScopeDBToGQL = (
+  privacyScope: ClaimPrivacyScope_Firestore
+): TournamentPrivacyScope[] => {
+  return Object.keys(privacyScope).filter(
+    (key) => privacyScope[key]
+  ) as TournamentPrivacyScope[];
+};
+
+export const convertClaimPrivacyScopeGQLToDB = (
+  privacyScope: TournamentPrivacyScope[]
+): ClaimPrivacyScope_Firestore => {
+  return privacyScope.reduce(
+    (acc, curr) => ({
+      ...acc,
+      [curr]: true,
+    }),
+    {} as ClaimPrivacyScope_Firestore
+  );
+};
+
 export const convertClaimDBToGQL = (claim: Claim_Firestore): Claim => {
   return {
     id: claim.id,
@@ -129,7 +151,10 @@ export const convertClaimDBToGQL = (claim: Claim_Firestore): Claim => {
       deletedAt: claim.timestamps.deletedAt,
     },
     ticketID: claim?.ticketID || null,
-    privacyScope: claim?.privacyScope || [],
+    // privacyScope: claim?.privacyScope || [],
+    privacyScope: claim?.privacyScope
+      ? convertClaimPrivacyScopeDBToGQL(claim.privacyScope)
+      : [],
 
     /** @deprecated */
     originPartyBasketId: claim.originPartyBasketId,
