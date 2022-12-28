@@ -7,7 +7,6 @@ import {
     LootboxID,
     LootboxTicketID_Web3,
     LootboxMintWhitelistID,
-    ClaimID,
     LootboxTicketDigest,
     LootboxMintSignatureNonce,
     LootboxCreatedNonce,
