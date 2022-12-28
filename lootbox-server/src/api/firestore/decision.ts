@@ -173,13 +173,14 @@ export const decideAdToServe = async ({
 export const decideAirdropAdToServe = async (
   { lootboxID, placement, sessionID }: DecisionAdAirdropV1Payload,
   userID: UserIdpID
-): Promise<AdServed> => {
+): Promise<AdServed | string> => {
   const lootbox = await getLootbox(lootboxID as LootboxID);
 
-  if (!lootbox || !lootbox.airdropMetadata) {
-    throw Error(
-      `Lootbox with id ${lootboxID} and airdropMetadat does not exist in the database`
-    );
+  if (!lootbox) {
+    throw Error(`Lootbox with id ${lootboxID} does not exist in the database`);
+  }
+  if (!lootbox.airdropMetadata) {
+    return `No airdrop metadata found for lootbox ${lootboxID}`;
   }
   const { tournamentID } = lootbox;
 
@@ -223,12 +224,9 @@ export const decideAirdropAdToServe = async (
     });
 
   const match = matchingAdSetsForPlacement[0];
-
   const defaultAirdropAdSet = adSetsData.find((a) => a.id === match.adSetID);
   if (!defaultAirdropAdSet || !match || !match.adID || !match.adSetID) {
-    throw Error(
-      `No default ad found for lootbox ${lootboxID} with offer ${lootbox.airdropMetadata.offerID} and placement ${placement}`
-    );
+    return `No default ad found for lootbox ${lootboxID} with offer ${lootbox.airdropMetadata.offerID} and placement ${placement}`;
   }
 
   const [ad, claims] = await Promise.all([
@@ -241,9 +239,7 @@ export const decideAirdropAdToServe = async (
   })[0];
 
   if (!ad) {
-    throw Error(
-      `No ad found for adSet ${match.adSetID} in tournament ${tournamentID}`
-    );
+    return `No ad found for adSet ${match.adSetID} in tournament ${tournamentID}`;
   }
 
   const flight = await createFlight({

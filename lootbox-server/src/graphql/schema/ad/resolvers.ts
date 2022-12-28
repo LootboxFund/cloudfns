@@ -373,25 +373,20 @@ const AdResolvers: Resolvers = {
         console.log(`Retrieving ad for user ${context.userId}`);
         console.log(payload);
         const ad = await decideAirdropAdToServe(payload, context.userId);
-        console.log(`Got ad... ${ad.adID}`);
-        const questions = await getQuestionsForAd(ad);
-        console.log(`questions.legnth = ${questions.length}}`);
-        if (!ad) {
+        if (typeof ad === "string") {
           return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "No Ad could be served",
-            },
+            questions: [],
+            requiresAd: true,
+            errorMessage: ad,
           };
         }
-        return { ad, questions };
+        const questions = await getQuestionsForAd(ad);
+        return { ad, questions, requiresAd: true, errorMessage: "" };
       } catch (err) {
-        // console.error(err);
         return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
+          questions: [],
+          requiresAd: true,
+          errorMessage: err instanceof Error ? err.message : "",
         };
       }
     },

@@ -198,8 +198,10 @@ const AdTypeDefs = gql`
   }
 
   type DecisionAdAirdropV1ResponseSuccess {
-    ad: AdServed!
+    ad: AdServed
     questions: [AdOfferQuestion!]!
+    requiresAd: Boolean!
+    errorMessage: String
   }
 
   union DecisionAdAirdropV1Response =
