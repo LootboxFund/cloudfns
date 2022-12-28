@@ -41,7 +41,6 @@ import {
   VoucherRewardStatus,
   Deposit_Firestore,
   DepositID,
-  TicketID,
 } from "@wormgraph/helpers";
 import { LootboxID, UserIdpID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -777,7 +776,7 @@ export const createVoucher = async (
     title: metadata.title,
     status: VoucherRewardStatus.Available,
     url: voucher.url,
-    code: voucher.code,
+    code: voucher.code.trim(),
     type: metadata.type,
     lootboxID: metadata.lootboxID,
     depositedBy: metadata.depositedBy,
@@ -882,7 +881,7 @@ export const updateVoucherAsClaimed = async ({
 }: {
   id: VoucherRewardID;
   redeemedBy: UserID;
-  ticketID: TicketID;
+  ticketID: LootboxTicketID;
 }): Promise<VoucherReward_Firestore> => {
   const voucherRef = db
     .collection(Collection.VoucherReward)
@@ -909,7 +908,7 @@ export const cloneReuseableVoucher = async ({
 }: {
   userID: UserID;
   id: VoucherRewardID;
-  ticketID: TicketID;
+  ticketID: LootboxTicketID;
 }): Promise<VoucherReward_Firestore> => {
   const voucherRef = db
     .collection(Collection.VoucherReward)
@@ -938,7 +937,7 @@ export const getVoucherForDepositForFan = async ({
   userID,
 }: {
   depositID: DepositID;
-  ticketID: TicketID;
+  ticketID: LootboxTicketID;
   userID: UserID;
 }): Promise<VoucherDeposit | undefined> => {
   // 1. Get VoucherRewards matching voucher.deposit

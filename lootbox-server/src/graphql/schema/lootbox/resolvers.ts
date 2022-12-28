@@ -61,7 +61,6 @@ import {
   Lootbox_Firestore,
   QuestionAnswerID,
   QuestionAnswer_Firestore,
-  TicketID,
   TournamentID,
 } from "@wormgraph/helpers";
 import { Context } from "../../server";
@@ -207,7 +206,7 @@ const LootboxResolvers: Resolvers = {
       try {
         const voucher = await getVoucherForDepositForFan({
           depositID: depositID as DepositID,
-          ticketID: ticketID as TicketID,
+          ticketID: ticketID as LootboxTicketID,
           userID: context.userId as unknown as UserID,
         });
         if (!voucher) {
