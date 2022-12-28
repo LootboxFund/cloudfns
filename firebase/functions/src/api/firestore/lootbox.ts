@@ -22,7 +22,7 @@ import {
     TournamentID,
     LootboxSnapshotTimestamps,
 } from "@wormgraph/helpers";
-import { DocumentReference, FieldValue, Query, Timestamp } from "firebase-admin/firestore";
+import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
 
 export const getLootbox = async (id: LootboxID): Promise<Lootbox_Firestore | undefined> => {
@@ -161,16 +161,6 @@ export const getLootboxByChainAddress = async (
 //     return request;
 // };
 
-export const incrementLootboxRunningClaims = async (lootboxID: LootboxID): Promise<void> => {
-    const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
-
-    const updateReq: Partial<Lootbox_Firestore> = {
-        runningCompletedClaims: FieldValue.increment(1) as unknown as number,
-    };
-
-    await lootboxRef.update(updateReq);
-};
-
 interface CreateTicketRequest {
     minterUserID: UserID;
     lootboxID: LootboxID;
@@ -183,12 +173,14 @@ interface CreateTicketRequest {
     digest: LootboxTicketDigest;
     nonce: LootboxMintSignatureNonce;
     whitelist: MintWhitelistSignature_Firestore;
+    /** New flow: use this to update an existing ticket */
+    ticketWeb2ID?: LootboxTicketID;
 }
 
-export const finalizeMint = async (payload: CreateTicketRequest): Promise<LootboxTicket_Firestore> => {
+/** @deprecated use finalizeMintV2 */
+export const finalizeMint = async (payload: CreateTicketRequest): Promise<void> => {
     // - updates mintWhitelist.redeemed = true
     // - creates LootboxTicket_Firestore as subcollection under Lootbox
-
     const batch = db.batch();
 
     const ticketRef = db
@@ -210,6 +202,8 @@ export const finalizeMint = async (payload: CreateTicketRequest): Promise<Lootbo
         id: ticketRef.id as LootboxTicketID,
         digest: payload.digest,
         nonce: payload.nonce,
+        isMinted: true,
+        mintedAt: Timestamp.now().toMillis(),
     };
 
     const whitelistRef = db
@@ -221,7 +215,7 @@ export const finalizeMint = async (payload: CreateTicketRequest): Promise<Lootbo
     const whitelistUpdateReq: Partial<MintWhitelistSignature_Firestore> = {
         isRedeemed: true,
         lootboxTicketID: ticketRef.id as LootboxTicketID,
-        whitelistedAt: Timestamp.now().toMillis(),
+        redeemedAt: Timestamp.now().toMillis(),
     };
 
     // We need to update the claim with ticketID & web3TicketID
@@ -248,8 +242,105 @@ export const finalizeMint = async (payload: CreateTicketRequest): Promise<Lootbo
 
     await batch.commit();
 
-    const ticket = await ticketRef.get();
-    return ticket.data()!;
+    return;
+};
+
+interface FinalizeMintV2Request {
+    minterUserID: UserID;
+    lootboxID: LootboxID;
+    lootboxAddress: Address;
+    ticketID: LootboxTicketID_Web3;
+    minterAddress: Address;
+    mintWhitelistID: LootboxMintWhitelistID;
+    stampImage: string;
+    metadataURL: string;
+    digest: LootboxTicketDigest;
+    nonce: LootboxMintSignatureNonce;
+    whitelist: MintWhitelistSignature_Firestore;
+    /** New flow: use this to update an existing ticket */
+    ticketWeb2ID: LootboxTicketID;
+}
+
+export const finalizeMintV2 = async (payload: FinalizeMintV2Request): Promise<void> => {
+    // - updates mintWhitelist.redeemed = true
+    // - updates LootboxTicket_Firestore
+    // - updates mintwhitelist document
+    const batch = db.batch();
+
+    const ticketRef = db
+        .collection(Collection.Lootbox)
+        .doc(payload.lootboxID)
+        .collection(Collection.LootboxTicket)
+        .doc(payload.ticketWeb2ID) as DocumentReference<LootboxTicket_Firestore>;
+
+    const updateTicketDocument: Partial<LootboxTicket_Firestore> = {
+        lootboxAddress: payload.lootboxAddress,
+        ticketID: payload.ticketID,
+        minterAddress: payload.minterAddress,
+        mintWhitelistID: payload.mintWhitelistID,
+        updatedAt: Timestamp.now().toMillis(),
+        stampImage: payload.stampImage,
+        metadataURL: payload.metadataURL,
+        minterUserID: payload.minterUserID,
+        digest: payload.digest,
+        nonce: payload.nonce,
+        isMinted: true,
+        mintedAt: Timestamp.now().toMillis(),
+    };
+
+    const whitelistRef = db
+        .collection(Collection.Lootbox)
+        .doc(payload.lootboxID)
+        .collection(Collection.MintWhiteList)
+        .doc(payload.mintWhitelistID) as DocumentReference<MintWhitelistSignature_Firestore>;
+
+    const whitelistUpdateReq: Partial<MintWhitelistSignature_Firestore> = {
+        isRedeemed: true,
+        lootboxTicketID: ticketRef.id as LootboxTicketID,
+        redeemedAt: Timestamp.now().toMillis(),
+    };
+
+    // We need to update the claim with ticketID & web3TicketID
+    const claimRef = db
+        .collection(Collection.Referral)
+        .doc(payload.whitelist.referralID)
+        .collection(Collection.Claim)
+        .doc(payload.whitelist.claimID);
+
+    const timestampName: keyof Claim_Firestore = "timestamps";
+    const updatedAtName: keyof ClaimTimestamps_Firestore = "updatedAt";
+    const mintedAtName: keyof ClaimTimestamps_Firestore = "mintedAt";
+
+    const claimUpdateReq: Partial<Claim_Firestore> = {
+        ticketWeb3ID: payload.ticketID,
+        [`${timestampName}.${updatedAtName}`]: Timestamp.now().toMillis(),
+        [`${timestampName}.${mintedAtName}`]: Timestamp.now().toMillis(),
+    };
+
+    batch.update(ticketRef, updateTicketDocument);
+    batch.update(whitelistRef, whitelistUpdateReq);
+    batch.update(claimRef, claimUpdateReq);
+
+    await batch.commit();
+
+    return;
+};
+
+export const getTicketByID = async (ticketID: LootboxTicketID): Promise<LootboxTicket_Firestore | undefined> => {
+    const idFieldName: keyof LootboxTicket_Firestore = "id";
+    const collectionRef = db
+        .collectionGroup(Collection.LootboxTicket)
+        .where(idFieldName, "==", ticketID)
+        .limit(1) as Query<LootboxTicket_Firestore>;
+
+    const query = await collectionRef.get();
+
+    if (query.empty) {
+        return undefined;
+    }
+
+    const doc = query.docs[0];
+    return doc.data();
 };
 
 export const getTicketByDigest = async (
@@ -344,7 +435,7 @@ interface AssociateWeb3LootboxPayload {
 export const associateWeb3Lootbox = async (
     lootboxID: LootboxID,
     payload: AssociateWeb3LootboxPayload
-): Promise<Lootbox_Firestore> => {
+): Promise<void> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
     const timestampsFieldName: keyof Lootbox_Firestore = "timestamps";
     const deployedAtFieldName: keyof LootboxTimestamps = "deployedAt";
@@ -367,8 +458,7 @@ export const associateWeb3Lootbox = async (
 
     await lootboxRef.update(updateReq);
 
-    const lootbox = await lootboxRef.get();
-    return lootbox.data()!;
+    return;
 };
 
 interface AssociateWeb3LootboxTournamentPayload {

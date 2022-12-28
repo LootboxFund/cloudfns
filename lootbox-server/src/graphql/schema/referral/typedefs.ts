@@ -58,6 +58,7 @@ const ReferralTypeDefs = gql`
     status: ClaimStatus!
     type: ClaimType!
     timestamps: ClaimTimestamps!
+    ticketID: ID
 
     # GQL
     tournament: Tournament

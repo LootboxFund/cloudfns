@@ -7,6 +7,8 @@ import {
     ReferralID,
     LootboxStatus_Firestore,
     LootboxTournamentStatus_Firestore,
+    Lootbox_Firestore,
+    Tournament_Firestore,
 } from "@wormgraph/helpers";
 import {
     getCompletedUserReferralClaimsForTournament,
@@ -17,8 +19,10 @@ import {
     getCompletedClaimsForReferral,
     transitionClaimToComplete,
     transitionClaimToExpired,
+    handleClaimCompletedBatchUpdate,
 } from "../api/firestore";
 import * as functions from "firebase-functions";
+import { logger } from "firebase-functions";
 
 export const validateUnverifiedUserClaim = async (user: User_Firestore, claim: Claim_Firestore) => {
     if (!claim.lootboxID || !claim.claimerUserId) {
@@ -143,4 +147,61 @@ export const transitionUnverifiedClaimToCompleted = async (
             referralID: claim.referralId,
         });
     }
+};
+
+interface ClaimCompletedCallbackRequest {
+    claim: Claim_Firestore;
+}
+export const claimCompletedCallback = async (request: ClaimCompletedCallbackRequest) => {
+    logger.log("claim completed callback", {
+        referralID: request.claim.referralId,
+        claimID: request.claim.id,
+        lootboxID: request.claim.lootboxID,
+    });
+
+    if (!request.claim.lootboxID) {
+        logger.error("no lootboxID", { claimID: request.claim.id });
+        return;
+    }
+
+    if (!request.claim.claimerUserId) {
+        logger.error("no claimerUserID", { claimID: request.claim.id });
+        return;
+    }
+
+    let lootbox: Lootbox_Firestore | undefined;
+    let tournament: Tournament_Firestore | undefined;
+
+    try {
+        [lootbox, tournament] = await Promise.all([
+            getLootbox(request.claim.lootboxID),
+            getTournamentByID(request.claim.tournamentId),
+        ]);
+        if (!lootbox) {
+            throw new Error("Lootbox not found");
+        }
+        if (!tournament) {
+            throw new Error("Tournament not found");
+        }
+        if (lootbox.status === LootboxStatus_Firestore.disabled || lootbox.status === LootboxStatus_Firestore.soldOut) {
+            throw new Error("Lootbox disabled or sold out");
+        }
+    } catch (err) {
+        logger.error("error fetching lootbox", { lootboxID: request.claim.lootboxID, err });
+        return;
+    }
+
+    try {
+        await handleClaimCompletedBatchUpdate({
+            ownerUserID: request.claim.claimerUserId,
+            claim: request.claim,
+            lootbox: lootbox,
+            tournament: tournament,
+        });
+    } catch (err) {
+        logger.error("Error batch updating claims onClaimCompleteCallback", err);
+        return;
+    }
+
+    return;
 };

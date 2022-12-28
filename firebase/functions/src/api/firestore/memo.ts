@@ -19,10 +19,10 @@ import {
     Tournament_Firestore,
     UserID,
     RateQuoteStatus,
+    AdFlight_Firestore,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
-import { AdFlight_Firestore } from "@wormgraph/helpers";
 
 export const generateMemoBills = async (adEvent: AdEvent_Firestore): Promise<Memo_Firestore[]> => {
     if (adEvent.activationID) {
