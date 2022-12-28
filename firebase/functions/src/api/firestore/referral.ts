@@ -321,6 +321,7 @@ export const handleClaimCompletedBatchUpdate = async (payload: ClaimCompleteBatc
             lootboxAddress: payload.lootbox.address || null,
             lootboxName: payload.lootbox.name,
             lootboxMaxTickets: payload.lootbox.maxTickets,
+            privacyScope: {}, // since these a bonus claims, they have not consented
             ticketWeb3ID: null, // this will be filled out later in indexLootboxOnMint
             ticketID: null, // this will be filled out later in indexLootboxOnMint
             whitelistedAddress: null, // gets filled out later on the fly when user requests it

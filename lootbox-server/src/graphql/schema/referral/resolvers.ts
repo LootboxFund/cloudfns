@@ -90,6 +90,8 @@ import provider from "../../../api/identityProvider/firebase";
 import { convertTournamentDBToGQL } from "../../../lib/tournament";
 import {
   convertClaimDBToGQL,
+  convertClaimPrivacyScopeDBToGQL,
+  convertClaimPrivacyScopeGQLToDB,
   convertReferralDBToGQL,
   convertReferralTypeGQLToDB,
 } from "../../../lib/referral";
@@ -827,7 +829,9 @@ const ReferralResolvers: Resolvers = {
             ? (referral.seedPartyBasketId as PartyBasketID)
             : undefined,
           isPostCosmic: !!referral.isPostCosmic,
-          privacyScope: tournament.privacyScope || [],
+          privacyScope: tournament?.privacyScope
+            ? convertClaimPrivacyScopeGQLToDB(tournament.privacyScope)
+            : {},
         });
 
         return {

@@ -101,6 +101,10 @@
       "type": "string"
     },
     {
+      "name": "privacyScope",
+      "type": "array"
+    },
+    {
       "name": "timestamps",
       "type": "map",
       "fields": [
