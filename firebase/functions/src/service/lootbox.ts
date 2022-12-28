@@ -119,7 +119,6 @@ interface MintNewTicketCallbackRequest {
     minterAddress: Address;
     digest: LootboxTicketDigest;
     nonce: LootboxMintSignatureNonce;
-    claimID?: ClaimID;
 }
 export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest): Promise<void> => {
     const lootbox = await getLootboxByChainAddress(params.lootboxAddress, params.chainIDHex);
