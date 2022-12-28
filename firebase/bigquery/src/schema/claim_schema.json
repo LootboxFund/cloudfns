@@ -102,7 +102,17 @@
     },
     {
       "name": "privacyScope",
-      "type": "array"
+      "type": "map",
+      "fields": [
+        {
+          "name": "MarketingEmails",
+          "type": "boolean"
+        },
+        {
+          "name": "DataSharing",
+          "type": "boolean"
+        }
+      ]
     },
     {
       "name": "timestamps",
