@@ -29,6 +29,7 @@ import {
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
   LootboxType,
+  TournamentPrivacyScope,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -159,6 +160,8 @@ interface CreateClaimCall {
 
   isPostCosmic: boolean;
 
+  privacyScope: TournamentPrivacyScope[];
+
   /** @deprecated use lootbox */
   originPartyBasketId?: PartyBasketID;
   /** @deprecated use lootbox */
@@ -196,6 +199,7 @@ export const _createClaim = async (
     isPostCosmic: req.isPostCosmic,
     ticketID: null,
     ticketWeb3ID: null,
+    privacyScope: req.privacyScope || [],
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -308,6 +312,7 @@ export const _createAirdropClaim = async (
     ticketID: null,
     ticketWeb3ID: null,
     claimerUserId: req.claimerUserId,
+    privacyScope: req.privacyScope || [],
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -369,6 +374,7 @@ interface CreateCreateClaimReq {
   /** @deprecated */
   originPartyBasketId?: PartyBasketID;
   isPostCosmic: boolean;
+  privacyScope: TournamentPrivacyScope[];
 }
 export const createStartingClaim = async (
   req: CreateCreateClaimReq
@@ -388,6 +394,7 @@ export const createStartingClaim = async (
     originLootboxId: req.originLootboxID,
     originPartyBasketId: req.originPartyBasketId,
     isPostCosmic: req.isPostCosmic,
+    privacyScope: req.privacyScope,
   });
 };
 
@@ -435,6 +442,7 @@ export const createRewardClaim = async (
     referrerId: null,
     completed: true,
     isPostCosmic: req.isPostCosmic,
+    privacyScope: [],
   });
 };
 

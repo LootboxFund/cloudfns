@@ -47,16 +47,22 @@ export const convertLootboxTicketDBToGQL = (
   const ticket: LootboxTicket = {
     id: ticketDB.id,
     lootboxID: ticketDB.lootboxID,
-    lootboxAddress: ticketDB.lootboxAddress,
-    minterUserID: ticketDB.minterUserID,
-    minterAddress: ticketDB.minterAddress,
+    ownerUserID: ticketDB.ownerUserID || null,
     createdAt: ticketDB.createdAt,
-    metadataURL: ticketDB.metadataURL,
-    mintWhitelistID: ticketDB.mintWhitelistID,
-    stampImage: ticketDB.stampImage,
-    ticketID: ticketDB.ticketID,
-    nonce: ticketDB.nonce,
-    digest: ticketDB.digest,
+    updatedAt: ticketDB.updatedAt || null,
+
+    // Web3 stuff
+    lootboxAddress: ticketDB.lootboxAddress || null,
+    minterUserID: ticketDB.minterUserID || null,
+    minterAddress: ticketDB.minterAddress || null,
+    metadataURL: ticketDB.metadataURL || null,
+    mintWhitelistID: ticketDB.mintWhitelistID || null,
+    stampImage: ticketDB.stampImage || null,
+    ticketID: ticketDB.ticketID || null,
+    nonce: ticketDB.nonce || null,
+    digest: ticketDB.digest || null,
+    isMinted: ticketDB.isMinted || false,
+    mintedAt: ticketDB.mintedAt || null,
   };
 
   return ticket;

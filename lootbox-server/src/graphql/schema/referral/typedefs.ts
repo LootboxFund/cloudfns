@@ -59,6 +59,7 @@ const ReferralTypeDefs = gql`
     type: ClaimType!
     timestamps: ClaimTimestamps!
     ticketID: ID
+    privacyScope: [TournamentPrivacyScope!]!
 
     # GQL
     tournament: Tournament

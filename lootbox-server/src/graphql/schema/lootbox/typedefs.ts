@@ -58,16 +58,23 @@ const LootboxTypeDefs = gql`
   type LootboxTicket {
     id: ID!
     lootboxID: ID!
-    lootboxAddress: ID!
-    ticketID: ID! # web3 ticket id
-    minterUserID: ID!
-    minterAddress: ID!
-    mintWhitelistID: ID!
     createdAt: Timestamp!
-    stampImage: String!
-    metadataURL: String!
-    nonce: ID!
-    digest: ID!
+    # TODO: Make this required... It should be the same as minterUserID but should be on the document since creation
+    ownerUserID: ID
+    updatedAt: Timestamp
+
+    # web3 stuf:
+    lootboxAddress: ID
+    ticketID: ID # web3 ticket id
+    minterUserID: ID
+    minterAddress: ID
+    mintWhitelistID: ID
+    stampImage: String
+    metadataURL: String
+    nonce: ID
+    digest: ID
+    isMinted: Boolean!
+    mintedAt: Timestamp
   }
 
   type LootboxUserClaimPageInfo {
