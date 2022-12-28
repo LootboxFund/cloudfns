@@ -60,7 +60,7 @@ interface CreateLootboxRequest {
 
 // This associates the web3 aspects of a lootbox to Lootbox_Firestore
 // NOTE: The Lootbox_Firestore already exists.
-export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo): Promise<Lootbox_Firestore> => {
+export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo): Promise<void> => {
     // Make sure the lootbox dosen't already exist via the web3 look up
     const [lootbox, _lootbox] = await Promise.all([
         getLootbox(request.lootboxID),
@@ -91,7 +91,7 @@ export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo
 
     logger.info("updating lootbox with web3 data", request);
 
-    const updatedLootbox = await associateWeb3Lootbox(lootbox.id, {
+    await associateWeb3Lootbox(lootbox.id, {
         address: request.lootboxAddress,
         factory: request.factory,
         creatorAddress: request.creatorAddress,
@@ -106,7 +106,7 @@ export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo
         creationNonce: request.creationNonce,
     });
 
-    return updatedLootbox;
+    return;
 };
 
 interface MintNewTicketCallbackRequest {

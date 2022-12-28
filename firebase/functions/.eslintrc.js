@@ -29,5 +29,6 @@ module.exports = {
         "import/no-unresolved": 0,
         "prettier/prettier": "error",
         camelcase: 0,
+        "valid-jsdoc": 0,
     },
 };

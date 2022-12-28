@@ -226,6 +226,7 @@ interface ClaimCompleteBatchUpdatePayload {
  * - Increments tournament running claims
  * - Increments lootbox running claims
  * - Creates bonus claim if required
+ * @param payload
  */
 export const handleClaimCompletedBatchUpdate = async (payload: ClaimCompleteBatchUpdatePayload): Promise<void> => {
     const batch = db.batch();

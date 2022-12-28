@@ -178,7 +178,7 @@ interface CreateTicketRequest {
 }
 
 /** @deprecated use finalizeMintV2 */
-export const finalizeMint = async (payload: CreateTicketRequest): Promise<LootboxTicket_Firestore> => {
+export const finalizeMint = async (payload: CreateTicketRequest): Promise<void> => {
     // - updates mintWhitelist.redeemed = true
     // - creates LootboxTicket_Firestore as subcollection under Lootbox
     const batch = db.batch();
@@ -242,8 +242,7 @@ export const finalizeMint = async (payload: CreateTicketRequest): Promise<Lootbo
 
     await batch.commit();
 
-    const ticket = await ticketRef.get();
-    return ticket.data()!;
+    return;
 };
 
 interface FinalizeMintV2Request {
@@ -262,7 +261,7 @@ interface FinalizeMintV2Request {
     ticketWeb2ID: LootboxTicketID;
 }
 
-export const finalizeMintV2 = async (payload: FinalizeMintV2Request): Promise<LootboxTicket_Firestore> => {
+export const finalizeMintV2 = async (payload: FinalizeMintV2Request): Promise<void> => {
     // - updates mintWhitelist.redeemed = true
     // - updates LootboxTicket_Firestore
     // - updates mintwhitelist document
@@ -324,8 +323,7 @@ export const finalizeMintV2 = async (payload: FinalizeMintV2Request): Promise<Lo
 
     await batch.commit();
 
-    const ticket = await ticketRef.get();
-    return ticket.data()!;
+    return;
 };
 
 export const getTicketByID = async (ticketID: LootboxTicketID): Promise<LootboxTicket_Firestore | undefined> => {
@@ -437,7 +435,7 @@ interface AssociateWeb3LootboxPayload {
 export const associateWeb3Lootbox = async (
     lootboxID: LootboxID,
     payload: AssociateWeb3LootboxPayload
-): Promise<Lootbox_Firestore> => {
+): Promise<void> => {
     const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
     const timestampsFieldName: keyof Lootbox_Firestore = "timestamps";
     const deployedAtFieldName: keyof LootboxTimestamps = "deployedAt";
@@ -460,8 +458,7 @@ export const associateWeb3Lootbox = async (
 
     await lootboxRef.update(updateReq);
 
-    const lootbox = await lootboxRef.get();
-    return lootbox.data()!;
+    return;
 };
 
 interface AssociateWeb3LootboxTournamentPayload {
