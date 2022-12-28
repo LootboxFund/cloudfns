@@ -129,6 +129,7 @@ export const convertClaimDBToGQL = (claim: Claim_Firestore): Claim => {
       deletedAt: claim.timestamps.deletedAt,
     },
     ticketID: claim?.ticketID || null,
+    privacyScope: claim?.privacyScope || [],
 
     /** @deprecated */
     originPartyBasketId: claim.originPartyBasketId,

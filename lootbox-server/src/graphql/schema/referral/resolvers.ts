@@ -827,6 +827,7 @@ const ReferralResolvers: Resolvers = {
             ? (referral.seedPartyBasketId as PartyBasketID)
             : undefined,
           isPostCosmic: !!referral.isPostCosmic,
+          privacyScope: tournament.privacyScope || [],
         });
 
         return {

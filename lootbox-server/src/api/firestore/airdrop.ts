@@ -215,6 +215,7 @@ export const createAirdropClaim = async (
       batchAlias: `Batch ${airdropLootbox.airdropMetadata.batch}`,
       answers: [],
     },
+    privacyScope: req?.privacyScope || [],
   });
 };
 
