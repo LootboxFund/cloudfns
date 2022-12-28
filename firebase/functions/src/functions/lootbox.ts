@@ -594,7 +594,7 @@ export const enqueueLootboxOnMint = functions
                     throw new Error("Not found");
                 }
             } catch (err) {
-                logger.error("Could not find ticket", { ticketID: data.ticketID });
+                logger.error("Could not find ticket", err, { ticketID: data.ticketID });
                 throw new functions.https.HttpsError("unauthenticated", "Ticket not found");
             }
 
