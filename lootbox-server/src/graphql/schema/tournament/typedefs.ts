@@ -51,6 +51,16 @@ const TournamentTypeDefs = gql`
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
   }
 
+  input ClaimerCSVDataPayload {
+    eventID: ID!
+  }
+
+  type ClaimerCSVDataResponseSuccess {
+    csvDownloadURL: String!
+  }
+
+  union ClaimerCSVDataResponse = ClaimerCSVDataResponseSuccess | ResponseError
+
   type Tournament {
     id: ID!
     title: String!
@@ -489,6 +499,7 @@ const TournamentTypeDefs = gql`
     removePromoterFromTournament(
       payload: RemovePromoterFromTournamentPayload!
     ): RemovePromoterFromTournamentResponse!
+    claimerCSVData(payload: ClaimerCSVDataPayload!): ClaimerCSVDataResponse!
     # promoter leaves a tournament on their own accord
     #leaveAsPromoterInTournament(
     #  tournamentID: ID!
