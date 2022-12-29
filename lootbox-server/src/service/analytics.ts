@@ -330,7 +330,7 @@ export const claimerStatisticsForLootboxTournament = async (
 export const fansListForTournament = async (
   payload: QueryFansListForTournamentArgs,
   userID: UserIdpID
-) => {
+): Promise<FanListRowForTournament[]> => {
   const tournament = await getTournamentById(
     payload.tournamentID as TournamentID
   );
