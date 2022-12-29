@@ -892,9 +892,6 @@ export const getEventClaimerCSVData = async (
   });
 
   console.log("Fetched data from BigQuery", data.length);
-  console.log(data[0]);
-  console.log(data[1]);
-  console.log(data[2]);
 
   return { data, tournament };
 };

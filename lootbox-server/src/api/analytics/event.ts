@@ -191,8 +191,9 @@ export const eventClaimerData = async ({
           WHERE
           claims.tournamentId = @eventID
         GROUP BY
-          users.id,
+          userID,
           username,
+          userAvatar,
           socialTwitter,
           socialInstagram,
           socialTiktok,

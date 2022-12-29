@@ -1,6 +1,6 @@
 export const csvCleaner = (obj: any): string => {
   if (typeof obj === "string") {
-    return obj.replace(/[^\w\s]/g, "");
+    return obj.replace(/,|\n|\r/g, "");
   } else if (typeof obj === "number") {
     return obj.toString();
   } else if (typeof obj === "boolean") {
@@ -8,7 +8,7 @@ export const csvCleaner = (obj: any): string => {
   } else if (typeof obj === "object") {
     return JSON.stringify(obj, (key, value) => {
       if (typeof value === "string") {
-        return value.replace(/[^\w\s]/g, "");
+        return value.replace(/,|\n|\r/g, "");
       } else if (typeof value === "number") {
         return value.toString();
       } else if (typeof value === "boolean") {

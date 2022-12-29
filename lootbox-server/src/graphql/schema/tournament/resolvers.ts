@@ -343,7 +343,10 @@ const TournamentResolvers = {
 
         const csvContent = parseCSVRows(data);
         const filename =
-          toFilename(tournament.title || tournament.id) + nanoid() + ".csv";
+          toFilename(tournament.title || tournament.id) +
+          "_" +
+          nanoid(6) +
+          ".csv";
 
         const downloadUrl = await saveCsvToStorage({
           fileName: `event_claimer_export/${filename}`,
@@ -1144,6 +1147,20 @@ const TournamentResolvers = {
     __resolveType: (obj: ListPotentialAirdropClaimersResponse) => {
       if ("potentialClaimers" in obj) {
         return "ListPotentialAirdropClaimersResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  ClaimerCSVDataResponse: {
+    __resolveType: (obj: ClaimerCsvDataResponse) => {
+      if ("csvDownloadURL" in obj) {
+        return "ClaimerCSVDataResponseSuccess";
       }
 
       if ("error" in obj) {
