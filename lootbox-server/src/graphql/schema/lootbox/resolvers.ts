@@ -201,6 +201,14 @@ const LootboxResolvers: Resolvers = {
       { payload }: QueryGetVoucherOfDepositForFanArgs,
       context: Context
     ): Promise<GetVoucherOfDepositForFanResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
       const { depositID, ticketID } = payload;
       try {
         const voucher = await getVoucherForDepositForFan({
