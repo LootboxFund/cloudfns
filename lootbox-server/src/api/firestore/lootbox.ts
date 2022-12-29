@@ -970,8 +970,22 @@ export const getVoucherForDepositForFan = async ({
   ticketID: LootboxTicketID;
   userID: UserID;
 }): Promise<VoucherDeposit | undefined> => {
+  // 0. Check that there is a Ticket with matching user and lootbox
   // 1. Get VoucherRewards matching voucher.deposit
-  const vouchers = await getVoucherRewardsOfDeposit(depositID);
+  const [vouchers, deposit] = await Promise.all([
+    getVoucherRewardsOfDeposit(depositID),
+    getDeposit(depositID),
+  ]);
+  if (!deposit) {
+    throw Error(`Deposit ${depositID} does not exist!`);
+  }
+  const ticket = await getTicket(deposit.lootboxID, ticketID);
+  if (!ticket) {
+    throw Error(`Ticket ${ticketID} does not exist!`);
+  }
+  if (ticket.ownerUserID !== userID) {
+    throw Error(`Ticket ${ticketID} does not belong to user ${userID}!`);
+  }
   // 2. Filter for existance of existing voucher via voucher.ticketID && voucher.redeemedBy
   // 2a. If voucher.ticketID && voucher.redeemedBy exists, return Voucher as Redeemed
   const existingVoucher = vouchers.find((v) => v.ticketID && v.redeemedBy);
@@ -1022,4 +1036,20 @@ export const getVoucherForDepositForFan = async ({
   }
   // 3. If no VoucherRewards are available, throw Error
   throw Error(`No VoucherRewards available for this deposit ${depositID}`);
+};
+
+export const getDeposit = async (
+  id: DepositID
+): Promise<Deposit_Firestore | undefined> => {
+  const depositRef = db
+    .collection(Collection.Deposit)
+    .doc(id) as DocumentReference<Deposit_Firestore>;
+
+  const depositSnapshot = await depositRef.get();
+
+  if (!depositSnapshot.exists) {
+    return undefined;
+  } else {
+    return depositSnapshot.data();
+  }
 };
