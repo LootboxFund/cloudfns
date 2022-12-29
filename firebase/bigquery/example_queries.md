@@ -304,3 +304,78 @@ GROUP BY
 LIMIT
   1000
 ```
+
+### WIP queries for analytics CSV
+
+```
+
+// SELECT
+//   claimer.username AS claimerUsername,
+//   claims.status as claimStatus,
+//   CONCAT("https://REPLACE_ME.com", claimer.id) AS userPublicProfilePage,
+//   claims.type as claimType,
+//   claims.referralType as referralType,
+//   TIMESTAMP_MILLIS(CAST(claims.timestamps_completedAt AS INT64)) AS completedAt,
+//   flight.id AS flightID,
+//   flight.offerID AS offerID,
+//   flight.adSetID AS adSetID,
+//   claims.tournamentName AS tournamentName
+// FROM
+//   `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` AS claims
+// LEFT JOIN
+//   `lootbox-fund-staging.firestore_export.flight_schema_flight_schema_latest` AS flight
+// ON
+//   claims.id = flight.claimID
+// LEFT JOIN
+//   `lootbox-fund-staging.firestore_export.user_schema_user_schema_latest` AS claimer
+// ON
+//   claimer.id = claims.claimerUserID
+// -- INNER JOIN
+// --   `lootbox-fund-staging.firestore_export.claim_schema_claim_privacy_scope_schema_latest` AS claimsPrivacy
+// -- ON
+// --   claimsPrivacy.claimID = claims.id
+// WHERE
+//   claims.tournamentId = 'AVkMS8PZAJ6uiTgVp1wP'
+// ORDER BY
+//   CASE WHEN claims.status = 'complete' THEN 0 ELSE 1 END
+//   ASC,
+//   claims.status,claimerUsername
+// LIMIT
+//   10000
+
+// SELECT
+//   claimer.username AS claimerUsername,
+//   claims.status as claimStatus,
+//   CONCAT("https://REPLACE_ME.com", claimer.id) AS userPublicProfilePage,
+//   claims.type as claimType,
+//   claims.referralType as referralType,
+//   TIMESTAMP_MILLIS(CAST(claims.timestamps_completedAt AS INT64)) AS completedAt,
+//   flight.id AS flightID,
+//   flight.offerID AS offerID,
+//   flight.adSetID AS adSetID,
+//   claims.tournamentName AS tournamentName
+// FROM
+//   `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` AS claims
+// LEFT JOIN
+//   `lootbox-fund-staging.firestore_export.flight_schema_flight_schema_latest` AS flight
+// ON
+//   claims.id = flight.claimID
+// LEFT JOIN
+//   `lootbox-fund-staging.firestore_export.user_schema_user_schema_latest` AS claimer
+// ON
+//   claimer.id = claims.claimerUserID
+// -- INNER JOIN
+// --   `lootbox-fund-staging.firestore_export.claim_schema_claim_privacy_scope_schema_latest` AS claimsPrivacy
+// -- ON
+// --   claimsPrivacy.claimID = claims.id
+// WHERE
+//   claims.tournamentId = 'AVkMS8PZAJ6uiTgVp1wP'
+// ORDER BY
+//   CASE WHEN claims.status = 'complete' THEN 0 ELSE 1 END
+//   ASC,
+//   claims.status,claimerUsername
+// LIMIT
+//   10000
+
+
+```

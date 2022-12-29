@@ -83,6 +83,8 @@ import {
   MutationBulkEditLootboxTournamentSnapshotsArgs,
   BulkEditLootboxTournamentSnapshotsResponse,
   QueryListPotentialAirdropClaimersArgs,
+  ClaimerCsvDataResponse,
+  MutationClaimerCsvDataArgs,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -105,6 +107,12 @@ import { convertLootboxDBToGQL } from "../../../lib/lootbox";
 import { listPotentialAirdropClaimers } from "../../../api/firestore/airdrop";
 import { getRandomUserName } from "../../../api/lexica-images";
 import { Affiliate_Firestore } from "../../../api/firestore/affiliate.type";
+import * as analyticsService from "../../../service/analytics";
+import { saveCsvToStorage } from "../../../api/storage";
+import { nanoid } from "nanoid";
+import { manifest } from "../../../manifest";
+import { parseCSVRows } from "../../../lib/csv";
+import { toFilename } from "../../../lib/parser";
 
 const TournamentResolvers = {
   Query: {
@@ -313,6 +321,49 @@ const TournamentResolvers = {
   },
 
   Mutation: {
+    claimerCSVData: async (
+      _: any,
+      { payload }: MutationClaimerCsvDataArgs,
+      context: Context
+    ): Promise<ClaimerCsvDataResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      try {
+        const { data, tournament } =
+          await analyticsService.getEventClaimerCSVData({
+            eventID: payload.eventID as TournamentID,
+            callerUserID: context.userId,
+          });
+
+        const csvContent = parseCSVRows(data);
+        const filename =
+          toFilename(tournament.title || tournament.id) +
+          "_" +
+          nanoid(6) +
+          ".csv";
+
+        const downloadUrl = await saveCsvToStorage({
+          fileName: `event_claimer_export/${filename}`,
+          data: csvContent,
+          bucket: manifest.firebase.storageBucket,
+        });
+
+        return { csvDownloadURL: downloadUrl };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
     createTournament: async (
       _,
       { payload }: MutationCreateTournamentArgs,
@@ -1105,6 +1156,20 @@ const TournamentResolvers = {
       return null;
     },
   },
+
+  ClaimerCSVDataResponse: {
+    __resolveType: (obj: ClaimerCsvDataResponse) => {
+      if ("csvDownloadURL" in obj) {
+        return "ClaimerCSVDataResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const tournamentResolverComposition = {
@@ -1121,6 +1186,7 @@ const tournamentResolverComposition = {
   "Mutation.bulkEditLootboxTournamentSnapshots": [isAuthenticated()],
   // "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
+  "Mutation.claimerCSVData": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(

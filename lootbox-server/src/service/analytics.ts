@@ -16,6 +16,7 @@ import {
   Lootbox_Firestore,
   OfferID,
   TournamentID,
+  Tournament_Firestore,
   UserID,
   User_Firestore,
 } from "@wormgraph/helpers";
@@ -27,6 +28,7 @@ import {
   claimerStatsForTournament,
   getOfferEventActivations,
   getOfferActivations,
+  eventClaimerData,
 } from "../api/analytics";
 import { manifest } from "../manifest";
 import {
@@ -34,6 +36,7 @@ import {
   FanListRowForTournament,
   QueryFansListForLootboxArgs,
   QueryFansListForTournamentArgs,
+  Tournament,
   ViewAdResponseSuccess,
 } from "../graphql/generated/types";
 import * as _ from "lodash";
@@ -327,10 +330,13 @@ export const claimerStatisticsForLootboxTournament = async (
   }
 };
 
+/**
+ * @TODO this can be replaced with BigQuery from this query: eventClaimerCSV
+ */
 export const fansListForTournament = async (
   payload: QueryFansListForTournamentArgs,
   userID: UserIdpID
-) => {
+): Promise<FanListRowForTournament[]> => {
   const tournament = await getTournamentById(
     payload.tournamentID as TournamentID
   );
@@ -818,4 +824,74 @@ export const offerActivations = async (
   });
 
   return data;
+};
+
+interface EventClaimerCSVRequest {
+  eventID: TournamentID;
+  callerUserID: UserIdpID;
+}
+interface EventClaimerCSVRow {
+  userID: string;
+  username: string;
+  userPublicProfilePage: string;
+  timestampFirstJoined: string;
+  favoriteLootboxName: string;
+  eventName: string;
+  totalClaimCount: number;
+  completedClaimCount: number;
+  viralClaimCount: number;
+  referralBonusClaimCount: number;
+  participationRewardCount: number;
+  airdropClaimCount: number;
+  pendingClaims: number;
+  expiredClaims: number;
+  originalClaims: number;
+  socialTwitter: string;
+  socialInstagram: string;
+  socialTiktok: string;
+  socialFacebook: string;
+  socialDiscord: string;
+  socialSnapchat: string;
+  socialTwitch: string;
+  socialWeb: string;
+  userEmail: string;
+  userPhone: string;
+  userAvatar: string;
+}
+export const getEventClaimerCSVData = async (
+  payload: EventClaimerCSVRequest
+): Promise<{
+  data: EventClaimerCSVRow[];
+  tournament: Tournament_Firestore;
+}> => {
+  const tournament = await getTournamentById(payload.eventID);
+  if (!tournament || !tournament.organizer) {
+    throw new Error("Tournament not found");
+  }
+  // only allow the tournament owner to view this data
+  const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
+    payload.callerUserID as unknown as UserIdpID,
+    tournament.organizer as AffiliateID
+  );
+  if (
+    !isValidUserAffiliate ||
+    tournament.creatorId !== (payload.callerUserID as unknown as UserID)
+  ) {
+    throw Error(
+      `Unauthorized. User do not have permissions to get analytics for this tournament`
+    );
+  }
+
+  const data = await eventClaimerData({
+    queryParams: { eventID: tournament.id as TournamentID },
+    claimTable: manifest.bigQuery.datasets.firestoreExport.tables.claim.id,
+    userTable: manifest.bigQuery.datasets.firestoreExport.tables.user.id,
+    claimPrivacyTable:
+      manifest.bigQuery.datasets.firestoreExport.tables.claimPrivacy.id,
+    location: manifest.bigQuery.datasets.firestoreExport.location,
+  });
+
+  console.log("Fetched data from BigQuery", data.length);
+
+  return { data, tournament };
 };
