@@ -244,10 +244,32 @@ const LootboxTypeDefs = gql`
     createdAt: Timestamp!
     oneTimeVouchersCount: Int!
     hasReuseableVoucher: Boolean!
+    isRedeemed: Boolean
   }
 
   union GetLootboxDepositsResponse =
       GetLootboxDepositsResponseSuccess
+    | ResponseError
+
+  # --------------- Get Voucher of Deposit ---------------
+  input GetVoucherOfDepositForFanPayload {
+    depositID: ID!
+    ticketID: ID!
+  }
+  type GetVoucherOfDepositForFanResponseSuccess {
+    voucher: VoucherDeposit!
+  }
+
+  type VoucherDeposit {
+    id: ID!
+    title: String!
+    code: String
+    url: String
+    isRedeemed: Boolean
+  }
+
+  union GetVoucherOfDepositForFanResponse =
+      GetVoucherOfDepositForFanResponseSuccess
     | ResponseError
 
   extend type Query {
@@ -261,6 +283,10 @@ const LootboxTypeDefs = gql`
     lootboxFeed(first: Int!, after: ID): LootboxFeedResponse!
     #
     getLootboxDeposits(lootboxID: ID!): GetLootboxDepositsResponse!
+    #
+    getVoucherOfDepositForFan(
+      payload: GetVoucherOfDepositForFanPayload!
+    ): GetVoucherOfDepositForFanResponse!
   }
 
   input CreateLootboxPayload {

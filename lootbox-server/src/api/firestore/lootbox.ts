@@ -11,6 +11,7 @@ import {
   AirdropMetadataCreateInput,
   CreateLootboxPayload,
   DepositVoucherRewardsPayload,
+  VoucherDeposit,
 } from "../../graphql/generated/types";
 import {
   Address,
@@ -775,7 +776,7 @@ export const createVoucher = async (
     title: metadata.title,
     status: VoucherRewardStatus.Available,
     url: voucher.url,
-    code: voucher.code,
+    code: voucher.code.trim(),
     type: metadata.type,
     lootboxID: metadata.lootboxID,
     depositedBy: metadata.depositedBy,
@@ -843,16 +844,182 @@ export const getDepositsOfLootbox = async (
 
   if (depositCollectionItems.empty) {
     return [];
-  } else {
-    return depositCollectionItems.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: data.id,
-        title: data.voucherMetadata?.voucherTitle || "",
-        createdAt: data.createdAt,
-        oneTimeVouchersCount: data.voucherMetadata?.oneTimeVouchersCount || 0,
-        hasReuseableVoucher: data.voucherMetadata?.hasReuseableVoucher || false,
-      };
-    });
   }
+  const deposits = depositCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: data.id,
+      title: data.voucherMetadata?.voucherTitle || "",
+      createdAt: data.createdAt,
+      oneTimeVouchersCount: data.voucherMetadata?.oneTimeVouchersCount || 0,
+      hasReuseableVoucher: data.voucherMetadata?.hasReuseableVoucher || false,
+      isRedeemed: false,
+    };
+  });
+  // const depositsWithRedemptionBool = await Promise.all(
+  //   deposits.map((d) => {
+  //     const isRedeemed = checkIfUserHasRedeemedFromDeposit(d.id, userID);
+  //     return {
+  //       ...d,
+  //       isRedeemed,
+  //     };
+  //   })
+  // );
+  return deposits;
+};
+
+export const checkIfUserHasRedeemedFromDeposit = async (
+  depositID: DepositID,
+  userID: UserID
+) => {
+  const vouchersRef = db
+    .collection(Collection.VoucherReward)
+    .where("depositID", "==", depositID)
+    .where("redeemedBy", "==", userID) as Query<VoucherReward_Firestore>;
+
+  const voucherCollectionItems = await vouchersRef.get();
+
+  if (voucherCollectionItems.empty) {
+    return [];
+  } else {
+    return voucherCollectionItems.docs
+      .map((doc) => doc.data())
+      .filter((d) => d);
+  }
+};
+
+export const getVoucherRewardsOfDeposit = async (depositID: DepositID) => {
+  const vouchersRef = db
+    .collection(Collection.VoucherReward)
+    .where("depositID", "==", depositID) as Query<VoucherReward_Firestore>;
+
+  const voucherCollectionItems = await vouchersRef.get();
+
+  if (voucherCollectionItems.empty) {
+    return [];
+  } else {
+    return voucherCollectionItems.docs
+      .map((doc) => doc.data())
+      .filter((d) => d);
+  }
+};
+
+export const updateVoucherAsClaimed = async ({
+  id,
+  redeemedBy,
+  ticketID,
+}: {
+  id: VoucherRewardID;
+  redeemedBy: UserID;
+  ticketID: LootboxTicketID;
+}): Promise<VoucherReward_Firestore> => {
+  const voucherRef = db
+    .collection(Collection.VoucherReward)
+    .doc(id) as DocumentReference<VoucherReward_Firestore>;
+  const voucherSnapshot = await voucherRef.get();
+  if (!voucherSnapshot.exists) {
+    throw Error(`VoucherReward ${id} does not exist!`);
+  }
+  const updatePayload: Partial<VoucherReward_Firestore> = {
+    redeemedBy,
+    redeemedDate: new Date().getTime() / 1000,
+    ticketID: ticketID as LootboxTicketID,
+    status: VoucherRewardStatus.Redeemed,
+  };
+  // until done
+  await voucherRef.update(updatePayload);
+  return (await voucherRef.get()).data() as VoucherReward_Firestore;
+};
+
+export const cloneReuseableVoucher = async ({
+  id,
+  userID,
+  ticketID,
+}: {
+  userID: UserID;
+  id: VoucherRewardID;
+  ticketID: LootboxTicketID;
+}): Promise<VoucherReward_Firestore> => {
+  const voucherRef = db
+    .collection(Collection.VoucherReward)
+    .doc(id) as DocumentReference<VoucherReward_Firestore>;
+  const userSnapshot = await voucherRef.get();
+  const existingVoucher = userSnapshot.data() as VoucherReward_Firestore;
+  const cloneRef = db
+    .collection(Collection.VoucherReward)
+    .doc() as DocumentReference<VoucherReward_Firestore>;
+  const cloneObjectOfSchema: VoucherReward_Firestore = {
+    ...existingVoucher,
+    id: cloneRef.id as VoucherRewardID,
+    redeemedBy: userID,
+    redeemedDate: new Date().getTime() / 1000,
+    ticketID: ticketID as LootboxTicketID,
+    type: VoucherRewardType.ReusableCloned,
+    status: VoucherRewardStatus.Redeemed,
+  };
+  await cloneRef.set(cloneObjectOfSchema);
+  return cloneObjectOfSchema;
+};
+
+export const getVoucherForDepositForFan = async ({
+  depositID,
+  ticketID,
+  userID,
+}: {
+  depositID: DepositID;
+  ticketID: LootboxTicketID;
+  userID: UserID;
+}): Promise<VoucherDeposit | undefined> => {
+  // 1. Get VoucherRewards matching voucher.deposit
+  const vouchers = await getVoucherRewardsOfDeposit(depositID);
+  // 2. Filter for existance of existing voucher via voucher.ticketID && voucher.redeemedBy
+  // 2a. If voucher.ticketID && voucher.redeemedBy exists, return Voucher as Redeemed
+  const existingVoucher = vouchers.find((v) => v.ticketID && v.redeemedBy);
+  if (existingVoucher) {
+    return {
+      id: existingVoucher.id,
+      title: existingVoucher.title,
+      code: existingVoucher.code,
+      url: existingVoucher.url,
+      isRedeemed: true,
+    };
+  }
+  // 2b. If not voucher.ticketID || voucher.redeemedBy, return first one-time Voucher as Available (and mark it redeemed)
+  const firstFreeOneTime = vouchers.find(
+    (v) => !v.ticketID && !v.redeemedBy && v.type === VoucherRewardType.OneTime
+  );
+  if (firstFreeOneTime) {
+    await updateVoucherAsClaimed({
+      id: firstFreeOneTime.id,
+      redeemedBy: userID,
+      ticketID,
+    });
+    return {
+      id: firstFreeOneTime.id,
+      title: firstFreeOneTime.title,
+      code: firstFreeOneTime.code,
+      url: firstFreeOneTime.url,
+      isRedeemed: false,
+    };
+  }
+  // 3. If no one-time VoucherRewards are available, return a reuseable VoucherReward
+  const firstFreeReuseable = vouchers.find(
+    (v) => v.type === VoucherRewardType.ReusableSource
+  );
+  if (firstFreeReuseable) {
+    const voucher = await cloneReuseableVoucher({
+      id: firstFreeReuseable.id,
+      userID,
+      ticketID,
+    });
+    return {
+      id: voucher.id,
+      title: voucher.title,
+      code: voucher.code,
+      url: voucher.url,
+      isRedeemed: false,
+    };
+  }
+  // 3. If no VoucherRewards are available, throw Error
+  throw Error(`No VoucherRewards available for this deposit ${depositID}`);
 };
