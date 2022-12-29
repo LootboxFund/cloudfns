@@ -1186,6 +1186,7 @@ const tournamentResolverComposition = {
   "Mutation.bulkEditLootboxTournamentSnapshots": [isAuthenticated()],
   // "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
+  "Mutation.claimerCSVData": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(
