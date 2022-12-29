@@ -844,17 +844,47 @@ export const getDepositsOfLootbox = async (
 
   if (depositCollectionItems.empty) {
     return [];
+  }
+  const deposits = depositCollectionItems.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: data.id,
+      title: data.voucherMetadata?.voucherTitle || "",
+      createdAt: data.createdAt,
+      oneTimeVouchersCount: data.voucherMetadata?.oneTimeVouchersCount || 0,
+      hasReuseableVoucher: data.voucherMetadata?.hasReuseableVoucher || false,
+      isRedeemed: false,
+    };
+  });
+  // const depositsWithRedemptionBool = await Promise.all(
+  //   deposits.map((d) => {
+  //     const isRedeemed = checkIfUserHasRedeemedFromDeposit(d.id, userID);
+  //     return {
+  //       ...d,
+  //       isRedeemed,
+  //     };
+  //   })
+  // );
+  return deposits;
+};
+
+export const checkIfUserHasRedeemedFromDeposit = async (
+  depositID: DepositID,
+  userID: UserID
+) => {
+  const vouchersRef = db
+    .collection(Collection.VoucherReward)
+    .where("depositID", "==", depositID)
+    .where("redeemedBy", "==", userID) as Query<VoucherReward_Firestore>;
+
+  const voucherCollectionItems = await vouchersRef.get();
+
+  if (voucherCollectionItems.empty) {
+    return [];
   } else {
-    return depositCollectionItems.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: data.id,
-        title: data.voucherMetadata?.voucherTitle || "",
-        createdAt: data.createdAt,
-        oneTimeVouchersCount: data.voucherMetadata?.oneTimeVouchersCount || 0,
-        hasReuseableVoucher: data.voucherMetadata?.hasReuseableVoucher || false,
-      };
-    });
+    return voucherCollectionItems.docs
+      .map((doc) => doc.data())
+      .filter((d) => d);
   }
 };
 

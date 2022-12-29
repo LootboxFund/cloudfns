@@ -192,7 +192,6 @@ const LootboxResolvers: Resolvers = {
         lootboxID as LootboxID,
         context.userId as unknown as UserID
       );
-
       return {
         deposits,
       };

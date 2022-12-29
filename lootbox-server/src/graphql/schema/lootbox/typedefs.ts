@@ -244,6 +244,7 @@ const LootboxTypeDefs = gql`
     createdAt: Timestamp!
     oneTimeVouchersCount: Int!
     hasReuseableVoucher: Boolean!
+    isRedeemed: Boolean
   }
 
   union GetLootboxDepositsResponse =
