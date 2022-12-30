@@ -1,5 +1,6 @@
 {
   "name": "lootbox-hosting",
+  "version": "0.1.0",
   "scripts": {
     "emulator": "firebase emulators:start --only hosting",
     "deploy:staging": "firebase deploy --only hosting:staging  --project lootbox-fund-staging",
