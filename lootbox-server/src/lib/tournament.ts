@@ -61,6 +61,7 @@ export const parseTournamentDB = (
     isPostCosmic: data.isPostCosmic || false,
     runningCompletedClaims: data.runningCompletedClaims || 0,
     playbookUrl: data.playbookUrl || "",
+    privacyScope: data?.privacyScope || [],
     timestamps: {
       createdAt: data.timestamps.createdAt,
       updatedAt: data.timestamps.updatedAt,
