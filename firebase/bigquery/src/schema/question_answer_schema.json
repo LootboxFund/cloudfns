@@ -1,0 +1,92 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "batch",
+      "type": "string"
+    },
+    {
+      "name": "order",
+      "type": "number",
+      "column_name": "order_database_copy"
+    },
+    {
+      "name": "isOriginal",
+      "type": "boolean"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "question",
+      "type": "string"
+    },
+    {
+      "name": "answer",
+      "type": "string"
+    },
+    {
+      "name": "userID",
+      "type": "string"
+    },
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "mandatory",
+      "type": "boolean"
+    },
+    {
+      "name": "options",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "number",
+      "column_name": "timestamp_1"
+    },
+    {
+      "name": "metadata",
+      "type": "map",
+      "fields": [
+        {
+          "name": "offerID",
+          "type": "string"
+        },
+        {
+          "name": "lootboxID",
+          "type": "string"
+        },
+        {
+          "name": "tournamentID",
+          "type": "string"
+        },
+        {
+          "name": "organizerID",
+          "type": "string"
+        },
+        {
+          "name": "advertiserID",
+          "type": "string"
+        },
+        {
+          "name": "adSetID",
+          "type": "string"
+        },
+        {
+          "name": "referralID",
+          "type": "string"
+        },
+        {
+          "name": "claimID",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}
