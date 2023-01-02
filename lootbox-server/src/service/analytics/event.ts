@@ -7,11 +7,10 @@ import {
   UserIdpID,
 } from "@wormgraph/helpers";
 import {
-  OfferQuestionAnswerByEventRequest,
-  getOfferClaimsWithQAByEvent,
-  OfferClaimWithQARow,
+  getEventOfferClaimsWithQAByEvent,
+  EventOfferClaimWithQARow,
 } from "../../api/analytics";
-import { getOffer, getTournamentById } from "../../api/firestore";
+import { getTournamentById } from "../../api/firestore";
 import { checkIfUserIdpMatchesAffiliate } from "../../api/identityProvider/firebase";
 import { manifest } from "../../manifest";
 
@@ -20,11 +19,10 @@ interface getOfferClaimsWithQARequest {
   offerID: OfferID;
   callerUserID: UserIdpID;
 }
-interface EventClaimsWithQACSVRow {}
-export const offerClaimsWithQA = async (
+export const eventOfferClaimsWithQA = async (
   payload: getOfferClaimsWithQARequest
 ): Promise<{
-  data: OfferClaimWithQARow[];
+  data: EventOfferClaimWithQARow[];
   tournament: Tournament_Firestore;
 }> => {
   const [tournament] = await Promise.all([getTournamentById(payload.eventID)]);
@@ -48,7 +46,7 @@ export const offerClaimsWithQA = async (
     );
   }
 
-  const data = await getOfferClaimsWithQAByEvent({
+  const data = await getEventOfferClaimsWithQAByEvent({
     queryParams: {
       eventID: tournament.id as TournamentID,
       offerID: payload.offerID as OfferID,

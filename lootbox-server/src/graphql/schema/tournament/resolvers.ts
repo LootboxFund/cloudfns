@@ -975,11 +975,12 @@ const TournamentResolvers = {
         };
       }
       try {
-        const { data, tournament } = await analyticsService.offerClaimsWithQA({
-          eventID: payload.eventID as TournamentID,
-          offerID: payload.offerID as OfferID,
-          callerUserID: context.userId,
-        });
+        const { data, tournament } =
+          await analyticsService.eventOfferClaimsWithQA({
+            eventID: payload.eventID as TournamentID,
+            offerID: payload.offerID as OfferID,
+            callerUserID: context.userId,
+          });
 
         const csvContent = parseCSVRows(data);
         const filename =
