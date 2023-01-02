@@ -6,7 +6,7 @@ import {
   getOffer,
   getTournamentById,
   getUser,
-} from "../api/firestore";
+} from "../../api/firestore";
 import {
   AffiliateID,
   ClaimStatus_Firestore,
@@ -29,27 +29,27 @@ import {
   getOfferEventActivations,
   getOfferActivations,
   eventClaimerData,
-} from "../api/analytics";
-import { manifest } from "../manifest";
+} from "../../api/analytics";
+import { manifest } from "../../manifest";
 import {
   FanListRowForLootbox,
   FanListRowForTournament,
   QueryFansListForLootboxArgs,
   QueryFansListForTournamentArgs,
-  Tournament,
-  ViewAdResponseSuccess,
-} from "../graphql/generated/types";
+} from "../../graphql/generated/types";
 import * as _ from "lodash";
 import {
   checkIfUserIdpMatchesAdvertiser,
   checkIfUserIdpMatchesAffiliate,
-} from "../api/identityProvider/firebase";
+} from "../../api/identityProvider/firebase";
 import { UserIdpID } from "@wormgraph/helpers";
 
 interface BaseClaimStatsForLootboxRequest {
   lootboxID: LootboxID;
   eventID: TournamentID;
 }
+
+export * from "./event";
 
 export interface BaseLootboxStatisticsServiceResponse {
   totalClaimCount: number;
@@ -412,14 +412,14 @@ export const fansListForTournament = async (
   //   `uniqueClaimersSortedByDate count = ${uniqueClaimersSortedByDate.length}`
   // );
   console.log(`
-  
-  -
-  -
-  -
-  -
-  -
-  
-  `);
+    
+    -
+    -
+    -
+    -
+    -
+    
+    `);
   // uniqueClaimersSortedByDate.forEach((c) =>
   //   console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`)
   // );
@@ -624,14 +624,14 @@ export const fansListForLootbox = async (
   //   `uniqueClaimersSortedByDate count = ${uniqueClaimersSortedByDate.length}`
   // );
   console.log(`
-  
-  -
-  -
-  -
-  -
-  -
-  
-  `);
+    
+    -
+    -
+    -
+    -
+    -
+    
+    `);
   // uniqueClaimersSortedByDate.forEach((c) =>
   //   console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`)
   // );
@@ -762,6 +762,9 @@ export const offerActivationsForEvent = async (
   if (!tournament || !tournament.organizer) {
     throw new Error("Tournament not found");
   }
+  if (!tournament?.offers || !tournament.offers[payload.offerID]) {
+    throw new Error("Offer not found");
+  }
 
   // only allow the tournament owner to view this data
   const isValidUserAffiliate = await checkIfUserIdpMatchesAffiliate(
@@ -890,8 +893,6 @@ export const getEventClaimerCSVData = async (
       manifest.bigQuery.datasets.firestoreExport.tables.claimPrivacy.id,
     location: manifest.bigQuery.datasets.firestoreExport.location,
   });
-
-  console.log("Fetched data from BigQuery", data.length);
 
   return { data, tournament };
 };
