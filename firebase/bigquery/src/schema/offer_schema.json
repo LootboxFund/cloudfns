@@ -1,0 +1,118 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "title",
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "name": "image",
+      "type": "string"
+    },
+    {
+      "name": "advertiserID",
+      "type": "string"
+    },
+    {
+      "name": "spentBudget",
+      "type": "number"
+    },
+    {
+      "name": "maxBudget",
+      "type": "number"
+    },
+    {
+      "name": "strategy",
+      "type": "string"
+    },
+    {
+      "name": "startDate",
+      "type": "number"
+    },
+    {
+      "name": "endDate",
+      "type": "number"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "affiliateBaseLink",
+      "type": "string"
+    },
+    {
+      "name": "mmp",
+      "type": "string"
+    },
+    {
+      "name": "airdropMetadata",
+      "type": "map",
+      "fields": [
+        {
+          "name": "batchCount",
+          "type": "string"
+        },
+        {
+          "name": "advertiserID",
+          "type": "string"
+        },
+        {
+          "name": "lootboxTemplateID",
+          "type": "string"
+        },
+        {
+          "name": "lootboxTemplateStamp",
+          "type": "string"
+        },
+        {
+          "name": "offerID",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "oneLiner",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "type": "string"
+        },
+        {
+          "name": "instructionsLink",
+          "type": "string"
+        },
+        {
+          "name": "instructionsCallToAction",
+          "type": "string"
+        },
+        {
+          "name": "callToActionLink",
+          "type": "string"
+        },
+        {
+          "name": "tournamentID",
+          "type": "string"
+        },
+        {
+          "name": "organizerID",
+          "type": "string"
+        },
+        {
+          "name": "advertiserName",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}
