@@ -379,3 +379,229 @@ LIMIT
 
 
 ```
+
+CREATE TEMP FUNCTION clean*column_name(column_name STRING) AS (
+TRIM(REGEXP_REPLACE(column_name, '[^a-zA-Z0-9*]', '_'), '_')
+);
+
+WITH Data AS (
+SELECT
+claims.id AS claimID,
+question,
+answer
+FROM
+`lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` AS claims
+LEFT JOIN
+`lootbox-fund-staging.firestore_export.question-answer_schema_question_answer_schema_latest` AS questionAnswers
+ON claims.id = questionAnswers.metadata_claimID
+)
+SELECT \* FROM Data
+PIVOT(MAX(answer) FOR clean_column_name(question) IN ('Do_you_agree_to_eat_our_jellyfish'))
+where Do_you_agree_to_eat_our_jellyfish is not null
+-- WHERE questionAnswers.answer is not null
+LIMIT 100
+
+```
+
+
+```
+
+CREATE TEMP FUNCTION
+clean*column_name(column_name STRING) AS ( TRIM(REGEXP_REPLACE(column_name, '[^a-za-z0-9*]', '\*'), '\*') );
+
+WITH DATA AS (
+SELECT
+claims.id AS claimID,
+question,
+answer,
+-- ROW_NUMBER() OVER(PARTITION BY question ORDER BY question) AS index
+DENSE_RANK() OVER(ORDER BY question) AS questionIndex
+FROM
+`lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` AS claims
+LEFT JOIN
+`lootbox-fund-staging.firestore_export.question-answer_schema_question_answer_schema_latest` AS questionAnswers
+ON
+claims.id = questionAnswers.metadata_claimID
+WHERE questionAnswers.answer is not NULL
+)
+SELECT
+
+- FROM
+  DATA
+  PIVOT(MIN(question) as question, MIN(answer) as answer FOR questionIndex IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,18,19, 20, 21, 22, 23, 24, 25,26,27,28,29,30,31,32,33,34,35,35,36,37,38,39,40))
+  LIMIT
+  1000
+
+-- Do you agree to eat our jellyfish?
+-- true
+
+-- select \* from `lootbox-fund-staging.firestore_export.question-answer_schema_question_answer_schema_latest` AS questionAnswers where question is not null and answer is not null
+
+````
+
+```sql
+WITH
+  QuestionAnswers_Raw AS (
+  SELECT
+    claims.id AS qaClaimID,
+    question,
+    answer,
+    DENSE_RANK() OVER(ORDER BY question) AS questionIndex
+  FROM
+    `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` AS claims
+  LEFT JOIN
+    `lootbox-fund-staging.firestore_export.question-answer_schema_question_answer_schema_latest` AS questionAnswers
+  ON
+    claims.id = questionAnswers.metadata_claimID
+  WHERE
+    questionAnswers.answer IS NOT NULL ),
+  QuestionAnswers AS (
+  SELECT
+    *
+  FROM
+    QuestionAnswers_Raw PIVOT(MIN(question) AS question,
+      MIN(answer) AS answer FOR questionIndex IN (0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40)) ),
+  ClaimerUserData AS (
+  SELECT
+    claims.id AS claimID,
+    claimer.username AS username,
+    CASE
+      WHEN claimer.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', claimer.id)
+    ELSE
+    NULL
+  END
+    AS userPublicProfilePage,
+    TIMESTAMP_MILLIS(CAST(claims.timestamps_completedAt AS INT64)) AS claimCompletedAt,
+    claims.status AS claimStatus,
+    claims.type AS claimType,
+    claims.referralType AS referralType,
+    claims.tournamentName AS eventName,
+    claims.lootboxName AS lootboxName,
+    CASE
+      WHEN claims.lootboxID IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.lootbox}?lid=', claims.lootboxID)
+    ELSE
+    NULL
+  END
+    AS lootboxRedeemPage,
+    COALESCE(MIN(
+        CASE
+          WHEN claimPrivacy.privacyScope_member = 'DataSharing' THEN COALESCE(claimer.email, "")
+        ELSE
+        NULL
+      END
+        ), "CONSENT_REQUIRED") AS claimerEmail,
+    COALESCE(MIN(
+        CASE
+          WHEN claimPrivacy.privacyScope_member = 'DataSharing' THEN COALESCE(claimer.phoneNumber, "")
+        ELSE
+        NULL
+      END
+        ), "CONSENT_REQUIRED") AS claimerPhone,
+    referrer.username AS referrerUsername,
+    CASE
+      WHEN claimer.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', claimer.id)
+    ELSE
+    NULL
+  END
+    AS referrerPublicProfile
+  FROM
+    `lootbox-fund-staging.firestore_export.claim_schema_claim_schema_latest` AS claims
+  LEFT JOIN
+    `lootbox-fund-staging.firestore_export.user_schema_user_schema_latest` AS claimer
+  ON
+    claims.claimerUserID = claimer.id
+  LEFT JOIN
+    `lootbox-fund-staging.firestore_export.user_schema_user_schema_latest` AS referrer
+  ON
+    claims.referrerID = referrer.id
+  INNER JOIN
+    `lootbox-fund-staging.firestore_export.claim_schema_claim_privacy_scope_schema_latest` AS claimPrivacy
+  ON
+    claims.id = claimPrivacy.claimID
+  GROUP BY
+    claimID,
+    username,
+    userPublicProfilePage,
+    claimCompletedAt,
+    claimStatus,
+    claimType,
+    referralType,
+    eventName,
+    lootboxName,
+    lootboxRedeemPage,
+    referrerUsername,
+    referrerPublicProfile )
+SELECT
+  claimerUser.claimCompletedAt,
+  claimerUser.username AS username,
+  claimerUser.userPublicProfilePage,
+  claimerUser.claimType,
+  claimerUser.claimStatus,
+  claimerUser.referralType,
+  flight.adSetID,
+  offer.title AS offerTitle,
+  claimerUser.eventName AS event,
+  claimerUser.referrerUsername,
+  claimerUser.referrerPublicProfile,
+  qa.*
+FROM
+  QuestionAnswers AS qa
+FULL OUTER JOIN
+  ClaimerUserData AS claimerUser
+ON
+  qa.qaClaimID = claimerUser.claimID
+LEFT JOIN
+  `lootbox-fund-staging.firestore_export.flight_schema_flight_schema_latest` AS flight
+ON
+  flight.claimID = qa.qaClaimID
+LEFT JOIN
+  `lootbox-fund-staging.firestore_export.offer_schema_offer_schema_latest` AS offer
+ON
+  flight.offerID = offer.id
+ORDER BY
+  claimStatus ASC,
+  claimCompletedAt DESC
+LIMIT
+  1000
+````
