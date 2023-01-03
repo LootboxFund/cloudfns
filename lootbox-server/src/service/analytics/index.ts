@@ -50,6 +50,7 @@ interface BaseClaimStatsForLootboxRequest {
 }
 
 export * from "./event";
+export * from "./offer";
 
 export interface BaseLootboxStatisticsServiceResponse {
   totalClaimCount: number;

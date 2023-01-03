@@ -37,6 +37,8 @@ import {
   UpdateClaimRedemptionStatusResponse,
   MutationUpdateClaimRedemptionStatusArgs,
   MutationAnswerAfterTicketClaimQuestionArgs,
+  MutationOfferClaimsCsvArgs,
+  OfferClaimsCsvResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -72,6 +74,12 @@ import {
   CheckIfUserAnsweredAirdropQuestionsResponse,
   AfterTicketClaimQuestionResponse,
 } from "../../generated/types";
+import * as analyticsService from "../../../service/analytics";
+import { parseCSVRows } from "../../../lib/csv";
+import { toFilename } from "../../../lib/parser";
+import { nanoid } from "nanoid";
+import { saveCsvToStorage } from "../../../api/storage";
+import { manifest } from "../../../manifest";
 
 const OfferResolvers: Resolvers = {
   Query: {
@@ -461,6 +469,46 @@ const OfferResolvers: Resolvers = {
         };
       }
     },
+    offerClaimsCSV: async (
+      _,
+      { payload }: MutationOfferClaimsCsvArgs,
+      context: Context
+    ): Promise<OfferClaimsCsvResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: "Unauthorized",
+          },
+        };
+      }
+
+      try {
+        const { data, offer } = await analyticsService.offerClaimsWithQA({
+          offerID: payload.offerID as OfferID,
+          callerUserID: context.userId,
+        });
+
+        const csvContent = parseCSVRows(data);
+        const filename =
+          toFilename(offer.title || offer.id) + "_" + nanoid(6) + ".csv";
+
+        const downloadUrl = await saveCsvToStorage({
+          fileName: `offer_claims_export/${filename}`,
+          data: csvContent,
+          bucket: manifest.firebase.storageBucket,
+        });
+
+        return { csvDownloadURL: downloadUrl };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   Offer: {
@@ -647,6 +695,19 @@ const OfferResolvers: Resolvers = {
       return null;
     },
   },
+  OfferClaimsCSVResponse: {
+    __resolveType: (obj: OfferClaimsCsvResponse) => {
+      if ("csvDownloadURL" in obj) {
+        return "OfferClaimsCSVResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const offerComposition = {
@@ -656,6 +717,7 @@ const offerComposition = {
   "Mutation.editOffer": [isAuthenticated()],
   "Mutation.createActivation": [isAuthenticated()],
   "Mutation.editActivationsInOffer": [isAuthenticated()],
+  "Mutation.offerClaimsCSV": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(OfferResolvers, offerComposition);

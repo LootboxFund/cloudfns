@@ -205,6 +205,9 @@ export const getOfferActivations = async (
 
 export interface EventOfferClaimWithQARow
   extends EventClaimQuestionAndAnswerBaseRow {
+  claimerEmail: string;
+  claimerPhone: string;
+  claimStartedTimestamp: string;
   claimCompletedAt: string;
   username: string;
   userPublicProfilePage: string;
@@ -279,17 +282,20 @@ const convertEventOfferClaimsWithQAByEvent = (
 ): EventOfferClaimWithQARow => {
   // Convert data into type T and return it
   return {
-    claimCompletedAt: data?.claimCompletedAt || "",
+    claimStartedTimestamp: parseDate(data?.claimStartedTimestamp),
     username: data?.username || "",
     userPublicProfilePage: data?.userPublicProfilePage || "",
     claimType: data?.claimType || "",
     claimStatus: data?.claimStatus || "",
+    claimCompletedAt: parseDate(data?.claimCompletedAt),
     referralType: data?.referralType || "",
     adSetID: data?.adSetID || "",
     offerTitle: data?.offerTitle || "",
     eventName: data?.eventName || "",
     referrerUsername: data?.referrerUsername || "",
     referrerPublicProfile: data?.referrerPublicProfile || "",
+    claimerEmail: data?.claimerEmail || "",
+    claimerPhone: data?.claimerPhone || "",
     question_1: data?.question_1 || "",
     answer_1: data?.answer_1 || "",
     question_2: data?.question_2 || "",
@@ -405,6 +411,7 @@ export const getEventOfferClaimsWithQAByEvent = async (
     END
       AS userPublicProfilePage,
       TIMESTAMP_MILLIS(CAST(claims.timestamps_completedAt AS INT64)) AS claimCompletedAt,
+      TIMESTAMP_MILLIS(CAST(claims.timestamps_createdAt AS INT64)) AS claimStartedTimestamp,
       claims.status AS claimStatus,
       claims.type AS claimType,
       claims.referralType AS referralType,
@@ -457,6 +464,7 @@ export const getEventOfferClaimsWithQAByEvent = async (
       username,
       userPublicProfilePage,
       claimCompletedAt,
+      claimStartedTimestamp,
       claimStatus,
       claimType,
       referralType,
@@ -467,6 +475,7 @@ export const getEventOfferClaimsWithQAByEvent = async (
       referrerPublicProfile )
   SELECT
     claimerUser.claimCompletedAt,
+    claimerUser.claimStartedTimestamp,
     claimerUser.username AS username,
     claimerUser.userPublicProfilePage,
     claimerUser.claimType,
@@ -474,11 +483,13 @@ export const getEventOfferClaimsWithQAByEvent = async (
     claimerUser.referralType,
     flight.adSetID,
     offer.title AS offerTitle,
-    claimerUser.eventName AS event,
+    claimerUser.eventName AS eventName,
     claimerUser.referrerUsername,
     claimerUser.referrerPublicProfile,
     claimerUser.lootboxName,
     claimerUser.lootboxRedeemPage,
+    claimerUser.claimerPhone,
+    claimerUser.claimerEmail,
     qa.*
   FROM
     QuestionAnswers AS qa
@@ -524,7 +535,8 @@ export const getEventOfferClaimsWithQAByEvent = async (
 };
 
 export interface OfferClaimWithQARow extends ClaimQuestionAndAnswerBaseRow {
-  claimCompletedAt: string;
+  claimStartedTimestamp: string;
+  claimCompletedTimestamp: string;
   username: string;
   userPublicProfilePage: string;
   claimType: string;
@@ -537,6 +549,8 @@ export interface OfferClaimWithQARow extends ClaimQuestionAndAnswerBaseRow {
   eventOrganizerPublicProfilePage: string;
   referrerUsername: string;
   referrerPublicProfile: string;
+  claimerEmail: string;
+  claimerPhone: string;
 }
 export interface OfferQuestionAnswerRequest {
   queryParams: {
@@ -595,14 +609,19 @@ export interface ClaimQuestionAndAnswerBaseRow {
   answer_20: string;
 }
 
+const parseDate = (date: undefined | any | { value: string }) => {
+  return date && "value" in date ? date.value : date || "";
+};
+
 const convertOfferClaimsWithQA = (data: any): OfferClaimWithQARow => {
   // Convert data into type T and return it
   return {
-    claimCompletedAt: data?.claimCompletedAt || "",
     username: data?.username || "",
+    claimStartedTimestamp: parseDate(data?.claimStartedTimestamp),
     userPublicProfilePage: data?.userPublicProfilePage || "",
     claimType: data?.claimType || "",
     claimStatus: data?.claimStatus || "",
+    claimCompletedTimestamp: parseDate(data?.claimCompletedAt),
     referralType: data?.referralType || "",
     adSetID: data?.adSetID || "",
     offerTitle: data?.offerTitle || "",
@@ -612,6 +631,8 @@ const convertOfferClaimsWithQA = (data: any): OfferClaimWithQARow => {
       data?.eventOrganizerPublicProfilePage || "",
     referrerUsername: data?.referrerUsername || "",
     referrerPublicProfile: data?.referrerPublicProfile || "",
+    claimerEmail: data?.claimerEmail || "",
+    claimerPhone: data?.claimerPhone || "",
     question_1: data?.question_1 || "",
     answer_1: data?.answer_1 || "",
     question_2: data?.question_2 || "",
@@ -680,6 +701,7 @@ export const getOfferClaimsWithQA = async (
       claims.id AS qaClaimID,
       question,
       answer,
+      userID,
       DENSE_RANK() OVER(ORDER BY question) AS questionIndex
     FROM
       \`${payload.claimTable}\` AS claims
@@ -691,7 +713,12 @@ export const getOfferClaimsWithQA = async (
       questionAnswers.metadata_offerID = @offerID ),
     QuestionAnswers AS (
     SELECT
-      *
+      *,
+      CASE
+          WHEN questionUser.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', questionUser.id)
+        ELSE
+        NULL
+      END AS userPublicProfilePage,
     FROM
       QuestionAnswers_Raw PIVOT(MIN(question) AS question,
         MIN(answer) AS answer FOR questionIndex IN (0,
@@ -714,7 +741,11 @@ export const getOfferClaimsWithQA = async (
           17,
           18,
           19,
-          20)) ),
+          20))
+        LEFT JOIN 
+          \`${payload.userTable}\` as questionUser
+        ON questionUser.id = userID
+      ),
     ClaimerUserData AS (
     SELECT
       claims.id AS claimID,
@@ -726,6 +757,7 @@ export const getOfferClaimsWithQA = async (
     END
       AS userPublicProfilePage,
       TIMESTAMP_MILLIS(CAST(claims.timestamps_completedAt AS INT64)) AS claimCompletedAt,
+      TIMESTAMP_MILLIS(CAST(claims.timestamps_createdAt AS INT64)) AS claimStartedTimestamp,
       claims.status AS claimStatus,
       claims.type AS claimType,
       claims.referralType AS referralType,
@@ -737,7 +769,7 @@ export const getOfferClaimsWithQA = async (
         WHEN eventOrganizer.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', eventOrganizer.id)
       ELSE
       NULL
-    END AS eventOrganizerPublicProfile,
+    END AS eventOrganizerPublicProfilePage,
       CASE
         WHEN claims.lootboxID IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.cosmicLootboxPage}?lid=', claims.lootboxID)
       ELSE
@@ -798,6 +830,7 @@ export const getOfferClaimsWithQA = async (
       username,
       userPublicProfilePage,
       claimCompletedAt,
+      claimStartedTimestamp,
       claimStatus,
       claimType,
       referralType,
@@ -807,30 +840,72 @@ export const getOfferClaimsWithQA = async (
       referrerUsername,
       referrerPublicProfile,
       eventOrganizerUsername,
-      eventOrganizerPublicProfile,
+      eventOrganizerPublicProfilePage,
       adSetID )
   SELECT
     c.claimCompletedAt,
-    c.username AS username,
-    c.userPublicProfilePage,
+    c.claimStartedTimestamp,
+    COALESCE(c.username, qa.username) AS username,
+    COALESCE(c.userPublicProfilePage, qa.userPublicProfilePage) AS userPublicProfilePage,
     c.claimType,
     c.claimStatus,
     c.referralType,
     c.adSetID,
-    c.eventName AS event,
+    c.eventName AS eventName,
     c.referrerUsername,
     c.referrerPublicProfile,
     c.eventOrganizerUsername,
-    c.eventOrganizerPublicProfile,
-    qa.*
+    c.eventOrganizerPublicProfilePage,
+    c.lootboxName,
+    c.lootboxRedeemPage,
+    c.claimerEmail,
+    c.claimerPhone,
+    qa.question_1,
+    qa.answer_1,
+    qa.question_2,
+    qa.answer_2,
+    qa.question_3,
+    qa.answer_3,
+    qa.question_4,
+    qa.answer_4,
+    qa.question_5,
+    qa.answer_5,
+    qa.question_6,
+    qa.answer_6,
+    qa.question_7,
+    qa.answer_7,
+    qa.question_8,
+    qa.answer_8,
+    qa.question_9,
+    qa.answer_9,
+    qa.question_10,
+    qa.answer_10,
+    qa.question_11,
+    qa.answer_11,
+    qa.question_12,
+    qa.answer_12,
+    qa.question_13,
+    qa.answer_13,
+    qa.question_14,
+    qa.answer_14,
+    qa.question_15,
+    qa.answer_15,
+    qa.question_16,
+    qa.answer_16,
+    qa.question_17,
+    qa.answer_17,
+    qa.question_18,
+    qa.answer_18,
+    qa.question_19,
+    qa.answer_19,
+    qa.question_20,
+    qa.answer_20,
   FROM
     QuestionAnswers AS qa
   FULL OUTER JOIN
     ClaimerUserData AS c
   ON
     qa.qaClaimID = c.claimID
-  WHERE 
-    flight.offerID = @offerID
   ORDER BY
     claimStatus ASC,
     claimCompletedAt DESC

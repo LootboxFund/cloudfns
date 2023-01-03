@@ -1,4 +1,4 @@
-import { OfferID, UserIdpID } from "@wormgraph/helpers";
+import { OfferID, Offer_Firestore, UserIdpID } from "@wormgraph/helpers";
 import { getOfferClaimsWithQA, OfferClaimWithQARow } from "../../api/analytics";
 import { getOffer } from "../../api/firestore";
 import { checkIfUserIdpMatchesAdvertiser } from "../../api/identityProvider/firebase";
@@ -12,6 +12,7 @@ export const offerClaimsWithQA = async (
   payload: getOfferClaimsWithQARequest
 ): Promise<{
   data: OfferClaimWithQARow[];
+  offer: Offer_Firestore;
 }> => {
   const offer = await getOffer(payload.offerID);
   if (!offer) {
@@ -42,5 +43,5 @@ export const offerClaimsWithQA = async (
       manifest.bigQuery.datasets.firestoreExport.tables.claimPrivacy.id,
   });
 
-  return { data };
+  return { data, offer };
 };
