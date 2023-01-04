@@ -359,7 +359,6 @@ export const fansListForTournament = async (
     payload.tournamentID as TournamentID
   );
   claims.forEach((c) => console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`));
-  // console.log(`claims count = ${claims.length}`);
   // get unique users
   const recentSortedClaims = claims
     .sort((a, b) => a.timestamps.createdAt - b.timestamps.createdAt)
@@ -369,8 +368,6 @@ export const fansListForTournament = async (
     recentSortedClaims,
     "claimerUserId"
   );
-  console.log(`uniqueClaimersSortedByDate`);
-  console.log(uniqueClaimersSortedByDate.map((c) => c.claimerUserId));
   const uniqueClaimsByLootbox: Claim_Firestore[] = _.uniqBy(
     claims,
     "lootboxID"
@@ -383,7 +380,6 @@ export const fansListForTournament = async (
   );
   // console.log(`uniqueLootboxes count = ${uniqueLootboxes.length}`);
   const uniqueLootboxesHash = uniqueLootboxes.reduce((acc, cur) => {
-    // console.log(`>> cur = ${cur?.id}`);
     if (cur) {
       return {
         ...acc,
@@ -393,7 +389,6 @@ export const fansListForTournament = async (
     return acc;
   }, {} as Record<LootboxID, Lootbox_Firestore>);
   const usersByLootboxCount = claims.reduce((acc, cur) => {
-    // console.log(`++ cur = ${cur?.id}`);
     if (!cur.claimerUserId || !cur.lootboxID) return acc;
     const prev = acc[cur.claimerUserId] ? acc[cur.claimerUserId] : {};
     return {
@@ -407,23 +402,7 @@ export const fansListForTournament = async (
       },
     };
   }, {} as Record<UserID, Record<LootboxID, number>>);
-  // console.log(`usersByLootboxCount`);
-  // console.log(usersByLootboxCount);
-  // console.log(
-  //   `uniqueClaimersSortedByDate count = ${uniqueClaimersSortedByDate.length}`
-  // );
-  console.log(`
-    
-    -
-    -
-    -
-    -
-    -
-    
-    `);
-  // uniqueClaimersSortedByDate.forEach((c) =>
-  //   console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`)
-  // );
+
   const users = (
     await Promise.all(
       uniqueClaimersSortedByDate.map((claim) => {
@@ -492,8 +471,6 @@ export const fansListForTournament = async (
       },
     };
   }, {} as Record<UserID, FanRowStatSum>);
-  // console.log(claimsBreakdown);
-  // console.log(Object.keys(claimsBreakdown));
   type FanRowStatSum = {
     userID: UserID;
     claimsCount: number;
@@ -506,20 +483,15 @@ export const fansListForTournament = async (
   const rows = uniqueClaimersSortedByDate
     .filter((c) => c.claimerUserId && usersMap[c.claimerUserId])
     .map((claim) => {
-      // console.log(`}} claim === ${claim.id}`);
       if (!claim.claimerUserId) return null;
-      // console.log(`}} --> a`);
       const earliestClaim = claim;
       if (!earliestClaim) return null;
-      // console.log(`}} --> b`);
       const user = usersMap[claim.claimerUserId];
       if (!user) return null;
-      // console.log(`}} --> c`);
       const userSortedLootboxes = Object.keys(
         usersByLootboxCount[claim.claimerUserId] || {}
       )
         .map((lid, i) => {
-          // console.log(`}} --> d = ${i}`);
           if (!claim.claimerUserId) {
             return {
               lootboxID: lid,
@@ -537,17 +509,12 @@ export const fansListForTournament = async (
         })
         .slice()
         .sort((a, b) => a.count - b.count);
-      // console.log(`userSortedLootboxes.length = ${userSortedLootboxes.length}`);
-      // console.log(
-      //   `userSortedLootboxes[0].lootboxID = ${userSortedLootboxes[0]?.lootboxID}`
-      // );
       const favoriteLootbox =
         userSortedLootboxes[0] &&
         userSortedLootboxes[0].lootboxID &&
         uniqueLootboxesHash[userSortedLootboxes[0].lootboxID as LootboxID]
           ? uniqueLootboxesHash[userSortedLootboxes[0].lootboxID as LootboxID]
           : null;
-      // console.log(`favoriteLootbox.id = ${favoriteLootbox?.id}`);
       if (!favoriteLootbox) return null;
       const fanRow: FanListRowForTournament = {
         userID: claim.claimerUserId,
@@ -612,30 +579,11 @@ export const fansListForLootbox = async (
   const recentSortedClaims = claims
     .sort((a, b) => a.timestamps.createdAt - b.timestamps.createdAt)
     .filter((c) => c.claimerUserId);
-  // console.log(`recentSortedClaims count = ${recentSortedClaims.length}`);
   const uniqueClaimersSortedByDate: Claim_Firestore[] = _.uniqBy(
     recentSortedClaims,
     "claimerUserId"
   );
-  // console.log(`uniqueClaimersSortedByDate`);
-  // console.log(uniqueClaimersSortedByDate.map((c) => c.claimerUserId));
-  // console.log(`usersByLootboxCount`);
-  // console.log(usersByLootboxCount);
-  // console.log(
-  //   `uniqueClaimersSortedByDate count = ${uniqueClaimersSortedByDate.length}`
-  // );
-  console.log(`
-    
-    -
-    -
-    -
-    -
-    -
-    
-    `);
-  // uniqueClaimersSortedByDate.forEach((c) =>
-  //   console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`)
-  // );
+
   const users = (
     await Promise.all(
       uniqueClaimersSortedByDate.map((claim) => {

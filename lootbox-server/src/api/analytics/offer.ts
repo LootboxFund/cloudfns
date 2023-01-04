@@ -551,6 +551,8 @@ export interface OfferClaimWithQARow extends ClaimQuestionAndAnswerBaseRow {
   referrerPublicProfile: string;
   claimerEmail: string;
   claimerPhone: string;
+  lootboxName: string;
+  lootboxRedeemPage: string;
 }
 export interface OfferQuestionAnswerRequest {
   queryParams: {
@@ -633,6 +635,8 @@ const convertOfferClaimsWithQA = (data: any): OfferClaimWithQARow => {
     referrerPublicProfile: data?.referrerPublicProfile || "",
     claimerEmail: data?.claimerEmail || "",
     claimerPhone: data?.claimerPhone || "",
+    lootboxName: data?.lootboxName || "",
+    lootboxRedeemPage: data?.lootboxRedeemPage || "",
     question_1: data?.question_1 || "",
     answer_1: data?.answer_1 || "",
     question_2: data?.question_2 || "",
@@ -710,44 +714,33 @@ export const getOfferClaimsWithQA = async (
     ON
       claims.id = questionAnswers.metadata_claimID
     WHERE
-      questionAnswers.metadata_offerID = @offerID ),
+      questionAnswers.metadata_offerID = @offerID
+    GROUP BY question, answer, userID, claims.id ),
     QuestionAnswers AS (
-    SELECT
-      *,
-      CASE
-          WHEN questionUser.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', questionUser.id)
-        ELSE
-        NULL
-      END AS userPublicProfilePage,
-    FROM
-      QuestionAnswers_Raw PIVOT(MIN(question) AS question,
-        MIN(answer) AS answer FOR questionIndex IN (0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16,
-          17,
-          18,
-          19,
-          20))
+      SELECT 
+        *,
+       CASE
+           WHEN questionUser.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', questionUser.id)
+           ELSE NULL
+       END AS userPublicProfilePage,
+      CASE WHEN COALESCE(answer_0, answer_1, answer_2, answer_3, answer_4, answer_5, answer_6, answer_7, answer_8, answer_9,
+        answer_10, answer_11, answer_12, answer_13, answer_14, answer_15, answer_16, answer_17, answer_18,
+        answer_19, answer_20) IS NOT NULL THEN true
+      ELSE false
+      END AS hasQuestionsAnswered
+      FROM
+        QuestionAnswers_Raw PIVOT
+        (
+          MAX(question) AS question,
+          MAX(answer) AS answer FOR questionIndex IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+        )
         LEFT JOIN 
           \`${payload.userTable}\` as questionUser
         ON questionUser.id = userID
-      ),
+    ),
     ClaimerUserData AS (
     SELECT
+      claims.claimerUserID, 
       claims.id AS claimID,
       claimer.username AS username,
       CASE
@@ -827,6 +820,7 @@ export const getOfferClaimsWithQA = async (
       flight.offerID = @offerID
     GROUP BY
       claimID,
+      claimerUserID,
       username,
       userPublicProfilePage,
       claimCompletedAt,
@@ -845,11 +839,12 @@ export const getOfferClaimsWithQA = async (
   SELECT
     c.claimCompletedAt,
     c.claimStartedTimestamp,
+    COALESCE(c.claimerUserID, qa.userID) AS userID,
     COALESCE(c.username, qa.username) AS username,
     COALESCE(c.userPublicProfilePage, qa.userPublicProfilePage) AS userPublicProfilePage,
-    c.claimType,
-    c.claimStatus,
-    c.referralType,
+    COALESCE(c.claimType, 'N/A') AS claimType,
+    COALESCE(c.claimStatus, 'N/A') AS claimStatus,
+    COALESCE(c.referralType, 'N/A') AS referralType,
     c.adSetID,
     c.eventName AS eventName,
     c.referrerUsername,
@@ -858,8 +853,9 @@ export const getOfferClaimsWithQA = async (
     c.eventOrganizerPublicProfilePage,
     c.lootboxName,
     c.lootboxRedeemPage,
-    c.claimerEmail,
-    c.claimerPhone,
+    COALESCE(c.claimerEmail, 'N/A') as claimerEmail,
+    COALESCE(c.claimerPhone, 'N/A') as claimerPhone,
+    qa.hasQuestionsAnswered,
     qa.question_1,
     qa.answer_1,
     qa.question_2,
@@ -907,7 +903,9 @@ export const getOfferClaimsWithQA = async (
   ON
     qa.qaClaimID = c.claimID
   ORDER BY
+    qa.hasQuestionsAnswered DESC,
     claimStatus ASC,
+    claimerUserID ASC,
     claimCompletedAt DESC
   LIMIT
     10000;
