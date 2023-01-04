@@ -364,6 +364,7 @@ export const getEventOfferClaimsWithQAByEvent = async (
       claims.id AS qaClaimID,
       question,
       answer,
+      userID,
       DENSE_RANK() OVER(ORDER BY question) AS questionIndex
     FROM
       \`${payload.claimTable}\` AS claims
@@ -373,10 +374,20 @@ export const getEventOfferClaimsWithQAByEvent = async (
       claims.id = questionAnswers.metadata_claimID
     WHERE
       claims.tournamentID = @eventID
+    GROUP BY question, answer, userID, claims.id 
     ),
     QuestionAnswers AS (
     SELECT
-      *
+      *,
+      CASE
+           WHEN questionUser.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', questionUser.id)
+           ELSE NULL
+       END AS userPublicProfilePage,
+      CASE WHEN COALESCE(answer_0, answer_1, answer_2, answer_3, answer_4, answer_5, answer_6, answer_7, answer_8, answer_9,
+        answer_10, answer_11, answer_12, answer_13, answer_14, answer_15, answer_16, answer_17, answer_18,
+        answer_19, answer_20) IS NOT NULL THEN true
+      ELSE false
+      END AS hasQuestionsAnswered
     FROM
       QuestionAnswers_Raw PIVOT(MIN(question) AS question,
         MIN(answer) AS answer FOR questionIndex IN (0,
@@ -399,9 +410,13 @@ export const getEventOfferClaimsWithQAByEvent = async (
           17,
           18,
           19,
-          20)) ),
+          20)) 
+        LEFT JOIN 
+          \`${payload.userTable}\` as questionUser
+        ON questionUser.id = userID),
     ClaimerUserData AS (
     SELECT
+      claims.claimerUserID, 
       claims.id AS claimID,
       claimer.username AS username,
       CASE
@@ -461,6 +476,7 @@ export const getEventOfferClaimsWithQAByEvent = async (
     WHERE claims.tournamentId = @eventID
     GROUP BY
       claimID,
+      claimerUserID,
       username,
       userPublicProfilePage,
       claimCompletedAt,
@@ -474,13 +490,14 @@ export const getEventOfferClaimsWithQAByEvent = async (
       referrerUsername,
       referrerPublicProfile )
   SELECT
-    claimerUser.claimCompletedAt,
     claimerUser.claimStartedTimestamp,
-    claimerUser.username AS username,
-    claimerUser.userPublicProfilePage,
-    claimerUser.claimType,
-    claimerUser.claimStatus,
-    claimerUser.referralType,
+    claimerUser.claimCompletedAt,
+    COALESCE(claimerUser.claimerUserID, qa.userID) AS userID,
+    COALESCE(claimerUser.username, qa.username) AS username,
+    COALESCE(claimerUser.userPublicProfilePage, qa.userPublicProfilePage) AS userPublicProfilePage,
+    COALESCE(claimerUser.claimType, 'N/A') AS claimType,
+    COALESCE(claimerUser.claimStatus, 'N/A') AS claimStatus,
+    COALESCE(claimerUser.referralType, 'N/A') AS referralType,
     flight.adSetID,
     offer.title AS offerTitle,
     claimerUser.eventName AS eventName,
@@ -488,8 +505,8 @@ export const getEventOfferClaimsWithQAByEvent = async (
     claimerUser.referrerPublicProfile,
     claimerUser.lootboxName,
     claimerUser.lootboxRedeemPage,
-    claimerUser.claimerPhone,
-    claimerUser.claimerEmail,
+    COALESCE(claimerUser.claimerEmail, 'N/A') as claimerEmail,
+    COALESCE(claimerUser.claimerPhone, 'N/A') as claimerPhone,
     qa.*
   FROM
     QuestionAnswers AS qa
@@ -508,7 +525,11 @@ export const getEventOfferClaimsWithQAByEvent = async (
   WHERE 
     flight.offerID = @offerID AND flight.tournamentID = @eventID
   ORDER BY
+    -- claimStatus ASC,
+    -- claimCompletedAt DESC
+    qa.hasQuestionsAnswered DESC,
     claimStatus ASC,
+    claimerUserID ASC,
     claimCompletedAt DESC
   LIMIT
     10000
@@ -543,6 +564,7 @@ export interface OfferClaimWithQARow extends ClaimQuestionAndAnswerBaseRow {
   claimStatus: string;
   referralType: string;
   adSetID: string;
+  offerID: string;
   offerTitle: string;
   eventName: string;
   eventOrganizerUsername: string;
@@ -626,6 +648,7 @@ const convertOfferClaimsWithQA = (data: any): OfferClaimWithQARow => {
     claimCompletedTimestamp: parseDate(data?.claimCompletedAt),
     referralType: data?.referralType || "",
     adSetID: data?.adSetID || "",
+    offerID: data?.offerID || "",
     offerTitle: data?.offerTitle || "",
     eventName: data?.eventName || "",
     eventOrganizerUsername: data?.eventOrganizerUsername || "",
@@ -743,6 +766,7 @@ export const getOfferClaimsWithQA = async (
       claims.claimerUserID, 
       claims.id AS claimID,
       claimer.username AS username,
+      flight.offerID,
       CASE
         WHEN claimer.id IS NOT NULL THEN CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', claimer.id)
       ELSE
@@ -835,6 +859,7 @@ export const getOfferClaimsWithQA = async (
       referrerPublicProfile,
       eventOrganizerUsername,
       eventOrganizerPublicProfilePage,
+      flight.offerID,
       adSetID )
   SELECT
     c.claimCompletedAt,
@@ -846,6 +871,7 @@ export const getOfferClaimsWithQA = async (
     COALESCE(c.claimStatus, 'N/A') AS claimStatus,
     COALESCE(c.referralType, 'N/A') AS referralType,
     c.adSetID,
+    c.offerID,
     c.eventName AS eventName,
     c.referrerUsername,
     c.referrerPublicProfile,
