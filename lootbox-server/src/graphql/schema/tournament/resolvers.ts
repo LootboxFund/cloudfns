@@ -85,6 +85,8 @@ import {
   QueryListPotentialAirdropClaimersArgs,
   ClaimerCsvDataResponse,
   MutationClaimerCsvDataArgs,
+  MutationOfferEventClaimsCsvArgs,
+  OfferEventClaimsCsvResponse,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -958,6 +960,51 @@ const TournamentResolvers = {
         };
       }
     },
+
+    offerEventClaimsCSV: async (
+      _: any,
+      { payload }: MutationOfferEventClaimsCsvArgs,
+      context: Context
+    ): Promise<OfferEventClaimsCsvResponse> => {
+      if (!context.userId) {
+        return {
+          error: {
+            code: StatusCode.Unauthorized,
+            message: `Unauthorized`,
+          },
+        };
+      }
+      try {
+        const { data, tournament } =
+          await analyticsService.eventOfferClaimsWithQA({
+            eventID: payload.eventID as TournamentID,
+            offerID: payload.offerID as OfferID,
+            callerUserID: context.userId,
+          });
+
+        const csvContent = parseCSVRows(data);
+        const filename =
+          toFilename(tournament.title || tournament.id) +
+          "_" +
+          nanoid(6) +
+          ".csv";
+
+        const downloadUrl = await saveCsvToStorage({
+          fileName: `offer_claims_export/${filename}`,
+          data: csvContent,
+          bucket: manifest.firebase.storageBucket,
+        });
+
+        return { csvDownloadURL: downloadUrl };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
   },
 
   TournamentResponse: {
@@ -1170,6 +1217,20 @@ const TournamentResolvers = {
       return null;
     },
   },
+
+  OfferEventClaimsCSVResponse: {
+    __resolveType: (obj: OfferEventClaimsCsvResponse) => {
+      if ("csvDownloadURL" in obj) {
+        return "OfferEventClaimsCSVResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
 };
 
 const tournamentResolverComposition = {
@@ -1187,6 +1248,7 @@ const tournamentResolverComposition = {
   // "Mutation.removeOfferAdSetFromTournament": [isAuthenticated()],
   "Query.myTournament": [isAuthenticated()],
   "Mutation.claimerCSVData": [isAuthenticated()],
+  "Mutation.offerEventClaimsCSV": [isAuthenticated()],
 };
 
 const resolvers = composeResolvers(

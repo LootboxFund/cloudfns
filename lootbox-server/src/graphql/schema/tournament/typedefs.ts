@@ -61,6 +61,19 @@ const TournamentTypeDefs = gql`
 
   union ClaimerCSVDataResponse = ClaimerCSVDataResponseSuccess | ResponseError
 
+  input OfferEventClaimsCSVPayload {
+    eventID: ID!
+    offerID: ID!
+  }
+
+  type OfferEventClaimsCSVResponseSuccess {
+    csvDownloadURL: String!
+  }
+
+  union OfferEventClaimsCSVResponse =
+      OfferEventClaimsCSVResponseSuccess
+    | ResponseError
+
   type Tournament {
     id: ID!
     title: String!
@@ -500,6 +513,9 @@ const TournamentTypeDefs = gql`
       payload: RemovePromoterFromTournamentPayload!
     ): RemovePromoterFromTournamentResponse!
     claimerCSVData(payload: ClaimerCSVDataPayload!): ClaimerCSVDataResponse!
+    offerEventClaimsCSV(
+      payload: OfferEventClaimsCSVPayload!
+    ): OfferEventClaimsCSVResponse!
     # promoter leaves a tournament on their own accord
     #leaveAsPromoterInTournament(
     #  tournamentID: ID!

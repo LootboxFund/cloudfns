@@ -1,0 +1,78 @@
+{
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "title",
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "name": "tournamentLink",
+      "type": "string"
+    },
+    {
+      "name": "timestamps",
+      "type": "map",
+      "fields": [
+        {
+          "name": "createdAt",
+          "type": "number"
+        },
+        {
+          "name": "deletedAt",
+          "type": "number"
+        },
+        {
+          "name": "updatedAt",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "creatorId",
+      "type": "string"
+    },
+    {
+      "name": "magicLink",
+      "type": "string"
+    },
+    {
+      "name": "tournamentDate",
+      "type": "number"
+    },
+    {
+      "name": "prize",
+      "type": "string"
+    },
+    {
+      "name": "coverPhoto",
+      "type": "string"
+    },
+    {
+      "name": "communityURL",
+      "type": "string"
+    },
+    {
+      "name": "organizer",
+      "type": "string"
+    },
+    {
+      "name": "isPostCosmic",
+      "type": "boolean"
+    },
+    {
+      "name": "runningCompletedClaims",
+      "type": "number"
+    },
+    {
+      "name": "playbookUrl",
+      "type": "string"
+    }
+  ]
+}

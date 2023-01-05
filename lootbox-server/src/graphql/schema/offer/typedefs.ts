@@ -397,6 +397,16 @@ const OfferTypeDefs = gql`
       AfterTicketClaimQuestionResponseSuccess
     | ResponseError
 
+  type OfferClaimsCSVResponseSuccess {
+    csvDownloadURL: String!
+  }
+
+  union OfferClaimsCSVResponse = OfferClaimsCSVResponseSuccess | ResponseError
+
+  input OfferClaimsCSVPayload {
+    offerID: ID!
+  }
+
   extend type Mutation {
     # Advertiser creates an offer
     createOffer(
@@ -423,6 +433,7 @@ const OfferTypeDefs = gql`
     answerAfterTicketClaimQuestion(
       payload: AfterTicketClaimQuestionPayload!
     ): AfterTicketClaimQuestionResponse!
+    offerClaimsCSV(payload: OfferClaimsCSVPayload!): OfferClaimsCSVResponse!
   }
 `;
 
