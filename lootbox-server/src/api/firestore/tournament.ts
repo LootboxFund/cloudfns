@@ -31,6 +31,7 @@ import {
   LootboxTournamentStatus_Firestore,
   LootboxType,
   TournamentPrivacyScope,
+  TournamentSafetyFeatures_Firestore,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -345,7 +346,10 @@ export interface CreateTournamentArgs {
   communityURL?: string | null;
   organizer?: AffiliateID;
   privacyScope?: TournamentPrivacyScope[];
+  seedMaxLootboxTickets?: number;
+  maxTicketsPerUser?: number;
 }
+
 export const createTournament = async ({
   title,
   description,
@@ -357,6 +361,8 @@ export const createTournament = async ({
   communityURL,
   organizer,
   privacyScope,
+  seedMaxLootboxTickets = 5,
+  maxTicketsPerUser = 100,
 }: CreateTournamentArgs): Promise<Tournament_Firestore> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -377,6 +383,10 @@ export const createTournament = async ({
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
       deletedAt: null,
+    },
+    safetyFeatures: {
+      seedMaxLootboxTicketsPerUser: seedMaxLootboxTickets,
+      maxTicketsPerUser,
     },
   };
 
@@ -459,6 +469,22 @@ export const updateTournament = async (
 
   if (payload.privacyScope != undefined) {
     updatePayload.privacyScope = payload.privacyScope;
+  }
+
+  const safetyFeaturesFieldname: keyof Tournament_Firestore = "safetyFeatures";
+
+  if (payload.seedMaxLootboxTickets != undefined) {
+    const seedMaxTicketsFieldname: keyof TournamentSafetyFeatures_Firestore =
+      "seedMaxLootboxTicketsPerUser";
+    updatePayload[`${safetyFeaturesFieldname}.${seedMaxTicketsFieldname}`] =
+      payload.seedMaxLootboxTickets;
+  }
+
+  if (payload.maxTicketsPerUser != undefined) {
+    const maxTicketsFieldname: keyof TournamentSafetyFeatures_Firestore =
+      "maxTicketsPerUser";
+    updatePayload[`${safetyFeaturesFieldname}.${maxTicketsFieldname}`] =
+      payload.maxTicketsPerUser;
   }
 
   await tournamentRef.update(updatePayload);

@@ -79,6 +79,10 @@ export const parseTournamentDB = (
     res.offers = data.offers;
   }
 
+  if (data.safetyFeatures) {
+    res.safetyFeatures = data.safetyFeatures;
+  }
+
   return res;
 };
 

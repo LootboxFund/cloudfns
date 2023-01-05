@@ -310,6 +310,8 @@ const TournamentTypeDefs = gql`
     tournamentDate: Timestamp
     playbookUrl: String
     privacyScope: [TournamentPrivacyScope!]
+    seedMaxLootboxTickets: Int
+    maxTicketsPerUser: Int
   }
 
   input AddStreamPayload {
