@@ -94,6 +94,11 @@ const LootboxTypeDefs = gql`
     endBefore: Timestamp
   }
 
+  type LootboxSafetyFeatures {
+    maxTicketsPerUser: Int
+    isSharingDisabled: Boolean
+  }
+
   type Lootbox {
     # Immutable stuff
     id: ID!
@@ -110,6 +115,7 @@ const LootboxTypeDefs = gql`
     backgroundImage: String!
     themeColor: String!
     runningCompletedClaims: Int!
+    safetyFeatures: LootboxSafetyFeatures
 
     # Web3 stuff
     address: ID
@@ -323,6 +329,8 @@ const LootboxTypeDefs = gql`
     status: LootboxStatus
     maxTickets: Int
     themeColor: String
+    isSharingDisabled: Boolean
+    maxTicketsPerUser: Int
   }
 
   # input BulkMintWhitelistPayload {

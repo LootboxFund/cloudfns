@@ -72,6 +72,11 @@ const TournamentTypeDefs = gql`
       OfferEventClaimsCSVResponseSuccess
     | ResponseError
 
+  type TournamentSafetyFeatures {
+    maxTicketsPerUser: Int
+    seedMaxLootboxTicketsPerUser: Int
+  }
+
   type Tournament {
     id: ID!
     title: String!
@@ -93,6 +98,7 @@ const TournamentTypeDefs = gql`
     runningCompletedClaims: Int!
     privacyScope: [TournamentPrivacyScope!]
     playbookUrl: String
+    safetyFeatures: TournamentSafetyFeatures
     # promoterConfigs: [PromoterConfigTournament!]!
     isPostCosmic: Boolean
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")

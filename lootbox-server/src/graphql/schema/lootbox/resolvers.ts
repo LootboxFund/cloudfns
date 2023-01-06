@@ -402,6 +402,17 @@ const LootboxResolvers: Resolvers = {
             },
           };
         }
+        if (
+          payload.maxTicketsPerUser != undefined &&
+          payload.maxTicketsPerUser < 1
+        ) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Max Tickets Per User must be greater than 0",
+            },
+          };
+        }
         const res = await editLootbox(payload.lootboxID as LootboxID, {
           name: payload.name || undefined,
           description: payload.description || undefined,

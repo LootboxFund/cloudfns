@@ -41,6 +41,7 @@ import {
   VoucherRewardStatus,
   Deposit_Firestore,
   DepositID,
+  LootboxSafetyFeatures_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID, UserIdpID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -109,6 +110,8 @@ interface EditLootboxPayload {
   badgeImage?: string;
   themeColor?: string;
   symbol?: string;
+  isSharingDisabled?: boolean;
+  maxTicketsPerUser?: number;
 }
 export const editLootbox = async (
   lootboxID: LootboxID,
@@ -158,6 +161,20 @@ export const editLootbox = async (
 
   if (!!payload.symbol) {
     updateRequest.symbol = payload.symbol;
+  }
+
+  const safetyFeaturesFieldname: keyof Lootbox_Firestore = "safetyFeatures";
+  if (payload.isSharingDisabled != undefined) {
+    const isSharingDisabledFieldName: keyof LootboxSafetyFeatures_Firestore =
+      "isSharingDisabled";
+    updateRequest[`${safetyFeaturesFieldname}.${isSharingDisabledFieldName}`] =
+      payload.isSharingDisabled;
+  }
+  if (payload.maxTicketsPerUser != undefined) {
+    const maxTicketsPerUserFieldName: keyof LootboxSafetyFeatures_Firestore =
+      "maxTicketsPerUser";
+    updateRequest[`${safetyFeaturesFieldname}.${maxTicketsPerUserFieldName}`] =
+      payload.maxTicketsPerUser;
   }
 
   updateRequest["timestamps.updatedAt"] = Timestamp.now().toMillis();
@@ -429,6 +446,8 @@ interface CreateLootboxPayloadLocalType {
   variant: LootboxVariant_Firestore;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
+  maxTicketsPerUser?: number;
+  isSharingDisabled?: boolean;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -472,6 +491,10 @@ export const createLootbox = async (
     creationNonce: null,
     members: [],
     isContractDeployed: false,
+    safetyFeatures: {
+      maxTicketsPerUser: payload.maxTicketsPerUser || 5,
+      isSharingDisabled: payload.isSharingDisabled || false,
+    },
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),

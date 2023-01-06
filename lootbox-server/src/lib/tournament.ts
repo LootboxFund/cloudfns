@@ -219,6 +219,10 @@ export const convertTournamentDBToGQL = (
     res.tournamentLink = tournament.tournamentLink;
   }
 
+  if (!!tournament.safetyFeatures) {
+    res.safetyFeatures = tournament.safetyFeatures;
+  }
+
   return res as unknown as Tournament;
 };
 
