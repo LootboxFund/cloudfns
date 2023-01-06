@@ -261,7 +261,7 @@ const _validateBaseClaimForCompletionStep = async (
   }
 
   // get user tickets for this lootbox & tournamet
-  const [userLootboxTicketCount, userTournamentTicketCount] = await Promise.all(
+  const [userTournamentTicketCount, userLootboxTicketCount] = await Promise.all(
     [
       getUserClaimCountForTournament(
         tournament.id,
