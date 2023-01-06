@@ -20,6 +20,8 @@ import {
   getReferralById,
   getTournamentById,
   getUnverifiedClaimsForUser,
+  getUserClaimCountForLootbox,
+  getUserClaimCountForTournament,
 } from "../api/firestore";
 import { IIdpUser } from "../api/identityProvider/interface";
 
@@ -245,6 +247,41 @@ const _validateBaseClaimForCompletionStep = async (
     if (previousClaimsForReferral.length > 0) {
       throw new Error("This referral link has already been used");
     }
+  }
+
+  // Validate tournament / Lootbox safety features
+  const { safetyFeatures: lootboxSafety } = lootbox;
+  const { safetyFeatures: tournamentSafety } = tournament;
+
+  if (lootboxSafety?.isSharingDisabled) {
+    // If sharing is disabled, no bonus reward
+    throw new Error(
+      "Sharing is disabled for this Lootbox. Please choose a different Lootbox."
+    );
+  }
+
+  // get user tickets for this lootbox & tournamet
+  const [userLootboxTicketCount, userTournamentTicketCount] = await Promise.all(
+    [
+      getUserClaimCountForTournament(
+        tournament.id,
+        claimer.id as unknown as UserID
+      ),
+      getUserClaimCountForLootbox(lootbox.id, claimer.id as unknown as UserID),
+    ]
+  );
+
+  const maxLootboxTicketsAllowed = lootboxSafety?.maxTicketsPerUser || 5;
+  if (userLootboxTicketCount >= maxLootboxTicketsAllowed) {
+    throw new Error(
+      `You already have the maximum number of tickets for this Lootbox (${maxLootboxTicketsAllowed}).`
+    );
+  }
+  const maxEventTicketsAllowed = tournamentSafety?.maxTicketsPerUser || 100;
+  if (userTournamentTicketCount >= maxEventTicketsAllowed) {
+    throw new Error(
+      `You already have the maximum number of tickets for this Event (${maxEventTicketsAllowed}).`
+    );
   }
 
   return {
