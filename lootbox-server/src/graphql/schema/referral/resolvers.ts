@@ -16,13 +16,11 @@ import {
   ReferralResponse,
   Tournament,
   UserClaimsResponse,
-  PartyBasket,
   QueryUserClaimsArgs,
   CreateClaimResponse,
   MutationGenerateClaimsCsvArgs,
   GenerateClaimsCsvResponse,
   PublicUser,
-  PartyBasketStatus,
   ReferralType,
   MutationBulkCreateReferralArgs,
   BulkCreateReferralResponse,
@@ -38,7 +36,6 @@ import {
   getReferralBySlug,
   createReferral,
   getTournamentById,
-  getPartyBasketById,
   createStartingClaim,
   getClaimById,
   completeClaim,
@@ -68,7 +65,6 @@ import {
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
   Lootbox_Firestore,
-  PartyBasketID,
   ReferralID,
   ReferralSlug,
   TournamentID,
@@ -277,17 +273,6 @@ const ReferralResolvers: Resolvers = {
         return null;
       }
     },
-    chosenPartyBasket: async (claim: Claim): Promise<PartyBasket | null> => {
-      if (!claim.chosenPartyBasketId) {
-        return null;
-      }
-
-      const partyBasket = await getPartyBasketById(
-        claim.chosenPartyBasketId as PartyBasketID
-      );
-
-      return !partyBasket ? null : partyBasket;
-    },
     tournament: async (claim: Claim): Promise<Tournament | null> => {
       if (!claim.tournamentId) {
         return null;
@@ -328,18 +313,6 @@ const ReferralResolvers: Resolvers = {
         console.error(err);
         return null;
       }
-    },
-    seedPartyBasket: async (
-      referral: Referral
-    ): Promise<PartyBasket | null> => {
-      if (!referral.seedPartyBasketId) {
-        return null;
-      }
-      const partyBasket = await getPartyBasketById(
-        referral.seedPartyBasketId as PartyBasketID
-      );
-
-      return !partyBasket ? null : partyBasket;
     },
   },
 
@@ -430,52 +403,20 @@ const ReferralResolvers: Resolvers = {
         lootbox.status !== LootboxStatus_Firestore.disabled &&
         lootbox.status !== LootboxStatus_Firestore.soldOut;
 
-      if (tournament.isPostCosmic) {
-        // we get the lootbox tournament snapshot
-        if (!!isSeedLootboxEnabled && !!lootbox) {
-          const lootboxTournamentSnapshot =
-            await getLootboxTournamentSnapshotByLootboxID(
-              tournament.id,
-              lootbox.id
-            );
-          // Only allow the seed lootbox if it is enabled for the tournament
-          isSeedLootboxEnabled =
-            isSeedLootboxEnabled &&
-            !!lootboxTournamentSnapshot &&
-            !lootboxTournamentSnapshot.timestamps.deletedAt &&
-            lootboxTournamentSnapshot.status ===
-              LootboxTournamentStatus_Firestore.active;
-        }
-      } else {
-        // ################ DEPRECATED ################
-        let partyBasket: PartyBasket | undefined;
-        // Party Basket checks
-        if (!!payload.partyBasketId) {
-          try {
-            partyBasket = await getPartyBasketById(
-              payload.partyBasketId as PartyBasketID
-            );
-          } catch (err) {
-            // Swallow error, proceed without party basket
-            console.log("error fetching party basket", err);
-          }
-        }
-
-        if (
-          !!partyBasket &&
-          (partyBasket?.status === PartyBasketStatus.Disabled ||
-            partyBasket?.status === PartyBasketStatus.SoldOut)
-        ) {
-          // Make sure the party basket is not disabled
-          return {
-            error: {
-              code: StatusCode.InvalidOperation,
-              message: "Party Basket is disabled or sold out",
-            },
-          };
-        }
-
-        // ################################
+      // we get the lootbox tournament snapshot
+      if (!!isSeedLootboxEnabled && !!lootbox) {
+        const lootboxTournamentSnapshot =
+          await getLootboxTournamentSnapshotByLootboxID(
+            tournament.id,
+            lootbox.id
+          );
+        // Only allow the seed lootbox if it is enabled for the tournament
+        isSeedLootboxEnabled =
+          isSeedLootboxEnabled &&
+          !!lootboxTournamentSnapshot &&
+          !lootboxTournamentSnapshot.timestamps.deletedAt &&
+          lootboxTournamentSnapshot.status ===
+            LootboxTournamentStatus_Firestore.active;
       }
 
       if (!!payload.referrerId) {
@@ -554,10 +495,7 @@ const ReferralResolvers: Resolvers = {
               tournamentId: payload.tournamentId as TournamentID,
               seedLootboxID:
                 lootbox && isSeedLootboxEnabled ? lootbox.id : undefined,
-              seedPartyBasketId: payload.partyBasketId
-                ? (payload.partyBasketId as PartyBasketID)
-                : undefined,
-              isPostCosmic: !!tournament?.isPostCosmic,
+              isPostCosmic: true,
             });
 
             return res;
@@ -681,44 +619,20 @@ const ReferralResolvers: Resolvers = {
           lootbox.status !== LootboxStatus_Firestore.disabled &&
           lootbox.status !== LootboxStatus_Firestore.soldOut;
 
-        if (tournament.isPostCosmic) {
-          // we get the lootbox tournament snapshot
-          if (!!isSeedLootboxEnabled && !!lootbox) {
-            const lootboxTournamentSnapshot =
-              await getLootboxTournamentSnapshotByLootboxID(
-                tournament.id,
-                lootbox.id
-              );
-            // Only allow the seed lootbox if it is enabled for the tournament
-            isSeedLootboxEnabled =
-              isSeedLootboxEnabled &&
-              !!lootboxTournamentSnapshot &&
-              !lootboxTournamentSnapshot.timestamps.deletedAt &&
-              lootboxTournamentSnapshot.status ===
-                LootboxTournamentStatus_Firestore.active;
-          }
-        } else {
-          /** @deprecated - todo only use Lootbox */
-          let partyBasket: PartyBasket | undefined = undefined;
-          if (payload.partyBasketId) {
-            /** @deprecated!!!!! */
-            partyBasket = await getPartyBasketById(
-              payload.partyBasketId as PartyBasketID
+        // we get the lootbox tournament snapshot
+        if (!!isSeedLootboxEnabled && !!lootbox) {
+          const lootboxTournamentSnapshot =
+            await getLootboxTournamentSnapshotByLootboxID(
+              tournament.id,
+              lootbox.id
             );
-
-            if (partyBasket === undefined) {
-              // Makesure the party basket exists
-              throw new Error("Party Basket not found");
-            }
-
-            if (
-              partyBasket?.status === PartyBasketStatus.Disabled ||
-              partyBasket?.status === PartyBasketStatus.SoldOut
-            ) {
-              // Make sure the party basket is not disabled
-              throw new Error("Party Basket is disabled or sold out");
-            }
-          }
+          // Only allow the seed lootbox if it is enabled for the tournament
+          isSeedLootboxEnabled =
+            isSeedLootboxEnabled &&
+            !!lootboxTournamentSnapshot &&
+            !lootboxTournamentSnapshot.timestamps.deletedAt &&
+            lootboxTournamentSnapshot.status ===
+              LootboxTournamentStatus_Firestore.active;
         }
 
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
@@ -748,11 +662,7 @@ const ReferralResolvers: Resolvers = {
             ? (payload.lootboxID as LootboxID)
             : undefined,
 
-          /** @deprecated */
-          seedPartyBasketId: payload.partyBasketId
-            ? (payload.partyBasketId as PartyBasketID)
-            : undefined,
-          isPostCosmic: !!tournament.isPostCosmic,
+          isPostCosmic: true,
         });
         const rf = convertReferralDBToGQL(referral);
 
@@ -825,10 +735,7 @@ const ReferralResolvers: Resolvers = {
           tournamentName: tournament.title,
           referralType: referral.type || ReferralType.Viral, // default to viral
           originLootboxID: referral.seedLootboxID,
-          originPartyBasketId: !!referral.seedPartyBasketId
-            ? (referral.seedPartyBasketId as PartyBasketID)
-            : undefined,
-          isPostCosmic: !!referral.isPostCosmic,
+          isPostCosmic: true,
           privacyScope: tournament?.privacyScope
             ? convertClaimPrivacyScopeGQLToDB(tournament.privacyScope)
             : [],
@@ -883,263 +790,65 @@ const ReferralResolvers: Resolvers = {
           };
         }
 
-        if (!!claim?.isPostCosmic) {
-          if (!payload.chosenLootboxID) {
-            return {
-              error: {
-                code: StatusCode.BadRequest,
-                message: "Must choose a lootbox",
-              },
-            };
-          }
-
-          // To prevent abuse, we ensure the user has a phone number to complete a claim.
-          // If they dont, they are usually an anonymous user and the claim actually becomes status = unverified
-          // In this case, no side effects happen until some async method changes the claim status to status = complete
-          // & firebase cloud function "onClaimWrite" gets triggered
-          const isPhoneVerified = !!user.phoneNumber;
-          let updatedClaim: Claim_Firestore | undefined;
-          if (isPhoneVerified) {
-            const { targetLootbox } =
-              await claimService.validatePendingClaimForCompletion(
-                claim,
-                user,
-                payload.chosenLootboxID as LootboxID
-              );
-
-            // set status = complete
-            updatedClaim = await completeClaim({
-              claimId: claim.id as ClaimID,
-              referralId: claim.referralId as ReferralID,
-              lootboxID: payload.chosenLootboxID as LootboxID,
-              lootboxAddress: targetLootbox.address,
-              lootboxName: targetLootbox.name,
-              lootboxNFTBountyValue: targetLootbox.nftBountyValue,
-              lootboxMaxTickets: targetLootbox.maxTickets,
-              claimerUserId: context.userId as unknown as UserID,
-            });
-          } else {
-            const { targetLootbox } =
-              await claimService.validatePendingClaimForUnverified(
-                claim,
-                user,
-                payload.chosenLootboxID as LootboxID
-              );
-
-            // set status = unverified
-            // side effects like firebase cloud function "onClaimWrite" DO NOT get triggered
-            updatedClaim = await completeAnonClaim({
-              claimId: claim.id as ClaimID,
-              referralId: claim.referralId as ReferralID,
-              lootboxID: payload.chosenLootboxID as LootboxID,
-              lootboxAddress: targetLootbox.address,
-              lootboxName: targetLootbox.name,
-              lootboxNFTBountyValue: targetLootbox.nftBountyValue,
-              lootboxMaxTickets: targetLootbox.maxTickets,
-              claimerUserId: context.userId as unknown as UserID,
-            });
-          }
-
+        if (!payload.chosenLootboxID) {
           return {
-            claim: convertClaimDBToGQL(updatedClaim),
-          };
-        } else {
-          // DEPRECATED
-          if (!user.phoneNumber) {
-            // Prevent abuse by requiring a phone number
-            return {
-              error: {
-                code: StatusCode.Forbidden,
-                message:
-                  "You need to login with your PHONE NUMBER to claim a ticket.",
-              },
-            };
-          }
-
-          if (!payload.chosenPartyBasketId) {
-            return {
-              error: {
-                code: StatusCode.BadRequest,
-                message: "Must choose a party basket",
-              },
-            };
-          }
-
-          const partyBasket = await getPartyBasketById(
-            payload.chosenPartyBasketId as PartyBasketID
-          );
-
-          if (!partyBasket || !!partyBasket?.timestamps?.deletedAt) {
-            return {
-              error: {
-                code: StatusCode.NotFound,
-                message: "Party Basket not found",
-              },
-            };
-          }
-          if (
-            partyBasket.status === PartyBasketStatus.Disabled ||
-            partyBasket.status === PartyBasketStatus.SoldOut
-          ) {
-            return {
-              error: {
-                code: StatusCode.BadRequest,
-                message: "Out of stock! Please select a different team.",
-              },
-            };
-          }
-
-          // Make sure the user has not accepted a claim for a tournament before
-          const [previousClaims, tournament, referral, lootbox] =
-            await Promise.all([
-              getCompletedUserReferralClaimsForTournament(
-                context.userId,
-                claim.tournamentId as TournamentID,
-                1
-              ),
-              getTournamentById(claim.tournamentId as TournamentID),
-              getReferralById(claim.referralId as ReferralID),
-              getLootboxByAddress(partyBasket.lootboxAddress as Address),
-            ]);
-
-          if (!lootbox) {
-            return {
-              error: {
-                code: StatusCode.NotFound,
-                message: "Lootbox not found",
-              },
-            };
-          }
-          if (!referral || !!referral.timestamps.deletedAt) {
-            return {
-              error: {
-                code: StatusCode.NotFound,
-                message: "Referral not found",
-              },
-            };
-          }
-
-          if (
-            (referral.referrerId as unknown as UserIdpID) === context.userId
-          ) {
-            return {
-              error: {
-                code: StatusCode.Forbidden,
-                message: "You cannot redeem your own referral link!",
-              },
-            };
-          }
-          if (!tournament || !!tournament.timestamps.deletedAt) {
-            return {
-              error: {
-                code: StatusCode.NotFound,
-                message: "Tournament not found",
-              },
-            };
-          }
-
-          // Old logic TODO: remove it in a week or two
-          if (referral.type == undefined) {
-            if (previousClaims.length > 0) {
-              return {
-                error: {
-                  code: StatusCode.BadRequest,
-                  // WARNING - this message is stupidly parsed in the frontend for internationalization.
-                  //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
-                  message: HACKY_MESSAGE,
-                },
-              };
-            }
-          } else {
-            // New validation logic
-            if (
-              referral.type === ReferralType_Firestore.viral ||
-              referral.type === ReferralType_Firestore.genesis ||
-              claim.type === ClaimType_Firestore.referral
-            ) {
-              if (previousClaims.length > 0) {
-                return {
-                  error: {
-                    code: StatusCode.BadRequest,
-                    // WARNING - this message is stupidly parsed in the frontend for internationalization.
-                    //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
-                    message: HACKY_MESSAGE,
-                  },
-                };
-              }
-            }
-
-            if (referral.type === ReferralType_Firestore.one_time) {
-              const previousClaimsForReferral =
-                await getCompletedClaimsForReferral(
-                  referral.id as ReferralID,
-                  1
-                );
-              if (previousClaimsForReferral.length > 0) {
-                return {
-                  error: {
-                    code: StatusCode.BadRequest,
-                    message: "This referral link has already been used",
-                  },
-                };
-              }
-            }
-          }
-
-          const updatedClaim = await completeClaim({
-            claimId: claim.id as ClaimID,
-            referralId: claim.referralId as ReferralID,
-            chosenPartyBasketId: payload.chosenPartyBasketId as PartyBasketID,
-            chosenPartyBasketAddress: partyBasket.address as Address,
-            chosenPartyBasketName: partyBasket.name,
-            chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
-              ? partyBasket.nftBountyValue
-              : undefined,
-            lootboxAddress: lootbox.address as Address,
-            lootboxName: lootbox.name,
-            claimerUserId: context.userId as unknown as UserID,
-            lootboxID: lootbox.id as LootboxID,
-          });
-
-          // Now write the referrers reward claim (type=REWARD)
-          const currentAmount = partyBasket?.runningCompletedClaims || 0;
-          const maxAmount = partyBasket?.maxClaimsAllowed || 10000;
-          const isBonuxWithinLimit = currentAmount + 1 <= maxAmount; // +1 because we will be adding one bonus claim
-          if (
-            isBonuxWithinLimit &&
-            referral.type === ReferralType_Firestore.viral
-          ) {
-            try {
-              await createRewardClaim({
-                referralCampaignName: referral.campaignName,
-                referralId: claim.referralId as ReferralID,
-                tournamentId: claim.tournamentId as TournamentID,
-                referralSlug: claim.referralSlug as ReferralSlug,
-                rewardFromClaim: claim.id as ClaimID,
-                tournamentName: tournament.title,
-                chosenPartyBasketId:
-                  payload.chosenPartyBasketId as PartyBasketID,
-                chosenPartyBasketAddress: partyBasket.address as Address,
-                chosenPartyBasketName: partyBasket.name,
-                lootboxAddress: lootbox.address || undefined,
-                lootboxName: lootbox.name,
-                claimerId: referral.referrerId as UserID,
-                rewardFromFriendReferred: context.userId as unknown as UserID,
-                chosenPartyBasketNFTBountyValue: !!partyBasket.nftBountyValue
-                  ? partyBasket.nftBountyValue
-                  : undefined,
-                isPostCosmic: !!referral.isPostCosmic,
-              });
-            } catch (err) {
-              // If error here, we just make a log... but we dont return an error to client
-              console.error("Error writting reward claim", err);
-            }
-          }
-
-          return {
-            claim: convertClaimDBToGQL(updatedClaim),
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Must choose a lootbox",
+            },
           };
         }
+
+        // To prevent abuse, we ensure the user has a phone number to complete a claim.
+        // If they dont, they are usually an anonymous user and the claim actually becomes status = unverified
+        // In this case, no side effects happen until some async method changes the claim status to status = complete
+        // & firebase cloud function "onClaimWrite" gets triggered
+        const isPhoneVerified = !!user.phoneNumber;
+        let updatedClaim: Claim_Firestore | undefined;
+        if (isPhoneVerified) {
+          const { targetLootbox } =
+            await claimService.validatePendingClaimForCompletion(
+              claim,
+              user,
+              payload.chosenLootboxID as LootboxID
+            );
+
+          // set status = complete
+          updatedClaim = await completeClaim({
+            claimId: claim.id as ClaimID,
+            referralId: claim.referralId as ReferralID,
+            lootboxID: payload.chosenLootboxID as LootboxID,
+            lootboxAddress: targetLootbox.address,
+            lootboxName: targetLootbox.name,
+            lootboxNFTBountyValue: targetLootbox.nftBountyValue,
+            lootboxMaxTickets: targetLootbox.maxTickets,
+            claimerUserId: context.userId as unknown as UserID,
+          });
+        } else {
+          const { targetLootbox } =
+            await claimService.validatePendingClaimForUnverified(
+              claim,
+              user,
+              payload.chosenLootboxID as LootboxID
+            );
+
+          // set status = unverified
+          // side effects like firebase cloud function "onClaimWrite" DO NOT get triggered
+          updatedClaim = await completeAnonClaim({
+            claimId: claim.id as ClaimID,
+            referralId: claim.referralId as ReferralID,
+            lootboxID: payload.chosenLootboxID as LootboxID,
+            lootboxAddress: targetLootbox.address,
+            lootboxName: targetLootbox.name,
+            lootboxNFTBountyValue: targetLootbox.nftBountyValue,
+            lootboxMaxTickets: targetLootbox.maxTickets,
+            claimerUserId: context.userId as unknown as UserID,
+          });
+        }
+
+        return {
+          claim: convertClaimDBToGQL(updatedClaim),
+        };
       } catch (err) {
         return {
           error: {

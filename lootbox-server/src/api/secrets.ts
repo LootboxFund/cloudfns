@@ -26,6 +26,7 @@ export const getSecret = async (
 };
 
 export const getWhitelisterPrivateKey = async (): Promise<string> => {
+  // TODO: CHANGE THE SECRET NAME TO LOOTBOX_WHITELISTER_PRIVATE_KEY !!!
   const secretConfig = manifest.secretManager.secrets.find(
     (secret) => secret.name === "PARTY_BASKET_WHITELISTER_PRIVATE_KEY"
   );

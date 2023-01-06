@@ -21,8 +21,6 @@ import AdvertiserResolvers from "./advertiser/resolvers";
 import AffiliateResolvers from "./affiliate/resolvers";
 import OfferResolvers from "./offer/resolvers";
 import MarketplaceResolvers from "./marketplace/resolvers";
-import PartyBasketTypeDefs from "./partyBasket/typedefs";
-import PartyBasketResolvers from "./partyBasket/resolvers";
 import ReferralResolvers from "./referral/resolvers";
 import AdTypeDefs from "./ad/typedefs";
 import AdResolvers from "./ad/resolvers";
@@ -39,7 +37,6 @@ const typeDefs = [
   AffiliateTypeDefs,
   OfferTypeDefs,
   MarketplaceTypeDefs,
-  PartyBasketTypeDefs,
   AdTypeDefs,
   AnalyticsTypeDefs,
   ReferralTypeDefs,
@@ -54,7 +51,6 @@ const resolvers = {
   ...OfferResolvers,
   ...MarketplaceResolvers,
   ...AffiliateResolvers,
-  ...PartyBasketResolvers,
   ...ReferralResolvers,
   ...AdResolvers,
   ...AnalyticsResolvers,
@@ -67,7 +63,6 @@ const resolvers = {
     ...OfferResolvers.Query,
     ...MarketplaceResolvers.Query,
     ...AffiliateResolvers.Query,
-    ...PartyBasketResolvers.Query,
     ...ReferralResolvers.Query,
     ...AdResolvers.Query,
     ...AnalyticsResolvers.Query,
@@ -81,7 +76,6 @@ const resolvers = {
     ...OfferResolvers.Mutation,
     ...MarketplaceResolvers.Mutation,
     ...AffiliateResolvers.Mutation,
-    ...PartyBasketResolvers.Mutation,
     ...ReferralResolvers.Mutation,
     ...AdResolvers.Mutation,
   },

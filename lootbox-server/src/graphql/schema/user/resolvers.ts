@@ -14,7 +14,6 @@ import {
   MutationRemoveWalletArgs,
   RemoveWalletResponse,
   Tournament,
-  PartyBasket,
   MutationUpdateUserArgs,
   UpdateUserResponse,
   QueryPublicUserArgs,
@@ -41,7 +40,6 @@ import {
   getLootboxSnapshotsForWallet,
   deleteWallet,
   getUserTournaments,
-  getUserPartyBasketsForLootbox,
   updateUser,
   getUsersByEmail,
 } from "../../../api/firestore";
@@ -393,22 +391,6 @@ const UserResolvers = {
         console.error(err);
         return [];
       }
-    },
-    // lootboxes: async (user: User): Promise<Lootbox[]> => {
-    //   // paginated
-    // },
-    /** @deprecated use user.lootboxes instead */
-    partyBaskets: async (
-      user: User,
-      lootbox: Address
-    ): Promise<PartyBasket[]> => {
-      const partyBaskets = await getUserPartyBasketsForLootbox(
-        user.id as UserID,
-        lootbox
-      );
-      return partyBaskets.filter(
-        (partyBasket) => !partyBasket.timestamps.deletedAt
-      );
     },
   },
   Wallet: {

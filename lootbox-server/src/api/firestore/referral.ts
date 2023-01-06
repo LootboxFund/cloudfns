@@ -10,7 +10,6 @@ import {
 import {
   ClaimID,
   LootboxID,
-  PartyBasketID,
   ReferralID,
   ReferralSlug,
   TournamentID,
@@ -95,8 +94,6 @@ interface CreateReferralCall {
   tournamentId: TournamentID;
   type: ReferralType_Firestore;
   seedLootboxID?: LootboxID;
-  /** @deprecated */
-  seedPartyBasketId?: PartyBasketID;
   isPostCosmic: boolean;
 }
 export const createReferral = async (
@@ -126,10 +123,6 @@ export const createReferral = async (
 
   if (!!req.seedLootboxID) {
     newReferral.seedLootboxID = req.seedLootboxID;
-  }
-
-  if (!!req.seedPartyBasketId) {
-    newReferral.seedPartyBasketId = req.seedPartyBasketId;
   }
 
   await ref.set(newReferral);
@@ -162,17 +155,6 @@ interface CreateClaimCall {
   isPostCosmic: boolean;
 
   privacyScope: TournamentPrivacyScope[];
-
-  /** @deprecated use lootbox */
-  originPartyBasketId?: PartyBasketID;
-  /** @deprecated use lootbox */
-  chosenPartyBasketId?: PartyBasketID;
-  /** @deprecated use lootbox */
-  chosenPartyBasketAddress?: Address;
-  /** @deprecated use lootbox */
-  chosenPartyBasketName?: string;
-  /** @deprecated use lootbox */
-  chosenPartyBasketNFTBountyValue?: string;
 }
 export const _createClaim = async (
   req: CreateClaimCall
@@ -239,33 +221,8 @@ export const _createClaim = async (
     newClaim.lootboxAddress = req.lootboxAddress;
   }
 
-  if (!!req.chosenPartyBasketId) {
-    newClaim.chosenPartyBasketId = req.chosenPartyBasketId;
-  }
-
-  if (!!req.chosenPartyBasketName) {
-    newClaim.chosenPartyBasketName = req.chosenPartyBasketName;
-  }
-
-  if (!!req.chosenPartyBasketNFTBountyValue) {
-    newClaim.chosenPartyBasketNFTBountyValue =
-      req.chosenPartyBasketNFTBountyValue;
-  }
-
-  if (!!req.chosenPartyBasketId) {
-    newClaim.chosenPartyBasketId = req.chosenPartyBasketId;
-  }
-
-  if (!!req.originPartyBasketId) {
-    newClaim.originPartyBasketId = req.originPartyBasketId;
-  }
-
   if (!!req.rewardFromClaim) {
     newClaim.rewardFromClaim = req.rewardFromClaim;
-  }
-
-  if (!!req.chosenPartyBasketAddress) {
-    newClaim.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
   }
 
   if (!!req.rewardFromFriendReferred) {
@@ -374,8 +331,6 @@ interface CreateCreateClaimReq {
   originLootboxID?: LootboxID;
   isPostCosmic: boolean;
   privacyScope: TournamentPrivacyScope[];
-  /** @deprecated */
-  originPartyBasketId?: PartyBasketID;
 }
 export const createStartingClaim = async (
   req: CreateCreateClaimReq
@@ -393,7 +348,6 @@ export const createStartingClaim = async (
     referralType: req.referralType,
     completed: false,
     originLootboxId: req.originLootboxID,
-    originPartyBasketId: req.originPartyBasketId,
     isPostCosmic: req.isPostCosmic,
     privacyScope: req.privacyScope,
   });
@@ -408,10 +362,6 @@ interface CreateRewardClaimReq {
   tournamentName: string;
   referralSlug: ReferralSlug;
   rewardFromClaim: ClaimID;
-  chosenPartyBasketId: PartyBasketID;
-  chosenPartyBasketAddress: Address;
-  chosenPartyBasketName: string;
-  chosenPartyBasketNFTBountyValue?: string;
   lootboxName: string;
   lootboxAddress: Address | undefined;
   rewardFromFriendReferred: UserID;
@@ -429,10 +379,6 @@ export const createRewardClaim = async (
     referralSlug: req.referralSlug,
     rewardFromClaim: req.rewardFromClaim,
     tournamentName: req.tournamentName,
-    chosenPartyBasketId: req.chosenPartyBasketId,
-    chosenPartyBasketAddress: req.chosenPartyBasketAddress,
-    chosenPartyBasketName: req.chosenPartyBasketName,
-    chosenPartyBasketNFTBountyValue: req.chosenPartyBasketNFTBountyValue,
     lootboxName: req.lootboxName,
     lootboxAddress: req.lootboxAddress,
     status: ClaimStatus_Firestore.complete,
@@ -456,14 +402,6 @@ interface CompleteClaimReq {
   lootboxName: string;
   lootboxNFTBountyValue?: string;
   lootboxMaxTickets?: number;
-  /** @deprecated */
-  chosenPartyBasketId?: PartyBasketID;
-  /** @deprecated */
-  chosenPartyBasketAddress?: Address;
-  /** @deprecated */
-  chosenPartyBasketName?: string;
-  /** @deprecated */
-  chosenPartyBasketNFTBountyValue?: string;
 }
 export const completeClaim = async (
   req: CompleteClaimReq
@@ -490,22 +428,6 @@ export const completeClaim = async (
 
   if (req.lootboxMaxTickets) {
     updateClaimRequest.lootboxMaxTickets = req.lootboxMaxTickets;
-  }
-
-  if (req.chosenPartyBasketId) {
-    updateClaimRequest.chosenPartyBasketId = req.chosenPartyBasketId;
-  }
-
-  if (req.chosenPartyBasketNFTBountyValue) {
-    updateClaimRequest.chosenPartyBasketNFTBountyValue =
-      req.chosenPartyBasketNFTBountyValue;
-  }
-
-  if (req.chosenPartyBasketAddress) {
-    updateClaimRequest.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
-  }
-  if (req.chosenPartyBasketName) {
-    updateClaimRequest.chosenPartyBasketName = req.chosenPartyBasketName;
   }
 
   // This is to update nested object in non-destructive way
@@ -545,14 +467,6 @@ interface CompleteAnonClaimReq {
   lootboxName: string;
   lootboxNFTBountyValue?: string;
   lootboxMaxTickets?: number;
-  /** @deprecated */
-  chosenPartyBasketId?: PartyBasketID;
-  /** @deprecated */
-  chosenPartyBasketAddress?: Address;
-  /** @deprecated */
-  chosenPartyBasketName?: string;
-  /** @deprecated */
-  chosenPartyBasketNFTBountyValue?: string;
 }
 export const completeAnonClaim = async (
   req: CompleteAnonClaimReq
@@ -579,22 +493,6 @@ export const completeAnonClaim = async (
 
   if (req.lootboxMaxTickets) {
     updateClaimRequest.lootboxMaxTickets = req.lootboxMaxTickets;
-  }
-
-  if (req.chosenPartyBasketId) {
-    updateClaimRequest.chosenPartyBasketId = req.chosenPartyBasketId;
-  }
-
-  if (req.chosenPartyBasketNFTBountyValue) {
-    updateClaimRequest.chosenPartyBasketNFTBountyValue =
-      req.chosenPartyBasketNFTBountyValue;
-  }
-
-  if (req.chosenPartyBasketAddress) {
-    updateClaimRequest.chosenPartyBasketAddress = req.chosenPartyBasketAddress;
-  }
-  if (req.chosenPartyBasketName) {
-    updateClaimRequest.chosenPartyBasketName = req.chosenPartyBasketName;
   }
 
   // This is to update nested object in non-destructive way
@@ -903,13 +801,6 @@ const convertClaimToCsvRow = (
     lootboxLink: claim.lootboxAddress
       ? `${manifest.microfrontends.webflow.cosmicLootboxPage}?lid=${claim.lootboxID}`
       : "",
-    originPartyBasketId: claim.originPartyBasketId || "",
-    partyBasketNFTBountyValue: claim.chosenPartyBasketNFTBountyValue || "",
-    partyBasketAddress: claim.chosenPartyBasketAddress || "",
-    partyBasketId: claim.chosenPartyBasketId || "",
-    partyBasketName: claim.chosenPartyBasketName || "",
-    partyBasketManageLink: "",
-    partyBasketRedeemLink: "",
     claimCreatedAt: claim.timestamps.createdAt,
     claimUpdatedAt: claim.timestamps.updatedAt,
 
@@ -981,65 +872,6 @@ const convertClaimToCsvRow = (
       ? referrer?.wallets[10]?.address || ""
       : "",
   };
-};
-
-/** @deprecated - uses deprecated party basket */
-export const getUnassignedClaims = async (
-  partyBasketId: PartyBasketID
-): Promise<Claim_Firestore[]> => {
-  const collectionGroupRef = db
-    .collectionGroup(Collection.Claim)
-    .where("chosenPartyBasketId", "==", partyBasketId)
-    .where("status", "==", ClaimStatus.Complete)
-    .where("whitelistId", "==", null) as CollectionGroup<Claim_Firestore>;
-
-  const snapshot = await collectionGroupRef.get();
-
-  if (!snapshot || snapshot.empty) {
-    return [];
-  } else {
-    return snapshot.docs.map((doc) => doc.data());
-  }
-};
-
-/** @deprecated - this is duped in functions */
-export const attachWhitelistIdToClaim = async (
-  referralId: ReferralID,
-  claimId: ClaimID,
-  whitelistId: LootboxMintWhitelistID
-) => {
-  const ref = db
-    .collection(Collection.Referral)
-    .doc(referralId)
-    .collection(Collection.Claim)
-    .doc(claimId);
-
-  const updateRequest: Partial<Claim_Firestore> = {
-    whitelistId: whitelistId,
-    // @ts-ignore
-    "timestamps.updatedAt": Timestamp.now().toMillis(),
-  };
-
-  await ref.update(updateRequest);
-};
-
-export const getUserClaimsForLootbox = async (
-  lootboxID: LootboxID,
-  userId: UserID
-): Promise<Claim_Firestore[]> => {
-  const collectionRef = db
-    .collectionGroup(Collection.Claim)
-    .where("status", "==", ClaimStatus_Firestore.complete)
-    .where("claimerUserId", "==", userId)
-    .where("lootboxID", "==", lootboxID) as CollectionGroup<Claim_Firestore>;
-
-  const snapshot = await collectionRef.get();
-
-  if (!snapshot || snapshot.empty) {
-    return [];
-  } else {
-    return snapshot.docs.map((doc) => doc.data());
-  }
 };
 
 const buildBaseLootboxUserClaimQuery = (

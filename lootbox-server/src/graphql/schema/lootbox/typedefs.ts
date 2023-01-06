@@ -139,8 +139,6 @@ const LootboxTypeDefs = gql`
     tournamentSnapshot(tournamentID: ID): LootboxTournamentSnapshot
     # DEPRECATED
     metadata: LootboxMetadata @deprecated(reason: "Use metadataV2")
-    partyBaskets: [PartyBasket!]
-      @deprecated(reason: "Use Cosmic Lootbox Instead")
     tournamentId: ID
       @deprecated(
         reason: "Use LootboxTournamentSnapshot subcollection instead - will be removed after Cosmic"
@@ -226,10 +224,6 @@ const LootboxTypeDefs = gql`
     pageInfo: PageInfo!
     edges: [LootboxFeedEdge!]!
   }
-
-  union GetWhitelistSignaturesResponse =
-      GetWhitelistSignaturesResponseSuccess
-    | ResponseError
 
   union LootboxFeedResponse = LootboxFeedResponseSuccess | ResponseError
 
@@ -363,9 +357,6 @@ const LootboxTypeDefs = gql`
     | ResponseError
   union CreateLootboxResponse = CreateLootboxResponseSuccess | ResponseError
   union EditLootboxResponse = EditLootboxResponseSuccess | ResponseError
-  union GetWhitelistSignaturesResponse =
-      GetWhitelistSignaturesResponseSuccess
-    | ResponseError
 
   input BulkCreateLootboxBodyPayload {
     name: String

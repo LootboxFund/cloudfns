@@ -23,7 +23,6 @@ import {
   getStreamById,
   deleteStream,
   updateStream,
-  getPartyBasketsForLootbox,
   getLootboxSnapshotsForTournament,
   getLootbox,
   paginateLootboxSnapshotsForTournament,
@@ -67,8 +66,6 @@ import {
   EditStreamResponse,
   MutationDeleteStreamArgs,
   DeleteStreamResponse,
-  PartyBasket,
-  PartyBasketStatus,
   MutationAddOfferAdSetToTournamentArgs,
   AddOfferAdSetToTournamentResponse,
   RemovePromoterFromTournamentResponse,
@@ -308,17 +305,6 @@ const TournamentResolvers = {
         throw new Error(`Lootbox not found`);
       }
       return convertLootboxDBToGQL(lootbox);
-    },
-    /** @deprecated to be removed after Party Basket */
-    partyBaskets: async (
-      snapshot: LootboxTournamentSnapshot
-    ): Promise<PartyBasket[]> => {
-      const partyBaskets = await getPartyBasketsForLootbox(
-        snapshot.address as Address
-      );
-      return partyBaskets.filter(
-        (p) => p.status !== PartyBasketStatus.Disabled
-      );
     },
   },
 

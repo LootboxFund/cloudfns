@@ -24,8 +24,6 @@ const UserTypeDefs = gql`
     wallets: [Wallet!]
     tournaments: [Tournament!]
     lootboxes: [Lootbox!]
-    partyBaskets: [PartyBasket!]
-      @deprecated(reason: "Use Cosmic Lootbox Instead")
   }
 
   type PublicUser {
