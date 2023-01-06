@@ -342,7 +342,7 @@ export interface CreateTournamentArgs {
   creatorId: UserID;
   prize?: string | null;
   coverPhoto?: string | null;
-  tournamentDate: number;
+  tournamentDate?: number;
   communityURL?: string | null;
   organizer?: AffiliateID;
   privacyScope?: TournamentPrivacyScope[];
@@ -386,7 +386,7 @@ export const createTournament = async ({
     },
     safetyFeatures: {
       seedMaxLootboxTicketsPerUser: seedMaxLootboxTicketsPerUser,
-      maxTicketsPerUser,
+      maxTicketsPerUser: maxTicketsPerUser,
     },
   };
 
@@ -417,9 +417,23 @@ export const createTournament = async ({
   return tournament;
 };
 
+export interface UpdateTournamentPayload {
+  communityURL?: string | null;
+  coverPhoto?: string | null;
+  description?: string | null;
+  magicLink?: string | null;
+  maxTicketsPerUser?: number | null;
+  playbookUrl?: string | null;
+  privacyScope?: TournamentPrivacyScope[] | null;
+  prize?: string | null;
+  seedMaxLootboxTicketsPerUser?: number | null;
+  title?: string | null;
+  tournamentDate?: number | null;
+  tournamentLink?: string | null;
+}
 export const updateTournament = async (
   id: TournamentID,
-  payload: Omit<EditTournamentPayload, "id">
+  payload: UpdateTournamentPayload
 ): Promise<Tournament_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
