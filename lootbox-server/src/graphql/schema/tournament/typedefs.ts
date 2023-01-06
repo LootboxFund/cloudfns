@@ -47,8 +47,6 @@ const TournamentTypeDefs = gql`
     # @depreacted remove this
     # metadataDownloadUrl: String
     # socials: LootboxSocialsWithoutEmail!
-    partyBaskets: [PartyBasket!]
-      @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
   }
 
   input ClaimerCSVDataPayload {

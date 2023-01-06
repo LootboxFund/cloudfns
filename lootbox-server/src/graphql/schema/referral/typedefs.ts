@@ -66,14 +66,6 @@ const ReferralTypeDefs = gql`
     userLink: PublicUser
     chosenLootbox: Lootbox
     whitelist: MintWhitelistSignature # Whitelist when whitelistId is available
-    # DEPRECATED
-    chosenPartyBasket: PartyBasket @deprecated(reason: "Use Lootbox instead")
-    originPartyBasketId: ID @deprecated(reason: "Use Lootbox instead")
-    chosenPartyBasketId: ID @deprecated(reason: "Use Lootbox instead")
-    chosenPartyBasketAddress: ID @deprecated(reason: "Use Lootbox instead")
-    chosenPartyBasketName: String @deprecated(reason: "Use Lootbox instead")
-    chosenPartyBasketNFTBountyValue: String
-      @deprecated(reason: "Use Lootbox instead")
   }
 
   type ClaimEdge {
@@ -97,12 +89,6 @@ const ReferralTypeDefs = gql`
     type: ReferralType
     isPostCosmic: Boolean
     seedLootbox: Lootbox
-
-    isRewardDisabled: Boolean @deprecated(reason: "Use ReferralType instead")
-    seedPartyBasket: PartyBasket
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
-    seedPartyBasketId: ID
-      @deprecated(reason: "removing after Cosmic Lootbox Refactor")
   }
 
   type ReferralResponseSuccess {
@@ -118,14 +104,12 @@ const ReferralTypeDefs = gql`
     campaignName: String
     referrerId: ID # If null / undefined, uses the caller user id
     promoterId: ID # used for billing
-    partyBasketId: ID # Optional
     lootboxID: ID # Optional
   }
 
   input CreateReferralPayload {
     campaignName: String
     tournamentId: ID!
-    partyBasketId: ID
     lootboxID: ID # Optional
     isRewardDisabled: Boolean @deprecated(reason: "Use referral.type instead")
     type: ReferralType # todo: make this required
@@ -136,7 +120,6 @@ const ReferralTypeDefs = gql`
   input CompleteClaimPayload {
     claimId: ID!
     chosenLootboxID: ID
-    chosenPartyBasketId: ID # @deprecated(reason: "Use chosenLootboxId instead")
   }
 
   input PendingClaimToUntrustedPayload {

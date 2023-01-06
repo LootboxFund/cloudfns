@@ -147,16 +147,5 @@ export const convertClaimDBToGQL = (claim: Claim_Firestore): Claim => {
     privacyScope: claim?.privacyScope
       ? convertClaimPrivacyScopeDBToGQL(claim.privacyScope)
       : [],
-
-    /** @deprecated */
-    originPartyBasketId: claim.originPartyBasketId,
-    /** @deprecated */
-    chosenPartyBasketId: claim.chosenPartyBasketId,
-    /** @deprecated */
-    chosenPartyBasketAddress: claim.chosenPartyBasketAddress,
-    /** @deprecated */
-    chosenPartyBasketName: claim.chosenPartyBasketName,
-    /** @deprecated */
-    chosenPartyBasketNFTBountyValue: claim.chosenPartyBasketNFTBountyValue,
   };
 };

@@ -36,7 +36,6 @@ import {
   getLootbox,
   getLootboxByAddress,
   getUser,
-  getUserPartyBasketsForLootbox,
   editLootbox,
   paginateLootboxFeedQuery,
   getTicket,
@@ -682,51 +681,6 @@ const LootboxResolvers: Resolvers = {
         options: q.options || "",
       }));
     },
-
-    // mintWhitelistSignatures: async (
-    //   lootbox: Lootbox,
-    //   _,
-    //   context: Context
-    // ): Promise<MintWhitelistSignature[]> => {
-    //   if (!context.userId) {
-    //     return [];
-    //   }
-
-    //   try {
-    //     const mintSignatures = await getUserMintSignaturesForLootbox(
-    //       lootbox.id as LootboxID,
-    //       context.userId
-    //     );
-
-    //     return mintSignatures.map(convertMintWhitelistSignatureDBToGQL);
-    //   } catch (err) {
-    //     console.error(err);
-    //     return [];
-    //   }
-    // },
-    // tournamentSnapshots: async (
-    //   lootbox: Lootbox
-    // ): Promise<LootboxTournamentSnapshot[]> => {
-    //   const snapshots = await getTournamentSnapshotsForLootbox(
-    //     lootbox.id as LootboxID
-    //   );
-    // },
-    /** @deprecated will be removed and replaced with cosmic lootbox */
-    partyBaskets: async (lootbox: Lootbox, _, context: Context) => {
-      if (!context.userId) {
-        return [];
-      }
-      try {
-        const baskets = await getUserPartyBasketsForLootbox(
-          context.userId as unknown as UserID,
-          lootbox.address as Address
-        );
-        return baskets;
-      } catch (err) {
-        console.error(err);
-        return [];
-      }
-    },
   },
 
   LootboxFeedResponse: {
@@ -881,9 +835,7 @@ const LootboxResolvers: Resolvers = {
 
 const lootboxResolverComposition = {
   "Query.getLootboxDeposits": [isAuthenticated()],
-  "Mutation.createPartyBasket": [isAuthenticated()],
   "Mutation.bulkWhitelist": [isAuthenticated()],
-  "Mutation.editPartyBasket": [isAuthenticated()],
   "Mutation.whitelistAllUnassignedClaims": [isAuthenticated()],
   "Mutation.editLootbox": [isAuthenticated()],
   "Mutation.mintLootboxTicket": [isAuthenticated()],

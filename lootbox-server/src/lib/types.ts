@@ -67,22 +67,10 @@ export type ClaimsCsvRow = {
   referrerAddress_9: string;
   referrerAddress_10: string;
 
-  // lootbox + party baskets
+  // lootbox
   lootboxAddress: string;
   lootboxName: string;
   lootboxLink: string;
-
-  partyBasketId: string;
-  partyBasketName: string;
-  partyBasketRedeemLink: string;
-  partyBasketManageLink: string;
-  partyBasketAddress: string;
-  partyBasketNFTBountyValue: string;
-
-  originPartyBasketId: string;
-  // originPartyBasketName: String!
-  // originPartyBasketLink: String!
-  // originPartyBasketAddress: String!
 
   // timestamp
   claimCreatedAt: number;
