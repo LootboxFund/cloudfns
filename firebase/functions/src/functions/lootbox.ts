@@ -1009,7 +1009,7 @@ export const onLootboxWrite = functions
 
                 await lootboxRef.update(updateReq);
             } catch (err) {
-                logger.error("Error onPartyBasketWrite", err);
+                logger.error("Error onLootboxWrite", err);
             }
         }
 
