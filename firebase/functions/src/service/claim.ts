@@ -20,6 +20,9 @@ import {
     transitionClaimToComplete,
     transitionClaimToExpired,
     handleClaimCompletedBatchUpdate,
+    createBonusClaim,
+    getUserClaimCountForTournament,
+    getUserClaimCountForLootbox,
 } from "../api/firestore";
 import * as functions from "firebase-functions";
 import { logger } from "firebase-functions";
@@ -191,17 +194,103 @@ export const claimCompletedCallback = async (request: ClaimCompletedCallbackRequ
         return;
     }
 
+    // Validate tournament & lootbox safety settings for the bonus claim
     try {
-        await handleClaimCompletedBatchUpdate({
-            ownerUserID: request.claim.claimerUserId,
-            claim: request.claim,
-            lootbox: lootbox,
-            tournament: tournament,
-        });
+        await Promise.allSettled([
+            handleClaimCompletedBatchUpdate({
+                ownerUserID: request.claim.claimerUserId,
+                claimID: request.claim.id,
+                lootboxID: lootbox.id,
+                tournamentID: tournament.id,
+                referralID: request.claim.referralId,
+            }),
+            handleBonusRewardClaim({
+                lootbox,
+                claim: request.claim,
+                tournament,
+            }),
+        ]);
     } catch (err) {
         logger.error("Error batch updating claims onClaimCompleteCallback", err);
         return;
     }
 
     return;
+};
+
+interface BonusRewardClaimServiceRequest {
+    claim: Claim_Firestore;
+    lootbox: Lootbox_Firestore;
+    tournament: Tournament_Firestore;
+}
+
+const handleBonusRewardClaim = async (payload: BonusRewardClaimServiceRequest) => {
+    const bonusRewardReceiver = payload.claim.referrerId;
+
+    // Checks if bonus reward is eligible
+    if (!bonusRewardReceiver) {
+        logger.info("bonus reward not eligible, no referrer", {
+            claimID: payload.claim.id,
+            referralID: payload.claim.referralId,
+        });
+        return;
+    }
+
+    // Make sure tournent & lootbox not sold out
+    const _currentAmount = payload.lootbox.runningCompletedClaims || 0;
+    const _maxAmount = payload.lootbox.maxTickets || 10000;
+    const _newCurrentAmount = _currentAmount + 1; // Since we increment by one in handleClaimCompletedBatchUpdate
+
+    const toCreateBonusClaim: boolean =
+        payload.claim.referralType === ReferralType_Firestore.viral &&
+        payload.claim.type === ClaimType_Firestore.referral &&
+        _newCurrentAmount < _maxAmount;
+
+    if (!toCreateBonusClaim) {
+        logger.info("bonus reward not eligible, not viral referral or claim type or saturated", {
+            claimID: payload.claim.id,
+            referralID: payload.claim.referralId,
+        });
+
+        return;
+    }
+
+    const { safetyFeatures: lootboxSafety } = payload.lootbox;
+    const { safetyFeatures: tournamentSafety } = payload.tournament;
+
+    if (lootboxSafety?.isSharingDisabled) {
+        // If sharing is disabled, no bonus reward
+        logger.info("Sharing is disabled for this lootbox");
+        return;
+    }
+
+    // get user tickets for this lootbox & tournamet
+    const [userLootboxTicketCount, userTournamentTicketCount] = await Promise.all([
+        getUserClaimCountForTournament(payload.tournament.id, bonusRewardReceiver),
+        getUserClaimCountForLootbox(payload.lootbox.id, bonusRewardReceiver),
+    ]);
+
+    if (
+        userLootboxTicketCount >= (lootboxSafety?.maxTicketsPerUser || 5) ||
+        userTournamentTicketCount >= (tournamentSafety?.maxTicketsPerUser || 100)
+    ) {
+        // If user has already claimed max tickets for this lootbox or tournament, no bonus reward
+        logger.warn("User already has max amount of allowed tickets", {
+            userLootboxTicketCount,
+            userTournamentTicketCount,
+            maxTicketsPerUser: lootboxSafety?.maxTicketsPerUser || 5,
+            maxTicketsPerUserTournament: tournamentSafety?.maxTicketsPerUser || 100,
+            claimID: payload.claim.id,
+            referralID: payload.claim.referralId,
+        });
+        return;
+    }
+
+    // Creates the bonus reward
+    return createBonusClaim({
+        claim: payload.claim,
+        lootbox: payload.lootbox,
+        tournament: payload.tournament,
+        bonusRewardReceiver,
+    });
 };

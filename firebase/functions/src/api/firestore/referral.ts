@@ -215,9 +215,10 @@ export const transitionClaimToExpired = async (
 
 interface ClaimCompleteBatchUpdatePayload {
     ownerUserID: UserID;
-    claim: Claim_Firestore;
-    lootbox: Lootbox_Firestore;
-    tournament: Tournament_Firestore;
+    claimID: ClaimID;
+    lootboxID: LootboxID;
+    tournamentID: TournamentID;
+    referralID: ReferralID;
 }
 /**
  * Handles claim complete callback for firestore updates in a batch
@@ -233,14 +234,14 @@ export const handleClaimCompletedBatchUpdate = async (payload: ClaimCompleteBatc
 
     const ticketRef = db
         .collection(Collection.Lootbox)
-        .doc(payload.lootbox.id)
+        .doc(payload.lootboxID)
         .collection(Collection.LootboxTicket)
         .doc() as DocumentReference<LootboxTicket_Firestore>;
 
     // Creates the web2 ticket
     const ticketDocument: LootboxTicket_Firestore = {
         createdAt: Timestamp.now().toMillis(),
-        lootboxID: payload.lootbox.id,
+        lootboxID: payload.lootboxID,
         id: ticketRef.id as LootboxTicketID,
         ownerUserID: payload.ownerUserID,
     };
@@ -248,9 +249,9 @@ export const handleClaimCompletedBatchUpdate = async (payload: ClaimCompleteBatc
     // We need to update the claim with ticketID
     const claimRef = db
         .collection(Collection.Referral)
-        .doc(payload.claim.referralId)
+        .doc(payload.referralID)
         .collection(Collection.Claim)
-        .doc(payload.claim.id);
+        .doc(payload.claimID);
 
     const timestampName: keyof Claim_Firestore = "timestamps";
     const updatedAtName: keyof ClaimTimestamps_Firestore = "updatedAt";
@@ -261,9 +262,7 @@ export const handleClaimCompletedBatchUpdate = async (payload: ClaimCompleteBatc
     };
 
     // Update the running claim counts
-    const lootboxRef = db
-        .collection(Collection.Lootbox)
-        .doc(payload.lootbox.id) as DocumentReference<Lootbox_Firestore>;
+    const lootboxRef = db.collection(Collection.Lootbox).doc(payload.lootboxID) as DocumentReference<Lootbox_Firestore>;
 
     const lootboxUpdateReq: Partial<Lootbox_Firestore> = {
         runningCompletedClaims: FieldValue.increment(1) as unknown as number,
@@ -272,7 +271,7 @@ export const handleClaimCompletedBatchUpdate = async (payload: ClaimCompleteBatc
     // Update the running tournament claim counts
     const tournamentRef = db
         .collection(Collection.Tournament)
-        .doc(payload.tournament.id) as DocumentReference<Tournament_Firestore>;
+        .doc(payload.tournamentID) as DocumentReference<Tournament_Firestore>;
 
     const tournamentUpdateReq: Partial<Tournament_Firestore> = {
         runningCompletedClaims: FieldValue.increment(1) as unknown as number,
@@ -283,67 +282,155 @@ export const handleClaimCompletedBatchUpdate = async (payload: ClaimCompleteBatc
     batch.update(lootboxRef, lootboxUpdateReq);
     batch.update(tournamentRef, tournamentUpdateReq);
 
-    const _currentAmount = payload.lootbox.runningCompletedClaims || 0;
-    const _maxAmount = payload.lootbox.maxTickets || 10000;
-    const _newCurrentAmount = _currentAmount + 1; // Since we increment by one in handleClaimCompletedBatchUpdate
+    // const _currentAmount = payload.lootbox.runningCompletedClaims || 0;
+    // const _maxAmount = payload.lootbox.maxTickets || 10000;
+    // const _newCurrentAmount = _currentAmount + 1; // Since we increment by one in handleClaimCompletedBatchUpdate
 
-    const createBonusClaim: boolean =
-        payload.claim.referralType === ReferralType_Firestore.viral &&
-        payload.claim.type === ClaimType_Firestore.referral &&
-        !!payload.claim.referrerId &&
-        _newCurrentAmount < _maxAmount;
+    // const createBonusClaim: boolean =
+    //     payload.claim.referralType === ReferralType_Firestore.viral &&
+    //     payload.claim.type === ClaimType_Firestore.referral &&
+    //     !!payload.claim.referrerId &&
+    //     _newCurrentAmount < _maxAmount;
 
-    if (createBonusClaim && payload.claim.referrerId) {
-        const bonusClaimRef = db
-            .collection(Collection.Referral)
-            .doc(payload.claim.referralId)
-            .collection(Collection.Claim)
-            .doc() as DocumentReference<Claim_Firestore>;
+    // if (createBonusClaim && payload.claim.referrerId) {
+    //     const bonusClaimRef = db
+    //         .collection(Collection.Referral)
+    //         .doc(payload.claim.referralId)
+    //         .collection(Collection.Claim)
+    //         .doc() as DocumentReference<Claim_Firestore>;
 
-        const timestamp = Timestamp.now().toMillis();
+    //     const timestamp = Timestamp.now().toMillis();
 
-        const bonusClaimBody: Claim_Firestore = {
-            id: bonusClaimRef.id as ClaimID,
-            referralId: payload.claim.referralId,
-            tournamentId: payload.tournament.id,
-            tournamentName: payload.tournament.title,
-            referralSlug: payload.claim.referralSlug,
-            referralCampaignName: payload.claim.referralCampaignName || "",
-            rewardFromClaim: payload.claim.id,
-            claimerUserId: payload.claim.referrerId,
-            referrerId: null,
-            whitelistId: null,
-            isPostCosmic: true,
-            status: ClaimStatus_Firestore.complete,
-            type: ClaimType_Firestore.reward,
-            referralType: ReferralType_Firestore.viral,
-            lootboxID: payload.lootbox.id,
-            lootboxAddress: payload.lootbox.address || null,
-            lootboxName: payload.lootbox.name,
-            lootboxMaxTickets: payload.lootbox.maxTickets,
-            privacyScope: [], // since these a bonus claims, they have not consented
-            ticketWeb3ID: null, // this will be filled out later in indexLootboxOnMint
-            ticketID: null, // this will be filled out later in indexLootboxOnMint
-            whitelistedAddress: null, // gets filled out later on the fly when user requests it
-            timestamps: {
-                createdAt: timestamp,
-                updatedAt: timestamp,
-                deletedAt: null,
-                completedAt: timestamp,
-                whitelistedAt: null,
-                mintedAt: null,
-            },
-            rewardFromFriendReferred: payload.claim.claimerUserId,
-        };
+    //     const bonusClaimBody: Claim_Firestore = {
+    //         id: bonusClaimRef.id as ClaimID,
+    //         referralId: payload.claim.referralId,
+    //         tournamentId: payload.tournament.id,
+    //         tournamentName: payload.tournament.title,
+    //         referralSlug: payload.claim.referralSlug,
+    //         referralCampaignName: payload.claim.referralCampaignName || "",
+    //         rewardFromClaim: payload.claim.id,
+    //         claimerUserId: payload.claim.referrerId,
+    //         referrerId: null,
+    //         whitelistId: null,
+    //         isPostCosmic: true,
+    //         status: ClaimStatus_Firestore.complete,
+    //         type: ClaimType_Firestore.reward,
+    //         referralType: ReferralType_Firestore.viral,
+    //         lootboxID: payload.lootbox.id,
+    //         lootboxAddress: payload.lootbox.address || null,
+    //         lootboxName: payload.lootbox.name,
+    //         lootboxMaxTickets: payload.lootbox.maxTickets,
+    //         privacyScope: [], // since these a bonus claims, they have not consented
+    //         ticketWeb3ID: null, // this will be filled out later in indexLootboxOnMint
+    //         ticketID: null, // this will be filled out later in indexLootboxOnMint
+    //         whitelistedAddress: null, // gets filled out later on the fly when user requests it
+    //         timestamps: {
+    //             createdAt: timestamp,
+    //             updatedAt: timestamp,
+    //             deletedAt: null,
+    //             completedAt: timestamp,
+    //             whitelistedAt: null,
+    //             mintedAt: null,
+    //         },
+    //         rewardFromFriendReferred: payload.claim.claimerUserId,
+    //     };
 
-        if (payload.lootbox.nftBountyValue) {
-            bonusClaimBody.lootboxNFTBountyValue = payload.lootbox.nftBountyValue;
-        }
+    //     if (payload.lootbox.nftBountyValue) {
+    //         bonusClaimBody.lootboxNFTBountyValue = payload.lootbox.nftBountyValue;
+    //     }
 
-        batch.create(bonusClaimRef, bonusClaimBody);
-    }
+    //     batch.create(bonusClaimRef, bonusClaimBody);
+    // }
 
     await batch.commit();
 
     return;
+};
+
+interface CreateBonusClaimPayload {
+    // ownerUserID: UserID;
+    claim: Claim_Firestore;
+    lootbox: Lootbox_Firestore;
+    tournament: Tournament_Firestore;
+    bonusRewardReceiver: UserID;
+}
+
+export const createBonusClaim = async (payload: CreateBonusClaimPayload): Promise<void> => {
+    const bonusClaimRef = db
+        .collection(Collection.Referral)
+        .doc(payload.claim.referralId)
+        .collection(Collection.Claim)
+        .doc() as DocumentReference<Claim_Firestore>;
+
+    const timestamp = Timestamp.now().toMillis();
+
+    const bonusClaimBody: Claim_Firestore = {
+        id: bonusClaimRef.id as ClaimID,
+        referralId: payload.claim.referralId,
+        tournamentId: payload.tournament.id,
+        tournamentName: payload.tournament.title,
+        referralSlug: payload.claim.referralSlug,
+        referralCampaignName: payload.claim.referralCampaignName || "",
+        rewardFromClaim: payload.claim.id,
+        claimerUserId: payload.bonusRewardReceiver,
+        referrerId: null,
+        whitelistId: null,
+        isPostCosmic: true,
+        status: ClaimStatus_Firestore.complete,
+        type: ClaimType_Firestore.reward,
+        referralType: ReferralType_Firestore.viral,
+        lootboxID: payload.lootbox.id,
+        lootboxAddress: payload.lootbox.address || null,
+        lootboxName: payload.lootbox.name,
+        lootboxMaxTickets: payload.lootbox.maxTickets,
+        privacyScope: [], // since these a bonus claims, they have not consented
+        ticketWeb3ID: null, // this will be filled out later in indexLootboxOnMint
+        ticketID: null, // this will be filled out later in indexLootboxOnMint
+        whitelistedAddress: null, // gets filled out later on the fly when user requests it
+        timestamps: {
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            deletedAt: null,
+            completedAt: timestamp,
+            whitelistedAt: null,
+            mintedAt: null,
+        },
+        rewardFromFriendReferred: payload.claim.claimerUserId,
+    };
+
+    if (payload.lootbox.nftBountyValue) {
+        bonusClaimBody.lootboxNFTBountyValue = payload.lootbox.nftBountyValue;
+    }
+
+    // batch.create(bonusClaimRef, bonusClaimBody);
+
+    await bonusClaimRef.set(bonusClaimBody);
+
+    return;
+};
+
+export const getUserClaimCountForTournament = async (tournamentID: TournamentID, userID: UserID): Promise<number> => {
+    const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
+    const statusField: keyof Claim_Firestore = "status";
+    const query = await db
+        .collectionGroup(Collection.Claim)
+        .where(claimerUserIDField, "==", userID)
+        .where(statusField, "==", ClaimStatus_Firestore.complete)
+        .get();
+
+    return query.docs.length;
+};
+
+export const getUserClaimCountForLootbox = async (lootboxID: LootboxID, userID: UserID): Promise<number> => {
+    const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
+    const statusField: keyof Claim_Firestore = "status";
+    const lootboxIDField: keyof Claim_Firestore = "lootboxID";
+    const query = await db
+        .collectionGroup(Collection.Claim)
+        .where(claimerUserIDField, "==", userID)
+        .where(statusField, "==", ClaimStatus_Firestore.complete)
+        .where(lootboxIDField, "==", lootboxID)
+        .get();
+
+    return query.docs.length;
 };
