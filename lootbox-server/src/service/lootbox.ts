@@ -9,6 +9,7 @@ import {
   Lootbox_Firestore,
   MintWhitelistSignature_Firestore,
   TournamentID,
+  Tournament_Firestore,
   UserID,
 } from "@wormgraph/helpers";
 import { stampNewLootbox } from "../api/stamp";
@@ -28,6 +29,7 @@ import { whitelistLootboxMintSignature } from "../lib/whitelist";
 import {
   LootboxType,
   AirdropMetadataCreateInput,
+  Tournament,
 } from "../graphql/generated/types";
 
 export interface CreateLootboxRequest {
@@ -45,6 +47,7 @@ export interface CreateLootboxRequest {
   tournamentID: TournamentID;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
+  isSharingDisabled?: boolean;
 }
 
 export const create = async (
@@ -53,10 +56,9 @@ export const create = async (
   console.log("creating lootbox", request);
 
   // Make sure the tournament exists
+  let tournament: Tournament_Firestore | undefined = undefined;
   if (request.tournamentID) {
-    const tournament = await getTournamentById(
-      request.tournamentID as TournamentID
-    );
+    tournament = await getTournamentById(request.tournamentID as TournamentID);
     if (!tournament || !!tournament.timestamps.deletedAt) {
       throw new Error(
         "Could not create Lootbox. The Requested tournament was not found."
@@ -95,6 +97,9 @@ export const create = async (
       joinCommunityUrl: request.joinCommunityUrl,
       type: request.type,
       airdropMetadata: request.airdropMetadata,
+      maxTicketsPerUser:
+        tournament?.safetyFeatures?.seedMaxLootboxTicketsPerUser,
+      isSharingDisabled: request.isSharingDisabled,
     },
     lootboxDocumentRef
   );

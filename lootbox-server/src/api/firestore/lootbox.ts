@@ -696,6 +696,7 @@ export const extractOrGenerateLootboxCreateInput = async (
     lootboxName: name,
     tournamentID: payload.tournamentID as TournamentID,
     type: payload.type ? (payload.type as LootboxType) : undefined,
+    isSharingDisabled: payload.isSharingDisabled || false,
     airdropMetadata: payload.airdropMetadata
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)
       : undefined,

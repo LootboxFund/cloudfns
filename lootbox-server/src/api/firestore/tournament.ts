@@ -346,7 +346,7 @@ export interface CreateTournamentArgs {
   communityURL?: string | null;
   organizer?: AffiliateID;
   privacyScope?: TournamentPrivacyScope[];
-  seedMaxLootboxTickets?: number;
+  seedMaxLootboxTicketsPerUser?: number;
   maxTicketsPerUser?: number;
 }
 
@@ -361,7 +361,7 @@ export const createTournament = async ({
   communityURL,
   organizer,
   privacyScope,
-  seedMaxLootboxTickets = 5,
+  seedMaxLootboxTicketsPerUser = 5,
   maxTicketsPerUser = 100,
 }: CreateTournamentArgs): Promise<Tournament_Firestore> => {
   const tournamentRef = db
@@ -385,7 +385,7 @@ export const createTournament = async ({
       deletedAt: null,
     },
     safetyFeatures: {
-      seedMaxLootboxTicketsPerUser: seedMaxLootboxTickets,
+      seedMaxLootboxTicketsPerUser: seedMaxLootboxTicketsPerUser,
       maxTicketsPerUser,
     },
   };
@@ -473,11 +473,12 @@ export const updateTournament = async (
 
   const safetyFeaturesFieldname: keyof Tournament_Firestore = "safetyFeatures";
 
-  if (payload.seedMaxLootboxTickets != undefined) {
-    const seedMaxTicketsFieldname: keyof TournamentSafetyFeatures_Firestore =
+  if (payload.seedMaxLootboxTicketsPerUser != undefined) {
+    const seedMaxLootboxTicketsPerUser: keyof TournamentSafetyFeatures_Firestore =
       "seedMaxLootboxTicketsPerUser";
-    updatePayload[`${safetyFeaturesFieldname}.${seedMaxTicketsFieldname}`] =
-      payload.seedMaxLootboxTickets;
+    updatePayload[
+      `${safetyFeaturesFieldname}.${seedMaxLootboxTicketsPerUser}`
+    ] = payload.seedMaxLootboxTicketsPerUser;
   }
 
   if (payload.maxTicketsPerUser != undefined) {

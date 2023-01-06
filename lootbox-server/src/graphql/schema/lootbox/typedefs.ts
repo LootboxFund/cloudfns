@@ -300,6 +300,7 @@ const LootboxTypeDefs = gql`
     themeColor: String
     tournamentID: String!
     type: LootboxType
+    isSharingDisabled: Boolean
     airdropMetadata: AirdropMetadataCreateInput
   }
 

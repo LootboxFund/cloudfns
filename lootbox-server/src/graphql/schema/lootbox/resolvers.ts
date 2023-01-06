@@ -271,6 +271,7 @@ const LootboxResolvers: Resolvers = {
           lootboxName: fullPayload.lootboxName,
           tournamentID: fullPayload.tournamentID,
           type: fullPayload.type ? (payload.type as LootboxType) : undefined,
+          isSharingDisabled: fullPayload.isSharingDisabled,
           airdropMetadata: fullPayload.airdropMetadata
             ? (payload.airdropMetadata as AirdropMetadataCreateInput)
             : undefined,

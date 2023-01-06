@@ -316,7 +316,7 @@ const TournamentTypeDefs = gql`
     tournamentDate: Timestamp
     playbookUrl: String
     privacyScope: [TournamentPrivacyScope!]
-    seedMaxLootboxTickets: Int
+    seedMaxLootboxTicketsPerUser: Int
     maxTicketsPerUser: Int
   }
 
