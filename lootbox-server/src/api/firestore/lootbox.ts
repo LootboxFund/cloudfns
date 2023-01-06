@@ -98,7 +98,7 @@ export const getLootboxByAddress = async (
   }
 };
 
-interface EditLootboxPayload {
+export interface EditLootboxPayload {
   logo?: string;
   name?: string;
   description?: string;
@@ -430,7 +430,7 @@ export const getLootboxByUserIDAndNonce = async (
   return collectionSnapshot.docs[0].data();
 };
 
-interface CreateLootboxPayloadLocalType {
+export interface CreateLootboxPayloadLocalType {
   creatorID: UserID;
   stampImage: string;
   logo: string;
@@ -654,9 +654,19 @@ export const getLootboxUnassignedClaimForUser = async (
 };
 
 export const extractOrGenerateLootboxCreateInput = async (
-  payload: CreateLootboxPayload,
-  userIdpID: UserIdpID
-): Promise<CreateLootboxRequest> => {
+  payload: CreateLootboxPayload
+): Promise<
+  CreateLootboxRequest & {
+    backgroundImage: string;
+    logoImage: string;
+    themeColor: string;
+    lootboxName: string;
+    symbol: string;
+    description: string;
+    nftBountyValue: string;
+    maxTickets: number;
+  }
+> => {
   let name = payload.name;
   if (!name) {
     name = await getRandomUserName({
@@ -684,15 +694,14 @@ export const extractOrGenerateLootboxCreateInput = async (
   const impliedSymbol =
     trimmedName.length < 12 ? trimmedName : trimmedName.slice(0, 12);
   return {
-    lootboxDescription: payload.description || "",
+    description: payload.description || "",
     backgroundImage: backgroundImage,
     logoImage: logoImage,
     themeColor: themeColor,
     nftBountyValue: payload.nftBountyValue || "Prize",
     maxTickets: payload.maxTickets || 30,
     joinCommunityUrl: payload.joinCommunityUrl || undefined,
-    symbol: impliedSymbol,
-    creatorID: userIdpID as unknown as UserID,
+    symbol: impliedSymbol || "LOOTBOX",
     lootboxName: name,
     tournamentID: payload.tournamentID as TournamentID,
     type: payload.type ? (payload.type as LootboxType) : undefined,

@@ -379,6 +379,7 @@ const LootboxTypeDefs = gql`
     tournamentID: String!
     type: LootboxType
     airdropMetadata: AirdropMetadataCreateInput
+    isSharingDisabled: Boolean
   }
 
   input BulkCreateLootboxPayload {

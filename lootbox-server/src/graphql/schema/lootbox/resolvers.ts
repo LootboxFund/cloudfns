@@ -252,30 +252,31 @@ const LootboxResolvers: Resolvers = {
           },
         };
       }
-      const fullPayload = await extractOrGenerateLootboxCreateInput(
-        payload,
-        context.userId
-      );
+      // const fullPayload = await extractOrGenerateLootboxCreateInput(
+      //   payload,
+      //   context.userId
+      // );
 
       try {
-        const lootbox = await LootboxService.create({
-          lootboxDescription: fullPayload.lootboxDescription,
-          backgroundImage: fullPayload.backgroundImage,
-          logoImage: fullPayload.logoImage,
-          themeColor: fullPayload.themeColor,
-          nftBountyValue: fullPayload.nftBountyValue,
-          maxTickets: fullPayload.maxTickets,
-          joinCommunityUrl: fullPayload.joinCommunityUrl || undefined,
-          symbol: fullPayload.symbol,
-          creatorID: fullPayload.creatorID,
-          lootboxName: fullPayload.lootboxName,
-          tournamentID: fullPayload.tournamentID,
-          type: fullPayload.type ? (payload.type as LootboxType) : undefined,
-          isSharingDisabled: fullPayload.isSharingDisabled,
-          airdropMetadata: fullPayload.airdropMetadata
-            ? (payload.airdropMetadata as AirdropMetadataCreateInput)
-            : undefined,
-        });
+        const lootbox = await LootboxService.create(
+          {
+            description: payload.description,
+            backgroundImage: payload.backgroundImage,
+            logoImage: payload.logo,
+            themeColor: payload.themeColor,
+            nftBountyValue: payload.nftBountyValue,
+            maxTickets: payload.maxTickets,
+            joinCommunityUrl: payload.joinCommunityUrl || undefined,
+            lootboxName: payload.name,
+            tournamentID: payload.tournamentID as unknown as TournamentID,
+            type: payload.type ? (payload.type as LootboxType) : undefined,
+            isSharingDisabled: payload.isSharingDisabled || false,
+            airdropMetadata: payload.airdropMetadata
+              ? (payload.airdropMetadata as AirdropMetadataCreateInput)
+              : undefined,
+          },
+          context.userId as unknown as UserID
+        );
 
         return { lootbox: convertLootboxDBToGQL(lootbox) };
       } catch (err) {
@@ -319,30 +320,28 @@ const LootboxResolvers: Resolvers = {
         const lootboxPayload = payload.lootboxes[idx];
 
         try {
-          const fullPayload = await extractOrGenerateLootboxCreateInput(
-            lootboxPayload,
-            context.userId
+          const lootbox = await LootboxService.create(
+            {
+              description: lootboxPayload.description,
+              backgroundImage: lootboxPayload.backgroundImage,
+              logoImage: lootboxPayload.logo,
+              themeColor: lootboxPayload.themeColor,
+              nftBountyValue: lootboxPayload.nftBountyValue,
+              maxTickets: lootboxPayload.maxTickets,
+              joinCommunityUrl: lootboxPayload.joinCommunityUrl || undefined,
+              lootboxName: lootboxPayload.name,
+              tournamentID:
+                lootboxPayload.tournamentID as unknown as TournamentID,
+              type: lootboxPayload.type
+                ? (lootboxPayload.type as LootboxType)
+                : undefined,
+              isSharingDisabled: lootboxPayload.isSharingDisabled || false,
+              airdropMetadata: lootboxPayload.airdropMetadata
+                ? (lootboxPayload.airdropMetadata as AirdropMetadataCreateInput)
+                : undefined,
+            },
+            context.userId as unknown as UserID
           );
-
-          const lootbox = await LootboxService.create({
-            lootboxDescription: fullPayload.lootboxDescription,
-            backgroundImage: fullPayload.backgroundImage,
-            logoImage: fullPayload.logoImage,
-            themeColor: fullPayload.themeColor,
-            nftBountyValue: fullPayload.nftBountyValue,
-            maxTickets: fullPayload.maxTickets,
-            joinCommunityUrl: fullPayload.joinCommunityUrl || undefined,
-            symbol: fullPayload.symbol,
-            creatorID: fullPayload.creatorID,
-            lootboxName: fullPayload.lootboxName,
-            tournamentID: fullPayload.tournamentID,
-            type: fullPayload.type
-              ? (fullPayload.type as LootboxType)
-              : undefined,
-            airdropMetadata: fullPayload.airdropMetadata
-              ? (fullPayload.airdropMetadata as AirdropMetadataCreateInput)
-              : undefined,
-          });
 
           createdLootboxes.push(lootbox);
         } catch (err) {
@@ -375,59 +374,23 @@ const LootboxResolvers: Resolvers = {
       }
 
       try {
-        const [user, lootbox] = await Promise.all([
-          getUser(context.userId),
-          getLootbox(payload.lootboxID as LootboxID),
-        ]);
-        if (!user || !!user.deletedAt) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "User not found",
-            },
-          };
-        }
-        if (!lootbox || !!lootbox.timestamps.deletedAt) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "Lootbox not found",
-            },
-          };
-        }
-        if ((context.userId as unknown as UserID) !== lootbox.creatorID) {
-          return {
-            error: {
-              code: StatusCode.Unauthorized,
-              message: "You do not own this Lootbox",
-            },
-          };
-        }
-        if (
-          payload.maxTicketsPerUser != undefined &&
-          payload.maxTicketsPerUser < 1
-        ) {
-          return {
-            error: {
-              code: StatusCode.BadRequest,
-              message: "Max Tickets Per User must be greater than 0",
-            },
-          };
-        }
-        const res = await editLootbox(payload.lootboxID as LootboxID, {
-          name: payload.name || undefined,
-          description: payload.description || undefined,
-          maxTickets: payload.maxTickets || undefined,
-          nftBountyValue: payload.nftBountyValue || undefined,
-          // symbol: payload.symbol || undefined,
-          joinCommunityUrl: payload.joinCommunityUrl || undefined,
-          status: payload.status
-            ? convertLootboxStatusGQLToDB(payload.status)
-            : undefined,
-          logo: payload.logo || undefined,
-          backgroundImage: payload.backgroundImage || undefined,
-          themeColor: payload.themeColor || undefined,
-        });
+        const res = await LootboxService.edit(
+          payload.lootboxID as LootboxID,
+          {
+            name: payload.name || undefined,
+            description: payload.description || undefined,
+            maxTickets: payload.maxTickets || undefined,
+            nftBountyValue: payload.nftBountyValue || undefined,
+            joinCommunityUrl: payload.joinCommunityUrl || undefined,
+            status: payload.status,
+            logo: payload.logo || undefined,
+            backgroundImage: payload.backgroundImage || undefined,
+            themeColor: payload.themeColor || undefined,
+            isSharingDisabled: payload.isSharingDisabled || undefined,
+            maxTicketsPerUser: payload.maxTicketsPerUser || undefined,
+          },
+          context.userId as unknown as UserID
+        );
 
         return { lootbox: convertLootboxDBToGQL(res) };
       } catch (err) {

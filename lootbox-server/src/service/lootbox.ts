@@ -4,6 +4,7 @@ import {
   Collection,
   ContractAddress,
   LootboxID,
+  LootboxStatus_Firestore,
   LootboxTicketDigest,
   LootboxVariant_Firestore,
   Lootbox_Firestore,
@@ -11,13 +12,20 @@ import {
   TournamentID,
   Tournament_Firestore,
   UserID,
+  UserIdpID,
 } from "@wormgraph/helpers";
 import { stampNewLootbox } from "../api/stamp";
 import {
   createLootbox,
+  CreateLootboxPayloadLocalType,
   createLootboxTournamentSnapshot,
   createMintWhitelistSignature,
+  editLootbox,
+  EditLootboxPayload,
+  extractOrGenerateLootboxCreateInput,
+  getLootbox,
   getTournamentById,
+  getUser,
   getWhitelistByDigest,
 } from "../api/firestore";
 import { getStampSecret } from "../api/secrets";
@@ -30,20 +38,22 @@ import {
   LootboxType,
   AirdropMetadataCreateInput,
   Tournament,
+  LootboxStatus,
 } from "../graphql/generated/types";
+import { convertLootboxStatusGQLToDB } from "../lib/lootbox";
+import { isInteger } from "../lib/number";
 
 export interface CreateLootboxRequest {
   // passed in variables
-  lootboxDescription: string;
-  backgroundImage: string;
-  logoImage: string;
-  themeColor: string;
-  nftBountyValue: string;
-  maxTickets: number;
+  description?: string | null;
+  backgroundImage?: string | null;
+  logoImage?: string | null;
+  themeColor?: string | null;
+  nftBountyValue?: string | null;
+  maxTickets?: number | null;
   joinCommunityUrl?: string;
-  symbol: string;
-  creatorID: UserID;
-  lootboxName: string;
+  symbol?: string | null;
+  lootboxName?: string | null;
   tournamentID: TournamentID;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
@@ -51,9 +61,12 @@ export interface CreateLootboxRequest {
 }
 
 export const create = async (
-  request: CreateLootboxRequest
+  _request: CreateLootboxRequest,
+  callerUserID: UserID
 ): Promise<Lootbox_Firestore> => {
-  console.log("creating lootbox", request);
+  console.log("creating lootbox", _request);
+
+  const request = await extractOrGenerateLootboxCreateInput(_request);
 
   // Make sure the tournament exists
   let tournament: Tournament_Firestore | undefined = undefined;
@@ -80,54 +93,42 @@ export const create = async (
     lootboxID: lootboxDocumentRef.id as LootboxID,
   });
 
-  const createdLootbox = await createLootbox(
-    {
-      variant: LootboxVariant_Firestore.cosmic,
-      creatorID: request.creatorID,
-      stampImage: stampImageUrl,
-      logo: request.logoImage,
-      symbol: request.symbol,
-      name: request.lootboxName,
-      tournamentID: request.tournamentID,
-      description: request.lootboxDescription,
-      nftBountyValue: request.nftBountyValue,
-      maxTickets: request.maxTickets,
-      backgroundImage: request.backgroundImage,
-      themeColor: request.themeColor,
-      joinCommunityUrl: request.joinCommunityUrl,
-      type: request.type,
-      airdropMetadata: request.airdropMetadata,
-      maxTicketsPerUser:
-        tournament?.safetyFeatures?.seedMaxLootboxTicketsPerUser,
-      isSharingDisabled: request.isSharingDisabled,
-    },
-    lootboxDocumentRef
-  );
+  const payload: CreateLootboxPayloadLocalType = {
+    variant: LootboxVariant_Firestore.cosmic,
+    creatorID: callerUserID,
+    stampImage: stampImageUrl,
+    logo: request.logoImage,
+    symbol: request.symbol,
+    name: request.lootboxName,
+    tournamentID: request.tournamentID,
+    description: request.description,
+    nftBountyValue: request.nftBountyValue,
+    maxTickets: request.maxTickets,
+    backgroundImage: request.backgroundImage,
+    themeColor: request.themeColor,
+    joinCommunityUrl: request.joinCommunityUrl,
+    type: request.type,
+    airdropMetadata: request.airdropMetadata,
+    maxTicketsPerUser: tournament?.safetyFeatures?.seedMaxLootboxTicketsPerUser,
+    isSharingDisabled: request.isSharingDisabled,
+  };
 
-  if (request.tournamentID) {
-    // console.log("Checking to add tournament snapshot", {
-    //   tournamentID: request.tournamentID,
-    //   lootboxID: createdLootbox.id,
-    // });
-    // Make sure tournament exists
-    const tournament = await getTournamentById(request.tournamentID);
-    if (tournament != null) {
-      // console.log("creating tournament snapshot", {
-      //   tournamentID: request.tournamentID,
-      //   lootboxID: createdLootbox.id,
-      // });
-      await createLootboxTournamentSnapshot({
-        tournamentID: request.tournamentID,
-        lootboxID: createdLootbox.id,
-        lootboxAddress: createdLootbox.address || null,
-        creatorID: request.creatorID,
-        lootboxCreatorID: request.creatorID,
-        description: createdLootbox.description,
-        name: createdLootbox.name,
-        stampImage: createdLootbox.stampImage,
-        type: createdLootbox.type,
-      });
-    }
+  validateCreateLootboxPayload(payload);
+
+  const createdLootbox = await createLootbox(payload, lootboxDocumentRef);
+
+  if (tournament != undefined) {
+    await createLootboxTournamentSnapshot({
+      tournamentID: request.tournamentID,
+      lootboxID: createdLootbox.id,
+      lootboxAddress: createdLootbox.address || null,
+      creatorID: callerUserID,
+      lootboxCreatorID: callerUserID,
+      description: createdLootbox.description,
+      name: createdLootbox.name,
+      stampImage: createdLootbox.stampImage,
+      type: createdLootbox.type,
+    });
   }
 
   return createdLootbox;
@@ -199,4 +200,122 @@ export const whitelist = async (
   });
 
   return signatureDB;
+};
+
+interface EditLootboxServiceRequest {
+  backgroundImage?: string | null;
+  description?: string | null;
+  isSharingDisabled?: boolean | null;
+  joinCommunityUrl?: string | null;
+  logo?: string | null;
+  maxTickets?: number | null;
+  maxTicketsPerUser?: number | null;
+  name?: string | null;
+  nftBountyValue?: string | null;
+  status?: LootboxStatus | null;
+  symbol?: string | null;
+  themeColor?: string | null;
+}
+
+export const edit = async (
+  id: LootboxID,
+  payload: EditLootboxServiceRequest,
+  callerUserID: UserID
+): Promise<Lootbox_Firestore> => {
+  const [user, lootbox] = await Promise.all([
+    getUser(callerUserID),
+    getLootbox(id as LootboxID),
+  ]);
+  if (!user || !!user.deletedAt) {
+    throw new Error("User not found");
+  }
+  if (!lootbox || !!lootbox.timestamps.deletedAt) {
+    throw new Error("Lootbox not found");
+  }
+  if (callerUserID !== lootbox.creatorID) {
+    throw new Error("You do not own this Lootbox");
+  }
+
+  const request: EditLootboxPayload = {
+    name: payload.name || undefined,
+    description: payload.description || undefined,
+    maxTickets: payload.maxTickets || undefined,
+    nftBountyValue: payload.nftBountyValue || undefined,
+    // symbol: payload.symbol || undefined,
+    joinCommunityUrl: payload.joinCommunityUrl || undefined,
+    status: payload.status
+      ? convertLootboxStatusGQLToDB(payload.status)
+      : undefined,
+    logo: payload.logo || undefined,
+    backgroundImage: payload.backgroundImage || undefined,
+    themeColor: payload.themeColor || undefined,
+    isSharingDisabled: payload.isSharingDisabled || undefined,
+    maxTicketsPerUser: payload.maxTicketsPerUser
+      ? Math.round(payload.maxTicketsPerUser)
+      : undefined,
+  };
+
+  validateEditLootboxRequest(request);
+
+  const updatedLootbox = await editLootbox(id, request);
+
+  return updatedLootbox;
+};
+
+const validateEditLootboxRequest = (payload: EditLootboxPayload) => {
+  if (
+    payload.status &&
+    Object.values(LootboxStatus_Firestore).indexOf(payload.status) === -1
+  ) {
+    throw new Error("Invalid Status");
+  }
+
+  if (payload.maxTicketsPerUser != undefined && payload.maxTicketsPerUser < 1) {
+    throw new Error("Max Tickets Per User must be greater than 0");
+  }
+  if (payload.maxTicketsPerUser && !isInteger(payload.maxTicketsPerUser)) {
+    throw new Error("Max Tickets Per User must be an integer");
+  }
+
+  if (payload.maxTickets != undefined && payload.maxTickets < 0) {
+    throw new Error("Max Tickets must be equal greater than 0");
+  }
+
+  if (payload.maxTickets != undefined && !isInteger(payload.maxTickets)) {
+    throw new Error("Max Tickets must be an integer");
+  }
+
+  return true;
+};
+
+const validateCreateLootboxPayload = (
+  payload: CreateLootboxPayloadLocalType
+) => {
+  if (
+    payload.variant != undefined &&
+    Object.values(LootboxVariant_Firestore).indexOf(payload.variant) === -1
+  ) {
+    throw new Error("Invalid Variant");
+  }
+  if (
+    payload.type != undefined &&
+    Object.values(LootboxType).indexOf(payload.type) === -1
+  ) {
+    throw new Error("Invalid Type");
+  }
+
+  if (payload.maxTicketsPerUser && !isInteger(payload.maxTicketsPerUser)) {
+    throw new Error("maxTicketsPerUser must be an integer");
+  }
+  if (payload.maxTicketsPerUser && payload.maxTicketsPerUser < 0) {
+    throw new Error("maxTicketsPerUser must be equal or greater than 0");
+  }
+  if (payload.maxTickets < 0) {
+    throw new Error("maxTickets must be equal or greater than 0");
+  }
+  if (!isInteger(payload.maxTickets)) {
+    throw new Error("maxTickets must be an integer");
+  }
+
+  return true;
 };

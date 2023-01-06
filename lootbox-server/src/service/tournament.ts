@@ -1,6 +1,7 @@
 import {
   TournamentID,
   TournamentPrivacyScope,
+  Tournament_Firestore,
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
@@ -15,6 +16,7 @@ import {
 } from "../api/firestore";
 import { Affiliate_Firestore } from "../api/firestore/affiliate.type";
 import { getRandomUserName } from "../api/lexica-images";
+import { isInteger } from "../lib/number";
 
 interface CreateTournamentServiceRequest {
   description: string;
@@ -90,6 +92,10 @@ const validateTournamentCreationRequest = (req: CreateTournamentArgs) => {
     throw new Error("Max Tickets per user must be greater than zero");
   }
 
+  if (req.maxTicketsPerUser != undefined && !isInteger(req.maxTicketsPerUser)) {
+    throw new Error("Max Tickets per user must be an integer");
+  }
+
   if (
     req.seedMaxLootboxTicketsPerUser != undefined &&
     req.seedMaxLootboxTicketsPerUser < 0
@@ -97,6 +103,13 @@ const validateTournamentCreationRequest = (req: CreateTournamentArgs) => {
     throw new Error(
       "Seed Max Lootbox Tickets per user must be greater than zero"
     );
+  }
+
+  if (
+    req.seedMaxLootboxTicketsPerUser != undefined &&
+    !isInteger(req.seedMaxLootboxTicketsPerUser)
+  ) {
+    throw new Error("Seed Max Lootbox Tickets per user must be an integer");
   }
 
   //   if (req.tournamentDate && typeof req.tournamentDate !== "number") {
@@ -126,7 +139,16 @@ export const edit = async (
   callerUserID: UserIdpID
 ) => {
   // Make sure the user owns the tournament
-  const tournamentDB = await getTournamentById(tournamentID);
+  let tournamentDB: Tournament_Firestore | undefined;
+  let affiliate: Affiliate_Firestore;
+  try {
+    [tournamentDB, affiliate] = await Promise.all([
+      getTournamentById(tournamentID),
+      getAffiliateByUserIdpID(callerUserID),
+    ]);
+  } catch (err) {
+    throw new Error("You must be an affiliate to create a tournament");
+  }
 
   if (!tournamentDB) {
     throw new Error("Tournament not found");
@@ -159,6 +181,10 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
     throw new Error("Max Tickets per user must be greater than zero");
   }
 
+  if (req.maxTicketsPerUser != undefined && !isInteger(req.maxTicketsPerUser)) {
+    throw new Error("Max Tickets per user must be an integer");
+  }
+
   if (
     req.seedMaxLootboxTicketsPerUser != undefined &&
     req.seedMaxLootboxTicketsPerUser < 0
@@ -166,6 +192,13 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
     throw new Error(
       "Seed Max Lootbox Tickets per user must be greater than zero"
     );
+  }
+
+  if (
+    req.seedMaxLootboxTicketsPerUser != undefined &&
+    !isInteger(req.seedMaxLootboxTicketsPerUser)
+  ) {
+    throw new Error("Seed Max Lootbox Tickets per user must be an integer");
   }
 
   if ("id" in req) {
