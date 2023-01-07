@@ -96,7 +96,7 @@ const LootboxTypeDefs = gql`
 
   type LootboxSafetyFeatures {
     maxTicketsPerUser: Int
-    isSharingDisabled: Boolean
+    isExclusiveLootbox: Boolean
   }
 
   type Lootbox {
@@ -300,7 +300,7 @@ const LootboxTypeDefs = gql`
     themeColor: String
     tournamentID: String!
     type: LootboxType
-    isSharingDisabled: Boolean
+    isExclusiveLootbox: Boolean
     airdropMetadata: AirdropMetadataCreateInput
   }
 
@@ -330,7 +330,7 @@ const LootboxTypeDefs = gql`
     status: LootboxStatus
     maxTickets: Int
     themeColor: String
-    isSharingDisabled: Boolean
+    isExclusiveLootbox: Boolean
     maxTicketsPerUser: Int
   }
 
@@ -379,7 +379,7 @@ const LootboxTypeDefs = gql`
     tournamentID: String!
     type: LootboxType
     airdropMetadata: AirdropMetadataCreateInput
-    isSharingDisabled: Boolean
+    isExclusiveLootbox: Boolean
   }
 
   input BulkCreateLootboxPayload {

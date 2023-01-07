@@ -110,7 +110,7 @@ export interface EditLootboxPayload {
   badgeImage?: string;
   themeColor?: string;
   symbol?: string;
-  isSharingDisabled?: boolean;
+  isExclusiveLootbox?: boolean;
   maxTicketsPerUser?: number;
 }
 export const editLootbox = async (
@@ -164,11 +164,11 @@ export const editLootbox = async (
   }
 
   const safetyFeaturesFieldname: keyof Lootbox_Firestore = "safetyFeatures";
-  if (payload.isSharingDisabled != undefined) {
-    const isSharingDisabledFieldName: keyof LootboxSafetyFeatures_Firestore =
-      "isSharingDisabled";
-    updateRequest[`${safetyFeaturesFieldname}.${isSharingDisabledFieldName}`] =
-      payload.isSharingDisabled;
+  if (payload.isExclusiveLootbox != undefined) {
+    const isExclusiveLootboxFieldName: keyof LootboxSafetyFeatures_Firestore =
+      "isExclusiveLootbox";
+    updateRequest[`${safetyFeaturesFieldname}.${isExclusiveLootboxFieldName}`] =
+      payload.isExclusiveLootbox;
   }
   if (payload.maxTicketsPerUser != undefined) {
     const maxTicketsPerUserFieldName: keyof LootboxSafetyFeatures_Firestore =
@@ -447,7 +447,7 @@ export interface CreateLootboxPayloadLocalType {
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   maxTicketsPerUser?: number;
-  isSharingDisabled?: boolean;
+  isExclusiveLootbox?: boolean;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -493,7 +493,7 @@ export const createLootbox = async (
     isContractDeployed: false,
     safetyFeatures: {
       maxTicketsPerUser: payload.maxTicketsPerUser || 5,
-      isSharingDisabled: payload.isSharingDisabled || false,
+      isExclusiveLootbox: payload.isExclusiveLootbox || false,
     },
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
@@ -705,7 +705,7 @@ export const extractOrGenerateLootboxCreateInput = async (
     lootboxName: name,
     tournamentID: payload.tournamentID as TournamentID,
     type: payload.type ? (payload.type as LootboxType) : undefined,
-    isSharingDisabled: payload.isSharingDisabled || false,
+    isExclusiveLootbox: payload.isExclusiveLootbox || false,
     airdropMetadata: payload.airdropMetadata
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)
       : undefined,

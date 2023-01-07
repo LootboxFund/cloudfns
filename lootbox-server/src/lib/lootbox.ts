@@ -106,7 +106,7 @@ export const parseLootboxDB = (
     runningCompletedClaims: lootbox.runningCompletedClaims || 0,
     type: lootbox.type,
     safetyFeatures: {
-      isSharingDisabled: lootbox?.safetyFeatures?.isSharingDisabled || false,
+      isExclusiveLootbox: lootbox?.safetyFeatures?.isExclusiveLootbox || false,
       maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser || 5,
     },
   };
@@ -224,7 +224,8 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       creationNonce: lootbox.creationNonce || null,
       type: lootbox.type,
       safetyFeatures: {
-        isSharingDisabled: lootbox?.safetyFeatures?.isSharingDisabled || false,
+        isExclusiveLootbox:
+          lootbox?.safetyFeatures?.isExclusiveLootbox || false,
         maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser || 5,
       },
     };

@@ -253,10 +253,13 @@ const _validateBaseClaimForCompletionStep = async (
   const { safetyFeatures: lootboxSafety } = lootbox;
   const { safetyFeatures: tournamentSafety } = tournament;
 
-  if (lootboxSafety?.isSharingDisabled) {
-    // If sharing is disabled, no bonus reward
+  if (
+    lootboxSafety?.isExclusiveLootbox &&
+    claim.referralType !== ReferralType_Firestore.genesis
+  ) {
+    // If sharing is disabled, users can only claim genesis referrals
     throw new Error(
-      "Sharing is disabled for this Lootbox. Please choose a different Lootbox."
+      "Sharing is disabled for this Lootbox. Please ask the event host for a different referral link."
     );
   }
 

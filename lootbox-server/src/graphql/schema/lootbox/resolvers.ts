@@ -270,7 +270,7 @@ const LootboxResolvers: Resolvers = {
             lootboxName: payload.name,
             tournamentID: payload.tournamentID as unknown as TournamentID,
             type: payload.type ? (payload.type as LootboxType) : undefined,
-            isSharingDisabled: payload.isSharingDisabled || false,
+            isExclusiveLootbox: payload.isExclusiveLootbox || false,
             airdropMetadata: payload.airdropMetadata
               ? (payload.airdropMetadata as AirdropMetadataCreateInput)
               : undefined,
@@ -335,7 +335,7 @@ const LootboxResolvers: Resolvers = {
               type: lootboxPayload.type
                 ? (lootboxPayload.type as LootboxType)
                 : undefined,
-              isSharingDisabled: lootboxPayload.isSharingDisabled || false,
+              isExclusiveLootbox: lootboxPayload.isExclusiveLootbox || false,
               airdropMetadata: lootboxPayload.airdropMetadata
                 ? (lootboxPayload.airdropMetadata as AirdropMetadataCreateInput)
                 : undefined,
@@ -386,7 +386,7 @@ const LootboxResolvers: Resolvers = {
             logo: payload.logo || undefined,
             backgroundImage: payload.backgroundImage || undefined,
             themeColor: payload.themeColor || undefined,
-            isSharingDisabled: payload.isSharingDisabled || undefined,
+            isExclusiveLootbox: payload.isExclusiveLootbox || undefined,
             maxTicketsPerUser: payload.maxTicketsPerUser || undefined,
           },
           context.userId as unknown as UserID

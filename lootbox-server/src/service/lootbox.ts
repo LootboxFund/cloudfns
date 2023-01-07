@@ -57,7 +57,7 @@ export interface CreateLootboxRequest {
   tournamentID: TournamentID;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
-  isSharingDisabled?: boolean;
+  isExclusiveLootbox?: boolean;
 }
 
 export const create = async (
@@ -110,7 +110,7 @@ export const create = async (
     type: request.type,
     airdropMetadata: request.airdropMetadata,
     maxTicketsPerUser: tournament?.safetyFeatures?.seedMaxLootboxTicketsPerUser,
-    isSharingDisabled: request.isSharingDisabled,
+    isExclusiveLootbox: request.isExclusiveLootbox,
   };
 
   validateCreateLootboxPayload(payload);
@@ -205,7 +205,7 @@ export const whitelist = async (
 interface EditLootboxServiceRequest {
   backgroundImage?: string | null;
   description?: string | null;
-  isSharingDisabled?: boolean | null;
+  isExclusiveLootbox?: boolean | null;
   joinCommunityUrl?: string | null;
   logo?: string | null;
   maxTickets?: number | null;
@@ -249,7 +249,7 @@ export const edit = async (
     logo: payload.logo || undefined,
     backgroundImage: payload.backgroundImage || undefined,
     themeColor: payload.themeColor || undefined,
-    isSharingDisabled: payload.isSharingDisabled || undefined,
+    isExclusiveLootbox: payload.isExclusiveLootbox || undefined,
     maxTicketsPerUser: payload.maxTicketsPerUser
       ? Math.round(payload.maxTicketsPerUser)
       : undefined,
