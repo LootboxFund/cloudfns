@@ -116,6 +116,36 @@ export const validateUnverifiedUserClaim = async (user: User_Firestore, claim: C
         }
     }
 
+    const { safetyFeatures: lootboxSafety } = lootbox;
+    const { safetyFeatures: tournamentSafety } = tournament;
+
+    if (lootboxSafety?.isSharingDisabled) {
+        // If sharing is disabled, no bonus reward
+        return false;
+    }
+
+    // get user tickets for this lootbox & tournamet
+    const [userLootboxTicketCount, userTournamentTicketCount] = await Promise.all([
+        getUserClaimCountForTournament(tournament.id, user.id),
+        getUserClaimCountForLootbox(lootbox.id, user.id),
+    ]);
+
+    if (
+        userLootboxTicketCount >= (lootboxSafety?.maxTicketsPerUser || 5) ||
+        userTournamentTicketCount >= (tournamentSafety?.maxTicketsPerUser || 100)
+    ) {
+        // If user has already claimed max tickets for this lootbox or tournament, no bonus reward
+        logger.warn("User already has max amount of allowed tickets", {
+            userLootboxTicketCount,
+            userTournamentTicketCount,
+            maxTicketsPerUser: lootboxSafety?.maxTicketsPerUser || 5,
+            maxTicketsPerUserTournament: tournamentSafety?.maxTicketsPerUser || 100,
+            claimID: claim.id,
+            referralID: claim.referralId,
+        });
+        return false;
+    }
+
     return true;
 };
 
