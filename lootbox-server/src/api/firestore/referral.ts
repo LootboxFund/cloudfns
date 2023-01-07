@@ -989,6 +989,7 @@ export const updateClaimRedemptionStatus = async (
   return claim.id;
 };
 
+/** @deprecated - use the lootbox snapshot resolver on the tournament */
 export const getLootboxOptionsForTournament = async (
   tournamentID: TournamentID
 ) => {
