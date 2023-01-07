@@ -108,7 +108,10 @@ const AdvertiserResolvers: Resolvers = {
           };
         }
         return {
-          ...advertiser,
+          id: advertiser.id,
+          name: advertiser.name,
+          description: advertiser.description,
+          avatar: advertiser.avatar,
         };
       } catch (err) {
         console.error(err);

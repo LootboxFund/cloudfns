@@ -32,6 +32,7 @@ import {
   LootboxType,
   TournamentPrivacyScope,
   TournamentSafetyFeatures_Firestore,
+  TournamentVisibility_Firestore,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -388,6 +389,8 @@ export const createTournament = async ({
       seedMaxLootboxTicketsPerUser: seedMaxLootboxTicketsPerUser,
       maxTicketsPerUser: maxTicketsPerUser,
     },
+    visibility: TournamentVisibility_Firestore.Private,
+    runningCompletedClaims: 0,
   };
 
   if (!!prize) {

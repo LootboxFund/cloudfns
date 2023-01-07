@@ -10,6 +10,7 @@ import {
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
   LootboxType,
+  TournamentVisibility_Firestore,
 } from "@wormgraph/helpers";
 import {
   Stream_Firestore,
@@ -67,6 +68,7 @@ export const parseTournamentDB = (
       updatedAt: data.timestamps.updatedAt,
       deletedAt: data.timestamps.deletedAt || null,
     },
+    visibility: data.visibility,
   };
 
   if (data.coverPhoto) {

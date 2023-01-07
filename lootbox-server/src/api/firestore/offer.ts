@@ -29,6 +29,7 @@ import {
   tableActivationIngestorRoutes,
   ActivationIngestorRoute_LootboxAppActivation_Body,
   FlightID,
+  OfferVisibility_Firestore,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -109,6 +110,7 @@ export const createOffer = async (
     adSets: [],
     strategy: (payload.strategy ||
       OfferStrategy.AfterTicketClaim) as OfferStrategy,
+    visibility: OfferVisibility_Firestore.Private,
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
   if (payload.airdropMetadata) {
@@ -508,6 +510,7 @@ export const listCreatedOffers = async (
       endDate: data.endDate,
       status: data.status,
       strategy: data.strategy || OfferStrategy.None,
+      visibility: data.visibility,
       // targetingTags: data.targetingTags,
     };
     return preview;

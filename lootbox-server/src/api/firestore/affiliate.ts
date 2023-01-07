@@ -47,6 +47,7 @@ import {
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
+  AffiliateVisibility_Firestore,
   Affiliate_Firestore,
   OrganizerOfferWhitelist_Firestore,
 } from "./affiliate.type";
@@ -105,6 +106,7 @@ export const upgradeToAffiliate = async (
     avatar: initialAvatar,
     website: "",
     audienceSize: 0,
+    visibility: AffiliateVisibility_Firestore.Private,
   };
   await affiliateRef.set(affiliate);
   return affiliate;
