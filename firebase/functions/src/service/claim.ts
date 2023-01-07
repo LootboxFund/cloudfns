@@ -118,9 +118,8 @@ export const validateUnverifiedUserClaim = async (user: User_Firestore, claim: C
 
     const { safetyFeatures: lootboxSafety } = lootbox;
     const { safetyFeatures: tournamentSafety } = tournament;
-
-    if (lootboxSafety?.isExclusiveLootbox && claim.referralType !== ReferralType_Firestore.genesis) {
-        // If sharing is disabled, no bonus reward
+    const isOwnerMadeReferral = referral.creatorId === tournament.creatorId || referral.creatorId === lootbox.creatorID;
+    if (lootboxSafety?.isExclusiveLootbox && (!isOwnerMadeReferral || lootbox.id !== referral.seedLootboxID)) {
         return false;
     }
 
@@ -290,7 +289,7 @@ const handleBonusRewardClaim = async (payload: BonusRewardClaimServiceRequest) =
 
     if (lootboxSafety?.isExclusiveLootbox) {
         // If sharing is disabled, no bonus reward
-        logger.info("Sharing is disabled for this lootbox");
+        logger.info("Bonus rewards are disabled for this lootbox");
         return;
     }
 

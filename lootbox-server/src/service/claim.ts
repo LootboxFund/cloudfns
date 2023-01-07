@@ -7,6 +7,7 @@ import {
   LootboxTournamentStatus_Firestore,
   Lootbox_Firestore,
   ReferralID,
+  ReferralSlug,
   ReferralType_Firestore,
   TournamentID,
   UserID,
@@ -18,12 +19,16 @@ import {
   getLootbox,
   getLootboxTournamentSnapshotByLootboxID,
   getReferralById,
+  getReferralBySlug,
   getTournamentById,
   getUnverifiedClaimsForUser,
   getUserClaimCountForLootbox,
   getUserClaimCountForTournament,
+  createStartingClaim,
 } from "../api/firestore";
 import { IIdpUser } from "../api/identityProvider/interface";
+import { ReferralType } from "../graphql/generated/types";
+import { convertClaimPrivacyScopeGQLToDB } from "../lib/referral";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -252,10 +257,13 @@ const _validateBaseClaimForCompletionStep = async (
   // Validate tournament / Lootbox safety features
   const { safetyFeatures: lootboxSafety } = lootbox;
   const { safetyFeatures: tournamentSafety } = tournament;
-
+  const isOwnerMadeReferral =
+    referral.creatorId === tournament.creatorId ||
+    referral.creatorId === lootbox.creatorID;
   if (
+    // Only allow exclusive lootbox redemptions if the referral creator is tournament host or lootbox creator
     lootboxSafety?.isExclusiveLootbox &&
-    claim.referralType !== ReferralType_Firestore.genesis
+    (!isOwnerMadeReferral || referral.seedLootboxID !== lootbox.id)
   ) {
     // If sharing is disabled, users can only claim genesis referrals
     throw new Error(
@@ -290,4 +298,60 @@ const _validateBaseClaimForCompletionStep = async (
   return {
     lootbox,
   };
+};
+
+interface StartClaimProcessPayload {
+  referralSlug: ReferralSlug;
+}
+
+export const startClaimProcess = async (
+  payload: StartClaimProcessPayload
+  // This is actually un-used because its unauthenticated
+  // _callerUserID: UserID
+): Promise<Claim_Firestore> => {
+  const referral = await getReferralBySlug(payload.referralSlug);
+
+  if (!referral || !!referral.timestamps.deletedAt) {
+    throw new Error("Referral not found");
+  }
+
+  const tournament = await getTournamentById(referral.tournamentId);
+
+  if (!tournament || !!tournament.timestamps.deletedAt) {
+    throw new Error("Tournament not found");
+  }
+
+  let claimType: ClaimType_Firestore.one_time | ClaimType_Firestore.referral;
+  if (referral.type === ReferralType_Firestore.one_time) {
+    claimType = ClaimType_Firestore.one_time;
+  } else if (
+    referral.type === ReferralType_Firestore.viral ||
+    referral.type === ReferralType_Firestore.genesis
+  ) {
+    claimType = ClaimType_Firestore.referral;
+  } else {
+    console.warn("invalid referral", referral);
+    // This should throw an error, but allowed to allow old referrals to work (when referral.tyle===undefined)
+    // default to viral
+    claimType = ClaimType_Firestore.referral;
+  }
+
+  const claim = await createStartingClaim({
+    claimType,
+    referralCampaignName: referral.campaignName,
+    referralId: referral.id as ReferralID,
+    promoterId: referral.promoterId,
+    tournamentId: referral.tournamentId as TournamentID,
+    referrerId: referral.referrerId as unknown as UserIdpID,
+    referralSlug: payload.referralSlug as ReferralSlug,
+    tournamentName: tournament.title,
+    referralType: referral.type || ReferralType.Viral, // default to viral
+    originLootboxID: referral.seedLootboxID,
+    isPostCosmic: true,
+    privacyScope: tournament?.privacyScope
+      ? convertClaimPrivacyScopeGQLToDB(tournament.privacyScope)
+      : [],
+  });
+
+  return claim;
 };

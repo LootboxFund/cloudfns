@@ -414,6 +414,15 @@ const ReferralResolvers: Resolvers = {
             LootboxTournamentStatus_Firestore.active;
       }
 
+      if (isSeedLootboxEnabled && lootbox?.safetyFeatures?.isExclusiveLootbox) {
+        const callerUserID = context.userId as unknown as UserID;
+        // Dont allow exclusive lootbox referrals if the user is not tournament host or lootbox creator
+        isSeedLootboxEnabled =
+          isSeedLootboxEnabled &&
+          (callerUserID === tournament.creatorId ||
+            callerUserID === lootbox.creatorID);
+      }
+
       if (!!payload.referrerId) {
         try {
           const user = await getUser(payload.referrerId);
@@ -630,6 +639,18 @@ const ReferralResolvers: Resolvers = {
               LootboxTournamentStatus_Firestore.active;
         }
 
+        if (
+          isSeedLootboxEnabled &&
+          lootbox?.safetyFeatures?.isExclusiveLootbox
+        ) {
+          const callerUserID = context.userId as unknown as UserID;
+          // Dont allow exclusive lootbox referrals if the user is not tournament host or lootbox creator
+          isSeedLootboxEnabled =
+            isSeedLootboxEnabled &&
+            (callerUserID === tournament.creatorId ||
+              callerUserID === lootbox.creatorID);
+        }
+
         const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
         let referrerIdToSet = payload.referrerId
           ? (payload.referrerId as UserID)
@@ -676,64 +697,8 @@ const ReferralResolvers: Resolvers = {
       { payload }: MutationCreateClaimArgs
     ): Promise<CreateClaimResponse> => {
       try {
-        const referral = await getReferralBySlug(
-          payload.referralSlug as ReferralSlug
-        );
-
-        if (!referral || !!referral.timestamps.deletedAt) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "Referral not found",
-            },
-          };
-        }
-
-        const tournament = await getTournamentById(
-          referral.tournamentId as TournamentID
-        );
-
-        if (!tournament || !!tournament.timestamps.deletedAt) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "Tournament not found",
-            },
-          };
-        }
-
-        let claimType:
-          | ClaimType_Firestore.one_time
-          | ClaimType_Firestore.referral;
-        if (referral.type === ReferralType_Firestore.one_time) {
-          claimType = ClaimType_Firestore.one_time;
-        } else if (
-          referral.type === ReferralType_Firestore.viral ||
-          referral.type === ReferralType_Firestore.genesis
-        ) {
-          claimType = ClaimType_Firestore.referral;
-        } else {
-          console.warn("invalid referral", referral);
-          // This should throw an error, but allowed to allow old referrals to work (when referral.tyle===undefined)
-          // default to viral
-          claimType = ClaimType_Firestore.referral;
-        }
-
-        const claim = await createStartingClaim({
-          claimType,
-          referralCampaignName: referral.campaignName,
-          referralId: referral.id as ReferralID,
-          promoterId: referral.promoterId,
-          tournamentId: referral.tournamentId as TournamentID,
-          referrerId: referral.referrerId as unknown as UserIdpID,
+        const claim = await claimService.startClaimProcess({
           referralSlug: payload.referralSlug as ReferralSlug,
-          tournamentName: tournament.title,
-          referralType: referral.type || ReferralType.Viral, // default to viral
-          originLootboxID: referral.seedLootboxID,
-          isPostCosmic: true,
-          privacyScope: tournament?.privacyScope
-            ? convertClaimPrivacyScopeGQLToDB(tournament.privacyScope)
-            : [],
         });
 
         return {
