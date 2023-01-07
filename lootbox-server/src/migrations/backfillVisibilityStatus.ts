@@ -9,6 +9,9 @@
  * - tournament.isPostCosmic -> false
  * - tournament.privacyScope -> []
  * - tournaemnt.runningCompletedClaims -> 0
+ * - user.username
+ * - user.avatar
+ * - user.headshot []
  *
  * You'll have to authenticate with before running the script:
  * > $ gcloud auth application-default login
@@ -28,6 +31,7 @@ import {
   Offer_Firestore,
   TournamentVisibility_Firestore,
   Tournament_Firestore,
+  User_Firestore,
 } from "@wormgraph/helpers";
 import { db } from "../api/firebase";
 import { CollectionReference } from "firebase-admin/firestore";
@@ -39,6 +43,12 @@ import {
   AffiliateVisibility_Firestore,
   Affiliate_Firestore,
 } from "../api/firestore/affiliate.type";
+import {
+  getRandomPortraitFromLexicaHardcoded,
+  getRandomUserName,
+} from "../api/lexica-images";
+import identityProvider from "../api/identityProvider";
+import { UpdateUserRequest } from "../api/identityProvider/interface";
 
 /**
  * Main function run in this script
@@ -184,6 +194,64 @@ const run = async () => {
 
       if (Object.values(updateReq).length > 0) {
         await db.collection(Collection.Tournament).doc(id).update(updateReq);
+      }
+    }
+  }
+
+  const _users = await (
+    db.collection(Collection.User) as CollectionReference<User_Firestore>
+  ).get();
+
+  const users = _users.docs
+    .map((doc) => doc.data())
+    .filter((f) => {
+      return (
+        f.username == undefined ||
+        f.headshot == undefined ||
+        f.avatar == undefined
+      );
+    });
+
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+    const { id, username, headshot, avatar } = user;
+
+    if (username == undefined || headshot == undefined || avatar == undefined) {
+      console.log(`\nUpdating user ( ${i}/${users.length} )`);
+      const updateReq: Partial<User_Firestore> = {};
+
+      if (username == undefined) {
+        const __username = await getRandomUserName({
+          type: "user",
+          seedEmail: user?.email || undefined,
+        });
+        console.log("generated user name", __username);
+        updateReq.username = __username;
+      }
+
+      if (headshot == undefined) {
+        updateReq.headshot = [];
+      }
+
+      if (avatar == undefined) {
+        const __avatar = await getRandomPortraitFromLexicaHardcoded();
+        console.log("generated avatar", __avatar);
+        updateReq.avatar = __avatar;
+      }
+
+      if (Object.values(updateReq).length > 0) {
+        // Updates the firestore user
+        console.log("updating user database....");
+        await db.collection(Collection.User).doc(id).update(updateReq);
+
+        const shouldUpdateIDP = updateReq.avatar || updateReq.username;
+        if (shouldUpdateIDP) {
+          console.log(`updating user IDP...`);
+          await identityProvider.updateUser(id, {
+            ...(updateReq.username && { username: updateReq.username }),
+            ...(updateReq.avatar && { avatar: updateReq.avatar }),
+          });
+        }
       }
     }
   }
