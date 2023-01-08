@@ -118,9 +118,10 @@ const validateTournamentCreationRequest = (req: CreateTournamentArgs) => {
     throw new Error("Seed Max Lootbox Tickets per user must be an integer");
   }
 
-  //   if (req.tournamentDate && typeof req.tournamentDate !== "number") {
-  //     throw new Error("Invalid tournament date");
-  //   }
+  if (req.tournamentDate && typeof req.tournamentDate !== "number") {
+    throw new Error("Invalid tournament date type. Should be number");
+  }
+
   return true;
 };
 

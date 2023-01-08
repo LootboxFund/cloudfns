@@ -304,10 +304,9 @@ interface StartClaimProcessPayload {
   referralSlug: ReferralSlug;
 }
 
+/** Starts claiming process - this does not do user caller checks because the endpoint is un authenticated */
 export const startClaimProcess = async (
   payload: StartClaimProcessPayload
-  // This is actually un-used because its unauthenticated
-  // _callerUserID: UserID
 ): Promise<Claim_Firestore> => {
   const referral = await getReferralBySlug(payload.referralSlug);
 
@@ -330,10 +329,7 @@ export const startClaimProcess = async (
   ) {
     claimType = ClaimType_Firestore.referral;
   } else {
-    console.warn("invalid referral", referral);
-    // This should throw an error, but allowed to allow old referrals to work (when referral.tyle===undefined)
-    // default to viral
-    claimType = ClaimType_Firestore.referral;
+    throw new Error("Invalid referral type");
   }
 
   const claim = await createStartingClaim({

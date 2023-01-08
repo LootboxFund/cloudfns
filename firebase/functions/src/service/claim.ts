@@ -288,7 +288,7 @@ const handleBonusRewardClaim = async (payload: BonusRewardClaimServiceRequest) =
     const { safetyFeatures: tournamentSafety } = payload.tournament;
 
     if (lootboxSafety?.isExclusiveLootbox) {
-        // If sharing is disabled, no bonus reward
+        // Exclusive Lootboxes will not award bonus claims
         logger.info("Bonus rewards are disabled for this lootbox");
         return;
     }

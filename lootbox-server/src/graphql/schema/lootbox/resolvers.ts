@@ -252,10 +252,6 @@ const LootboxResolvers: Resolvers = {
           },
         };
       }
-      // const fullPayload = await extractOrGenerateLootboxCreateInput(
-      //   payload,
-      //   context.userId
-      // );
 
       try {
         const lootbox = await LootboxService.create(
