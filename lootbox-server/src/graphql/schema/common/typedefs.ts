@@ -18,8 +18,8 @@ const CommonTypeDefs = gql`
 
   enum OrganizerRank {
     ClayRank1
-    IronRank2
-    BronzeRank3
+    BronzeRank2
+    IronRank3
     SilverRank4
     GoldRank5
     PlatinumRank6

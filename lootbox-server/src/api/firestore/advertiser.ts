@@ -493,7 +493,7 @@ export const listTournamentsOfAdvertiser = async (
 
 export const listPartnersOfAdvertiser = async (
   advertiserID: AdvertiserID
-): Promise<Affiliate[] | undefined> => {
+): Promise<Affiliate_Firestore[] | undefined> => {
   const advertiserRef = db
     .collection(Collection.Advertiser)
     .doc(advertiserID) as DocumentReference<Advertiser_Firestore>;
@@ -525,17 +525,8 @@ export const listPartnersOfAdvertiser = async (
     .map((snap) => {
       return snap.data();
     }) as Affiliate_Firestore[];
-  const affiliatePreviews = affiliates.map((a) => {
-    return {
-      id: a.id,
-      userID: a.userID,
-      name: a.name,
-      avatar: a.avatar,
-      website: a.website,
-      audienceSize: a.audienceSize,
-    };
-  });
-  return affiliatePreviews;
+
+  return affiliates;
 };
 
 export const getAdvertiser = async (

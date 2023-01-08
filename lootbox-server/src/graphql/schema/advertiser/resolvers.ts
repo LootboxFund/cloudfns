@@ -43,6 +43,7 @@ import {
   QueryListEventsOfAdvertiserArgs,
   ListEventsOfAdvertiserResponse,
 } from "../../generated/types";
+import { convertAffiliateDBToGQL } from "../../../lib/affiliate";
 
 const AdvertiserResolvers: Resolvers = {
   Query: {
@@ -270,7 +271,7 @@ const AdvertiserResolvers: Resolvers = {
           };
         }
         return {
-          partners,
+          partners: partners.map(convertAffiliateDBToGQL),
         };
       } catch (err) {
         console.error(err);
