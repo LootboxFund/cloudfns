@@ -9,6 +9,11 @@ const OfferTypeDefs = gql`
     thumbnail: String
   }
 
+  enum OfferVisibility {
+    Public
+    Private
+  }
+
   type Offer {
     id: ID!
     title: String!
@@ -29,6 +34,7 @@ const OfferTypeDefs = gql`
     airdropMetadata: OfferAirdropMetadata
     afterTicketClaimMetadata: OfferAfterTicketClaimMetadata
     strategy: OfferStrategyType!
+    visibility: OfferVisibility!
   }
 
   type OfferAirdropMetadata {
@@ -303,6 +309,7 @@ const OfferTypeDefs = gql`
     airdropMetadata: OfferAirdropMetadataEditInput
     afterTicketClaimMetadata: OfferAfterTicketClaimMetadataEditInput
     lootboxTemplateID: ID
+    visibility: OfferVisibility
     #targetingTags: [AdTargetTag!]!
   }
   input OfferAirdropMetadataEditInput {
