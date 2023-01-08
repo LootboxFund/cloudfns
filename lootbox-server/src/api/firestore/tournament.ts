@@ -566,6 +566,7 @@ export const paginateBattleFeedQuery = async (
   let tournamentQuery = db
     .collection(Collection.Tournament)
     .where("timestamps.deletedAt", "==", null)
+    .where("visibility", "==", TournamentVisibility_Firestore.Public)
     .orderBy("timestamps.createdAt", "desc") as Query<Tournament_Firestore>;
 
   if (cursor) {
