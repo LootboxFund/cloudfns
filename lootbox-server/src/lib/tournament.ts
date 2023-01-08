@@ -4,6 +4,8 @@ import {
   Stream,
   StreamType,
   Tournament,
+  TournamentSafetyFeatures,
+  TournamentVisibility,
 } from "../graphql/generated/types";
 import {
   Tournament_Firestore,
@@ -11,6 +13,7 @@ import {
   LootboxTournamentStatus_Firestore,
   LootboxType,
   TournamentVisibility_Firestore,
+  TournamentSafetyFeatures_Firestore,
 } from "@wormgraph/helpers";
 import {
   Stream_Firestore,
@@ -43,7 +46,6 @@ export const parseLootboxTournamentSnapshotDB = (
       depositEmailSentAt: data.timestamps.depositEmailSentAt || null,
     },
     type: data.type,
-    // socials,
     status: data.status || LootboxTournamentStatus_Firestore.disabled,
   };
 
@@ -68,7 +70,7 @@ export const parseTournamentDB = (
       updatedAt: data.timestamps.updatedAt,
       deletedAt: data.timestamps.deletedAt || null,
     },
-    visibility: data.visibility,
+    visibility: data.visibility || TournamentVisibility_Firestore.Private,
   };
 
   if (data.coverPhoto) {
@@ -180,10 +182,43 @@ export const convertStreamTypeGQLToDB = (
   }
 };
 
+export const convertTournamentSafetyFeaturesToGQL = (
+  feats: TournamentSafetyFeatures_Firestore
+): TournamentSafetyFeatures => {
+  return {
+    maxTicketsPerUser: feats.maxTicketsPerUser,
+    seedMaxLootboxTicketsPerUser: feats.seedMaxLootboxTicketsPerUser,
+  };
+};
+
+export const convertTournamentVisiblityGQL = (
+  visibility: TournamentVisibility_Firestore
+): TournamentVisibility => {
+  switch (visibility) {
+    case TournamentVisibility_Firestore.Public:
+      return TournamentVisibility.Public;
+    case TournamentVisibility_Firestore.Private:
+    default:
+      return TournamentVisibility.Private;
+  }
+};
+
+export const convertTournamentVisiblityDB = (
+  visibility: TournamentVisibility
+): TournamentVisibility_Firestore => {
+  switch (visibility) {
+    case TournamentVisibility.Public:
+      return TournamentVisibility_Firestore.Public;
+    case TournamentVisibility.Private:
+    default:
+      return TournamentVisibility_Firestore.Private;
+  }
+};
+
 export const convertTournamentDBToGQL = (
   tournament: Tournament_Firestore
 ): Tournament => {
-  const res: Omit<Tournament, "dealConfigs"> = {
+  const res: Tournament = {
     id: tournament.id,
     title: tournament.title,
     description: tournament.description,
@@ -195,6 +230,11 @@ export const convertTournamentDBToGQL = (
       updatedAt: tournament.timestamps.updatedAt,
       deletedAt: tournament.timestamps.deletedAt || null,
     },
+    safetyFeatures: tournament.safetyFeatures
+      ? convertTournamentSafetyFeaturesToGQL(tournament.safetyFeatures)
+      : null,
+    visibility: convertTournamentVisiblityGQL(tournament.visibility),
+    dealConfigs: [], // Gets fetched in gql layer
   };
 
   if (!!tournament.magicLink) {

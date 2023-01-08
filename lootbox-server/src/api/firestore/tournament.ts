@@ -20,6 +20,7 @@ import {
   PaginateLootboxTournamentSnapshotEdge,
   PaginatedLootboxTournamentSnapshotPageInfo,
   LootboxTournamentSnapshotCursor,
+  TournamentVisibility,
 } from "../../graphql/generated/types";
 import {
   UserID,
@@ -433,6 +434,7 @@ export interface UpdateTournamentPayload {
   title?: string | null;
   tournamentDate?: number | null;
   tournamentLink?: string | null;
+  visibility?: TournamentVisibility_Firestore | null;
 }
 export const updateTournament = async (
   id: TournamentID,
@@ -486,6 +488,10 @@ export const updateTournament = async (
 
   if (payload.privacyScope != undefined) {
     updatePayload.privacyScope = payload.privacyScope;
+  }
+
+  if (payload.visibility != undefined) {
+    updatePayload.visibility = payload.visibility;
   }
 
   const safetyFeaturesFieldname: keyof Tournament_Firestore = "safetyFeatures";

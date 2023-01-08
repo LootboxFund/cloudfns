@@ -13,6 +13,11 @@ const TournamentTypeDefs = gql`
     youtube
   }
 
+  enum TournamentVisibility {
+    Public
+    Private
+  }
+
   type TournamentTimestamps {
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -99,8 +104,9 @@ const TournamentTypeDefs = gql`
     privacyScope: [TournamentPrivacyScope!]
     playbookUrl: String
     safetyFeatures: TournamentSafetyFeatures
+    visibility: TournamentVisibility!
     # promoterConfigs: [PromoterConfigTournament!]!
-    isPostCosmic: Boolean
+    isPostCosmic: Boolean!
       @deprecated(reason: "Will be removed after Cosmic Lootbox refactor")
     paginateLootboxSnapshots(
       first: Int!
@@ -318,6 +324,7 @@ const TournamentTypeDefs = gql`
     privacyScope: [TournamentPrivacyScope!]
     seedMaxLootboxTicketsPerUser: Int
     maxTicketsPerUser: Int
+    visibility: String
   }
 
   input AddStreamPayload {

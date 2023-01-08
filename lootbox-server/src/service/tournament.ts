@@ -1,6 +1,7 @@
 import {
   TournamentID,
   TournamentPrivacyScope,
+  TournamentVisibility_Firestore,
   Tournament_Firestore,
   UserID,
   UserIdpID,
@@ -16,7 +17,12 @@ import {
 } from "../api/firestore";
 import { Affiliate_Firestore } from "../api/firestore/affiliate.type";
 import { getRandomUserName } from "../api/lexica-images";
+import { TournamentVisibility } from "../graphql/generated/types";
 import { isInteger } from "../lib/number";
+import {
+  convertTournamentVisiblityDB,
+  convertTournamentVisiblityGQL,
+} from "../lib/tournament";
 
 interface CreateTournamentServiceRequest {
   description: string;
@@ -131,6 +137,7 @@ interface EditTournamentServiceRequest {
   title?: string | null;
   tournamentDate?: number | null;
   tournamentLink?: string | null;
+  visibility?: string | null;
 }
 
 export const edit = async (
@@ -160,9 +167,27 @@ export const edit = async (
     throw new Error("Tournament is deleted");
   }
 
-  validateTournamentEditRequest(req);
+  const request: UpdateTournamentPayload = {
+    communityURL: req.communityURL,
+    coverPhoto: req.coverPhoto,
+    description: req.description,
+    magicLink: req.magicLink,
+    maxTicketsPerUser: req.maxTicketsPerUser,
+    playbookUrl: req.playbookUrl,
+    privacyScope: req.privacyScope,
+    prize: req.prize,
+    seedMaxLootboxTicketsPerUser: req.seedMaxLootboxTicketsPerUser,
+    title: req.title,
+    tournamentDate: req.tournamentDate,
+    tournamentLink: req.tournamentLink,
+    visibility: req.visibility
+      ? convertTournamentVisiblityDB(req.visibility as TournamentVisibility)
+      : undefined,
+  };
 
-  const updatedTournamentDB = await updateTournament(tournamentID, req);
+  validateTournamentEditRequest(request);
+
+  const updatedTournamentDB = await updateTournament(tournamentID, request);
 
   return updatedTournamentDB;
 };
@@ -175,6 +200,13 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
     )
   ) {
     throw new Error("Invalid privacy scope");
+  }
+
+  if (
+    req.visibility &&
+    !Object.values(TournamentVisibility_Firestore).includes(req.visibility)
+  ) {
+    throw new Error("Invalid visibility");
   }
 
   if (req.maxTicketsPerUser != undefined && req.maxTicketsPerUser < 0) {

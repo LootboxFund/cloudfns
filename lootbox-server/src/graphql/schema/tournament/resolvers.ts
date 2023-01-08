@@ -411,7 +411,21 @@ const TournamentResolvers = {
 
         const tournamentDB = await tournamentService.edit(
           payload.id as TournamentID,
-          rest,
+          {
+            communityURL: rest.communityURL,
+            coverPhoto: rest.coverPhoto,
+            description: rest.description,
+            magicLink: rest.magicLink,
+            maxTicketsPerUser: rest.maxTicketsPerUser,
+            playbookUrl: rest.playbookUrl,
+            privacyScope: rest.privacyScope,
+            prize: rest.prize,
+            seedMaxLootboxTicketsPerUser: rest.seedMaxLootboxTicketsPerUser,
+            title: rest.title,
+            tournamentDate: rest.tournamentDate,
+            tournamentLink: rest.tournamentLink,
+            visibility: rest.visibility,
+          },
           context.userId
         );
 
