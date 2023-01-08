@@ -20,9 +20,14 @@
  * WARNING: configuring your project to prod will update prod database if u have the right permissions
  *
  * You might need to temporarily grant your account firestore write permission.
+ * In order to use the firebase authentication edit stuff, you will need to download a
+ * firebase-admin-SDK key and link it to your account. Make sure to delete it after!
+ *
+ * I.e. /Users/starship420/Downloads/lootbox-fund-staging-feb043f6bda2.json
  *
  * to run:
- * npx ts-node --script-mode ./src/migrations/backfillVisibilityStatus.ts
+ * npx ts-node --script-mode ./src/migrations/backfillVisibilityStatus.ts path/to/key.json
+ * npx ts-node --script-mode ./src/migrations/backfillVisibilityStatus.ts /Users/starship420/Downloads/lootbox-fund-staging-feb043f6bda2.json
  */
 
 import {
@@ -32,8 +37,10 @@ import {
   TournamentVisibility_Firestore,
   Tournament_Firestore,
   User_Firestore,
+  AdvertiserID,
+  AffiliateID,
+  UserIdpID,
 } from "@wormgraph/helpers";
-import { db } from "../api/firebase";
 import { CollectionReference } from "firebase-admin/firestore";
 import {
   AdvertiserVisibility_Firestore,
@@ -47,8 +54,99 @@ import {
   getRandomPortraitFromLexicaHardcoded,
   getRandomUserName,
 } from "../api/lexica-images";
-import identityProvider from "../api/identityProvider";
-import { UpdateUserRequest } from "../api/identityProvider/interface";
+import admin from "firebase-admin";
+import {
+  default as adminAuth,
+  UpdateRequest as FirebaseUserUpdateRequest,
+  UserRecord,
+} from "firebase-admin/auth";
+import { DocumentReference } from "firebase-admin/firestore";
+import {
+  ICreateUserRequest,
+  IIdentityProvider,
+  IIdpUser,
+  UpdateUserRequest,
+} from "../api/identityProvider/interface";
+
+const pathToCredentials = process.argv[2];
+
+if (!pathToCredentials) {
+  console.error("Please provide path to credentials");
+  process.exit(1);
+}
+
+const serviceKey = require(pathToCredentials);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceKey),
+});
+const db = admin.firestore();
+const auth = admin.auth();
+
+const convertUserRecordToUser = (userRecord: UserRecord): IIdpUser => {
+  return {
+    id: userRecord.uid as UserIdpID,
+    email: userRecord.email ?? "",
+    phoneNumber: userRecord.phoneNumber ?? "",
+    isEnabled: !userRecord.disabled,
+    username: userRecord.displayName ?? "",
+    avatar: userRecord.photoURL ?? "",
+    emailVerified: userRecord.emailVerified,
+    providerData: userRecord.providerData,
+  };
+};
+
+class FirebaseIdentityProvider {
+  private readonly authInstance: adminAuth.Auth;
+  readonly typeName = "firebase";
+
+  constructor(authInstance: adminAuth.Auth) {
+    this.authInstance = authInstance;
+  }
+
+  async createUser({
+    email,
+    password,
+    phoneNumber,
+    emailVerified = false,
+    username,
+    avatar,
+  }: ICreateUserRequest): Promise<IIdpUser> {
+    const userRecord = await this.authInstance.createUser({
+      email,
+      password,
+      emailVerified,
+      phoneNumber,
+      disabled: false,
+      displayName: username,
+      photoURL: avatar,
+    });
+
+    // await this.generateEmailVerificationLink(email);
+
+    return convertUserRecordToUser(userRecord);
+  }
+
+  async updateUser(id: string, request: UpdateUserRequest): Promise<IIdpUser> {
+    const updateRequest: FirebaseUserUpdateRequest = {};
+    if (!!request.username) {
+      updateRequest.displayName = request.username;
+    }
+    if (!!request.avatar) {
+      updateRequest.photoURL = request.avatar;
+    }
+    if (!!request.email) {
+      updateRequest.email = request.email;
+      updateRequest.emailVerified = false;
+    }
+
+    const userRecord = await this.authInstance.updateUser(id, updateRequest);
+
+    return convertUserRecordToUser(userRecord);
+  }
+}
+
+const identityProvider = new FirebaseIdentityProvider(auth);
 
 /**
  * Main function run in this script
