@@ -25,7 +25,7 @@
         "@sendgrid/mail": "^7.7.0",
         "@types/fluent-ffmpeg": "^2.1.20",
         "@types/mkdirp": "^1.0.2",
-        "@wormgraph/helpers": "0.7.14-a",
+        "@wormgraph/helpers": "0.7.15",
         "@wormgraph/manifest": "0.7.12",
         "axios": "^1.1.2",
         "ethers": "^5.7.1",
