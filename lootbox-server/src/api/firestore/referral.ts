@@ -29,6 +29,7 @@ import {
   LootboxTournamentStatus_Firestore,
   LootboxType,
   TournamentPrivacyScope,
+  LootboxTimestamps,
 } from "@wormgraph/helpers";
 import { ClaimsCsvRow } from "../../lib/types";
 import { db } from "../firebase";
@@ -350,46 +351,6 @@ export const createStartingClaim = async (
     originLootboxId: req.originLootboxID,
     isPostCosmic: req.isPostCosmic,
     privacyScope: req.privacyScope,
-  });
-};
-
-interface CreateRewardClaimReq {
-  referralId: ReferralID;
-  claimerId: UserID;
-  promoterId?: AffiliateID;
-  referralCampaignName: string;
-  tournamentId: TournamentID;
-  tournamentName: string;
-  referralSlug: ReferralSlug;
-  rewardFromClaim: ClaimID;
-  lootboxName: string;
-  lootboxAddress: Address | undefined;
-  rewardFromFriendReferred: UserID;
-  isPostCosmic: boolean;
-}
-/** @deprecated duplicated in @cloudfns/firebase/functions */
-export const createRewardClaim = async (
-  req: CreateRewardClaimReq
-): Promise<Claim_Firestore> => {
-  return await _createClaim({
-    referralCampaignName: req.referralCampaignName,
-    referralId: req.referralId,
-    promoterId: req.promoterId,
-    tournamentId: req.tournamentId,
-    referralSlug: req.referralSlug,
-    rewardFromClaim: req.rewardFromClaim,
-    tournamentName: req.tournamentName,
-    lootboxName: req.lootboxName,
-    lootboxAddress: req.lootboxAddress,
-    status: ClaimStatus_Firestore.complete,
-    type: ClaimType_Firestore.reward,
-    claimerUserId: req.claimerId,
-    rewardFromFriendReferred: req.rewardFromFriendReferred,
-    referralType: ReferralType_Firestore.viral,
-    referrerId: null,
-    completed: true,
-    isPostCosmic: req.isPostCosmic,
-    privacyScope: [],
   });
 };
 
@@ -878,12 +839,20 @@ const buildBaseLootboxUserClaimQuery = (
   lootboxID: LootboxID,
   userID: UserID
 ) => {
+  const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
+  const statusField: keyof Claim_Firestore = "status";
+  const lootboxIDField: keyof Claim_Firestore = "lootboxID";
+  const timestampsField: keyof Claim_Firestore = "timestamps";
+  const createdAtField: keyof LootboxTimestamps = "createdAt";
   return db
     .collectionGroup(Collection.Claim)
-    .where("status", "==", ClaimStatus_Firestore.complete)
-    .where("claimerUserId", "==", userID)
-    .where("lootboxID", "==", lootboxID)
-    .orderBy("timestamps.createdAt", "desc") as Query<Claim_Firestore>;
+    .where(statusField, "==", ClaimStatus_Firestore.complete)
+    .where(claimerUserIDField, "==", userID)
+    .where(lootboxIDField, "==", lootboxID)
+    .orderBy(
+      `${timestampsField}.${createdAtField}`,
+      "desc"
+    ) as Query<Claim_Firestore>;
 };
 
 export const getUserClaimCountForLootbox = async (
@@ -1020,6 +989,7 @@ export const updateClaimRedemptionStatus = async (
   return claim.id;
 };
 
+/** @deprecated - use the lootbox snapshot resolver on the tournament */
 export const getLootboxOptionsForTournament = async (
   tournamentID: TournamentID
 ) => {
@@ -1093,4 +1063,19 @@ export const checkIfClaimRedemptionStatusIsSenior = (
   if (ranking[newStatus] > ranking[currentStatus || "None"]) {
     return true;
   }
+};
+
+export const getUserClaimCountForTournament = async (
+  tournamentID: TournamentID,
+  userID: UserID
+): Promise<number> => {
+  const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
+  const statusField: keyof Claim_Firestore = "status";
+  const query = await db
+    .collectionGroup(Collection.Claim)
+    .where(claimerUserIDField, "==", userID)
+    .where(statusField, "==", ClaimStatus_Firestore.complete)
+    .get();
+
+  return query.docs.length;
 };

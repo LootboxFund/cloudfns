@@ -8,6 +8,11 @@ import {
   UserID,
 } from "@wormgraph/helpers";
 
+export enum AffiliateVisibility_Firestore {
+  Public = "Public",
+  Private = "Private",
+}
+
 export interface Affiliate_Firestore {
   id: AffiliateID;
   userID: UserID;
@@ -19,6 +24,7 @@ export interface Affiliate_Firestore {
   avatar: string;
   website: string;
   audienceSize: number;
+  visibility: AffiliateVisibility_Firestore;
 }
 
 export enum OfferInTournamentStatus {

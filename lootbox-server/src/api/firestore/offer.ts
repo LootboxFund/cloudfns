@@ -29,6 +29,7 @@ import {
   tableActivationIngestorRoutes,
   ActivationIngestorRoute_LootboxAppActivation_Body,
   FlightID,
+  OfferVisibility_Firestore,
 } from "@wormgraph/helpers";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentReference, Query } from "firebase-admin/firestore";
@@ -44,6 +45,7 @@ import {
   OfferAfterTicketClaimMetadata,
   OfferAirdropMetadata,
   OfferStrategyType,
+  OfferVisibility,
   QuestionAnswerPreview,
   User,
 } from "../../graphql/generated/types";
@@ -109,6 +111,7 @@ export const createOffer = async (
     adSets: [],
     strategy: (payload.strategy ||
       OfferStrategy.AfterTicketClaim) as OfferStrategy,
+    visibility: OfferVisibility_Firestore.Private,
     //targetingTags: [], // payload.targetingTags as AdTargetTag[],
   };
   if (payload.airdropMetadata) {
@@ -228,6 +231,18 @@ export const createOffer = async (
   return offer;
 };
 
+export const convertOfferVisibilityDB = (
+  visibility: OfferVisibility
+): OfferVisibility_Firestore => {
+  switch (visibility) {
+    case OfferVisibility.Public:
+      return OfferVisibility_Firestore.Public;
+    case OfferVisibility.Private:
+    default:
+      return OfferVisibility_Firestore.Private;
+  }
+};
+
 export const editOffer = async (
   id: OfferID,
   payload: Omit<EditOfferPayload, "id">,
@@ -263,6 +278,9 @@ export const editOffer = async (
   // repeat
   if (payload.title != undefined) {
     updatePayload.title = payload.title;
+  }
+  if (payload.visibility != undefined) {
+    updatePayload.visibility = convertOfferVisibilityDB(payload.visibility);
   }
   if (payload.description != undefined) {
     updatePayload.description = payload.description;
@@ -508,6 +526,7 @@ export const listCreatedOffers = async (
       endDate: data.endDate,
       status: data.status,
       strategy: data.strategy || OfferStrategy.None,
+      visibility: data.visibility,
       // targetingTags: data.targetingTags,
     };
     return preview;

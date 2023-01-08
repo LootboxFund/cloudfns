@@ -35,7 +35,6 @@ import {
   getUser,
   getUserWallets,
   getWalletByAddress,
-  createUser,
   createUserWallet,
   getLootboxSnapshotsForWallet,
   deleteWallet,
@@ -59,6 +58,7 @@ import { formatEmail } from "../../../lib/utils";
 import { convertUserDBToGQL, isAnon } from "../../../lib/user";
 import { truncateEmail } from "../../../lib/email";
 import { getRandomUserName } from "../../../api/lexica-images";
+import * as userService from "../../../service/user";
 
 const UserResolvers = {
   Query: {
@@ -422,65 +422,13 @@ const UserResolvers = {
         };
       }
 
-      let idpUser: IIdpUser;
-
       try {
-        const _idpUser = await identityProvider.getUserById(context.userId);
-        if (!_idpUser) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "User not found",
-            },
-          };
-        }
-        idpUser = { ..._idpUser };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
-      }
-
-      try {
-        const dbUser = await getUser(context.userId);
-        if (!!dbUser) {
-          // User is already created
-          return { user: dbUser };
-        }
-
-        let createUserRequest = { ...idpUser };
-
-        if (!createUserRequest.email && !!payload?.email) {
-          // We add the email to our DB if the user provided the email address. However, we don't want to
-          // update the underlying AUTH user object because firebase will force a token refresh, invalidating
-          // the users current token. This will kinda fuck with the viral onboarding flow. So just update
-          // the database object and then later the user can confirm it in their profile.
-          createUserRequest.email = formatEmail(payload.email);
-        }
-
-        // Update the idp username if needed
-        // let updatedUserIdp: IIdpUser | undefined = undefined;
-        const username = await getRandomUserName({
-          type: "user",
-          seedEmail: payload?.email || undefined,
+        const user = await userService.createUserDBFromIDP({
+          userID: context.userId as unknown as UserID,
+          unverifiedEmail: payload?.email || undefined,
         });
-        if (!idpUser.username) {
-          const updatedUserIdp = await identityProvider.updateUser(
-            context.userId,
-            {
-              username,
-            }
-          );
-          idpUser = { ...updatedUserIdp };
-        }
 
-        // User does not exist in database, create it
-        const user = await createUser(createUserRequest, username);
-
-        return { user };
+        return { user: convertUserDBToGQL(user) };
       } catch (err) {
         return {
           error: {
@@ -495,22 +443,14 @@ const UserResolvers = {
       { payload }: MutationCreateUserWithPasswordArgs
     ): Promise<CreateUserResponse> => {
       try {
-        // Create the user in the IDP
-        const username = await getRandomUserName({
-          type: "user",
-          seedEmail: payload.email,
-        });
-        const idpUser = await identityProvider.createUser({
-          email: formatEmail(`${payload.email}`),
-          phoneNumber: payload.phoneNumber || undefined,
-          emailVerified: false,
-          password: payload.password,
-          username,
+        const user = await userService.create({
+          authOpts: {
+            email: payload.email,
+            password: payload.password,
+          },
         });
 
-        const user = await createUser(idpUser);
-        user.wallets = [];
-        return { user };
+        return { user: convertUserDBToGQL(user) };
       } catch (err) {
         return {
           error: {
@@ -566,26 +506,19 @@ const UserResolvers = {
       }
 
       try {
-        const username = await getRandomUserName({
-          type: "user",
-          seedEmail: payload.email,
+        const user = await userService.create({
+          authOpts: {
+            email: payload.email,
+          },
         });
 
-        // Create the user in the IDP
-        const idpUser = await identityProvider.createUser({
-          email: formatEmail(`${payload.email}`),
-          phoneNumber: payload.phoneNumber,
-          emailVerified: false,
-          username,
-        });
-
-        const user = await createUser(idpUser);
         const wallet = await createUserWallet({
-          userId: idpUser.id,
+          userId: user.id,
           address,
         });
-        user.wallets = [wallet];
-        return { user };
+        const userGQL = convertUserDBToGQL(user);
+        userGQL.wallets = [wallet];
+        return { user: userGQL };
       } catch (err) {
         return {
           error: {

@@ -41,6 +41,7 @@ import {
   VoucherRewardStatus,
   Deposit_Firestore,
   DepositID,
+  LootboxSafetyFeatures_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID, UserIdpID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -97,7 +98,7 @@ export const getLootboxByAddress = async (
   }
 };
 
-interface EditLootboxPayload {
+export interface EditLootboxPayload {
   logo?: string;
   name?: string;
   description?: string;
@@ -109,6 +110,8 @@ interface EditLootboxPayload {
   badgeImage?: string;
   themeColor?: string;
   symbol?: string;
+  isExclusiveLootbox?: boolean;
+  maxTicketsPerUser?: number;
 }
 export const editLootbox = async (
   lootboxID: LootboxID,
@@ -158,6 +161,20 @@ export const editLootbox = async (
 
   if (!!payload.symbol) {
     updateRequest.symbol = payload.symbol;
+  }
+
+  const safetyFeaturesFieldname: keyof Lootbox_Firestore = "safetyFeatures";
+  if (payload.isExclusiveLootbox != undefined) {
+    const isExclusiveLootboxFieldName: keyof LootboxSafetyFeatures_Firestore =
+      "isExclusiveLootbox";
+    updateRequest[`${safetyFeaturesFieldname}.${isExclusiveLootboxFieldName}`] =
+      payload.isExclusiveLootbox;
+  }
+  if (payload.maxTicketsPerUser != undefined) {
+    const maxTicketsPerUserFieldName: keyof LootboxSafetyFeatures_Firestore =
+      "maxTicketsPerUser";
+    updateRequest[`${safetyFeaturesFieldname}.${maxTicketsPerUserFieldName}`] =
+      payload.maxTicketsPerUser;
   }
 
   updateRequest["timestamps.updatedAt"] = Timestamp.now().toMillis();
@@ -413,7 +430,7 @@ export const getLootboxByUserIDAndNonce = async (
   return collectionSnapshot.docs[0].data();
 };
 
-interface CreateLootboxPayloadLocalType {
+export interface CreateLootboxPayloadLocalType {
   creatorID: UserID;
   stampImage: string;
   logo: string;
@@ -429,6 +446,8 @@ interface CreateLootboxPayloadLocalType {
   variant: LootboxVariant_Firestore;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
+  maxTicketsPerUser?: number;
+  isExclusiveLootbox?: boolean;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -472,6 +491,10 @@ export const createLootbox = async (
     creationNonce: null,
     members: [],
     isContractDeployed: false,
+    safetyFeatures: {
+      maxTicketsPerUser: payload.maxTicketsPerUser || 5,
+      isExclusiveLootbox: payload.isExclusiveLootbox || false,
+    },
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -631,9 +654,19 @@ export const getLootboxUnassignedClaimForUser = async (
 };
 
 export const extractOrGenerateLootboxCreateInput = async (
-  payload: CreateLootboxPayload,
-  userIdpID: UserIdpID
-): Promise<CreateLootboxRequest> => {
+  payload: CreateLootboxPayload
+): Promise<
+  CreateLootboxRequest & {
+    backgroundImage: string;
+    logoImage: string;
+    themeColor: string;
+    lootboxName: string;
+    symbol: string;
+    description: string;
+    nftBountyValue: string;
+    maxTickets: number;
+  }
+> => {
   let name = payload.name;
   if (!name) {
     name = await getRandomUserName({
@@ -661,18 +694,18 @@ export const extractOrGenerateLootboxCreateInput = async (
   const impliedSymbol =
     trimmedName.length < 12 ? trimmedName : trimmedName.slice(0, 12);
   return {
-    lootboxDescription: payload.description || "",
+    description: payload.description || "",
     backgroundImage: backgroundImage,
     logoImage: logoImage,
     themeColor: themeColor,
     nftBountyValue: payload.nftBountyValue || "Prize",
     maxTickets: payload.maxTickets || 30,
     joinCommunityUrl: payload.joinCommunityUrl || undefined,
-    symbol: impliedSymbol,
-    creatorID: userIdpID as unknown as UserID,
+    symbol: impliedSymbol || "LOOTBOX",
     lootboxName: name,
     tournamentID: payload.tournamentID as TournamentID,
     type: payload.type ? (payload.type as LootboxType) : undefined,
+    isExclusiveLootbox: payload.isExclusiveLootbox || false,
     airdropMetadata: payload.airdropMetadata
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)
       : undefined,

@@ -7,6 +7,7 @@ import {
   LootboxTournamentStatus_Firestore,
   Lootbox_Firestore,
   ReferralID,
+  ReferralSlug,
   ReferralType_Firestore,
   TournamentID,
   UserID,
@@ -18,10 +19,16 @@ import {
   getLootbox,
   getLootboxTournamentSnapshotByLootboxID,
   getReferralById,
+  getReferralBySlug,
   getTournamentById,
   getUnverifiedClaimsForUser,
+  getUserClaimCountForLootbox,
+  getUserClaimCountForTournament,
+  createStartingClaim,
 } from "../api/firestore";
 import { IIdpUser } from "../api/identityProvider/interface";
+import { ReferralType } from "../graphql/generated/types";
+import { convertClaimPrivacyScopeGQLToDB } from "../lib/referral";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -247,7 +254,100 @@ const _validateBaseClaimForCompletionStep = async (
     }
   }
 
+  // Validate tournament / Lootbox safety features
+  const { safetyFeatures: lootboxSafety } = lootbox;
+  const { safetyFeatures: tournamentSafety } = tournament;
+  const isOwnerMadeReferral =
+    referral.creatorId === tournament.creatorId ||
+    referral.creatorId === lootbox.creatorID;
+  if (
+    // Only allow exclusive lootbox redemptions if the referral creator is tournament host or lootbox creator
+    lootboxSafety?.isExclusiveLootbox &&
+    (!isOwnerMadeReferral || referral.seedLootboxID !== lootbox.id)
+  ) {
+    // If sharing is disabled, users can only claim genesis referrals
+    throw new Error(
+      "Sharing is disabled for this Lootbox. Please ask the event host for a different referral link."
+    );
+  }
+
+  // get user tickets for this lootbox & tournamet
+  const [userTournamentTicketCount, userLootboxTicketCount] = await Promise.all(
+    [
+      getUserClaimCountForTournament(
+        tournament.id,
+        claimer.id as unknown as UserID
+      ),
+      getUserClaimCountForLootbox(lootbox.id, claimer.id as unknown as UserID),
+    ]
+  );
+
+  const maxLootboxTicketsAllowed = lootboxSafety?.maxTicketsPerUser || 5;
+  if (userLootboxTicketCount >= maxLootboxTicketsAllowed) {
+    throw new Error(
+      `You already have the maximum number of tickets for this Lootbox (${maxLootboxTicketsAllowed}).`
+    );
+  }
+  const maxEventTicketsAllowed = tournamentSafety?.maxTicketsPerUser || 100;
+  if (userTournamentTicketCount >= maxEventTicketsAllowed) {
+    throw new Error(
+      `You already have the maximum number of tickets for this Event (${maxEventTicketsAllowed}).`
+    );
+  }
+
   return {
     lootbox,
   };
+};
+
+interface StartClaimProcessPayload {
+  referralSlug: ReferralSlug;
+}
+
+/** Starts claiming process - this does not do user caller checks because the endpoint is un authenticated */
+export const startClaimProcess = async (
+  payload: StartClaimProcessPayload
+): Promise<Claim_Firestore> => {
+  const referral = await getReferralBySlug(payload.referralSlug);
+
+  if (!referral || !!referral.timestamps.deletedAt) {
+    throw new Error("Referral not found");
+  }
+
+  const tournament = await getTournamentById(referral.tournamentId);
+
+  if (!tournament || !!tournament.timestamps.deletedAt) {
+    throw new Error("Tournament not found");
+  }
+
+  let claimType: ClaimType_Firestore.one_time | ClaimType_Firestore.referral;
+  if (referral.type === ReferralType_Firestore.one_time) {
+    claimType = ClaimType_Firestore.one_time;
+  } else if (
+    referral.type === ReferralType_Firestore.viral ||
+    referral.type === ReferralType_Firestore.genesis
+  ) {
+    claimType = ClaimType_Firestore.referral;
+  } else {
+    throw new Error("Invalid referral type");
+  }
+
+  const claim = await createStartingClaim({
+    claimType,
+    referralCampaignName: referral.campaignName,
+    referralId: referral.id as ReferralID,
+    promoterId: referral.promoterId,
+    tournamentId: referral.tournamentId as TournamentID,
+    referrerId: referral.referrerId as unknown as UserIdpID,
+    referralSlug: payload.referralSlug as ReferralSlug,
+    tournamentName: tournament.title,
+    referralType: referral.type || ReferralType.Viral, // default to viral
+    originLootboxID: referral.seedLootboxID,
+    isPostCosmic: true,
+    privacyScope: tournament?.privacyScope
+      ? convertClaimPrivacyScopeGQLToDB(tournament.privacyScope)
+      : [],
+  });
+
+  return claim;
 };

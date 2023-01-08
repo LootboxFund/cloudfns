@@ -94,6 +94,11 @@ const LootboxTypeDefs = gql`
     endBefore: Timestamp
   }
 
+  type LootboxSafetyFeatures {
+    maxTicketsPerUser: Int
+    isExclusiveLootbox: Boolean
+  }
+
   type Lootbox {
     # Immutable stuff
     id: ID!
@@ -110,6 +115,7 @@ const LootboxTypeDefs = gql`
     backgroundImage: String!
     themeColor: String!
     runningCompletedClaims: Int!
+    safetyFeatures: LootboxSafetyFeatures
 
     # Web3 stuff
     address: ID
@@ -294,6 +300,7 @@ const LootboxTypeDefs = gql`
     themeColor: String
     tournamentID: String!
     type: LootboxType
+    isExclusiveLootbox: Boolean
     airdropMetadata: AirdropMetadataCreateInput
   }
 
@@ -323,6 +330,8 @@ const LootboxTypeDefs = gql`
     status: LootboxStatus
     maxTickets: Int
     themeColor: String
+    isExclusiveLootbox: Boolean
+    maxTicketsPerUser: Int
   }
 
   # input BulkMintWhitelistPayload {
@@ -370,6 +379,7 @@ const LootboxTypeDefs = gql`
     tournamentID: String!
     type: LootboxType
     airdropMetadata: AirdropMetadataCreateInput
+    isExclusiveLootbox: Boolean
   }
 
   input BulkCreateLootboxPayload {

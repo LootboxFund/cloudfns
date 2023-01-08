@@ -9,6 +9,11 @@ import {
   TournamentID,
 } from "@wormgraph/helpers";
 
+export enum AdvertiserVisibility_Firestore {
+  Public = "Public",
+  Private = "Private",
+}
+
 export interface Advertiser_Firestore {
   id: AdvertiserID;
   userID: UserID;
@@ -22,6 +27,7 @@ export interface Advertiser_Firestore {
   conquests: Conquest_Firestore[];
   affiliatePartners: AffiliateID[];
   relatedTournaments: TournamentID[];
+  visibility: AdvertiserVisibility_Firestore;
 }
 
 export interface Conquest_Firestore {

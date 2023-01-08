@@ -1,6 +1,11 @@
 import { gql } from "apollo-server";
 
 const AffiliateTypeDefs = gql`
+  enum AffiliateVisibility {
+    Public
+    Private
+  }
+
   type Affiliate {
     id: ID!
     userID: ID!
@@ -11,6 +16,7 @@ const AffiliateTypeDefs = gql`
     publicContactEmail: String
     website: String
     audienceSize: Int
+    visibility: AffiliateVisibility!
   }
 
   type Memo {
@@ -174,6 +180,7 @@ const AffiliateTypeDefs = gql`
     publicContactEmail: String
     website: String
     audienceSize: Int
+    visibility: AffiliateVisibility
   }
   type UpdateAffiliateDetailsResponseSuccess {
     affiliate: Affiliate!

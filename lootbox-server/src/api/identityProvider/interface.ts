@@ -17,10 +17,11 @@ export interface IIdpUser {
 
 export interface ICreateUserRequest {
   phoneNumber?: string;
-  email: string;
+  email?: string;
   password?: string; // Optional because we can use wallet signature instead
   emailVerified?: boolean;
   username?: string;
+  avatar?: string;
 }
 
 export interface UpdateUserRequest {

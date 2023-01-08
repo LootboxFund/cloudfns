@@ -115,13 +115,13 @@ const UserTypeDefs = gql`
 
   input CreateUserWithPasswordPayload {
     email: EmailAddress!
-    phoneNumber: PhoneNumber
+    # phoneNumber: PhoneNumber
     password: String!
   }
 
   input CreateUserWithWalletPayload {
     email: EmailAddress!
-    phoneNumber: PhoneNumber
+    # phoneNumber: PhoneNumber
     message: String!
     signedMessage: String!
   }

@@ -112,6 +112,7 @@ import { nanoid } from "nanoid";
 import { manifest } from "../../../manifest";
 import { parseCSVRows } from "../../../lib/csv";
 import { toFilename } from "../../../lib/parser";
+import * as tournamentService from "../../../service/tournament";
 
 const TournamentResolvers = {
   Query: {
@@ -366,39 +367,20 @@ const TournamentResolvers = {
         };
       }
 
-      let title = payload.title;
-      if (!title) {
-        title = await getRandomUserName({
-          type: "event",
-        });
-      }
-
-      let affiliate: Affiliate_Firestore | undefined;
       try {
-        affiliate = await getAffiliateByUserIdpID(context.userId);
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.Forbidden,
-            message: `You must be an affiliate to create a tournament`,
+        const tournamentDB = await tournamentService.create(
+          {
+            title: payload.title,
+            description: payload.description || "",
+            tournamentLink: payload.tournamentLink,
+            coverPhoto: payload.coverPhoto,
+            prize: payload.prize,
+            tournamentDate: payload.tournamentDate,
+            communityURL: payload.communityURL,
+            privacyScope: payload.privacyScope || [],
           },
-        };
-      }
-
-      try {
-        const tournamentDB = await createTournament({
-          title,
-          description: payload.description || "",
-          tournamentLink: payload.tournamentLink,
-          creatorId: context.userId as unknown as UserID,
-          coverPhoto: payload.coverPhoto,
-          prize: payload.prize,
-          tournamentDate: payload.tournamentDate,
-          communityURL: payload.communityURL,
-          // organizer: (payload.organizer || "") as AffiliateID,
-          organizer: affiliate.id,
-          privacyScope: payload.privacyScope || [],
-        });
+          context.userId
+        );
 
         return { tournament: convertTournamentDBToGQL(tournamentDB) };
       } catch (err) {
@@ -425,43 +407,29 @@ const TournamentResolvers = {
       }
 
       try {
-        // Make sure the user owns the tournament
-        const tournamentDB = await getTournamentById(
-          payload.id as TournamentID
-        );
-        if (!tournamentDB) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: `Tournament not found`,
-            },
-          };
-        } else if (
-          (tournamentDB.creatorId as unknown as UserIdpID) !== context.userId
-        ) {
-          return {
-            error: {
-              code: StatusCode.Forbidden,
-              message: `You do not own this tournament`,
-            },
-          };
-        } else if (!!tournamentDB?.timestamps?.deletedAt) {
-          return {
-            error: {
-              code: StatusCode.InvalidOperation,
-              message: `Tournament is deleted`,
-            },
-          };
-        }
-
         const { id, ...rest } = payload;
 
-        const updatedTournamentDB = await updateTournament(
-          id as TournamentID,
-          rest
+        const tournamentDB = await tournamentService.edit(
+          payload.id as TournamentID,
+          {
+            communityURL: rest.communityURL,
+            coverPhoto: rest.coverPhoto,
+            description: rest.description,
+            magicLink: rest.magicLink,
+            maxTicketsPerUser: rest.maxTicketsPerUser,
+            playbookUrl: rest.playbookUrl,
+            privacyScope: rest.privacyScope,
+            prize: rest.prize,
+            seedMaxLootboxTicketsPerUser: rest.seedMaxLootboxTicketsPerUser,
+            title: rest.title,
+            tournamentDate: rest.tournamentDate,
+            tournamentLink: rest.tournamentLink,
+            visibility: rest.visibility,
+          },
+          context.userId
         );
 
-        return { tournament: convertTournamentDBToGQL(updatedTournamentDB) };
+        return { tournament: convertTournamentDBToGQL(tournamentDB) };
       } catch (err) {
         return {
           error: {

@@ -53,6 +53,7 @@ import {
 } from "../../generated/types";
 import { updateAdvertiserDetails } from "../../../api/firestore";
 import { updateAffiliateDetails } from "../../../api/firestore/affiliate";
+import { convertAffiliateDBToGQL } from "../../../lib/affiliate";
 
 const AffiliateResolvers: Resolvers = {
   Query: {
@@ -80,7 +81,7 @@ const AffiliateResolvers: Resolvers = {
           };
         }
         return {
-          affiliate,
+          affiliate: convertAffiliateDBToGQL(affiliate),
         };
       } catch (err) {
         console.error(err);
@@ -108,7 +109,7 @@ const AffiliateResolvers: Resolvers = {
           };
         }
         return {
-          affiliate,
+          affiliate: convertAffiliateDBToGQL(affiliate),
         };
       } catch (err) {
         console.error(err);
@@ -284,7 +285,7 @@ const AffiliateResolvers: Resolvers = {
             },
           };
         }
-        return { affiliate };
+        return { affiliate: convertAffiliateDBToGQL(affiliate) };
       } catch (err) {
         return {
           error: {

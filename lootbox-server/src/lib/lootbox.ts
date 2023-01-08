@@ -105,6 +105,10 @@ export const parseLootboxDB = (
     metadata: lootbox.metadata, // deprecated, dont use
     runningCompletedClaims: lootbox.runningCompletedClaims || 0,
     type: lootbox.type,
+    safetyFeatures: {
+      isExclusiveLootbox: lootbox?.safetyFeatures?.isExclusiveLootbox || false,
+      maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser || 5,
+    },
   };
   if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
     // @ts-ignore
@@ -219,6 +223,11 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       runningCompletedClaims: lootbox.runningCompletedClaims || 0,
       creationNonce: lootbox.creationNonce || null,
       type: lootbox.type,
+      safetyFeatures: {
+        isExclusiveLootbox:
+          lootbox?.safetyFeatures?.isExclusiveLootbox || false,
+        maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser || 5,
+      },
     };
     if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
       // @ts-ignore

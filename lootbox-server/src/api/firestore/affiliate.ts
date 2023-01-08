@@ -47,6 +47,7 @@ import {
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import {
+  AffiliateVisibility_Firestore,
   Affiliate_Firestore,
   OrganizerOfferWhitelist_Firestore,
 } from "./affiliate.type";
@@ -68,6 +69,7 @@ import {
   getRandomUserName,
 } from "../lexica-images";
 import { retrieveRandomColor } from "../storage";
+import { convertAffiliateVisibilityGQLToDB } from "../../lib/affiliate";
 
 export const upgradeToAffiliate = async (
   userIdpID: UserIdpID
@@ -105,6 +107,7 @@ export const upgradeToAffiliate = async (
     avatar: initialAvatar,
     website: "",
     audienceSize: 0,
+    visibility: AffiliateVisibility_Firestore.Private,
   };
   await affiliateRef.set(affiliate);
   return affiliate;
@@ -151,6 +154,12 @@ export const updateAffiliateDetails = async (
   }
   if (payload.audienceSize != undefined) {
     updatePayload.audienceSize = payload.audienceSize;
+  }
+
+  if (payload.visibility != undefined) {
+    updatePayload.visibility = convertAffiliateVisibilityGQLToDB(
+      payload.visibility
+    );
   }
 
   // until done

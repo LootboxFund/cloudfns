@@ -93,8 +93,9 @@ class FirebaseIdentityProvider implements IIdentityProvider {
     email,
     password,
     phoneNumber,
-    emailVerified = true,
+    emailVerified = false,
     username,
+    avatar,
   }: ICreateUserRequest): Promise<IIdpUser> {
     const userRecord = await this.authInstance.createUser({
       email,
@@ -103,6 +104,7 @@ class FirebaseIdentityProvider implements IIdentityProvider {
       phoneNumber,
       disabled: false,
       displayName: username,
+      photoURL: avatar,
     });
 
     // await this.generateEmailVerificationLink(email);

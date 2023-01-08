@@ -20,6 +20,7 @@ import {
   PaginateLootboxTournamentSnapshotEdge,
   PaginatedLootboxTournamentSnapshotPageInfo,
   LootboxTournamentSnapshotCursor,
+  TournamentVisibility,
 } from "../../graphql/generated/types";
 import {
   UserID,
@@ -31,6 +32,8 @@ import {
   LootboxTournamentStatus_Firestore,
   LootboxType,
   TournamentPrivacyScope,
+  TournamentSafetyFeatures_Firestore,
+  TournamentVisibility_Firestore,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -341,11 +344,14 @@ export interface CreateTournamentArgs {
   creatorId: UserID;
   prize?: string | null;
   coverPhoto?: string | null;
-  tournamentDate: number;
+  tournamentDate?: number;
   communityURL?: string | null;
   organizer?: AffiliateID;
   privacyScope?: TournamentPrivacyScope[];
+  seedMaxLootboxTicketsPerUser?: number;
+  maxTicketsPerUser?: number;
 }
+
 export const createTournament = async ({
   title,
   description,
@@ -357,6 +363,8 @@ export const createTournament = async ({
   communityURL,
   organizer,
   privacyScope,
+  seedMaxLootboxTicketsPerUser = 5,
+  maxTicketsPerUser = 100,
 }: CreateTournamentArgs): Promise<Tournament_Firestore> => {
   const tournamentRef = db
     .collection(Collection.Tournament)
@@ -378,6 +386,12 @@ export const createTournament = async ({
       updatedAt: Timestamp.now().toMillis(),
       deletedAt: null,
     },
+    safetyFeatures: {
+      seedMaxLootboxTicketsPerUser: seedMaxLootboxTicketsPerUser,
+      maxTicketsPerUser: maxTicketsPerUser,
+    },
+    visibility: TournamentVisibility_Firestore.Private,
+    runningCompletedClaims: 0,
   };
 
   if (!!prize) {
@@ -407,9 +421,24 @@ export const createTournament = async ({
   return tournament;
 };
 
+export interface UpdateTournamentPayload {
+  communityURL?: string | null;
+  coverPhoto?: string | null;
+  description?: string | null;
+  magicLink?: string | null;
+  maxTicketsPerUser?: number | null;
+  playbookUrl?: string | null;
+  privacyScope?: TournamentPrivacyScope[] | null;
+  prize?: string | null;
+  seedMaxLootboxTicketsPerUser?: number | null;
+  title?: string | null;
+  tournamentDate?: number | null;
+  tournamentLink?: string | null;
+  visibility?: TournamentVisibility_Firestore | null;
+}
 export const updateTournament = async (
   id: TournamentID,
-  payload: Omit<EditTournamentPayload, "id">
+  payload: UpdateTournamentPayload
 ): Promise<Tournament_Firestore> => {
   if (Object.keys(payload).length === 0) {
     throw new Error("No data provided");
@@ -459,6 +488,27 @@ export const updateTournament = async (
 
   if (payload.privacyScope != undefined) {
     updatePayload.privacyScope = payload.privacyScope;
+  }
+
+  if (payload.visibility != undefined) {
+    updatePayload.visibility = payload.visibility;
+  }
+
+  const safetyFeaturesFieldname: keyof Tournament_Firestore = "safetyFeatures";
+
+  if (payload.seedMaxLootboxTicketsPerUser != undefined) {
+    const seedMaxLootboxTicketsPerUser: keyof TournamentSafetyFeatures_Firestore =
+      "seedMaxLootboxTicketsPerUser";
+    updatePayload[
+      `${safetyFeaturesFieldname}.${seedMaxLootboxTicketsPerUser}`
+    ] = payload.seedMaxLootboxTicketsPerUser;
+  }
+
+  if (payload.maxTicketsPerUser != undefined) {
+    const maxTicketsFieldname: keyof TournamentSafetyFeatures_Firestore =
+      "maxTicketsPerUser";
+    updatePayload[`${safetyFeaturesFieldname}.${maxTicketsFieldname}`] =
+      payload.maxTicketsPerUser;
   }
 
   await tournamentRef.update(updatePayload);
@@ -516,6 +566,7 @@ export const paginateBattleFeedQuery = async (
   let tournamentQuery = db
     .collection(Collection.Tournament)
     .where("timestamps.deletedAt", "==", null)
+    .where("visibility", "==", TournamentVisibility_Firestore.Public)
     .orderBy("timestamps.createdAt", "desc") as Query<Tournament_Firestore>;
 
   if (cursor) {

@@ -12,41 +12,17 @@ import {
   UserSocials_Firestore,
   User_Firestore,
 } from "@wormgraph/helpers";
-import { getRandomPortraitFromLexicaHardcoded } from "../lexica-images";
 
 export const createUser = async (
-  idpUser: IIdpUser,
-  aliasUsername?: string
-): Promise<User> => {
+  payload: User_Firestore
+): Promise<User_Firestore> => {
   const userRef = db
     .collection(Collection.User)
-    .doc(idpUser.id) as DocumentReference<User>;
+    .doc(payload.id) as DocumentReference<User_Firestore>;
 
-  const user: User = {
-    id: idpUser.id,
-    createdAt: Timestamp.now().toMillis(),
-    updatedAt: Timestamp.now().toMillis(),
-    deletedAt: null,
-  };
+  await userRef.set(payload);
 
-  if (!!idpUser.email) {
-    user.email = idpUser.email;
-  }
-
-  if (!!idpUser.phoneNumber) {
-    user.phoneNumber = idpUser.phoneNumber;
-  }
-
-  if (!!idpUser.username || !!aliasUsername) {
-    user.username = idpUser.username || aliasUsername;
-  }
-
-  const initialAvatar = await getRandomPortraitFromLexicaHardcoded();
-  user.avatar = initialAvatar;
-
-  await userRef.set(user);
-
-  return user;
+  return payload;
 };
 
 const parseUserData = (user: User): User_Firestore => {
