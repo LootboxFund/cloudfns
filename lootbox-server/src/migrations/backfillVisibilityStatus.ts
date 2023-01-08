@@ -315,7 +315,7 @@ const run = async () => {
     const { id, username, headshot, avatar } = user;
 
     if (username == undefined || headshot == undefined || avatar == undefined) {
-      console.log(`\nUpdating user ( ${i}/${users.length} )`);
+      console.log(`\nUpdating user ( ${i}/${users.length} ) - ${id}`);
       const updateReq: Partial<User_Firestore> = {};
 
       if (username == undefined) {
