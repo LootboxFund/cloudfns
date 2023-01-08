@@ -11,6 +11,7 @@ import * as _ from "lodash";
 import {
   MarketplacePreviewAffiliate,
   MarketplacePreviewOffer,
+  OfferVisibility,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
 import { getAdvertiser } from "./advertiser";
@@ -55,7 +56,12 @@ export const browseActiveOffers = async (
 ): Promise<MarketplacePreviewOffer[]> => {
   const offerRef = db
     .collection(Collection.Offer)
-    .where("status", "==", OfferStatus.Active) as Query<Offer_Firestore>;
+    .where("status", "==", OfferStatus.Active)
+    .where(
+      "visibility",
+      "==",
+      OfferVisibility.Public
+    ) as Query<Offer_Firestore>;
 
   const offerCollectionItems = await offerRef.get();
 
