@@ -107,7 +107,7 @@ export const parseLootboxDB = (
     type: lootbox.type,
     safetyFeatures: {
       isExclusiveLootbox: lootbox?.safetyFeatures?.isExclusiveLootbox || false,
-      maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser || 5,
+      maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
     },
   };
   if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
@@ -226,7 +226,7 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       safetyFeatures: {
         isExclusiveLootbox:
           lootbox?.safetyFeatures?.isExclusiveLootbox || false,
-        maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser || 5,
+        maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
       },
     };
     if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {

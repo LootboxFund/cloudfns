@@ -282,13 +282,13 @@ const _validateBaseClaimForCompletionStep = async (
     ]
   );
 
-  const maxLootboxTicketsAllowed = lootboxSafety?.maxTicketsPerUser || 5;
+  const maxLootboxTicketsAllowed = lootboxSafety?.maxTicketsPerUser ?? 5;
   if (userLootboxTicketCount >= maxLootboxTicketsAllowed) {
     throw new Error(
       `You already have the maximum number of tickets for this Lootbox (${maxLootboxTicketsAllowed}).`
     );
   }
-  const maxEventTicketsAllowed = tournamentSafety?.maxTicketsPerUser || 100;
+  const maxEventTicketsAllowed = tournamentSafety?.maxTicketsPerUser ?? 100;
   if (userTournamentTicketCount >= maxEventTicketsAllowed) {
     throw new Error(
       `You already have the maximum number of tickets for this Event (${maxEventTicketsAllowed}).`

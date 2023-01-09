@@ -492,7 +492,7 @@ export const createLootbox = async (
     members: [],
     isContractDeployed: false,
     safetyFeatures: {
-      maxTicketsPerUser: payload.maxTicketsPerUser || 5,
+      maxTicketsPerUser: payload.maxTicketsPerUser ?? 5,
       isExclusiveLootbox: payload.isExclusiveLootbox || false,
     },
     timestamps: {
