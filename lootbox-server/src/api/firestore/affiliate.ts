@@ -1073,10 +1073,15 @@ export const viewMyTournamentsAsOrganizer = async (
       `Unauthorized. User do not have permissions for this affiliate`
     );
   }
-  //
+  const timestampFieldName: keyof Tournament_Firestore = "timestamps";
+  const createdAtFieldName = "createdAt";
   const tournamentRef = db
     .collection(Collection.Tournament)
-    .where("organizer", "==", organizerID) as Query<Tournament_Firestore>;
+    .where("organizer", "==", organizerID)
+    .orderBy(
+      `${timestampFieldName}.${createdAtFieldName}`,
+      "desc"
+    ) as Query<Tournament_Firestore>;
 
   const tournamentCollectionItems = await tournamentRef.get();
 

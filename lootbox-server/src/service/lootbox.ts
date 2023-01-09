@@ -237,19 +237,19 @@ export const edit = async (
   }
 
   const request: EditLootboxPayload = {
-    name: payload.name || undefined,
-    description: payload.description || undefined,
-    maxTickets: payload.maxTickets || undefined,
-    nftBountyValue: payload.nftBountyValue || undefined,
+    name: payload.name ?? undefined,
+    description: payload.description ?? undefined,
+    maxTickets: payload.maxTickets ?? undefined,
+    nftBountyValue: payload.nftBountyValue ?? undefined,
     // symbol: payload.symbol || undefined,
-    joinCommunityUrl: payload.joinCommunityUrl || undefined,
+    joinCommunityUrl: payload.joinCommunityUrl ?? undefined,
     status: payload.status
       ? convertLootboxStatusGQLToDB(payload.status)
       : undefined,
-    logo: payload.logo || undefined,
-    backgroundImage: payload.backgroundImage || undefined,
-    themeColor: payload.themeColor || undefined,
-    isExclusiveLootbox: payload.isExclusiveLootbox || undefined,
+    logo: payload.logo ?? undefined,
+    backgroundImage: payload.backgroundImage ?? undefined,
+    themeColor: payload.themeColor ?? undefined,
+    isExclusiveLootbox: payload.isExclusiveLootbox ?? undefined,
     maxTicketsPerUser: payload.maxTicketsPerUser
       ? Math.round(payload.maxTicketsPerUser)
       : undefined,
@@ -283,6 +283,13 @@ const validateEditLootboxRequest = (payload: EditLootboxPayload) => {
 
   if (payload.maxTickets != undefined && !isInteger(payload.maxTickets)) {
     throw new Error("Max Tickets must be an integer");
+  }
+
+  if (
+    payload.isExclusiveLootbox != undefined &&
+    typeof payload.isExclusiveLootbox !== "boolean"
+  ) {
+    throw new Error("isExclusiveLootbox must be a boolean");
   }
 
   return true;

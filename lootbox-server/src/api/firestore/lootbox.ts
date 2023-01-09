@@ -119,47 +119,47 @@ export const editLootbox = async (
 ): Promise<Lootbox_Firestore> => {
   const updateRequest: Partial<Lootbox_Firestore> = {};
 
-  if (!!payload.logo) {
+  if (payload.logo != undefined) {
     updateRequest.logo = payload.logo;
   }
 
-  if (!!payload.name) {
+  if (payload.name != undefined) {
     updateRequest.name = payload.name;
   }
 
-  if (!!payload.description) {
+  if (payload.description != undefined) {
     updateRequest.description = payload.description;
   }
 
-  if (!!payload.nftBountyValue) {
+  if (payload.nftBountyValue != undefined) {
     updateRequest.nftBountyValue = payload.nftBountyValue;
   }
 
-  if (!!payload.joinCommunityUrl) {
+  if (payload.joinCommunityUrl != undefined) {
     updateRequest.joinCommunityUrl = payload.joinCommunityUrl;
   }
 
-  if (!!payload.status) {
+  if (payload.status != undefined) {
     updateRequest.status = payload.status;
   }
 
-  if (!!payload.maxTickets) {
+  if (payload.maxTickets != undefined) {
     updateRequest.maxTickets = payload.maxTickets;
   }
 
-  if (!!payload.backgroundImage) {
+  if (payload.backgroundImage != undefined) {
     updateRequest.backgroundImage = payload.backgroundImage;
   }
 
-  if (!!payload.badgeImage) {
+  if (payload.badgeImage != undefined) {
     updateRequest.name = payload.badgeImage;
   }
 
-  if (!!payload.themeColor) {
+  if (payload.themeColor != undefined) {
     updateRequest.themeColor = payload.themeColor;
   }
 
-  if (!!payload.symbol) {
+  if (payload.symbol != undefined) {
     updateRequest.symbol = payload.symbol;
   }
 
@@ -492,7 +492,7 @@ export const createLootbox = async (
     members: [],
     isContractDeployed: false,
     safetyFeatures: {
-      maxTicketsPerUser: payload.maxTicketsPerUser || 5,
+      maxTicketsPerUser: payload.maxTicketsPerUser ?? 5,
       isExclusiveLootbox: payload.isExclusiveLootbox || false,
     },
     timestamps: {
@@ -653,21 +653,42 @@ export const getLootboxUnassignedClaimForUser = async (
   }
 };
 
+interface MockLootboxInputPayload {
+  description?: string | null;
+  backgroundImage?: string | null;
+  logoImage?: string | null;
+  themeColor?: string | null;
+  nftBountyValue?: string | null;
+  maxTickets?: number | null;
+  joinCommunityUrl?: string;
+  symbol?: string | null;
+  lootboxName?: string | null;
+  tournamentID: TournamentID;
+  type?: LootboxType;
+  airdropMetadata?: AirdropMetadataCreateInput;
+  isExclusiveLootbox?: boolean;
+}
+
+interface MockLootboxInputPayloadOutput {
+  description: string;
+  backgroundImage: string;
+  logoImage: string;
+  themeColor: string;
+  nftBountyValue: string;
+  maxTickets: number;
+  joinCommunityUrl?: string;
+  symbol: string;
+  lootboxName: string;
+  tournamentID: TournamentID;
+  type?: LootboxType;
+  airdropMetadata?: AirdropMetadataCreateInput;
+  isExclusiveLootbox?: boolean;
+}
+
 export const extractOrGenerateLootboxCreateInput = async (
-  payload: CreateLootboxPayload
-): Promise<
-  CreateLootboxRequest & {
-    backgroundImage: string;
-    logoImage: string;
-    themeColor: string;
-    lootboxName: string;
-    symbol: string;
-    description: string;
-    nftBountyValue: string;
-    maxTickets: number;
-  }
-> => {
-  let name = payload.name;
+  payload: MockLootboxInputPayload
+): Promise<MockLootboxInputPayloadOutput> => {
+  let name = payload.lootboxName;
   if (!name) {
     name = await getRandomUserName({
       type: "lootbox",
@@ -677,7 +698,7 @@ export const extractOrGenerateLootboxCreateInput = async (
   if (!backgroundImage) {
     backgroundImage = await getRandomBackgroundFromLexicaHardcoded();
   }
-  let logoImage = payload.logo;
+  let logoImage = payload.logoImage;
   if (!logoImage) {
     logoImage = await getRandomPortraitFromLexicaHardcoded();
   }

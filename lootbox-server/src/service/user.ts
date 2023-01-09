@@ -104,18 +104,21 @@ export const createUserDBFromIDP = async (
     throw new Error("IDP user not found");
   }
 
-  const dbUser = await getUser(idpUser.id);
+  const _dbUser = await getUser(idpUser.id);
 
-  if (!!dbUser) {
+  if (!!_dbUser) {
     // User is already created
-    return dbUser;
+    return _dbUser;
   }
+
+  const _emailToUse = idpUser.email || request.unverifiedEmail;
+  const emailToUse = _emailToUse ? formatEmail(_emailToUse) : undefined;
 
   const [username, avatar] = await Promise.all([
     idpUser?.username ||
       getRandomUserName({
         type: "user",
-        seedEmail: idpUser?.email || undefined,
+        seedEmail: emailToUse,
       }),
     idpUser?.avatar || getRandomPortraitFromLexicaHardcoded(),
   ]);
@@ -128,17 +131,8 @@ export const createUserDBFromIDP = async (
     createdAt: Timestamp.now().toMillis(),
     updatedAt: Timestamp.now().toMillis(),
     deletedAt: null,
+    email: emailToUse,
   };
-
-  if (idpUser.email) {
-    newUserBody.email = formatEmail(idpUser.email);
-  } else if (request.unverifiedEmail) {
-    // We add the email to our DB if the user provided the email address. However, we don't want to
-    // update the underlying AUTH user object because firebase will force a token refresh, invalidating
-    // the users current token. This will kinda fuck with the viral onboarding flow. So just update
-    // the database object and then later the user can confirm it in their profile.
-    newUserBody.email = formatEmail(request.unverifiedEmail);
-  }
 
   if (idpUser.phoneNumber) {
     newUserBody.phoneNumber = idpUser.phoneNumber;
@@ -156,10 +150,14 @@ export const createUserDBFromIDP = async (
 
   const userDB = await createUser(newUserBody);
 
-  // NOTE: we are NOT updating idp object with unverified email... see comment above
+  // NOTE: we are NOT updating idp object with unverified email... see comment below
   const shouldUpdateIDP = idpUser?.username !== userDB.username;
 
   if (shouldUpdateIDP) {
+    // We add the email to our DB if the user provided the email address. However, we don't want to
+    // update the underlying AUTH user object because firebase will force a token refresh, invalidating
+    // the users current token. This will kinda fuck with the viral onboarding flow. So just update
+    // the database object and then later the user can confirm it in their profile.
     await identityProvider.updateUser(userDB.id, {
       username: userDB.username,
     });

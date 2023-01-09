@@ -295,8 +295,8 @@ const handleBonusRewardClaim = async (payload: BonusRewardClaimServiceRequest) =
 
     // get user tickets for this lootbox & tournamet
     const [userLootboxTicketCount, userTournamentTicketCount] = await Promise.all([
-        getUserClaimCountForTournament(payload.tournament.id, bonusRewardReceiver),
         getUserClaimCountForLootbox(payload.lootbox.id, bonusRewardReceiver),
+        getUserClaimCountForTournament(payload.tournament.id, bonusRewardReceiver),
     ]);
 
     if (

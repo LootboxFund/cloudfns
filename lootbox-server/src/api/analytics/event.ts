@@ -1,4 +1,5 @@
 import { TournamentID } from "@wormgraph/helpers";
+import { parseDate } from "../../lib/parser";
 import { manifest } from "../../manifest";
 import { bigquery } from "./client";
 
@@ -44,7 +45,7 @@ const convertEventUserData = (data: any): EventClaimerDataRow => {
     userID: data?.userID || "",
     username: data?.username || "",
     userPublicProfilePage: data?.userPublicProfilePage || "",
-    timestampFirstJoined: data?.timestampFirstJoined || "",
+    timestampFirstJoined: parseDate(data?.timestampFirstJoined),
     favoriteLootboxName: data?.favoriteLootboxName || "",
     eventName: data?.eventName || "",
     totalClaimCount: data?.totalClaimCount || 0,

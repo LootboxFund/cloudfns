@@ -3,3 +3,7 @@ export const toFilename = (string: string): string => {
   const filename = string.replace(/[^\w]/g, "_");
   return filename;
 };
+
+export const parseDate = (date: undefined | any | { value: string }) => {
+  return date && "value" in date ? date.value : date || "";
+};

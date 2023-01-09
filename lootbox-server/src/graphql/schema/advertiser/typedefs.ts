@@ -18,6 +18,7 @@ const AdvertiserTypeDefs = gql`
     conquests: [Conquest!]!
     avatar: String
     publicContactEmail: String
+    visibility: AdvertiserVisibility!
   }
 
   type Conquest {
@@ -32,6 +33,11 @@ const AdvertiserTypeDefs = gql`
     spentBudget: Float
     maxBudget: Float
     tournaments: [ID!]!
+  }
+
+  enum AdvertiserVisibility {
+    Public
+    Private
   }
 
   type ConquestPreview {
@@ -49,6 +55,7 @@ const AdvertiserTypeDefs = gql`
     avatar: String!
     publicContactEmail: String
     website: String
+    visibility: AdvertiserVisibility!
   }
   union AdvertiserAdminViewResponse =
       AdvertiserAdminViewResponseSuccess
@@ -130,6 +137,7 @@ const AdvertiserTypeDefs = gql`
     avatar: String
     publicContactEmail: String
     website: String
+    visibility: AdvertiserVisibility
   }
   type UpdateAdvertiserDetailsResponseSuccess {
     advertiser: Advertiser!

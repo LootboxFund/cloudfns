@@ -168,23 +168,61 @@ export const edit = async (
     throw new Error("Tournament is deleted");
   }
 
-  const request: UpdateTournamentPayload = {
-    communityURL: req.communityURL,
-    coverPhoto: req.coverPhoto,
-    description: req.description,
-    magicLink: req.magicLink,
-    maxTicketsPerUser: req.maxTicketsPerUser,
-    playbookUrl: req.playbookUrl,
-    privacyScope: req.privacyScope,
-    prize: req.prize,
-    seedMaxLootboxTicketsPerUser: req.seedMaxLootboxTicketsPerUser,
-    title: req.title,
-    tournamentDate: req.tournamentDate,
-    tournamentLink: req.tournamentLink,
-    visibility: req.visibility
-      ? convertTournamentVisiblityDB(req.visibility as TournamentVisibility)
-      : undefined,
-  };
+  const request: UpdateTournamentPayload = {};
+
+  if (req.communityURL != undefined) {
+    request.communityURL = req.communityURL;
+  }
+
+  if (req.coverPhoto != undefined) {
+    request.coverPhoto = req.coverPhoto;
+  }
+
+  if (req.description != undefined) {
+    request.description = req.description;
+  }
+
+  if (req.magicLink != undefined) {
+    request.magicLink = req.magicLink;
+  }
+
+  if (req.maxTicketsPerUser != undefined) {
+    request.maxTicketsPerUser = req.maxTicketsPerUser;
+  }
+
+  if (req.playbookUrl != undefined) {
+    request.playbookUrl = req.playbookUrl;
+  }
+
+  if (req.privacyScope != undefined) {
+    request.privacyScope = req.privacyScope;
+  }
+
+  if (req.prize != undefined) {
+    request.prize = req.prize;
+  }
+
+  if (req.seedMaxLootboxTicketsPerUser != undefined) {
+    request.seedMaxLootboxTicketsPerUser = req.seedMaxLootboxTicketsPerUser;
+  }
+
+  if (req.title != undefined) {
+    request.title = req.title;
+  }
+
+  if (req.tournamentDate != undefined) {
+    request.tournamentDate = req.tournamentDate;
+  }
+
+  if (req.tournamentLink != undefined) {
+    request.tournamentLink = req.tournamentLink;
+  }
+
+  if (req.visibility != undefined) {
+    request.visibility = convertTournamentVisiblityDB(
+      req.visibility as TournamentVisibility
+    );
+  }
 
   validateTournamentEditRequest(request);
 
