@@ -1,6 +1,7 @@
 import { bigquery } from "./client";
 import { OfferID, TournamentID } from "@wormgraph/helpers";
 import { manifest } from "../../manifest";
+import { parseDate } from "../../lib/parser";
 
 interface OfferEventActivationsRow {
   activationName: string;
@@ -632,10 +633,6 @@ export interface ClaimQuestionAndAnswerBaseRow {
   question_20: string;
   answer_20: string;
 }
-
-const parseDate = (date: undefined | any | { value: string }) => {
-  return date && "value" in date ? date.value : date || "";
-};
 
 const convertOfferClaimsWithQA = (data: any): OfferClaimWithQARow => {
   // Convert data into type T and return it
