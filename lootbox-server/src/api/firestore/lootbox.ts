@@ -653,21 +653,42 @@ export const getLootboxUnassignedClaimForUser = async (
   }
 };
 
+interface MockLootboxInputPayload {
+  description?: string | null;
+  backgroundImage?: string | null;
+  logoImage?: string | null;
+  themeColor?: string | null;
+  nftBountyValue?: string | null;
+  maxTickets?: number | null;
+  joinCommunityUrl?: string;
+  symbol?: string | null;
+  lootboxName?: string | null;
+  tournamentID: TournamentID;
+  type?: LootboxType;
+  airdropMetadata?: AirdropMetadataCreateInput;
+  isExclusiveLootbox?: boolean;
+}
+
+interface MockLootboxInputPayloadOutput {
+  description: string;
+  backgroundImage: string;
+  logoImage: string;
+  themeColor: string;
+  nftBountyValue: string;
+  maxTickets: number;
+  joinCommunityUrl?: string;
+  symbol: string;
+  lootboxName: string;
+  tournamentID: TournamentID;
+  type?: LootboxType;
+  airdropMetadata?: AirdropMetadataCreateInput;
+  isExclusiveLootbox?: boolean;
+}
+
 export const extractOrGenerateLootboxCreateInput = async (
-  payload: CreateLootboxPayload
-): Promise<
-  CreateLootboxRequest & {
-    backgroundImage: string;
-    logoImage: string;
-    themeColor: string;
-    lootboxName: string;
-    symbol: string;
-    description: string;
-    nftBountyValue: string;
-    maxTickets: number;
-  }
-> => {
-  let name = payload.name;
+  payload: MockLootboxInputPayload
+): Promise<MockLootboxInputPayloadOutput> => {
+  let name = payload.lootboxName;
   if (!name) {
     name = await getRandomUserName({
       type: "lootbox",
@@ -677,7 +698,7 @@ export const extractOrGenerateLootboxCreateInput = async (
   if (!backgroundImage) {
     backgroundImage = await getRandomBackgroundFromLexicaHardcoded();
   }
-  let logoImage = payload.logo;
+  let logoImage = payload.logoImage;
   if (!logoImage) {
     logoImage = await getRandomPortraitFromLexicaHardcoded();
   }
