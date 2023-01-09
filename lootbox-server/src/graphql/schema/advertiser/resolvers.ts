@@ -44,6 +44,7 @@ import {
   ListEventsOfAdvertiserResponse,
 } from "../../generated/types";
 import { convertAffiliateDBToGQL } from "../../../lib/affiliate";
+import { convertAdvertiserDBToGQL } from "../../../lib/advertiser";
 
 const AdvertiserResolvers: Resolvers = {
   Query: {
@@ -70,8 +71,17 @@ const AdvertiserResolvers: Resolvers = {
             },
           };
         }
+
+        const advertiserGQL = convertAdvertiserDBToGQL(advertiser);
         return {
-          ...advertiser,
+          id: advertiserGQL.id,
+          userID: advertiserGQL.userID,
+          name: advertiserGQL.name || "",
+          description: advertiserGQL.description,
+          avatar: advertiserGQL.avatar || "",
+          publicContactEmail: advertiserGQL.publicContactEmail,
+          website: advertiserGQL.website,
+          visibility: advertiserGQL.visibility,
         };
       } catch (err) {
         console.error(err);
