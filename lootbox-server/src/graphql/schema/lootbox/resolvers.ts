@@ -373,17 +373,17 @@ const LootboxResolvers: Resolvers = {
         const res = await LootboxService.edit(
           payload.lootboxID as LootboxID,
           {
-            name: payload.name || undefined,
-            description: payload.description || undefined,
-            maxTickets: payload.maxTickets || undefined,
-            nftBountyValue: payload.nftBountyValue || undefined,
-            joinCommunityUrl: payload.joinCommunityUrl || undefined,
+            name: payload.name,
+            description: payload.description,
+            maxTickets: payload.maxTickets,
+            nftBountyValue: payload.nftBountyValue,
+            joinCommunityUrl: payload.joinCommunityUrl,
             status: payload.status,
-            logo: payload.logo || undefined,
-            backgroundImage: payload.backgroundImage || undefined,
-            themeColor: payload.themeColor || undefined,
-            isExclusiveLootbox: payload.isExclusiveLootbox || undefined,
-            maxTicketsPerUser: payload.maxTicketsPerUser || undefined,
+            logo: payload.logo,
+            backgroundImage: payload.backgroundImage,
+            themeColor: payload.themeColor,
+            isExclusiveLootbox: payload.isExclusiveLootbox,
+            maxTicketsPerUser: payload.maxTicketsPerUser,
           },
           context.userId as unknown as UserID
         );

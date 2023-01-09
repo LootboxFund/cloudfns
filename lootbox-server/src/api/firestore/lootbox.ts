@@ -119,47 +119,47 @@ export const editLootbox = async (
 ): Promise<Lootbox_Firestore> => {
   const updateRequest: Partial<Lootbox_Firestore> = {};
 
-  if (!!payload.logo) {
+  if (payload.logo != undefined) {
     updateRequest.logo = payload.logo;
   }
 
-  if (!!payload.name) {
+  if (payload.name != undefined) {
     updateRequest.name = payload.name;
   }
 
-  if (!!payload.description) {
+  if (payload.description != undefined) {
     updateRequest.description = payload.description;
   }
 
-  if (!!payload.nftBountyValue) {
+  if (payload.nftBountyValue != undefined) {
     updateRequest.nftBountyValue = payload.nftBountyValue;
   }
 
-  if (!!payload.joinCommunityUrl) {
+  if (payload.joinCommunityUrl != undefined) {
     updateRequest.joinCommunityUrl = payload.joinCommunityUrl;
   }
 
-  if (!!payload.status) {
+  if (payload.status != undefined) {
     updateRequest.status = payload.status;
   }
 
-  if (!!payload.maxTickets) {
+  if (payload.maxTickets != undefined) {
     updateRequest.maxTickets = payload.maxTickets;
   }
 
-  if (!!payload.backgroundImage) {
+  if (payload.backgroundImage != undefined) {
     updateRequest.backgroundImage = payload.backgroundImage;
   }
 
-  if (!!payload.badgeImage) {
+  if (payload.badgeImage != undefined) {
     updateRequest.name = payload.badgeImage;
   }
 
-  if (!!payload.themeColor) {
+  if (payload.themeColor != undefined) {
     updateRequest.themeColor = payload.themeColor;
   }
 
-  if (!!payload.symbol) {
+  if (payload.symbol != undefined) {
     updateRequest.symbol = payload.symbol;
   }
 
