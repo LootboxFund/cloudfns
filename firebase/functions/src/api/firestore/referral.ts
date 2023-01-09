@@ -320,8 +320,6 @@ export const createBonusClaim = async (payload: CreateBonusClaimPayload): Promis
         bonusClaimBody.lootboxNFTBountyValue = payload.lootbox.nftBountyValue;
     }
 
-    // batch.create(bonusClaimRef, bonusClaimBody);
-
     await bonusClaimRef.set(bonusClaimBody);
 
     return;
