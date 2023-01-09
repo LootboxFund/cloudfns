@@ -330,8 +330,10 @@ export const createBonusClaim = async (payload: CreateBonusClaimPayload): Promis
 export const getUserClaimCountForTournament = async (tournamentID: TournamentID, userID: UserID): Promise<number> => {
     const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
     const statusField: keyof Claim_Firestore = "status";
+    const tournamentIDField: keyof Claim_Firestore = "tournamentId";
     const query = await db
         .collectionGroup(Collection.Claim)
+        .where(tournamentIDField, "==", tournamentID)
         .where(claimerUserIDField, "==", userID)
         .where(statusField, "==", ClaimStatus_Firestore.complete)
         .get();
