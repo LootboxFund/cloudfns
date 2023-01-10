@@ -28,6 +28,7 @@
  * to run:
  * npx ts-node --script-mode ./src/migrations/backfillVisibilityStatus.ts path/to/key.json
  * npx ts-node --script-mode ./src/migrations/backfillVisibilityStatus.ts /Users/starship420/Downloads/lootbox-fund-staging-feb043f6bda2.json
+ * npx ts-node --script-mode ./src/migrations/backfillVisibilityStatus.ts /Users/starship420/Downloads/lootbox-fund-prod-aaa58dc5fea6.json
  */
 
 import {
@@ -121,8 +122,6 @@ class FirebaseIdentityProvider {
       displayName: username,
       photoURL: avatar,
     });
-
-    // await this.generateEmailVerificationLink(email);
 
     return convertUserRecordToUser(userRecord);
   }
