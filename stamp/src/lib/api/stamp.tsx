@@ -6,6 +6,7 @@ import nodeHtmlToImage from "node-html-to-image";
 import Ticket, { TicketProps } from "../components/Ticket";
 import { saveLocalFileToGBucket } from "./gbucket";
 import { manifest } from "../../manifest";
+import SimpleTicket, { SimpleTicketProps } from "../components/SimpleTicket";
 
 export const generateStaticElement = (props: TicketProps) =>
   ReactDOMServer.renderToStaticMarkup(
@@ -18,6 +19,17 @@ export const generateStaticElement = (props: TicketProps) =>
       lootboxAddress={props.lootboxAddress}
       chainIdHex={props.chainIdHex}
       lootboxID={props.lootboxID}
+    />
+  );
+
+export const simpleTicketStaticElement = (props: SimpleTicketProps) =>
+  ReactDOMServer.renderToStaticMarkup(
+    <SimpleTicket
+      coverPhoto={props.coverPhoto}
+      sponsorLogos={props.sponsorLogos}
+      teamName={props.teamName}
+      playerHeadshot={props.playerHeadshot}
+      themeColor={props.themeColor}
     />
   );
 
@@ -92,6 +104,50 @@ export const generateTicketImage = async (path: string, props: TicketProps) => {
       bucket: manifest.storage.buckets.stamp.id,
     });
     return imagePath;
+  } catch (e) {
+    console.log(`--- BIG ERROR ---`);
+    console.log(e);
+    return;
+  }
+};
+
+export const generateSimpleTicket = async (
+  path: string,
+  props: SimpleTicketProps
+) => {
+  console.log("Generating Basic Ticket Image...");
+  try {
+    await nodeHtmlToImage({
+      output: path,
+      html: `<html>
+      <head>
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap");
+          @import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,800;1,800&display=swap");
+
+          body {
+            width: 900px;
+            height: 1650px;
+          }
+        </style>
+      </head>
+      <body>
+          ${simpleTicketStaticElement(props)}
+      </body>
+    </html>
+    `,
+      transparent: true,
+      puppeteerArgs: {
+        args: ["--no-sandbox"],
+      },
+    });
+    // const imagePath = await saveLocalFileToGBucket({
+    //   alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
+    //   localFilePath: path,
+    //   fileName: `${props.lootboxID}/${props.ticketID}.png`,
+    //   bucket: manifest.storage.buckets.stamp.id,
+    // });
+    // return imagePath;
   } catch (e) {
     console.log(`--- BIG ERROR ---`);
     console.log(e);

@@ -1,20 +1,18 @@
 import { ContractAddress, LootboxID } from "@wormgraph/helpers";
 import { generateImage } from "./lib/api/stamp";
+import { generateSimpleTicket } from "./lib/api/stamp";
 
 const demo = async () => {
   console.log(`Generating image...`);
   const tempLocalPath = "export/image.png";
-  const linkToImage = await generateImage(tempLocalPath, {
-    ticketID: "0",
-    backgroundImage: "https://wallpaperaccess.com/full/5583122.jpg",
-    logoImage:
-      "https://images.fineartamerica.com/images/artworkimages/mediumlarge/1/teutonic-knight-04-andrea-mazzocchetti.jpg",
-    themeColor: "#000000",
-    name: "Pig Iron Gang",
-    // lootboxAddress:
-    // "0x1c69bcBCb7f860680cDf9D4914Fc850a61888f89" as ContractAddress,
-    // chainIdHex: "0x38",
-    lootboxID: "doisdfhhzl12a" as LootboxID,
+  const linkToImage = await generateSimpleTicket(tempLocalPath, {
+    coverPhoto:
+      "https://lexica-serve-encoded-images2.sharif.workers.dev/full_jpg/2f8a30cc-a1ae-475c-8b82-b91fd96316d7",
+    sponsorLogos: [],
+    teamName: "Big Boidem",
+    themeColor: "#9f5497",
+    playerHeadshot:
+      "https://lexica-serve-encoded-images2.sharif.workers.dev/md/e2036ab2-efc5-4150-bf7f-f205b059cb45",
   });
   console.log(`linkToImage = ${linkToImage}`);
 };
