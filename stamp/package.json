@@ -14,7 +14,8 @@
     "deploy:staging": "yarn build && gcloud run deploy --memory 1024Mi --service-account stamp-instance@lootbox-fund-staging.iam.gserviceaccount.com --impersonate-service-account stamp-cloud-run-306@lootbox-fund-staging.iam.gserviceaccount.com --project=lootbox-fund-staging",
     "deploy:prod": "yarn build && gcloud run deploy --memory 1024Mi --service-account stamp-instance@lootbox-fund-prod.iam.gserviceaccount.com --impersonate-service-account sa-stamp-cloud-run@lootbox-fund-prod.iam.gserviceaccount.com --project=lootbox-fund-prod --region=asia-southeast1",
     "local:dev": "yarn build && node dist/server.js",
-    "local:render": "npx ts-node ./src/demo.ts",
+    "local:render:simple": "npx ts-node ./demo/simple-ticket.ts",
+    "local:render:invite": "npx ts-node ./demo/invite-stamp.ts",
     "storybook": "start-storybook"
   },
   "keywords": [],

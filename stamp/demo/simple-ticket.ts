@@ -1,6 +1,6 @@
 import { ContractAddress, LootboxID } from "@wormgraph/helpers";
-import { generateImage } from "./lib/api/stamp";
-import { generateSimpleTicket } from "./lib/api/stamp";
+import { generateImage } from "../src/lib/api/stamp";
+import { generateSimpleTicket } from "../src/lib/api/stamp";
 
 const demo = async () => {
   console.log(`Generating image...`);
