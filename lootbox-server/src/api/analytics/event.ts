@@ -95,119 +95,148 @@ export const eventClaimerData = async ({
    * See https://cloud.google.com/bigquery/docs/parameterized-queries#node.js
    */
   const query = `
-        SELECT
-            users.id AS userID,
-            users.username AS username,
-            users.avatar AS userAvatar,
-            CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', users.id) AS userPublicProfilePage,
-            MIN(TIMESTAMP_MILLIS(CAST(claims.timestamps_createdAt AS INT64))) AS timestampFirstJoined,
-            MIN(claims.tournamentName) AS eventName,
-            MIN(CASE
-                WHEN claims.status = 'complete' AND claims.type = 'referral' OR claims.type = 'one_time' THEN claims.lootboxName
-              ELSE
-              NULL
-            END
-              ) AS favoriteLootboxName,
-            COUNT(*) AS totalClaimCount,
-            SUM(CASE
-                WHEN claims.status = 'complete' THEN 1
-              ELSE
-              0
-            END
-              ) AS completedClaimCount,
-            SUM(CASE
-                WHEN claims.referralType = 'viral' AND claims.status = 'complete' AND claims.type = 'referral' THEN 1
-              ELSE
-              0
-            END
-              ) AS viralClaimCount,
-            SUM(CASE
-                WHEN claims.referralType = 'viral' AND claims.status = 'complete' AND claims.type = 'reward' THEN 1
-              ELSE
-              0
-            END
-              ) AS referralBonusClaimCount,
-            SUM(CASE
-                WHEN claims.referralType = 'one_time' AND claims.status = 'complete' AND claims.type = 'one_time' THEN 1
-              ELSE
-              0
-            END
-              ) AS participationRewardCount,
-            SUM(CASE
-                WHEN claims.status = 'airdrop' AND claims.type = 'complete' THEN 1
-              ELSE
-              0
-            END
-              ) AS airdropClaimCount,
-            SUM(CASE
-                WHEN claims.status = 'pending' OR claims.status = 'unverified' THEN 1
-              ELSE
-              0
-            END
-              ) AS pendingClaims,
-            SUM(CASE
-                WHEN claims.status = 'expired' THEN 1
-              ELSE
-              0
-            END
-              ) AS expiredClaims,
-            SUM(CASE
-                WHEN claims.referralType = 'genesis' AND claims.status = 'complete' AND claims.type = 'referral' THEN 1
-              ELSE
-              0
-            END
-              ) AS originalClaims,
-            users.socials_twitter AS socialTwitter,
-            users.socials_instagram AS socialInstagram,
-            users.socials_tiktok AS socialTiktok,
-            users.socials_facebook AS socialFacebook,
-            users.socials_discord AS socialDiscord,
-            users.socials_snapchat AS socialSnapchat,
-            users.socials_twitch AS socialTwitch,
-            users.socials_web AS socialWeb,
-            COALESCE(MIN(
-                CASE
-                  WHEN claimsPrivacy.privacyScope_member = 'DataSharing' THEN COALESCE(users.email, "")
-                ELSE
-                NULL
-              END
-                ), "CONSENT_REQUIRED") AS userEmail,
-            COALESCE(MIN(
-                CASE
-                  WHEN claimsPrivacy.privacyScope_member = 'DataSharing' THEN COALESCE(users.phoneNumber, "")
-                ELSE
-                NULL
-              END
-                ), "CONSENT_REQUIRED") AS userPhone,
-        FROM
-          \`${userTable}\` AS users
-        INNER JOIN
-          \`${claimTable}\` AS claims
-        ON
-          users.id = claims.claimerUserID
-        INNER JOIN
-          \`${claimPrivacyTable}\` AS claimsPrivacy
-        ON
-          claimsPrivacy.claimID = claims.id
-          WHERE
-          claims.tournamentId = @eventID
-        GROUP BY
-          userID,
-          username,
-          userAvatar,
-          socialTwitter,
-          socialInstagram,
-          socialTiktok,
-          socialFacebook,
-          socialDiscord,
-          socialSnapchat,
-          socialTwitch,
-          socialWeb
-        ORDER BY
-          completedClaimCount DESC
-        LIMIT
-          100000
-    `;
+  WITH
+    ClaimsWithPermissions AS (
+    SELECT
+      claims.id AS claimID,
+      SUM(CASE
+          WHEN p.privacyScope_member = 'DataSharing' THEN 1
+        ELSE
+        0
+      END
+        ) > 0 AS DataSharing,
+      SUM(CASE
+          WHEN p.privacyScope_member = 'MarketingEmails' THEN 1
+        ELSE
+        0
+      END
+        ) > 0 AS MarketingEmails,
+    FROM
+      \`${claimTable}\` AS claims
+    INNER JOIN
+      \`${claimPrivacyTable}\` AS p
+    ON
+      claims.id = p.claimID
+    WHERE
+      claims.tournamentId = @eventID
+    GROUP BY
+      claims.id )
+    SELECT
+      users.id AS userID,
+      users.username AS username,
+      users.avatar AS userAvatar,
+      CONCAT('${manifest.microfrontends.webflow.publicProfile}?uid=', users.id) AS userPublicProfilePage,
+      MIN(TIMESTAMP_MILLIS(CAST(claims.timestamps_createdAt AS INT64))) AS timestampFirstJoined,
+      MIN(claims.tournamentName) AS eventName,
+      MIN(CASE
+          WHEN claims.status = 'complete' AND claims.type = 'referral' OR claims.type = 'one_time' THEN claims.lootboxName
+        ELSE
+        NULL
+      END
+        ) AS favoriteLootboxName,
+      COUNT(*) AS totalClaimCount,
+      SUM(CASE
+          WHEN claims.status = 'complete' THEN 1
+        ELSE
+        0
+      END
+        ) AS completedClaimCount,
+      SUM(CASE
+          WHEN claims.referralType = 'viral' AND claims.status = 'complete' AND claims.type = 'referral' THEN 1
+        ELSE
+        0
+      END
+        ) AS viralClaimCount,
+      SUM(CASE
+          WHEN claims.referralType = 'viral' AND claims.status = 'complete' AND claims.type = 'reward' THEN 1
+        ELSE
+        0
+      END
+        ) AS referralBonusClaimCount,
+      SUM(CASE
+          WHEN claims.referralType = 'one_time' AND claims.status = 'complete' AND claims.type = 'one_time' THEN 1
+        ELSE
+        0
+      END
+        ) AS participationRewardCount,
+      SUM(CASE
+          WHEN claims.status = 'airdrop' AND claims.type = 'complete' THEN 1
+        ELSE
+        0
+      END
+        ) AS airdropClaimCount,
+      SUM(CASE
+          WHEN claims.status = 'pending' OR claims.status = 'unverified' THEN 1
+        ELSE
+        0
+      END
+        ) AS pendingClaims,
+      SUM(CASE
+          WHEN claims.status = 'expired' THEN 1
+        ELSE
+        0
+      END
+        ) AS expiredClaims,
+      SUM(CASE
+          WHEN claims.referralType = 'genesis' AND claims.status = 'complete' AND claims.type = 'referral' THEN 1
+        ELSE
+        0
+      END
+        ) AS originalClaims,
+      users.socials_twitter AS socialTwitter,
+      users.socials_instagram AS socialInstagram,
+      users.socials_tiktok AS socialTiktok,
+      users.socials_facebook AS socialFacebook,
+      users.socials_discord AS socialDiscord,
+      users.socials_snapchat AS socialSnapchat,
+      users.socials_twitch AS socialTwitch,
+      users.socials_web AS socialWeb,
+      COALESCE(MIN(
+          CASE
+            WHEN claimsPrivacy.DataSharing = TRUE THEN COALESCE(users.email, "")
+          ELSE
+          NULL
+        END
+          ), "CONSENT_REQUIRED") AS userEmail,
+      COALESCE(MIN(
+          CASE
+            WHEN claimsPrivacy.DataSharing = TRUE THEN COALESCE(users.phoneNumber, "")
+          ELSE
+          NULL
+        END
+          ), "CONSENT_REQUIRED") AS userPhone,
+    FROM
+      \`${userTable}\` AS users
+    INNER JOIN
+      \`${claimTable}\` AS claims
+    ON
+      users.id = claims.claimerUserID
+    INNER JOIN
+      ClaimsWithPermissions AS claimsPrivacy
+    ON
+      claims.id = claimsPrivacy.claimID
+    WHERE
+      claims.tournamentId = @eventID
+    GROUP BY
+      userID,
+      username,
+      userAvatar,
+      socialTwitter,
+      socialInstagram,
+      socialTiktok,
+      socialFacebook,
+      socialDiscord,
+      socialSnapchat,
+      socialTwitch,
+      socialWeb
+    ORDER BY
+      completedClaimCount DESC
+    LIMIT
+      100000
+
+
+
+  `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
   const options = {
