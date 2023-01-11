@@ -95,7 +95,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
               position: "absolute",
               top: "76px",
               left: "0px",
-              fontSize: "44px",
+              fontSize: "40px",
               fontFamily: "'Open Sans'",
               color: "rgba(255, 255, 255, 0.6)",
               display: "inline-block",
@@ -110,7 +110,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
       <div
         style={{
           alignSelf: "stretch",
-          height: "1220px",
+          height: "1240px",
           flexShrink: "0",
           display: "flex",
           flexDirection: "column",
@@ -130,6 +130,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             overflow: "hidden",
             maxHeight: "100%",
             objectFit: "cover",
+            backgroundPosition: "center",
             zIndex: "0",
           }}
           alt=""
@@ -140,8 +141,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           style={{
             position: "absolute",
             margin: "0",
-            top: "727px",
-            left: "-1px",
+            // top: "767px",
             background:
               "linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(26, 26, 26, 0.54) 40.26%, #1a1a1a 75.33%)",
             width: "902px",
@@ -154,10 +154,12 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           style={{
             margin: "0",
             position: "absolute",
-            top: "895.67px",
+            // top: "895.67px",
+            bottom: "0px",
             left: "0px",
             width: "900px",
-            height: "324px",
+            // height: "324px",
+            // height: "374px",
             flexShrink: "0",
             display: "flex",
             flexDirection: "row",
@@ -169,16 +171,17 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             zIndex: "2",
           }}
         >
-          {/* <div
+          <div
             style={{
               position: "relative",
               // width: "300px",
               // height: "324px",
+              backgroundColor: "#ffffff",
               flexShrink: "0",
             }}
           >
-          </div> */}
-          <QRCode qrLink={props.qrCodeLink} width={300} height={300} />
+            <QRCode qrLink={props.qrCodeLink} width={300} height={300} />
+          </div>
           <div
             style={{
               flex: "1",
@@ -272,17 +275,16 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             style={{
               position: "absolute",
               margin: "0",
-              // bottom: "324.33px",
-              bottom: "312px",
+              bottom: "330px",
               // left: "calc(50% - 450px)",
               left: "40px", // takes left padding into account from QR code
               maxWidth: "300px",
               width: "100%",
               maxHeight: "500px",
-              // height: "300px",
               flexShrink: "0",
               objectFit: "contain",
-              zIndex: "3",
+              backgroundPosition: "center",
+              zIndex: "1",
             }}
             alt=""
             id="headshot"
@@ -294,16 +296,16 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
         style={{
           alignSelf: "stretch",
           backgroundColor: "#1a1a1a",
-          height: "110px",
+          height: "100px",
           flexShrink: "0",
           display: "flex",
           flexDirection: "row",
-          padding: "26px 40px 0px",
+          padding: "0px 40px",
           boxSizing: "border-box",
           alignItems: "center",
           justifyContent: "center",
           zIndex: "1",
-          fontSize: "25px",
+          fontSize: "18px",
           color: "rgba(255, 255, 255, 0.5)",
         }}
       >
@@ -314,7 +316,6 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             position: "relative",
             lineHeight: "110%",
             display: "inline-block",
-            height: "94px",
           }}
         >
           Visit https://lootbox.tickets. This free fan ticket entitles the
@@ -328,7 +329,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           alignSelf: "stretch",
           borderRadius: "0px 0px 38px 38px",
           backgroundColor: "#1a1a1a",
-          height: "145px",
+          height: "130px",
           flexShrink: "0",
           display: "flex",
           flexDirection: "row",
@@ -345,7 +346,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "space-between",
             gap: "20px",
           }}
         >
@@ -358,10 +359,12 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
                   maxWidth: "200px",
                   flex: "1",
                   position: "relative",
-                  maxHeight: "100px",
+                  maxHeight: "88px",
                   height: "100%",
-                  backgroundSize: "contain",
+                  objectFit: "contain",
+                  backgroundPosition: "center",
                   filter: "grayscale(100%)",
+                  margin: "auto",
                 }}
               />
             );

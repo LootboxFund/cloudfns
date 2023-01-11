@@ -56,7 +56,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
       <div
         style={{
           alignSelf: "stretch",
-          height: "1220px",
+          height: "1230px",
           flexShrink: "0",
           display: "flex",
           flexDirection: "column",
@@ -173,7 +173,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           alignSelf: "stretch",
           borderRadius: "0px 0px 38px 38px",
           backgroundColor: props.themeColor,
-          height: "145px",
+          height: "130px",
           flexShrink: "0",
           display: "flex",
           flexDirection: "row",
@@ -203,10 +203,12 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
                   maxWidth: "200px",
                   flex: "1",
                   position: "relative",
-                  maxHeight: "100px",
-                  height: "100px",
-                  backgroundSize: "contain",
+                  maxHeight: "88px",
+                  height: "100%",
+                  objectFit: "contain",
+                  backgroundPosition: "center",
                   filter: "grayscale(100%)",
+                  margin: "auto",
                 }}
               />
             );

@@ -14,7 +14,7 @@ const demo = async () => {
     playerHeadshot:
       "https://png2.cleanpng.com/sh/524a89e01501170c6fa886f07af32999/L0KzQYm3V8A6N6lmiZH0aYP2gLBuTgRpfZ5nRdpAbXHxPbPsiPF3cZD3Rd9qc3PyhH7qjPlxNZJ3jJ9wYX3ogn7olvF1aaMyTdQ9MnWzRrLoUMVma2YzSas6OUS6Q4m4VcMyOWEATKo7NkW5SXB3jvc=/kisspng-thumb-human-behavior-mascot-clip-art-gamer-avatar-5b42e06aa05ec5.1919473815311094826569.png",
     ticketValue: "$1000 USD",
-    qrCodeLink: "https://www.lootbox.fund",
+    qrCodeLink: "https://go.lootbox.fund/r?r=12345678",
     sponsorLogos: [
       "https://png2.cleanpng.com/sh/44a45ac16450e34761814b09a88bf1cc/L0KzQYi4UsIxN5p7iZGAYUPkQoa3hcA6PWNpTJC5OUi3SYe3WcE2OWQ8TqI5MUSzQ4m5VcYxP191htk=/5a3a250e0952d4.09849609151376001403825607.png",
       "https://png2.cleanpng.com/sh/379e97d71ffc3f714cc08576b386ff48/L0KzQYi4UsIxN6ZxfZGAYUPkQbaAVMM4QGc6T5C5MkS0QIq7UME2OWQ8Tao8MkS1Qoi7WMQ1Ol91htk=/5a3a1e74378657.02410940151375832422748442.png",

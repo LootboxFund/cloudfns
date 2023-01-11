@@ -25,7 +25,7 @@ const Template = () => {
         //   "https://png2.cleanpng.com/sh/6d6c8f72967f33151f4e8b1d6db0c554/L0KzQYm3V8I0N6ZviZH0aYP2gLBuTfNzaaRtReZCaX72cbBwlQkua6Nmi9o2bnn3grE0iBFzfF5uRd54dnWwecW0hPlocaVmRdlqbXX1PbL9ggRiel46eqcBNnSzQbO7VMcyPl85SqkENkW5RIK8U8I0QWE7TakCM0i3PsH1h5==/kisspng-crash-twinsanity-crash-nitro-kart-i-love-it-digita-gamer-avatar-5b566d01b44716.4279656415323906577384.png"
         // }
         playerHeadshot="https://png2.cleanpng.com/sh/524a89e01501170c6fa886f07af32999/L0KzQYm3V8A6N6lmiZH0aYP2gLBuTgRpfZ5nRdpAbXHxPbPsiPF3cZD3Rd9qc3PyhH7qjPlxNZJ3jJ9wYX3ogn7olvF1aaMyTdQ9MnWzRrLoUMVma2YzSas6OUS6Q4m4VcMyOWEATKo7NkW5SXB3jvc=/kisspng-thumb-human-behavior-mascot-clip-art-gamer-avatar-5b42e06aa05ec5.1919473815311094826569.png"
-        qrCodeLink="https://www.lootbox.fund"
+        qrCodeLink="https://go.lootbox.fund/r?r=12345678"
         ticketValue={"2.1 ETH"}
       />
     </$CardViewport>
