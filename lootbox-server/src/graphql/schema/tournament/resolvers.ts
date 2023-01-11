@@ -377,7 +377,7 @@ const TournamentResolvers = {
             prize: payload.prize,
             tournamentDate: payload.tournamentDate,
             communityURL: payload.communityURL,
-            privacyScope: payload.privacyScope || [],
+            privacyScope: payload.privacyScope || undefined,
           },
           context.userId
         );
