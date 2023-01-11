@@ -32,7 +32,7 @@ interface CreateTournamentServiceRequest {
   prize?: string | null;
   tournamentDate?: number | null;
   communityURL?: string | null;
-  privacyScope: TournamentPrivacyScope[];
+  privacyScope?: TournamentPrivacyScope[];
   maxTicketsPerUser?: number;
   seedMaxLootboxTicketsPerUser?: number;
 }
@@ -65,7 +65,14 @@ export const create = async (
     tournamentDate: payload.tournamentDate || undefined,
     communityURL: payload.communityURL,
     organizer: affiliate.id,
-    privacyScope: payload.privacyScope || [],
+    privacyScope:
+      payload.privacyScope == undefined
+        ? [
+            // Default to full permissions
+            TournamentPrivacyScope.DataSharing,
+            TournamentPrivacyScope.MarketingEmails,
+          ]
+        : payload.privacyScope,
     maxTicketsPerUser: payload.maxTicketsPerUser
       ? Math.round(payload.maxTicketsPerUser)
       : 100,
