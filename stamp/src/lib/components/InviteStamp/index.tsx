@@ -1,5 +1,4 @@
-import { ReferralSlug } from "@wormgraph/helpers";
-import e from "express";
+import QRCode from "../QRCode";
 import { FunctionComponent } from "react";
 
 export interface InviteStampProps {
@@ -9,7 +8,7 @@ export interface InviteStampProps {
   playerHeadshot?: string;
   themeColor: string;
   ticketValue: string;
-  referralSlug: ReferralSlug;
+  qrCodeLink: string;
 }
 
 const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
@@ -31,7 +30,6 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
         alignItems: "center",
         justifyContent: "space-between",
         textAlign: "left",
-        fontSize: "120px",
         color: "#fff",
         fontFamily: "'Open Sans'",
       }}
@@ -49,7 +47,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           boxSizing: "border-box",
           alignItems: "center",
           justifyContent: "center",
-          gap: "10px",
+          // gap: "10px",
           zIndex: "3",
           textAlign: "center",
         }}
@@ -59,9 +57,9 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             margin: "0",
             flex: "1",
             position: "relative",
-            fontSize: "inherit",
             fontWeight: "700",
             fontFamily: "inherit",
+            fontSize: "150px",
           }}
         >
           FREE
@@ -72,7 +70,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             position: "relative",
             height: "127px",
             textAlign: "left",
-            fontSize: "64px",
+            fontSize: "72px",
             color: "rgba(255, 255, 255, 0.68)",
             fontFamily: "'Fira Sans'",
           }}
@@ -86,6 +84,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
               fontStyle: "italic",
               fontWeight: "800",
               width: "398.38px",
+              whiteSpace: "nowrap",
             }}
           >
             LOOTBOX <span style={{ fontStyle: "normal" }}>🎁</span>
@@ -94,9 +93,9 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             style={{
               margin: "0",
               position: "absolute",
-              top: "70px",
+              top: "76px",
               left: "0px",
-              fontSize: "42px",
+              fontSize: "44px",
               fontFamily: "'Open Sans'",
               color: "rgba(255, 255, 255, 0.6)",
               display: "inline-block",
@@ -170,25 +169,16 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             zIndex: "2",
           }}
         >
-          <div
+          {/* <div
             style={{
               position: "relative",
-              width: "300px",
-              height: "324px",
+              // width: "300px",
+              // height: "324px",
               flexShrink: "0",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: "0px",
-                left: "0px",
-                backgroundColor: "#d9d9d9",
-                width: "300px",
-                height: "324px",
-              }}
-            />
-          </div>
+          </div> */}
+          <QRCode qrLink={props.qrCodeLink} width={300} height={300} />
           <div
             style={{
               flex: "1",
@@ -262,41 +252,6 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
                   );
                 }
               })}
-              {/* <h6
-                style={{
-                  margin: "0",
-                  position: "relative",
-                  fontSize: "inherit",
-                  lineHeight: "103.68%",
-                  fontWeight: "700",
-                  fontFamily: "inherit",
-                }}
-              >
-                $
-              </h6>
-              <h2
-                style={{
-                  margin: "0",
-                  position: "relative",
-                  fontSize: "180px",
-                  lineHeight: "103.68%",
-                  fontWeight: "700",
-                  fontFamily: "inherit",
-                }}
-              >
-                50
-              </h2>
-              <h6
-                style={{
-                  margin: "0",
-                  position: "relative",
-                  fontSize: "inherit",
-                  fontWeight: "700",
-                  fontFamily: "inherit",
-                }}
-              >
-                <span style={{ lineHeight: "103.68%" }}>{`USD `}</span>
-              </h6> */}
             </div>
             <h3
               style={{
@@ -317,12 +272,16 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             style={{
               position: "absolute",
               margin: "0",
-              bottom: "324.33px",
-              left: "calc(50% - 450px)",
-              width: "495px",
-              height: "387px",
+              // bottom: "324.33px",
+              bottom: "312px",
+              // left: "calc(50% - 450px)",
+              left: "40px", // takes left padding into account from QR code
+              maxWidth: "300px",
+              width: "100%",
+              maxHeight: "500px",
+              // height: "300px",
               flexShrink: "0",
-              objectFit: "cover",
+              objectFit: "contain",
               zIndex: "3",
             }}
             alt=""
@@ -373,7 +332,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           flexShrink: "0",
           display: "flex",
           flexDirection: "row",
-          padding: "16px",
+          padding: "20px 40px",
           boxSizing: "border-box",
           alignItems: "center",
           justifyContent: "center",
@@ -387,57 +346,26 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            gap: "15px",
+            gap: "20px",
           }}
         >
-          <img
-            style={{
-              flex: "1",
-              position: "relative",
-              maxWidth: "100%",
-              overflow: "hidden",
-              height: "112px",
-              objectFit: "cover",
-            }}
-            alt=""
-            src="../rectangle-173@1x.png"
-          />
-          <img
-            style={{
-              flex: "1",
-              position: "relative",
-              maxWidth: "100%",
-              overflow: "hidden",
-              height: "112px",
-              objectFit: "cover",
-            }}
-            alt=""
-            src="../rectangle-174@1x.png"
-          />
-          <img
-            style={{
-              flex: "1",
-              position: "relative",
-              maxWidth: "100%",
-              overflow: "hidden",
-              height: "112px",
-              objectFit: "cover",
-            }}
-            alt=""
-            src="../rectangle-175@1x.png"
-          />
-          <img
-            style={{
-              flex: "1",
-              position: "relative",
-              maxWidth: "100%",
-              overflow: "hidden",
-              height: "112px",
-              objectFit: "cover",
-            }}
-            alt=""
-            src="../rectangle-1731@1x.png"
-          />
+          {props.sponsorLogos.slice(0, 4).map((logo, idx) => {
+            return (
+              <img
+                key={`sponsor-logo-${idx}`}
+                src={logo}
+                style={{
+                  maxWidth: "200px",
+                  flex: "1",
+                  position: "relative",
+                  maxHeight: "100px",
+                  height: "100%",
+                  backgroundSize: "contain",
+                  filter: "grayscale(100%)",
+                }}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

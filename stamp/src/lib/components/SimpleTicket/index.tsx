@@ -20,7 +20,6 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
         alignItems: "center",
         justifyContent: "space-between",
         textAlign: "center",
-        fontSize: "86px",
         color: "#fff",
         fontFamily: "'Open Sans'",
       }}
@@ -46,12 +45,12 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             margin: "0",
             flex: "1",
             position: "relative",
-            fontSize: "inherit",
             fontWeight: "700",
             fontFamily: "inherit",
+            fontSize: "100px",
           }}
         >
-          {props.teamName.slice(0, 20)}
+          {props.teamName.slice(0, 18)}
         </h2>
       </div>
       <div
@@ -87,19 +86,23 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             style={{
               position: "absolute",
               margin: "0",
+              // bottom: "324.33px",
               bottom: "0px",
-              left: "calc(50% - 450px)",
-              width: "805px",
-              height: "629px",
+              // left: "calc(50% - 450px)",
+              left: "40px", // takes left padding into account from QR code
+              maxWidth: "420px",
+              width: "100%",
+              maxHeight: "620px",
               flexShrink: "0",
-              objectFit: "cover",
-              zIndex: "1",
+              objectFit: "contain",
+              zIndex: "2",
             }}
             alt=""
             id="headshot"
             src={props.playerHeadshot}
           />
         )}
+
         <div
           style={{
             position: "absolute",
@@ -174,7 +177,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           flexShrink: "0",
           display: "flex",
           flexDirection: "row",
-          padding: "16px",
+          padding: "20px 40px",
           boxSizing: "border-box",
           alignItems: "center",
           justifyContent: "center",
@@ -188,41 +191,26 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            gap: "15px",
+            gap: "20px",
           }}
         >
-          <div
-            style={{
-              flex: "1",
-              position: "relative",
-              backgroundColor: "#d9d9d9",
-              height: "112px",
-            }}
-          />
-          <div
-            style={{
-              flex: "1",
-              position: "relative",
-              backgroundColor: "#d9d9d9",
-              height: "112px",
-            }}
-          />
-          <div
-            style={{
-              flex: "1",
-              position: "relative",
-              backgroundColor: "#d9d9d9",
-              height: "112px",
-            }}
-          />
-          <div
-            style={{
-              flex: "1",
-              position: "relative",
-              backgroundColor: "#d9d9d9",
-              height: "112px",
-            }}
-          />
+          {props.sponsorLogos.slice(0, 4).map((logo, idx) => {
+            return (
+              <img
+                key={`sponsor-logo-${idx}`}
+                src={logo}
+                style={{
+                  maxWidth: "200px",
+                  flex: "1",
+                  position: "relative",
+                  maxHeight: "100px",
+                  height: "100px",
+                  backgroundSize: "contain",
+                  filter: "grayscale(100%)",
+                }}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

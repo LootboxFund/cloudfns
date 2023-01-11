@@ -43,7 +43,7 @@ export const inviteStampStaticElement = (props: InviteStampProps) =>
       playerHeadshot={props.playerHeadshot}
       themeColor={props.themeColor}
       ticketValue={props.ticketValue}
-      referralSlug={props.referralSlug}
+      qrCodeLink={props.qrCodeLink}
     />
   );
 
