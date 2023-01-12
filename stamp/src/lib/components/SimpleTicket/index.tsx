@@ -1,4 +1,5 @@
 import { FunctionComponent } from "react";
+import LogoSection from "../LogoSection";
 
 export interface SimpleTicketProps {
   coverPhoto: string;
@@ -92,7 +93,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
               left: "40px", // takes left padding into account from QR code
               maxWidth: "420px",
               width: "100%",
-              maxHeight: "620px",
+              maxHeight: "520px",
               flexShrink: "0",
               objectFit: "contain",
               zIndex: "2",
@@ -109,9 +110,9 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             margin: "0",
             bottom: "0px",
             left: "calc(50% - 450px)",
-            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}AB 50%, ${props.themeColor})`,
+            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}BB 50%, ${props.themeColor})`,
             width: "900px",
-            height: "167px",
+            height: "200px",
             flexShrink: "0",
             zIndex: "2",
           }}
@@ -168,53 +169,10 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           </div>
         </div>
       </div>
-      <div
-        style={{
-          alignSelf: "stretch",
-          borderRadius: "0px 0px 38px 38px",
-          backgroundColor: props.themeColor,
-          height: "130px",
-          flexShrink: "0",
-          display: "flex",
-          flexDirection: "row",
-          padding: "20px 40px",
-          boxSizing: "border-box",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: "0",
-        }}
-      >
-        <div
-          style={{
-            flex: "1",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "20px",
-          }}
-        >
-          {props.sponsorLogos.slice(0, 4).map((logo, idx) => {
-            return (
-              <img
-                key={`sponsor-logo-${idx}`}
-                src={logo}
-                style={{
-                  maxWidth: "200px",
-                  flex: "1",
-                  position: "relative",
-                  maxHeight: "88px",
-                  height: "100%",
-                  objectFit: "contain",
-                  backgroundPosition: "center",
-                  filter: "grayscale(100%)",
-                  margin: "auto",
-                }}
-              />
-            );
-          })}
-        </div>
-      </div>
+      <LogoSection
+        logoUrls={props.sponsorLogos}
+        backgroundColor={props.themeColor}
+      />
     </div>
   );
 };

@@ -2,7 +2,7 @@ import QRCode from "../QRCode";
 import { FunctionComponent } from "react";
 import LogoSection from "../LogoSection";
 
-export interface VictoryStampProps {
+export interface LossStampProps {
   coverPhoto: string;
   sponsorLogos: string[];
   teamName: string;
@@ -12,12 +12,13 @@ export interface VictoryStampProps {
   qrCodeLink: string;
 }
 
-const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
+const LossStamp: FunctionComponent<LossStampProps> = (props) => {
   const prizeValues = props.ticketValue
     .slice(0, 20)
     .split(/([\d,\.]+)/g)
     .filter((v) => v !== "");
   const hasNumber = prizeValues.some((v) => !isNaN(Number(v)));
+  const bottomColor = "#191919";
 
   return (
     <div
@@ -146,7 +147,8 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
             position: "absolute",
             margin: "0",
             top: "750px",
-            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}BB 40.26%, ${props.themeColor} 75.33%)`,
+            // background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}BB 40.26%, ${props.themeColor} 75.33%)`,
+            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(26, 26, 26, 0.54) 40.26%, #1a1a1a 75.33%)`,
             width: "900px",
             height: "493px",
             flexShrink: "0",
@@ -190,7 +192,7 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
                 lineHeight: "100%",
               }}
             >
-              WIN
+              LOSE
             </h1>
             <div
               style={{
@@ -363,7 +365,7 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
       <div
         style={{
           alignSelf: "stretch",
-          backgroundColor: props.themeColor,
+          backgroundColor: bottomColor,
           height: "100px",
           flexShrink: "0",
           display: "flex",
@@ -392,12 +394,9 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
           for sale.
         </p>
       </div>
-      <LogoSection
-        logoUrls={props.sponsorLogos}
-        backgroundColor={props.themeColor}
-      />
+      <LogoSection logoUrls={props.sponsorLogos} />
     </div>
   );
 };
 
-export default VictoryStamp;
+export default LossStamp;

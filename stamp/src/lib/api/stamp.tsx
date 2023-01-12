@@ -9,6 +9,7 @@ import { manifest } from "../../manifest";
 import SimpleTicket, { SimpleTicketProps } from "../components/SimpleTicket";
 import InviteStamp, { InviteStampProps } from "../components/InviteStamp";
 import VictoryStamp, { VictoryStampProps } from "../components/VictoryStamp";
+import LossStamp, { LossStampProps } from "../components/LossStamp";
 
 export const generateStaticElement = (props: TicketProps) =>
   ReactDOMServer.renderToStaticMarkup(
@@ -51,6 +52,19 @@ export const inviteStampStaticElement = (props: InviteStampProps) =>
 export const victoryStampStaticElement = (props: VictoryStampProps) =>
   ReactDOMServer.renderToStaticMarkup(
     <VictoryStamp
+      coverPhoto={props.coverPhoto}
+      sponsorLogos={props.sponsorLogos}
+      teamName={props.teamName}
+      playerHeadshot={props.playerHeadshot}
+      themeColor={props.themeColor}
+      ticketValue={props.ticketValue}
+      qrCodeLink={props.qrCodeLink}
+    />
+  );
+
+export const lossStampStaticElement = (props: LossStampProps) =>
+  ReactDOMServer.renderToStaticMarkup(
+    <LossStamp
       coverPhoto={props.coverPhoto}
       sponsorLogos={props.sponsorLogos}
       teamName={props.teamName}
@@ -249,6 +263,50 @@ export const generateVictoryStamp = async (
       </head>
       <body>
           ${victoryStampStaticElement(props)}
+      </body>
+    </html>
+    `,
+      transparent: true,
+      puppeteerArgs: {
+        args: ["--no-sandbox"],
+      },
+    });
+    // const imagePath = await saveLocalFileToGBucket({
+    //   alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
+    //   localFilePath: path,
+    //   fileName: `${props.lootboxID}/${props.ticketID}.png`,
+    //   bucket: manifest.storage.buckets.stamp.id,
+    // });
+    // return imagePath;
+  } catch (e) {
+    console.log(`--- BIG ERROR ---`);
+    console.log(e);
+    return;
+  }
+};
+
+export const generateLossStamp = async (
+  path: string,
+  props: LossStampProps
+) => {
+  console.log("Generating Invite Stamp...");
+  try {
+    await nodeHtmlToImage({
+      output: path,
+      html: `<html>
+      <head>
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap");
+          @import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,800;1,800&display=swap");
+
+          body {
+            width: 900px;
+            height: 1650px;
+          }
+        </style>
+      </head>
+      <body>
+          ${lossStampStaticElement(props)}
       </body>
     </html>
     `,

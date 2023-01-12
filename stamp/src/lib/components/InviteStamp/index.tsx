@@ -1,5 +1,6 @@
 import QRCode from "../QRCode";
 import { FunctionComponent } from "react";
+import LogoSection from "../LogoSection";
 
 export interface InviteStampProps {
   coverPhoto: string;
@@ -278,7 +279,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
               left: "40px", // takes left padding into account from QR code
               maxWidth: "300px",
               width: "100%",
-              maxHeight: "500px",
+              maxHeight: "380px",
               flexShrink: "0",
               objectFit: "contain",
               backgroundPosition: "center",
@@ -322,53 +323,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           for sale.
         </p>
       </div>
-      <div
-        style={{
-          alignSelf: "stretch",
-          borderRadius: "0px 0px 38px 38px",
-          backgroundColor: "#1a1a1a",
-          height: "130px",
-          flexShrink: "0",
-          display: "flex",
-          flexDirection: "row",
-          padding: "20px 40px",
-          boxSizing: "border-box",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: "0",
-        }}
-      >
-        <div
-          style={{
-            flex: "1",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "20px",
-          }}
-        >
-          {props.sponsorLogos.slice(0, 4).map((logo, idx) => {
-            return (
-              <img
-                key={`sponsor-logo-${idx}`}
-                src={logo}
-                style={{
-                  maxWidth: "200px",
-                  flex: "1",
-                  position: "relative",
-                  maxHeight: "88px",
-                  height: "100%",
-                  objectFit: "contain",
-                  backgroundPosition: "center",
-                  filter: "grayscale(100%)",
-                  margin: "auto",
-                }}
-              />
-            );
-          })}
-        </div>
-      </div>
+      <LogoSection logoUrls={props.sponsorLogos} />
     </div>
   );
 };
