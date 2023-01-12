@@ -98,7 +98,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
       `,
       transparent: true,
       puppeteerArgs: {
-        args: ["--no-sandbox"],
+        args: ["--no-sandbox", "--enable-font-antialiasing"],
       },
     });
     const imagePath = await saveLocalFileToGBucket({
@@ -167,7 +167,6 @@ export const generateSimpleTicket = async (
         <style>
           @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap");
           @import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,800;1,800&display=swap");
-
           body {
             width: 900px;
             height: 1650px;
@@ -181,7 +180,7 @@ export const generateSimpleTicket = async (
     `,
       transparent: true,
       puppeteerArgs: {
-        args: ["--no-sandbox"],
+        args: ["--no-sandbox", "--enable-font-antialiasing"],
       },
     });
     const imagePath = await saveLocalFileToGBucket({
@@ -224,7 +223,7 @@ export const generateInviteStamp = async (
     `,
       transparent: true,
       puppeteerArgs: {
-        args: ["--no-sandbox"],
+        args: ["--no-sandbox", "--enable-font-antialiasing"],
       },
     });
     const imagePath = await saveLocalFileToGBucket({
@@ -267,7 +266,7 @@ export const generateVictoryStamp = async (
     `,
       transparent: true,
       puppeteerArgs: {
-        args: ["--no-sandbox"],
+        args: ["--no-sandbox", "--enable-font-antialiasing"],
       },
     });
     const imagePath = await saveLocalFileToGBucket({
@@ -310,7 +309,7 @@ export const generateLossStamp = async (
     `,
       transparent: true,
       puppeteerArgs: {
-        args: ["--no-sandbox"],
+        args: ["--no-sandbox", "--enable-font-antialiasing"],
       },
     });
     const imagePath = await saveLocalFileToGBucket({
