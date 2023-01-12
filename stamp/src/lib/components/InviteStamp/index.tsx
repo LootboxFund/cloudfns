@@ -154,12 +154,9 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           style={{
             margin: "0",
             position: "absolute",
-            // top: "895.67px",
             bottom: "0px",
             left: "0px",
             width: "900px",
-            // height: "324px",
-            // height: "374px",
             flexShrink: "0",
             display: "flex",
             flexDirection: "row",
@@ -174,8 +171,6 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           <div
             style={{
               position: "relative",
-              // width: "300px",
-              // height: "324px",
               backgroundColor: "#ffffff",
               flexShrink: "0",
             }}
@@ -232,6 +227,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
                         fontSize: "140px",
                         fontWeight: "700",
                         fontFamily: "inherit",
+                        lineHeight: "110%",
                       }}
                     >
                       {val}
@@ -264,6 +260,8 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
                 fontSize: "56px",
                 fontWeight: "700",
                 fontFamily: "inherit",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
               }}
             >
               {props.teamName.slice(0, 20)}

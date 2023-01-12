@@ -16,6 +16,7 @@
     "local:dev": "yarn build && node dist/server.js",
     "local:render:simple": "npx ts-node ./demo/simple-ticket.ts",
     "local:render:invite": "npx ts-node ./demo/invite-stamp.ts",
+    "local:render:victory": "npx ts-node ./demo/victory-stamp.ts",
     "storybook": "start-storybook"
   },
   "keywords": [],

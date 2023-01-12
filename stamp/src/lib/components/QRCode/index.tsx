@@ -4,14 +4,16 @@ interface QRCodeProps {
   qrLink: string;
   width?: number;
   height?: number;
+  showURL?: boolean;
 }
 
 const QRCode: FunctionComponent<QRCodeProps> = ({
   qrLink,
   height = 300, // in px
   width = 300, // in px
+  showURL = true,
 }: QRCodeProps) => {
-  const urlSectionHeight = 30; // in px
+  const urlSectionHeight = showURL ? 30 : 0; // in px
   let shortURL = qrLink
     .replace("https://", "")
     .replace("http://", "")
@@ -27,20 +29,22 @@ const QRCode: FunctionComponent<QRCodeProps> = ({
         height: height + urlSectionHeight,
       }}
     >
-      <div
-        style={{
-          height: urlSectionHeight,
-          color: "#00AC1C",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          width: width,
-          fontFamily: "'Open Sans'",
-          fontSize: "20px",
-          fontWeight: 800,
-        }}
-      >
-        🔒 {shortURL}
-      </div>
+      {showURL && (
+        <div
+          style={{
+            height: urlSectionHeight,
+            color: "#00AC1C",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            width: width,
+            fontFamily: "'Open Sans'",
+            fontSize: "20px",
+            fontWeight: 800,
+          }}
+        >
+          🔒 {shortURL}
+        </div>
+      )}
       <img
         id="qrcode"
         // See their docs here: https://goqr.me/api/doc/create-qr-code/

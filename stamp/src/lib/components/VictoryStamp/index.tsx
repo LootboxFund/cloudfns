@@ -1,0 +1,488 @@
+import QRCode from "../QRCode";
+import { FunctionComponent } from "react";
+
+export interface VictoryStampProps {
+  coverPhoto: string;
+  sponsorLogos: string[];
+  teamName: string;
+  playerHeadshot?: string;
+  themeColor: string;
+  ticketValue: string;
+  qrCodeLink: string;
+}
+
+const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
+  const prizeValues = props.ticketValue
+    .slice(0, 20)
+    .split(/([\d,\.]+)/g)
+    .filter((v) => v !== "");
+  const hasNumber = prizeValues.some((v) => !isNaN(Number(v)));
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "1650px",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        textAlign: "left",
+        fontSize: "64px",
+        color: "rgba(255, 255, 255, 0.71)",
+        fontFamily: "'Open Sans'",
+      }}
+    >
+      <div
+        style={{
+          alignSelf: "stretch",
+          borderRadius: "100px 100px 0px 0px",
+          backgroundColor: props.themeColor,
+          height: "180px",
+          flexShrink: "0",
+          display: "flex",
+          flexDirection: "row",
+          padding: "30px 40px",
+          boxSizing: "border-box",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: "3",
+          textAlign: "center",
+          fontFamily: "'Fira Sans'",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            width: "820.69px",
+            height: "77px",
+            flexShrink: "0",
+          }}
+        >
+          <i
+            style={{
+              position: "absolute",
+              top: "0px",
+              left: "0px",
+              display: "inline-block",
+              fontWeight: "800",
+              width: "305.79px",
+            }}
+          >
+            LOOTBOX
+          </i>
+          <div
+            style={{
+              position: "absolute",
+              top: "4px",
+              left: "317.5px",
+              fontSize: "52px",
+              fontFamily: "'Open Sans'",
+              textAlign: "left",
+              display: "inline-block",
+              width: "503.19px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Gamers win you stuff 🎁
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          alignSelf: "stretch",
+          height: "1240px",
+          flexShrink: "0",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          position: "relative",
+          zIndex: "2",
+          fontSize: "300px",
+          color: "#fff",
+        }}
+      >
+        <img
+          style={{
+            alignSelf: "stretch",
+            flex: "1",
+            position: "relative",
+            maxWidth: "100%",
+            overflow: "hidden",
+            maxHeight: "100%",
+            objectFit: "cover",
+            zIndex: "0",
+          }}
+          alt=""
+          id="bg1"
+          src={props.coverPhoto}
+        />
+        <img
+          style={{
+            position: "absolute",
+            margin: "0",
+            bottom: "200px",
+            left: "40px",
+            maxWidth: "420px",
+            width: "100%",
+            maxHeight: "620px",
+            flexShrink: "0",
+            objectFit: "contain",
+            backgroundPosition: "center",
+            zIndex: "1",
+          }}
+          alt=""
+          id="headshot"
+          src={props.playerHeadshot}
+        />
+        <div
+          style={{
+            position: "absolute",
+            margin: "0",
+            top: "750px",
+            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor} 40.26%, ${props.themeColor} 75.33%)`,
+            width: "900px",
+            height: "493px",
+            flexShrink: "0",
+            zIndex: "2",
+          }}
+        />
+        <div
+          style={{
+            margin: "0",
+            position: "absolute",
+            top: "843.67px",
+            left: "0px",
+            width: "900px",
+            display: "flex",
+            flexDirection: "row",
+            boxSizing: "border-box",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            zIndex: "3",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              flex: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "16px",
+            }}
+          >
+            <h1
+              style={{
+                margin: "0",
+                position: "relative",
+                textAlign: "center",
+                flexShrink: "0",
+                fontSize: "inherit",
+                fontFamily: "inherit",
+                lineHeight: "100%",
+              }}
+            >
+              WIN
+            </h1>
+            <div
+              style={{
+                position: "relative",
+                width: "900px",
+                height: "110px",
+                flexShrink: "0",
+                fontSize: "90px",
+                fontFamily: "'Open Sans'",
+                textAlign: "center",
+              }}
+            >
+              <h3
+                style={{
+                  margin: "auto",
+                  position: "absolute",
+                  top: "-30px",
+                  left: "0px",
+                  fontSize: "inherit",
+                  fontWeight: "700",
+                  fontFamily: "inherit",
+                  width: "100%",
+                  textAlign: "center",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                }}
+              >
+                {props.teamName.slice(0, 18)}
+              </h3>
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            margin: "0",
+            top: "167px",
+            left: "901px",
+            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor} 50%, ${props.themeColor})`,
+            width: "902px",
+            height: "167px",
+            flexShrink: "0",
+            transform: " rotate(-180deg)",
+            transformOrigin: "0 0",
+            zIndex: "4",
+          }}
+        />
+        <div
+          style={{
+            margin: "0",
+            position: "absolute",
+            top: "0",
+            left: "60px",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            justifyContent: "flex-start",
+            zIndex: "5",
+            fontSize: "42px",
+          }}
+        >
+          {/* <div
+            style={{
+              alignSelf: "stretch",
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "flex-start",
+              justifyContent: "flex-start",
+              gap: "16px",
+            }}
+          >
+            <h6
+              style={{
+                margin: "0",
+                position: "relative",
+                fontSize: "inherit",
+                lineHeight: "103.68%",
+                fontWeight: "700",
+                fontFamily: "inherit",
+              }}
+            >
+              $
+            </h6>
+            <h2
+              style={{
+                margin: "0",
+                position: "relative",
+                fontSize: "250px",
+                lineHeight: "80%",
+                fontWeight: "700",
+                fontFamily: "inherit",
+              }}
+            >
+              50
+            </h2>
+            <h6
+              style={{
+                margin: "0",
+                position: "relative",
+                fontSize: "inherit",
+                fontWeight: "700",
+                fontFamily: "inherit",
+              }}
+            >
+              <span style={{ lineHeight: "103.68%" }}>{`USD `}</span>
+            </h6>
+          </div> */}
+          {prizeValues.map((val, idx) => {
+            const isBig = !hasNumber || !isNaN(Number(val));
+            if (isBig) {
+              return (
+                <h2
+                  key={`prize-value-${val}`}
+                  style={{
+                    margin: "0",
+                    position: "relative",
+                    fontSize: "140px",
+                    fontWeight: "700",
+                    fontFamily: "inherit",
+                    lineHeight: "110%",
+                  }}
+                >
+                  {val}
+                </h2>
+              );
+            } else {
+              return (
+                <h6
+                  key={`prize-value-${val}`}
+                  style={{
+                    margin: "0",
+                    position: "relative",
+                    fontSize: "inherit",
+                    fontWeight: "700",
+                    fontFamily: "inherit",
+                    ...(hasNumber && !isBig && { lineHeight: "100px" }),
+                  }}
+                >
+                  {val}
+                </h6>
+              );
+            }
+          })}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            margin: "0",
+            top: "-22.33px",
+            left: "541px",
+            boxShadow: `0px 4px 100px ${props.themeColor}`,
+            width: "334px",
+            height: "404.12px",
+            flexShrink: "0",
+            zIndex: "6",
+            fontSize: "48px",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: "0px",
+              left: "0px",
+              borderRadius: "20px",
+              backgroundColor: props.themeColor,
+              width: "334px",
+              height: "403.82px",
+            }}
+          />
+          <b
+            style={{
+              position: "absolute",
+              top: "338px",
+              left: "20px",
+              lineHeight: "103.68%",
+              fontWeight: "700",
+              display: "flex",
+              alignItems: "center",
+              width: "300px",
+              height: "55px",
+            }}
+          >
+            PLAY AGAIN
+          </b>
+          <div
+            style={{
+              position: "absolute",
+              top: "22px",
+              left: "17px",
+              width: "300px",
+              height: "324px",
+            }}
+          >
+            {/* <img
+              style={{
+                position: "absolute",
+                top: "0px",
+                left: "0px",
+                width: "300px",
+                height: "324px",
+                objectFit: "cover",
+              }}
+              alt=""
+              src="../rectangle-173@1x.png"
+            /> */}
+            <QRCode
+              qrLink={props.qrCodeLink}
+              width={300}
+              height={300}
+              showURL={false}
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          alignSelf: "stretch",
+          backgroundColor: props.themeColor,
+          height: "100px",
+          flexShrink: "0",
+          display: "flex",
+          flexDirection: "row",
+          padding: "0px 40px",
+          boxSizing: "border-box",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: "1",
+          fontSize: "18px",
+          color: "rgba(255, 255, 255, 0.5)",
+        }}
+      >
+        <p
+          style={{
+            margin: "0",
+            flex: "1",
+            position: "relative",
+            lineHeight: "110%",
+            display: "inline-block",
+          }}
+        >
+          Visit https://lootbox.tickets. This free fan ticket entitles the
+          holder to fan prizes up to the above value if this contestant wins a
+          predefined achievement. This is not redeemable as cash nor permitted
+          for sale.
+        </p>
+      </div>
+      <div
+        style={{
+          alignSelf: "stretch",
+          borderRadius: "0px 0px 38px 38px",
+          backgroundColor: props.themeColor,
+          height: "130px",
+          flexShrink: "0",
+          display: "flex",
+          flexDirection: "row",
+          padding: "20px 40px",
+          boxSizing: "border-box",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: "0",
+        }}
+      >
+        <div
+          style={{
+            flex: "1",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "20px",
+          }}
+        >
+          {props.sponsorLogos.slice(0, 4).map((logo, idx) => {
+            return (
+              <img
+                key={`sponsor-logo-${idx}`}
+                src={logo}
+                style={{
+                  maxWidth: "200px",
+                  flex: "1",
+                  position: "relative",
+                  maxHeight: "88px",
+                  height: "100%",
+                  objectFit: "contain",
+                  backgroundPosition: "center",
+                  filter: "grayscale(100%)",
+                  margin: "auto",
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VictoryStamp;

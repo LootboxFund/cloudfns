@@ -1,10 +1,10 @@
-import { generateInviteStamp } from "../src/lib/api/stamp";
+import { generateVictoryStamp } from "../src/lib/api/stamp";
 
 const demo = async () => {
   console.log(`Generating image...`);
   const now = new Date().valueOf();
   const tempLocalPath = `export/image_${now}.png`;
-  const linkToImage = await generateInviteStamp(tempLocalPath, {
+  const linkToImage = await generateVictoryStamp(tempLocalPath, {
     coverPhoto:
       "https://lexica-serve-encoded-images2.sharif.workers.dev/full_jpg/2f8a30cc-a1ae-475c-8b82-b91fd96316d7",
     teamName: "Big Boidem",
