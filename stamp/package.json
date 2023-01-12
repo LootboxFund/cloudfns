@@ -29,7 +29,7 @@
     "@types/express": "^4.17.13",
     "@types/react": "^17.0.22",
     "@types/react-dom": "^17.0.9",
-    "@wormgraph/helpers": "0.7.15",
+    "@wormgraph/helpers": "0.7.16",
     "@wormgraph/manifest": "0.7.14",
     "axios": "^0.26.0",
     "body-parser": "^1.19.2",
@@ -47,6 +47,7 @@
     "styled-components": "^5.3.3",
     "ts-loader": "^9.2.5",
     "typescript": "^4.4.3",
+    "uuid": "^9.0.0",
     "webpack": "^5.53.0",
     "webpack-cli": "^4.8.0",
     "webpack-node-externals": "^3.0.0"

@@ -10,6 +10,7 @@ import SimpleTicket, { SimpleTicketProps } from "../components/SimpleTicket";
 import InviteStamp, { InviteStampProps } from "../components/InviteStamp";
 import VictoryStamp, { VictoryStampProps } from "../components/VictoryStamp";
 import LossStamp, { LossStampProps } from "../components/LossStamp";
+import { v4 as uuidV4 } from "uuid";
 
 export const generateStaticElement = (props: TicketProps) =>
   ReactDOMServer.renderToStaticMarkup(
@@ -101,7 +102,7 @@ export const generateImage = async (path: string, props: TicketProps) => {
       },
     });
     const imagePath = await saveLocalFileToGBucket({
-      alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
+      // alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
       fileName: `${props.lootboxID}/lootbox.png`,
       bucket: manifest.storage.buckets.stamp.id,
@@ -140,7 +141,7 @@ export const generateTicketImage = async (path: string, props: TicketProps) => {
       },
     });
     const imagePath = await saveLocalFileToGBucket({
-      alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
+      // alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
       localFilePath: path,
       fileName: `${props.lootboxID}/${props.ticketID}.png`,
       bucket: manifest.storage.buckets.stamp.id,
@@ -183,13 +184,12 @@ export const generateSimpleTicket = async (
         args: ["--no-sandbox"],
       },
     });
-    // const imagePath = await saveLocalFileToGBucket({
-    //   alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
-    //   localFilePath: path,
-    //   fileName: `${props.lootboxID}/${props.ticketID}.png`,
-    //   bucket: manifest.storage.buckets.stamp.id,
-    // });
-    // return imagePath;
+    const imagePath = await saveLocalFileToGBucket({
+      localFilePath: path,
+      fileName: `stamp/simple/${uuidV4()}.png`,
+      bucket: manifest.storage.buckets.stamp.id,
+    });
+    return imagePath;
   } catch (e) {
     console.log(`--- BIG ERROR ---`);
     console.log(e);
@@ -227,13 +227,12 @@ export const generateInviteStamp = async (
         args: ["--no-sandbox"],
       },
     });
-    // const imagePath = await saveLocalFileToGBucket({
-    //   alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
-    //   localFilePath: path,
-    //   fileName: `${props.lootboxID}/${props.ticketID}.png`,
-    //   bucket: manifest.storage.buckets.stamp.id,
-    // });
-    // return imagePath;
+    const imagePath = await saveLocalFileToGBucket({
+      localFilePath: path,
+      fileName: `stamp/invite/${uuidV4()}.png`,
+      bucket: manifest.storage.buckets.stamp.id,
+    });
+    return imagePath;
   } catch (e) {
     console.log(`--- BIG ERROR ---`);
     console.log(e);
@@ -271,13 +270,12 @@ export const generateVictoryStamp = async (
         args: ["--no-sandbox"],
       },
     });
-    // const imagePath = await saveLocalFileToGBucket({
-    //   alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
-    //   localFilePath: path,
-    //   fileName: `${props.lootboxID}/${props.ticketID}.png`,
-    //   bucket: manifest.storage.buckets.stamp.id,
-    // });
-    // return imagePath;
+    const imagePath = await saveLocalFileToGBucket({
+      localFilePath: path,
+      fileName: `stamp/victory/${uuidV4()}.png`,
+      bucket: manifest.storage.buckets.stamp.id,
+    });
+    return imagePath;
   } catch (e) {
     console.log(`--- BIG ERROR ---`);
     console.log(e);
@@ -315,13 +313,12 @@ export const generateLossStamp = async (
         args: ["--no-sandbox"],
       },
     });
-    // const imagePath = await saveLocalFileToGBucket({
-    //   alias: `Image fosrc/actions/onLootboxURI/index.ts r ${props.name}`,
-    //   localFilePath: path,
-    //   fileName: `${props.lootboxID}/${props.ticketID}.png`,
-    //   bucket: manifest.storage.buckets.stamp.id,
-    // });
-    // return imagePath;
+    const imagePath = await saveLocalFileToGBucket({
+      localFilePath: path,
+      fileName: `stamp/loss/${uuidV4()}.png`,
+      bucket: manifest.storage.buckets.stamp.id,
+    });
+    return imagePath;
   } catch (e) {
     console.log(`--- BIG ERROR ---`);
     console.log(e);
