@@ -270,6 +270,7 @@ const LootboxResolvers: Resolvers = {
             airdropMetadata: payload.airdropMetadata
               ? (payload.airdropMetadata as AirdropMetadataCreateInput)
               : undefined,
+            isStampV2: payload.isStampV2 || false,
           },
           context.userId as unknown as UserID
         );

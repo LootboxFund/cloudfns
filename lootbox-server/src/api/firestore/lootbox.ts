@@ -12,6 +12,7 @@ import {
   CreateLootboxPayload,
   DepositVoucherRewardsPayload,
   VoucherDeposit,
+  CreateLootboxPayload_StampMetadata,
 } from "../../graphql/generated/types";
 import {
   Address,
@@ -667,6 +668,8 @@ interface MockLootboxInputPayload {
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
+  isStampV2?: boolean;
+  stampMetadata?: CreateLootboxPayload_StampMetadata;
 }
 
 interface MockLootboxInputPayloadOutput {
@@ -683,6 +686,8 @@ interface MockLootboxInputPayloadOutput {
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
+  isStampV2?: boolean;
+  stampMetadata?: CreateLootboxPayload_StampMetadata;
 }
 
 export const extractOrGenerateLootboxCreateInput = async (
@@ -730,6 +735,8 @@ export const extractOrGenerateLootboxCreateInput = async (
     airdropMetadata: payload.airdropMetadata
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)
       : undefined,
+    isStampV2: payload.isStampV2 ?? false,
+    stampMetadata: payload.stampMetadata,
   };
 };
 

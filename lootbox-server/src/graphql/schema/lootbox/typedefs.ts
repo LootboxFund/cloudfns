@@ -289,6 +289,10 @@ const LootboxTypeDefs = gql`
     ): GetVoucherOfDepositForFanResponse!
   }
 
+  input CreateLootboxPayload_StampMetadata {
+    playerHeadshot: String
+  }
+
   input CreateLootboxPayload {
     name: String
     description: String
@@ -302,6 +306,9 @@ const LootboxTypeDefs = gql`
     type: LootboxType
     isExclusiveLootbox: Boolean
     airdropMetadata: AirdropMetadataCreateInput
+    # if true, the lootbox will be created with the updated ticket design
+    isStampV2: Boolean
+    stampMetadata: CreateLootboxPayload_StampMetadata
   }
 
   input AirdropMetadataCreateInput {

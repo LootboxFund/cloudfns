@@ -14,7 +14,7 @@ import {
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
-import { stampNewLootbox } from "../api/stamp";
+import { stampNewLootbox, stampNewLootboxSimpleTicket } from "../api/stamp";
 import {
   createLootbox,
   CreateLootboxPayloadLocalType,
@@ -58,6 +58,7 @@ export interface CreateLootboxRequest {
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
+  isStampV2?: boolean;
 }
 
 export const create = async (
@@ -85,13 +86,26 @@ export const create = async (
     .doc() as DocumentReference<Lootbox_Firestore>;
 
   // stamp lootbox image
-  const stampImageUrl = await stampNewLootbox(stampSecret, {
-    backgroundImage: request.backgroundImage,
-    logoImage: request.logoImage,
-    themeColor: request.themeColor,
-    name: request.lootboxName,
-    lootboxID: lootboxDocumentRef.id as LootboxID,
-  });
+  let stampImageUrl: string;
+
+  if (_request.isStampV2) {
+    stampImageUrl = await stampNewLootboxSimpleTicket(stampSecret, {
+      coverPhoto: request.backgroundImage,
+      themeColor: request.themeColor,
+      teamName: request.lootboxName,
+      playerHeadshot: request.stampMetadata?.playerHeadshot ?? undefined,
+      /** @TODO fill these in with data */
+      sponsorLogos: [],
+    });
+  } else {
+    stampImageUrl = await stampNewLootbox(stampSecret, {
+      backgroundImage: request.backgroundImage,
+      logoImage: request.logoImage,
+      themeColor: request.themeColor,
+      name: request.lootboxName,
+      lootboxID: lootboxDocumentRef.id as LootboxID,
+    });
+  }
 
   const payload: CreateLootboxPayloadLocalType = {
     variant: LootboxVariant_Firestore.cosmic,
