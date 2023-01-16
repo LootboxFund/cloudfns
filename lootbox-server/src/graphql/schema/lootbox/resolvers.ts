@@ -271,6 +271,12 @@ const LootboxResolvers: Resolvers = {
               ? (payload.airdropMetadata as AirdropMetadataCreateInput)
               : undefined,
             isStampV2: payload.isStampV2 || false,
+            stampMetadata: payload.stampMetadata
+              ? {
+                  playerHeadshot:
+                    payload.stampMetadata.playerHeadshot ?? undefined,
+                }
+              : undefined,
           },
           context.userId as unknown as UserID
         );

@@ -59,6 +59,9 @@ export interface CreateLootboxRequest {
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
+  stampMetadata?: {
+    playerHeadshot?: string;
+  };
 }
 
 export const create = async (
