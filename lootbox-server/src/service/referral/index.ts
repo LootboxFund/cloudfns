@@ -17,8 +17,15 @@ import {
   getTournamentById,
   getUser,
 } from "../../api/firestore";
-import { ReferralType } from "../../graphql/generated/types";
+import { getRandomBackgroundFromLexicaHardcoded } from "../../api/lexica-images";
+import { getStampSecret } from "../../api/secrets";
+import { createInviteStamp } from "../../api/stamp";
+import {
+  InviteStampMetadata,
+  ReferralType,
+} from "../../graphql/generated/types";
 import { convertReferralTypeGQLToDB } from "../../lib/referral";
+import { manifest } from "../../manifest";
 
 interface CreateReferralServiceRequest {
   campaignName?: string | null;
@@ -27,6 +34,7 @@ interface CreateReferralServiceRequest {
   tournamentId: TournamentID;
   type?: ReferralType | null;
   lootboxID?: LootboxID | null;
+  stampMetadata?: InviteStampMetadata | null;
 }
 
 export const create = async (
@@ -111,6 +119,33 @@ export const create = async (
     }
   }
 
+  // create the stamp
+  let stampImageUrl: string | undefined;
+  try {
+    const [coverPhoto, stampSecret] = await Promise.all([
+      lootbox?.backgroundImage
+        ? lootbox.backgroundImage
+        : getRandomBackgroundFromLexicaHardcoded(),
+      getStampSecret(),
+    ]);
+
+    // stamp lootbox image
+    stampImageUrl = await createInviteStamp(stampSecret, {
+      coverPhoto,
+      themeColor: lootbox?.themeColor ?? "#000000",
+      teamName: lootbox?.name ?? payload.campaignName ?? "Player",
+      playerHeadshot: payload.stampMetadata?.playerHeadshot ?? undefined,
+
+      ticketValue: lootbox?.nftBountyValue ?? "Prizes",
+      qrCodeLink: `${manifest.microfrontends.webflow.referral}?r=${slug}`,
+
+      /** @TODO fill these in with data */
+      sponsorLogos: [],
+    });
+  } catch (err) {
+    console.error("Error creating stamp", err);
+  }
+
   const referral = await createReferral({
     slug,
     referrerId: referrerIdToSet,
@@ -124,6 +159,7 @@ export const create = async (
       : undefined,
 
     isPostCosmic: true,
+    inviteGraphic: stampImageUrl,
   });
 
   return referral;

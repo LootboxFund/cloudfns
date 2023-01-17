@@ -5,6 +5,8 @@ import {
   StampSimpleTicketProps,
   StampNewLootboxProps,
   StampNewLootboxResponse,
+  StampInviteTicketProps,
+  StampInviteTicketResponse,
 } from "@wormgraph/helpers";
 
 interface StampSimpleTicketPropsBE {
@@ -27,6 +29,45 @@ export const stampNewLootboxSimpleTicket = async (
     themeColor: props.themeColor,
   };
   const response = await axios.post<StampSimpleTicketResponse>(
+    manifest.cloudRun.containers.simpleLootboxStamp.fullRoute,
+    JSON.stringify(stampConfig),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        secret,
+      },
+    }
+  );
+
+  const { stamp } = response.data;
+  return stamp;
+};
+
+interface InviteStampPropsBE {
+  coverPhoto: string;
+  sponsorLogos: string[];
+  teamName: string;
+  playerHeadshot?: string;
+  themeColor: string;
+  ticketValue: string;
+  qrCodeLink: string;
+}
+
+export const createInviteStamp = async (
+  secret: string,
+  props: InviteStampPropsBE
+): Promise<string> => {
+  const stampConfig: StampInviteTicketProps = {
+    coverPhoto: props.coverPhoto,
+    sponsorLogos: props.sponsorLogos,
+    teamName: props.teamName,
+    playerHeadshot: props.playerHeadshot,
+    themeColor: props.themeColor,
+    ticketValue: props.ticketValue,
+    qrCodeLink: props.qrCodeLink,
+  };
+  const response = await axios.post<StampInviteTicketResponse>(
     manifest.cloudRun.containers.simpleLootboxStamp.fullRoute,
     JSON.stringify(stampConfig),
     {

@@ -89,6 +89,8 @@ const ReferralTypeDefs = gql`
     type: ReferralType
     isPostCosmic: Boolean
     seedLootbox: Lootbox
+    # URL to the player invite stamp
+    inviteGraphic: String
   }
 
   type ReferralResponseSuccess {
@@ -107,6 +109,10 @@ const ReferralTypeDefs = gql`
     lootboxID: ID # Optional
   }
 
+  input InviteStampMetadata {
+    playerHeadshot: String
+  }
+
   input CreateReferralPayload {
     campaignName: String
     tournamentId: ID!
@@ -115,6 +121,7 @@ const ReferralTypeDefs = gql`
     type: ReferralType # todo: make this required
     referrerId: ID # If null / undefined, uses the caller user id
     promoterId: ID # used for billing
+    inviteStampMetadata: InviteStampMetadata
   }
 
   input CompleteClaimPayload {

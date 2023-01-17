@@ -313,6 +313,7 @@ const ReferralResolvers: Resolvers = {
   },
 
   Mutation: {
+    /** @todo: refactor logic into service layer */
     bulkCreateReferral: async (
       _,
       { payload }: MutationBulkCreateReferralArgs,
