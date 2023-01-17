@@ -14,15 +14,15 @@ import {
   getTournamentById,
   updateTournament,
   UpdateTournamentPayload,
-} from "../api/firestore";
-import { Affiliate_Firestore } from "../api/firestore/affiliate.type";
-import { getRandomUserName } from "../api/lexica-images";
-import { TournamentVisibility } from "../graphql/generated/types";
-import { isInteger } from "../lib/number";
+} from "../../api/firestore";
+import { Affiliate_Firestore } from "../../api/firestore/affiliate.type";
+import { getRandomUserName } from "../../api/lexica-images";
+import { TournamentVisibility } from "../../graphql/generated/types";
+import { isInteger } from "../../lib/number";
 import {
   convertTournamentVisiblityDB,
   convertTournamentVisiblityGQL,
-} from "../lib/tournament";
+} from "../../lib/tournament";
 
 interface CreateTournamentServiceRequest {
   description: string;

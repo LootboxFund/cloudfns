@@ -14,7 +14,7 @@ import {
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
-import { stampNewLootbox, stampNewLootboxSimpleTicket } from "../api/stamp";
+import { stampNewLootbox, stampNewLootboxSimpleTicket } from "../../api/stamp";
 import {
   createLootbox,
   CreateLootboxPayloadLocalType,
@@ -27,21 +27,21 @@ import {
   getTournamentById,
   getUser,
   getWhitelistByDigest,
-} from "../api/firestore";
-import { getStampSecret } from "../api/secrets";
-import { db } from "../api/firebase";
+} from "../../api/firestore";
+import { getStampSecret } from "../../api/secrets";
+import { db } from "../../api/firebase";
 import { DocumentReference } from "firebase-admin/firestore";
 import { ethers } from "ethers";
-import { generateNonce, generateTicketDigest } from "../lib/whitelist";
-import { whitelistLootboxMintSignature } from "../lib/whitelist";
+import { generateNonce, generateTicketDigest } from "../../lib/whitelist";
+import { whitelistLootboxMintSignature } from "../../lib/whitelist";
 import {
   LootboxType,
   AirdropMetadataCreateInput,
   Tournament,
   LootboxStatus,
-} from "../graphql/generated/types";
-import { convertLootboxStatusGQLToDB } from "../lib/lootbox";
-import { isInteger } from "../lib/number";
+} from "../../graphql/generated/types";
+import { convertLootboxStatusGQLToDB } from "../../lib/lootbox";
+import { isInteger } from "../../lib/number";
 
 export interface CreateLootboxRequest {
   // passed in variables

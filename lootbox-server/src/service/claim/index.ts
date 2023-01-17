@@ -25,10 +25,10 @@ import {
   getUserClaimCountForLootbox,
   getUserClaimCountForTournament,
   createStartingClaim,
-} from "../api/firestore";
-import { IIdpUser } from "../api/identityProvider/interface";
-import { ReferralType } from "../graphql/generated/types";
-import { convertClaimPrivacyScopeGQLToDB } from "../lib/referral";
+} from "../../api/firestore";
+import { IIdpUser } from "../../api/identityProvider/interface";
+import { ReferralType } from "../../graphql/generated/types";
+import { convertClaimPrivacyScopeGQLToDB } from "../../lib/referral";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed

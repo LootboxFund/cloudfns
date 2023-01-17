@@ -4,13 +4,13 @@ import {
   User_Firestore,
 } from "@wormgraph/helpers";
 import { Timestamp } from "firebase-admin/firestore";
-import { createUser, getUser } from "../api/firestore";
-import identityProvider from "../api/identityProvider";
+import { createUser, getUser } from "../../api/firestore";
+import identityProvider from "../../api/identityProvider";
 import {
   getRandomPortraitFromLexicaHardcoded,
   getRandomUserName,
-} from "../api/lexica-images";
-import { formatEmail } from "../lib/utils";
+} from "../../api/lexica-images";
+import { formatEmail } from "../../lib/utils";
 
 type CreateUserServiceRequestAuthOpts =
   | {
