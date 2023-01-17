@@ -25,6 +25,14 @@
       "project": "lootbox-fund-staging",
       "rewrites": [
         {
+          "source": "/play",
+          "destination": "/play/index.html"
+        },
+        {
+          "source": "/play/**",
+          "destination": "/play/index.html"
+        },
+        {
           "source": "/host",
           "destination": "/host/index.html"
         },
