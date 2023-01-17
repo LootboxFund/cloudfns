@@ -592,6 +592,7 @@ const ReferralResolvers: Resolvers = {
             tournamentId: payload.tournamentId as TournamentID,
             type: payload.type,
             lootboxID: payload.lootboxID as LootboxID | null | undefined,
+            stampMetadata: payload.inviteStampMetadata,
           },
           context.userId as unknown as UserID
         );

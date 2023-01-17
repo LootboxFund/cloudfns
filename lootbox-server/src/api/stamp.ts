@@ -68,7 +68,7 @@ export const createInviteStamp = async (
     qrCodeLink: props.qrCodeLink,
   };
   const response = await axios.post<StampInviteTicketResponse>(
-    manifest.cloudRun.containers.simpleLootboxStamp.fullRoute,
+    manifest.cloudRun.containers.inviteStamp.fullRoute,
     JSON.stringify(stampConfig),
     {
       method: "POST",
