@@ -138,8 +138,8 @@ const LossStamp: FunctionComponent<LossStampProps> = (props) => {
           style={{
             position: "absolute",
             margin: "0",
-            bottom: "260px",
-            left: "40px",
+            bottom: "120px",
+            left: "0px",
             maxWidth: "420px",
             width: "100%",
             maxHeight: "520px",
