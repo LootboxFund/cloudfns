@@ -197,14 +197,23 @@ router.post(
         });
       }
       const tempLocalPath = `/tmp/image.png`;
-      const { coverPhoto, sponsorLogos, teamName, playerHeadshot, themeColor } =
-        req.body;
+      const {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        eventName,
+        hostName,
+      } = req.body;
       const linkToImage = await generateSimpleTicket(tempLocalPath, {
         coverPhoto,
         sponsorLogos,
         teamName,
         playerHeadshot,
         themeColor,
+        eventName,
+        hostName,
       });
       res.json({
         message: "Created stamp!",
@@ -246,6 +255,8 @@ router.post(
         themeColor,
         ticketValue,
         qrCodeLink,
+        eventName,
+        hostName,
       } = req.body;
       const linkToImage = await generateInviteStamp(tempLocalPath, {
         coverPhoto,
@@ -255,6 +266,8 @@ router.post(
         themeColor,
         ticketValue,
         qrCodeLink,
+        eventName,
+        hostName,
       });
       res.json({
         message: "Created invite stamp!",
@@ -296,6 +309,8 @@ router.post(
         themeColor,
         ticketValue,
         qrCodeLink,
+        eventName,
+        hostName,
       } = req.body;
       const linkToImage = await generateVictoryStamp(tempLocalPath, {
         coverPhoto,
@@ -305,6 +320,8 @@ router.post(
         themeColor,
         ticketValue,
         qrCodeLink,
+        eventName,
+        hostName,
       });
       res.json({
         message: "Created victory stamp!",
@@ -346,6 +363,8 @@ router.post(
         themeColor,
         ticketValue,
         qrCodeLink,
+        eventName,
+        hostName,
       } = req.body;
       const linkToImage = await generateLossStamp(tempLocalPath, {
         coverPhoto,
@@ -355,6 +374,8 @@ router.post(
         themeColor,
         ticketValue,
         qrCodeLink,
+        eventName,
+        hostName,
       });
       res.json({
         message: "Created loss stamp!",
