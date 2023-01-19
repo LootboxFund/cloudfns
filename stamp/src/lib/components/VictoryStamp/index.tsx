@@ -1,6 +1,7 @@
 import QRCode from "../QRCode";
 import { FunctionComponent } from "react";
 import LogoSection from "../LogoSection";
+import { LOGO_URL } from "../../../constants";
 
 export interface VictoryStampProps {
   coverPhoto: string;
@@ -41,7 +42,7 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
         alignItems: "center",
         justifyContent: "space-between",
         textAlign: "left",
-        fontSize: "64px",
+        fontSize: "68px",
         color: "rgba(255, 255, 255, 0.71)",
         fontFamily: "'Open Sans'",
       }}
@@ -90,7 +91,7 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
               position: "absolute",
               top: "8px",
               left: "317.5px",
-              fontSize: "42px",
+              fontSize: "44px",
               fontFamily: "'Open Sans'",
               textAlign: "left",
               display: "inline-block",
@@ -99,7 +100,16 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
               zIndex: 5,
             }}
           >
-            Gamers win you stuff 🎁
+            Gamers win you stuff&nbsp;&nbsp;
+            <img
+              src={LOGO_URL}
+              alt="Lootbox"
+              style={{
+                marginBottom: "-10px",
+                height: "50px",
+                width: "50px",
+              }}
+            />
           </div>
         </div>
       </div>

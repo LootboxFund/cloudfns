@@ -1,4 +1,5 @@
 import { FunctionComponent } from "react";
+import { LOGO_URL } from "../../../constants";
 import LogoSection from "../LogoSection";
 
 export interface SimpleTicketProps {
@@ -150,30 +151,63 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           lineHeight: "57px",
         }}
       >
-        <span
+        <div
           style={{
-            opacity: 0.5,
-            width: "50%",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
+            flex: "1",
+            height: "100%",
+            position: "relative",
             textAlign: "left",
+            fontFamily: "'Fira Sans'",
+            marginTop: "-24px",
           }}
         >
-          Powered by&nbsp;
-          <span
+          <strong
             style={{
-              fontFamily: "'Fira Sans'",
+              position: "absolute",
+              top: "0px",
+              left: "0px",
+              display: "inline-block",
+              fontStyle: "italic",
+              fontWeight: "800",
+              whiteSpace: "nowrap",
+              opacity: 0.5,
             }}
           >
-            LOOTBOX
-          </span>
-        </span>
+            LOOTBOX&nbsp;
+            <img
+              src={LOGO_URL}
+              alt="Lootbox Fan Tickets"
+              style={{
+                height: "42px",
+                width: "42px",
+                marginBottom: "-10px",
+                fontSize: "20px",
+                fontWeight: "normal",
+                filter: "grayscale(100%)",
+              }}
+            />
+          </strong>
+          <p
+            style={{
+              margin: "0",
+              position: "absolute",
+              top: "32px",
+              left: "0px",
+              fontFamily: "'Open Sans'",
+              display: "inline-block",
+              opacity: 0.5,
+              fontSize: "22px",
+            }}
+          >
+            Gamers win you stuff
+          </p>
+        </div>
 
         {(props.eventName || props.hostName) && (
           <span
             style={{
               opacity: 0.5,
-              width: "50%",
+              width: "70%",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textAlign: "right",
@@ -182,93 +216,8 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             {props.eventName || props.hostName}
           </span>
         )}
-
-        {/* <div
-          style={{
-            flex: "1",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "23px",
-          }}
-        >
-          <div
-            style={{
-              position: "relative",
-              display: "inline-block",
-              width: "358px",
-              flexShrink: "0",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span style={{ fontWeight: "800" }}>🎁</span>
-            <i style={{ fontWeight: "800" }}> LOOTBOX</i>
-          </div>
-          <div
-            style={{
-              position: "relative",
-              fontSize: "42px",
-              fontFamily: "'Open Sans'",
-              textAlign: "left",
-            }}
-          >
-            Gamers win you stuff
-          </div>
-        </div> */}
       </div>
 
-      {/* <div
-        style={{
-          alignSelf: "stretch",
-          backgroundColor: props.themeColor,
-          height: "110px",
-          flexShrink: "0",
-          display: "flex",
-          flexDirection: "row",
-          padding: "26px 50px 10px",
-          boxSizing: "border-box",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: "1",
-          fontSize: "62px",
-          fontFamily: "'Fira Sans'",
-        }}
-      >
-        <div
-          style={{
-            flex: "1",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "23px",
-          }}
-        >
-          <div
-            style={{
-              position: "relative",
-              display: "inline-block",
-              width: "358px",
-              flexShrink: "0",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span style={{ fontWeight: "800" }}>🎁</span>
-            <i style={{ fontWeight: "800" }}> LOOTBOX</i>
-          </div>
-          <div
-            style={{
-              position: "relative",
-              fontSize: "42px",
-              fontFamily: "'Open Sans'",
-              textAlign: "left",
-            }}
-          >
-            Gamers win you stuff
-          </div>
-        </div>
-      </div> */}
       <LogoSection
         logoUrls={props.sponsorLogos}
         backgroundColor={props.themeColor}

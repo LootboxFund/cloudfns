@@ -1,6 +1,7 @@
 import QRCode from "../QRCode";
 import { FunctionComponent } from "react";
 import LogoSection from "../LogoSection";
+import { LOGO_URL } from "../../../constants";
 
 export interface InviteStampProps {
   coverPhoto: string;
@@ -98,7 +99,18 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
               whiteSpace: "nowrap",
             }}
           >
-            LOOTBOX <span style={{ fontStyle: "normal" }}>🎁</span>
+            LOOTBOX&nbsp;
+            <img
+              src={LOGO_URL}
+              alt="Lootbox Fan Tickets"
+              style={{
+                height: "72px",
+                width: "72px",
+                marginBottom: "-10px",
+                fontSize: "20px",
+                fontWeight: "normal",
+              }}
+            />
           </strong>
           <p
             style={{

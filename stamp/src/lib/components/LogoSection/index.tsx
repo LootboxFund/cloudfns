@@ -31,7 +31,7 @@ const LogoSection = ({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: "20px",
+          gap: "24px",
         }}
       >
         {logoUrls.slice(0, 4).map((logo, idx) => {
