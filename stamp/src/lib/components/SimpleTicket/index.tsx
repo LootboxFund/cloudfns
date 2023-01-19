@@ -37,21 +37,6 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
     >
       <div
         style={{
-          position: "absolute",
-          margin: "0",
-          top: "340px",
-          left: "900px",
-          background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}BB 50%, ${props.themeColor})`,
-          width: "900px",
-          height: "167px",
-          flexShrink: "0",
-          transform: " rotate(-180deg)",
-          transformOrigin: "0 0",
-          zIndex: "4",
-        }}
-      />
-      <div
-        style={{
           alignSelf: "stretch",
           borderRadius: "100px 100px 0px 0px",
           backgroundColor: props.themeColor,
@@ -82,7 +67,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
       <div
         style={{
           alignSelf: "stretch",
-          height: "1230px",
+          height: "1260px",
           flexShrink: "0",
           display: "flex",
           flexDirection: "column",
@@ -149,34 +134,52 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
         style={{
           alignSelf: "stretch",
           backgroundColor: props.themeColor,
-          height: "110px",
+          height: "80px",
           flexShrink: "0",
           display: "flex",
           flexDirection: "row",
-          padding: "26px 50px 10px",
+          padding: "26px 40px 10px",
           boxSizing: "border-box",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
           zIndex: "1",
           fontFamily: "Open Sans",
           fontStyle: "normal",
           fontWeight: 400,
-          fontSize: "38px",
+          fontSize: "34px",
           lineHeight: "57px",
         }}
       >
-        {tournamentLine ? (
-          <span style={{ opacity: 0.5 }}>{tournamentLine}</span>
-        ) : (
-          <span style={{ opacity: 0.5 }}>
-            Powered by&nbsp;
-            <span
-              style={{
-                fontFamily: "'Fira Sans'",
-              }}
-            >
-              LOOTBOX
-            </span>
+        <span
+          style={{
+            opacity: 0.5,
+            width: "50%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textAlign: "left",
+          }}
+        >
+          Powered by&nbsp;
+          <span
+            style={{
+              fontFamily: "'Fira Sans'",
+            }}
+          >
+            LOOTBOX
+          </span>
+        </span>
+
+        {(props.eventName || props.hostName) && (
+          <span
+            style={{
+              opacity: 0.5,
+              width: "50%",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textAlign: "right",
+            }}
+          >
+            {props.eventName || props.hostName}
           </span>
         )}
 
