@@ -22,7 +22,7 @@ const Template = () => {
           "https://uploads-ssl.webflow.com/63bd0f8e51e48f5336cc7adb/63c1b38e4fdd781b6a729125_image%20129%20(Traced).png",
           "https://uploads-ssl.webflow.com/63bd0f8e51e48f5336cc7adb/63c1b3446e8f58197256869a_download-removebg-preview%20(1)%201%20(Traced).png",
         ]}
-        teamName={"Big Boidem"}
+        teamName={"Team Marvelous Masters"}
         themeColor={"#9f5497"}
         // themeColor={"#A3D11A"}
         // playerHeadshot={

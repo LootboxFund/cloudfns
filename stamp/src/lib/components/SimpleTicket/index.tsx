@@ -11,6 +11,7 @@ export interface SimpleTicketProps {
   eventName?: string;
   hostName?: string;
 }
+
 const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
   const tournamentLine =
     props.eventName && props.hostName
@@ -20,6 +21,18 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
       : props.hostName
       ? `${props.hostName}`
       : undefined;
+  const teamNameSize =
+    props.teamName.length > 30
+      ? "40px"
+      : props.teamName.length > 22
+      ? "60px"
+      : props.teamName.length > 18
+      ? "80px"
+      : props.teamName.length > 12
+      ? "90px"
+      : props.teamName.length > 8
+      ? "100px"
+      : "110px";
   return (
     <div
       style={{
@@ -54,12 +67,13 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
       >
         <h2
           style={{
-            margin: "0",
+            margin: "0px 20px",
             flex: "1",
             position: "relative",
             fontWeight: "700",
             fontFamily: "inherit",
-            fontSize: "100px",
+            // fontSize: "100px",
+            fontSize: teamNameSize,
             whiteSpace: "nowrap",
             overflow: "hidden",
           }}
