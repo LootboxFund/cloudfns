@@ -99,6 +99,11 @@ const LootboxTypeDefs = gql`
     isExclusiveLootbox: Boolean
   }
 
+  type LootboxStampMetadata {
+    playerHeadshot: String
+    logoURLs: [String!]
+  }
+
   type Lootbox {
     # Immutable stuff
     id: ID!
@@ -136,6 +141,7 @@ const LootboxTypeDefs = gql`
     type: LootboxType
     airdropMetadata: LootboxAirdropMetadata
     airdropQuestions: [LootboxAirdropMetadataQuestion!]
+    stampMetadata: LootboxStampMetadata
 
     # GQL layer
     userClaims(

@@ -128,6 +128,12 @@ export const create = async (
     airdropMetadata: request.airdropMetadata,
     maxTicketsPerUser: tournament?.safetyFeatures?.seedMaxLootboxTicketsPerUser,
     isExclusiveLootbox: request.isExclusiveLootbox,
+    stampMetadata: _request.isStampV2
+      ? {
+          playerHeadshot: request.stampMetadata?.playerHeadshot ?? null,
+          logoURLs: [],
+        }
+      : undefined,
   };
 
   validateCreateLootboxPayload(payload);

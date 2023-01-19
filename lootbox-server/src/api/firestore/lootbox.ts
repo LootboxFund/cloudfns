@@ -43,6 +43,7 @@ import {
   Deposit_Firestore,
   DepositID,
   LootboxSafetyFeatures_Firestore,
+  StampMetadata_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID, UserIdpID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -449,6 +450,7 @@ export interface CreateLootboxPayloadLocalType {
   airdropMetadata?: AirdropMetadataCreateInput;
   maxTicketsPerUser?: number;
   isExclusiveLootbox?: boolean;
+  stampMetadata?: StampMetadata_Firestore | null;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -505,6 +507,9 @@ export const createLootbox = async (
   };
   if (payload.type) {
     lootboxPayload.type = payload.type;
+  }
+  if (payload.stampMetadata) {
+    lootboxPayload.stampMetadata = payload.stampMetadata;
   }
   if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
     const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([

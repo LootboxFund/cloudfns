@@ -191,7 +191,7 @@ export const convertLootboxStatusGQLToDB = (
 
 export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
   if (lootbox.variant === LootboxVariant_Firestore.cosmic) {
-    const data = {
+    const data: Lootbox = {
       id: lootbox.id,
       address: lootbox.address,
       factory: lootbox.factory,
@@ -228,11 +228,12 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
           lootbox?.safetyFeatures?.isExclusiveLootbox || false,
         maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
       },
+      stampMetadata: lootbox?.stampMetadata ?? null,
     };
     if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
-      // @ts-ignore
       data.airdropMetadata = {
         lootboxID: lootbox.airdropMetadata.lootboxID,
+        // @ts-ignore
         batch: lootbox.airdropMetadata.batch,
         offerID: lootbox.airdropMetadata.offerID,
         title: lootbox.airdropMetadata.title,
@@ -244,6 +245,7 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
         callToActionLink: lootbox.airdropMetadata.callToActionLink,
         tournamentID: lootbox.airdropMetadata.tournamentID,
         organizerID: lootbox.airdropMetadata.organizerID,
+        // @ts-ignore
         advertiserID: lootbox.airdropMetadata.advertiserID,
         advertiserName: lootbox.airdropMetadata.advertiserName,
         questions: lootbox.airdropMetadata.questions,
