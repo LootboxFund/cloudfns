@@ -10,6 +10,8 @@ export interface InviteStampProps {
   themeColor: string;
   ticketValue: string;
   qrCodeLink: string;
+  eventName?: string;
+  hostName?: string;
 }
 
 const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
@@ -145,7 +147,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             // top: "767px",
             background:
               "linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(26, 26, 26, 0.54) 40.26%, #1a1a1a 75.33%)",
-            width: "902px",
+            width: "900px",
             height: "493px",
             flexShrink: "0",
             zIndex: "1",
@@ -269,6 +271,21 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             </h3>
           </div>
         </div>
+        <div
+          style={{
+            position: "absolute",
+            margin: "0",
+            top: "167px",
+            left: "900px",
+            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}BB 50%, ${props.themeColor})`,
+            width: "900px",
+            height: "167px",
+            flexShrink: "0",
+            transform: " rotate(-180deg)",
+            transformOrigin: "0 0",
+            zIndex: "4",
+          }}
+        />
         {props.playerHeadshot && (
           <img
             style={{

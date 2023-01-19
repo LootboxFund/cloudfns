@@ -3,12 +3,22 @@ import LogoSection from "../LogoSection";
 
 export interface SimpleTicketProps {
   coverPhoto: string;
-  sponsorLogos: string[];
   teamName: string;
   playerHeadshot?: string;
   themeColor: string;
+  sponsorLogos: string[];
+  eventName?: string;
+  hostName?: string;
 }
 const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
+  const tournamentLine =
+    props.eventName && props.hostName
+      ? `${props.eventName} hosted by ${props.hostName}`
+      : props.eventName
+      ? `${props.eventName}`
+      : props.hostName
+      ? `${props.hostName}`
+      : undefined;
   return (
     <div
       style={{
@@ -25,6 +35,21 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
         fontFamily: "'Open Sans'",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          margin: "0",
+          top: "340px",
+          left: "900px",
+          background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}BB 50%, ${props.themeColor})`,
+          width: "900px",
+          height: "167px",
+          flexShrink: "0",
+          transform: " rotate(-180deg)",
+          transformOrigin: "0 0",
+          zIndex: "4",
+        }}
+      />
       <div
         style={{
           alignSelf: "stretch",
@@ -82,6 +107,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           id="bg1"
           src={props.coverPhoto}
         />
+
         {props.playerHeadshot && (
           <img
             style={{
@@ -118,7 +144,78 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           }}
         />
       </div>
+
       <div
+        style={{
+          alignSelf: "stretch",
+          backgroundColor: props.themeColor,
+          height: "110px",
+          flexShrink: "0",
+          display: "flex",
+          flexDirection: "row",
+          padding: "26px 50px 10px",
+          boxSizing: "border-box",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: "1",
+          fontFamily: "Open Sans",
+          fontStyle: "normal",
+          fontWeight: 400,
+          fontSize: "38px",
+          lineHeight: "57px",
+        }}
+      >
+        {tournamentLine ? (
+          <span style={{ opacity: 0.5 }}>{tournamentLine}</span>
+        ) : (
+          <span style={{ opacity: 0.5 }}>
+            Powered by&nbsp;
+            <span
+              style={{
+                fontFamily: "'Fira Sans'",
+              }}
+            >
+              LOOTBOX
+            </span>
+          </span>
+        )}
+
+        {/* <div
+          style={{
+            flex: "1",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "23px",
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              display: "inline-block",
+              width: "358px",
+              flexShrink: "0",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ fontWeight: "800" }}>🎁</span>
+            <i style={{ fontWeight: "800" }}> LOOTBOX</i>
+          </div>
+          <div
+            style={{
+              position: "relative",
+              fontSize: "42px",
+              fontFamily: "'Open Sans'",
+              textAlign: "left",
+            }}
+          >
+            Gamers win you stuff
+          </div>
+        </div> */}
+      </div>
+
+      {/* <div
         style={{
           alignSelf: "stretch",
           backgroundColor: props.themeColor,
@@ -168,7 +265,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             Gamers win you stuff
           </div>
         </div>
-      </div>
+      </div> */}
       <LogoSection
         logoUrls={props.sponsorLogos}
         backgroundColor={props.themeColor}
