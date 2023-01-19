@@ -2,6 +2,7 @@ import QRCode from "../QRCode";
 import { FunctionComponent } from "react";
 import LogoSection from "../LogoSection";
 import { LOGO_URL } from "../../../constants";
+import { parsePrizeLine } from "../utils";
 
 export interface VictoryStampProps {
   coverPhoto: string;
@@ -16,11 +17,8 @@ export interface VictoryStampProps {
 }
 
 const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
-  const prizeValues = props.ticketValue
-    .slice(0, 20)
-    .split(/([\d,\.]+)/g)
-    .filter((v) => v !== "");
-  const hasNumber = prizeValues.some((v) => !isNaN(Number(v)));
+  const prizeParts = parsePrizeLine(props.ticketValue ?? "");
+
   const tournamentLine =
     props.eventName && props.hostName
       ? `${props.eventName} hosted by ${props.hostName}`
@@ -271,44 +269,59 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
             justifyContent: "flex-start",
             zIndex: "5",
             fontSize: "42px",
+            maxWidth: "460px",
+            gap: "16px",
           }}
         >
-          {prizeValues.map((val, idx) => {
-            const isBig = !hasNumber || !isNaN(Number(val));
-            if (isBig) {
-              return (
-                <h2
-                  key={`prize-value-${val}`}
-                  style={{
-                    margin: "0",
-                    position: "relative",
-                    fontSize: "140px",
-                    fontWeight: "700",
-                    fontFamily: "inherit",
-                    lineHeight: "110%",
-                  }}
-                >
-                  {val}
-                </h2>
-              );
-            } else {
-              return (
-                <h6
-                  key={`prize-value-${val}`}
-                  style={{
-                    margin: "0",
-                    position: "relative",
-                    fontSize: "inherit",
-                    fontWeight: "700",
-                    fontFamily: "inherit",
-                    ...(hasNumber && !isBig && { lineHeight: "100px" }),
-                  }}
-                >
-                  {val}
-                </h6>
-              );
-            }
-          })}
+          {prizeParts.smallPrefix && (
+            <h6
+              key={`prize-value-cc`}
+              style={{
+                margin: "0",
+                position: "relative",
+                fontSize: "inherit",
+                fontWeight: "700",
+                fontFamily: "inherit",
+                // ...(hasNumber && !isBig && { lineHeight: "100px" }),
+                alignSelf: "center",
+              }}
+            >
+              {prizeParts.smallPrefix}
+            </h6>
+          )}
+
+          {prizeParts.leadingNumber && (
+            <h2
+              key={`prize-value-bb`}
+              style={{
+                margin: "0",
+                position: "relative",
+                fontSize: "140px",
+                fontWeight: "700",
+                fontFamily: "inherit",
+                lineHeight: "110%",
+              }}
+            >
+              {prizeParts.leadingNumber}
+            </h2>
+          )}
+
+          {prizeParts.smallText && (
+            <h6
+              key={`prize-value-mt`}
+              style={{
+                margin: "0",
+                position: "relative",
+                fontSize: "inherit",
+                fontWeight: "700",
+                fontFamily: "inherit",
+                // ...(hasNumber && !isBig && { lineHeight: "100px" }),
+                alignSelf: "center",
+              }}
+            >
+              {prizeParts.smallText}
+            </h6>
+          )}
         </div>
         <div
           style={{

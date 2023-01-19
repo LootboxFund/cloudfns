@@ -60,9 +60,11 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             fontWeight: "700",
             fontFamily: "inherit",
             fontSize: "100px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
           }}
         >
-          {props.teamName.slice(0, 18)}
+          {props.teamName}
         </h2>
       </div>
       <div

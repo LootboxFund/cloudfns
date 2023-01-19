@@ -2,6 +2,7 @@ import QRCode from "../QRCode";
 import { FunctionComponent } from "react";
 import LogoSection from "../LogoSection";
 import { LOGO_URL } from "../../../constants";
+import { parsePrizeLine } from "../utils";
 
 export interface InviteStampProps {
   coverPhoto: string;
@@ -16,11 +17,8 @@ export interface InviteStampProps {
 }
 
 const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
-  const prizeValues = props.ticketValue
-    .slice(0, 20)
-    .split(/([\d,\.]+)/g)
-    .filter((v) => v !== "");
-  const hasNumber = prizeValues.some((v) => !isNaN(Number(v)));
+  const prizeParts = parsePrizeLine(props.ticketValue ?? "");
+
   const tournamentLine =
     props.eventName && props.hostName
       ? `${props.eventName} hosted by ${props.hostName}`
@@ -164,7 +162,6 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           style={{
             position: "absolute",
             margin: "0",
-            // top: "767px",
             background:
               "linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(26, 26, 26, 0.54) 40.26%, #1a1a1a 75.33%)",
             width: "900px",
@@ -208,6 +205,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
+              maxWidth: "500px",
             }}
           >
             <h6
@@ -236,44 +234,59 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
                 justifyContent: "flex-start",
                 gap: "16px",
                 fontSize: "42px",
+                minHeight: "150px",
+                // whiteSpace: "nowrap",
+                // overflow: "hidden",
               }}
             >
-              {prizeValues.map((val, idx) => {
-                const isBig = !hasNumber || !isNaN(Number(val));
-                if (isBig) {
-                  return (
-                    <h2
-                      key={`prize-value-${val}`}
-                      style={{
-                        margin: "0",
-                        position: "relative",
-                        fontSize: "140px",
-                        fontWeight: "700",
-                        fontFamily: "inherit",
-                        lineHeight: "110%",
-                      }}
-                    >
-                      {val}
-                    </h2>
-                  );
-                } else {
-                  return (
-                    <h6
-                      key={`prize-value-${val}`}
-                      style={{
-                        margin: "0",
-                        position: "relative",
-                        fontSize: "inherit",
-                        fontWeight: "700",
-                        fontFamily: "inherit",
-                        ...(hasNumber && !isBig && { lineHeight: "100px" }),
-                      }}
-                    >
-                      {val}
-                    </h6>
-                  );
-                }
-              })}
+              {prizeParts.smallPrefix && (
+                <h6
+                  key={`prize-value-sm-prefix`}
+                  style={{
+                    margin: "0",
+                    position: "relative",
+                    fontSize: "inherit",
+                    fontWeight: "700",
+                    fontFamily: "inherit",
+                    // ...(hasNumber && !isBig && { lineHeight: "100px" }),
+                    alignSelf: "center",
+                  }}
+                >
+                  {prizeParts.smallPrefix}
+                </h6>
+              )}
+              {prizeParts.leadingNumber && (
+                <h2
+                  key={`prize-value-leading-number`}
+                  style={{
+                    margin: "0",
+                    position: "relative",
+                    fontSize: "140px",
+                    fontWeight: "700",
+                    fontFamily: "inherit",
+                    lineHeight: "110%",
+                    alignSelf: "center",
+                  }}
+                >
+                  {prizeParts.leadingNumber}
+                </h2>
+              )}
+              {prizeParts.smallText && (
+                <h6
+                  key={`prize-value-sm-text`}
+                  style={{
+                    margin: "0",
+                    position: "relative",
+                    fontSize: "inherit",
+                    fontWeight: "700",
+                    fontFamily: "inherit",
+                    // ...(hasNumber && !isBig && { lineHeight: "100px" }),
+                    alignSelf: "center",
+                  }}
+                >
+                  {prizeParts.smallText}
+                </h6>
+              )}
             </div>
             <h3
               style={{
@@ -285,34 +298,19 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
                 fontFamily: "inherit",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              {props.teamName.slice(0, 20)}
+              {props.teamName}
             </h3>
           </div>
         </div>
-        {/* <div
-          style={{
-            position: "absolute",
-            margin: "0",
-            top: "167px",
-            left: "900px",
-            background: `linear-gradient(180deg, rgba(0, 0, 0, 0), ${props.themeColor}BB 50%, ${props.themeColor})`,
-            width: "900px",
-            height: "167px",
-            flexShrink: "0",
-            transform: " rotate(-180deg)",
-            transformOrigin: "0 0",
-            zIndex: "4",
-          }}
-        /> */}
         {props.playerHeadshot && (
           <img
             style={{
               position: "absolute",
               margin: "0",
               bottom: "330px",
-              // left: "calc(50% - 450px)",
               left: "40px", // takes left padding into account from QR code
               maxWidth: "300px",
               width: "100%",

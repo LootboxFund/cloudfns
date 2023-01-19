@@ -26,7 +26,9 @@ const Template = () => {
         // }
         playerHeadshot="https://storage.googleapis.com/lootbox-constants-staging/assets/space-girl-headshot-removebg-preview.png"
         qrCodeLink="https://go.lootbox.fund/r?r=12345678"
-        ticketValue={"2.1 ETH"}
+        // ticketValue={"2.1 ETH"}
+        // ticketValue={"3 FREE Jollibee Fried Chicken Sandwiches"}
+        ticketValue={"$50 USD (out of 100)"}
         eventName="Chaos Regime Sports META"
         hostName="Magneetus Jones III"
       />
