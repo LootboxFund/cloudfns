@@ -297,6 +297,7 @@ const LootboxTypeDefs = gql`
 
   input CreateLootboxPayload_StampMetadata {
     playerHeadshot: String
+    logoURLs: [String!]
   }
 
   input CreateLootboxPayload {

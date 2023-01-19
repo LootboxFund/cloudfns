@@ -61,6 +61,7 @@ export interface CreateLootboxRequest {
   isStampV2?: boolean;
   stampMetadata?: {
     playerHeadshot?: string;
+    logoURLs?: string[];
   };
 }
 
@@ -97,8 +98,8 @@ export const create = async (
       themeColor: request.themeColor,
       teamName: request.lootboxName,
       playerHeadshot: request.stampMetadata?.playerHeadshot ?? undefined,
-      /** @TODO fill these in with data */
-      sponsorLogos: [],
+      sponsorLogos: request?.stampMetadata?.logoURLs ?? [],
+      eventName: tournament?.title || "Lootbox Events",
     });
   } else {
     stampImageUrl = await stampNewLootbox(stampSecret, {

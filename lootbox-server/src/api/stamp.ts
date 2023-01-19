@@ -15,6 +15,8 @@ interface StampSimpleTicketPropsBE {
   teamName: string;
   playerHeadshot?: string;
   themeColor: string;
+  eventName?: string;
+  hostName?: string;
 }
 
 export const stampNewLootboxSimpleTicket = async (
@@ -27,6 +29,8 @@ export const stampNewLootboxSimpleTicket = async (
     teamName: props.teamName,
     playerHeadshot: props.playerHeadshot,
     themeColor: props.themeColor,
+    eventName: props.eventName,
+    hostName: props.hostName,
   };
   const response = await axios.post<StampSimpleTicketResponse>(
     manifest.cloudRun.containers.simpleLootboxStamp.fullRoute,
@@ -52,6 +56,8 @@ interface InviteStampPropsBE {
   themeColor: string;
   ticketValue: string;
   qrCodeLink: string;
+  eventName?: string;
+  hostName?: string;
 }
 
 export const createInviteStamp = async (
@@ -66,6 +72,8 @@ export const createInviteStamp = async (
     themeColor: props.themeColor,
     ticketValue: props.ticketValue,
     qrCodeLink: props.qrCodeLink,
+    eventName: props.eventName,
+    hostName: props.hostName,
   };
   const response = await axios.post<StampInviteTicketResponse>(
     manifest.cloudRun.containers.inviteStamp.fullRoute,

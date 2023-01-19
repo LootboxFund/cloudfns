@@ -708,8 +708,10 @@ export const extractOrGenerateLootboxCreateInput = async (
   if (!backgroundImage) {
     backgroundImage = await getRandomBackgroundFromLexicaHardcoded();
   }
+
   let logoImage = payload.logoImage;
-  if (!logoImage) {
+  if (!logoImage && !payload.isStampV2) {
+    // @NOTE: this field is not actually used in stamp v2 ATM
     logoImage = await getRandomPortraitFromLexicaHardcoded();
   }
   // if (!payload.logo && !payload.backgroundImage) {
@@ -727,7 +729,7 @@ export const extractOrGenerateLootboxCreateInput = async (
   return {
     description: payload.description || "",
     backgroundImage: backgroundImage,
-    logoImage: logoImage,
+    logoImage: logoImage ?? "", // Not used in stamp v2
     themeColor: themeColor,
     nftBountyValue: payload.nftBountyValue || "Prize",
     maxTickets: payload.maxTickets || 30,
