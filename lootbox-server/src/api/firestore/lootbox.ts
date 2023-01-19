@@ -54,7 +54,7 @@ import {
   determineAirdropClaimWithReferrerCredit,
 } from "./airdrop";
 import { CreateLootboxRequest } from "../../service/lootbox";
-import { retrieveRandomColor } from "../storage";
+import { retrieveRandomColor, retrieveRandomDarkColor } from "../storage";
 import {
   getRandomPortraitFromLexicaHardcoded,
   getRandomUserName,
@@ -721,7 +721,8 @@ export const extractOrGenerateLootboxCreateInput = async (
   // }
   let themeColor = payload.themeColor;
   if (!themeColor || themeColor === DEFAULT_THEME_COLOR) {
-    themeColor = await retrieveRandomColor();
+    // themeColor = await retrieveRandomColor();
+    themeColor = await retrieveRandomDarkColor();
   }
   const trimmedName = name.replace(" ", "");
   const impliedSymbol =
