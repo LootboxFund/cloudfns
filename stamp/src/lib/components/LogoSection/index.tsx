@@ -40,7 +40,7 @@ const LogoSection = ({
               key={`sponsor-logo-${idx}`}
               src={logo}
               style={{
-                maxWidth: "200px",
+                maxWidth: "180px",
                 flex: "1",
                 position: "relative",
                 maxHeight: "88px",

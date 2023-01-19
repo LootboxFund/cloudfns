@@ -20,6 +20,14 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
     .split(/([\d,\.]+)/g)
     .filter((v) => v !== "");
   const hasNumber = prizeValues.some((v) => !isNaN(Number(v)));
+  const tournamentLine =
+    props.eventName && props.hostName
+      ? `${props.eventName} hosted by ${props.hostName}`
+      : props.eventName
+      ? `${props.eventName}`
+      : props.hostName
+      ? `${props.hostName}`
+      : undefined;
 
   return (
     <div
@@ -271,7 +279,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             </h3>
           </div>
         </div>
-        <div
+        {/* <div
           style={{
             position: "absolute",
             margin: "0",
@@ -285,7 +293,7 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
             transformOrigin: "0 0",
             zIndex: "4",
           }}
-        />
+        /> */}
         {props.playerHeadshot && (
           <img
             style={{
@@ -313,9 +321,9 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           alignSelf: "stretch",
           backgroundColor: "#1a1a1a",
           height: "100px",
-          flexShrink: "0",
+          // flexShrink: "0",
           display: "flex",
-          flexDirection: "row",
+          flexDirection: "column",
           padding: "0px 40px",
           boxSizing: "border-box",
           alignItems: "center",
@@ -325,19 +333,31 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           color: "rgba(255, 255, 255, 0.5)",
         }}
       >
+        {tournamentLine && (
+          <p
+            style={{
+              margin: "16px 0px 8px 0px",
+              width: "100%",
+              display: "inline-block",
+              fontSize: "26px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+            }}
+          >
+            {tournamentLine}
+          </p>
+        )}
         <p
           style={{
-            margin: "0",
-            flex: "1",
-            position: "relative",
+            margin: 0,
+            width: "100%",
             lineHeight: "110%",
             display: "inline-block",
           }}
         >
-          Visit https://lootbox.tickets. This free fan ticket entitles the
-          holder to fan prizes up to the above value if this contestant wins a
-          predefined achievement. This is not redeemable as cash nor permitted
-          for sale.
+          Visit https://lootbox.tickets. This free fan ticket may entitle the
+          holder to fan prizes up to the above value if this contestant wins.
+          This is not redeemable as cash nor permitted for sale.
         </p>
       </div>
       <LogoSection logoUrls={props.sponsorLogos} />

@@ -10,6 +10,8 @@ export interface LossStampProps {
   themeColor: string;
   ticketValue: string;
   qrCodeLink: string;
+  eventName?: string;
+  hostName?: string;
 }
 
 const LossStamp: FunctionComponent<LossStampProps> = (props) => {
@@ -388,10 +390,9 @@ const LossStamp: FunctionComponent<LossStampProps> = (props) => {
             display: "inline-block",
           }}
         >
-          Visit https://lootbox.tickets. This free fan ticket entitles the
-          holder to fan prizes up to the above value if this contestant wins a
-          predefined achievement. This is not redeemable as cash nor permitted
-          for sale.
+          Visit https://lootbox.tickets. This free fan ticket may entitle the
+          holder to fan prizes up to the above value if this contestant wins.
+          This is not redeemable as cash nor permitted for sale.
         </p>
       </div>
       <LogoSection logoUrls={props.sponsorLogos} />

@@ -34,6 +34,8 @@ export const simpleTicketStaticElement = (props: SimpleTicketProps) =>
       teamName={props.teamName}
       playerHeadshot={props.playerHeadshot}
       themeColor={props.themeColor}
+      eventName={props.eventName}
+      hostName={props.hostName}
     />
   );
 
@@ -47,6 +49,8 @@ export const inviteStampStaticElement = (props: InviteStampProps) =>
       themeColor={props.themeColor}
       ticketValue={props.ticketValue}
       qrCodeLink={props.qrCodeLink}
+      eventName={props.eventName}
+      hostName={props.hostName}
     />
   );
 
@@ -60,6 +64,8 @@ export const victoryStampStaticElement = (props: VictoryStampProps) =>
       themeColor={props.themeColor}
       ticketValue={props.ticketValue}
       qrCodeLink={props.qrCodeLink}
+      eventName={props.eventName}
+      hostName={props.hostName}
     />
   );
 
@@ -73,6 +79,8 @@ export const lossStampStaticElement = (props: LossStampProps) =>
       themeColor={props.themeColor}
       ticketValue={props.ticketValue}
       qrCodeLink={props.qrCodeLink}
+      eventName={props.eventName}
+      hostName={props.hostName}
     />
   );
 
