@@ -275,6 +275,7 @@ const LootboxResolvers: Resolvers = {
               ? {
                   playerHeadshot:
                     payload.stampMetadata.playerHeadshot ?? undefined,
+                  logoURLs: payload.stampMetadata.logoURLs ?? undefined,
                 }
               : undefined,
           },

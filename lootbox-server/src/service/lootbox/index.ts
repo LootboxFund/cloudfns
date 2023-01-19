@@ -132,7 +132,7 @@ export const create = async (
     stampMetadata: _request.isStampV2
       ? {
           playerHeadshot: request.stampMetadata?.playerHeadshot ?? null,
-          logoURLs: [],
+          logoURLs: request.stampMetadata?.logoURLs ?? [],
         }
       : undefined,
   };

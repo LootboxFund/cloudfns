@@ -24,8 +24,10 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
   const teamNameSize =
     props.teamName.length > 30
       ? "40px"
-      : props.teamName.length > 22
+      : props.teamName.length > 24
       ? "60px"
+      : props.teamName.length > 20
+      ? "70px"
       : props.teamName.length > 18
       ? "80px"
       : props.teamName.length > 12
