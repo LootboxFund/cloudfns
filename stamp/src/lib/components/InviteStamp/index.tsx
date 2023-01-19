@@ -321,7 +321,6 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
           alignSelf: "stretch",
           backgroundColor: "#1a1a1a",
           height: "100px",
-          // flexShrink: "0",
           display: "flex",
           flexDirection: "column",
           padding: "0px 40px",

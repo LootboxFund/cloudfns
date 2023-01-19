@@ -21,6 +21,8 @@ const demo = async () => {
       "https://uploads-ssl.webflow.com/63bd0f8e51e48f5336cc7adb/63c1b38e4fdd781b6a729125_image%20129%20(Traced).png",
       "https://uploads-ssl.webflow.com/63bd0f8e51e48f5336cc7adb/63c1b3446e8f58197256869a_download-removebg-preview%20(1)%201%20(Traced).png",
     ],
+    eventName: "Chaos Regime Sports META",
+    hostName: "Magneetus Jones III",
   });
   console.log(`linkToImage = ${linkToImage}`);
 };

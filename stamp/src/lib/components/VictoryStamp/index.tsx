@@ -20,6 +20,14 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
     .split(/([\d,\.]+)/g)
     .filter((v) => v !== "");
   const hasNumber = prizeValues.some((v) => !isNaN(Number(v)));
+  const tournamentLine =
+    props.eventName && props.hostName
+      ? `${props.eventName} hosted by ${props.hostName}`
+      : props.eventName
+      ? `${props.eventName}`
+      : props.hostName
+      ? `${props.hostName}`
+      : undefined;
 
   return (
     <div
@@ -367,9 +375,8 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
           alignSelf: "stretch",
           backgroundColor: props.themeColor,
           height: "100px",
-          flexShrink: "0",
           display: "flex",
-          flexDirection: "row",
+          flexDirection: "column",
           padding: "0px 40px",
           boxSizing: "border-box",
           alignItems: "center",
@@ -379,13 +386,28 @@ const VictoryStamp: FunctionComponent<VictoryStampProps> = (props) => {
           color: "rgba(255, 255, 255, 0.5)",
         }}
       >
+        {tournamentLine && (
+          <p
+            style={{
+              margin: "8px 0px",
+              width: "100%",
+              display: "inline-block",
+              fontSize: "26px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textAlign: "center",
+            }}
+          >
+            {tournamentLine}
+          </p>
+        )}
         <p
           style={{
             margin: "0",
-            flex: "1",
-            position: "relative",
             lineHeight: "110%",
             display: "inline-block",
+            width: "100%",
+            textAlign: "center",
           }}
         >
           Visit https://lootbox.tickets. This free fan ticket may entitle the
