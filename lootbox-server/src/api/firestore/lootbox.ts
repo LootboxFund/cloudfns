@@ -114,6 +114,10 @@ export interface EditLootboxPayload {
   symbol?: string;
   isExclusiveLootbox?: boolean;
   maxTicketsPerUser?: number;
+  stampMetadata?: {
+    playerHeadshot: string | null | undefined;
+    logoURLs: string[] | undefined;
+  };
 }
 export const editLootbox = async (
   lootboxID: LootboxID,
@@ -163,6 +167,23 @@ export const editLootbox = async (
 
   if (payload.symbol != undefined) {
     updateRequest.symbol = payload.symbol;
+  }
+
+  if (payload.stampMetadata != undefined) {
+    const stampMetadataFieldname: keyof Lootbox_Firestore = "stampMetadata";
+    const logoURLsFieldname: keyof StampMetadata_Firestore = "logoURLs";
+    const playerHeadshotFieldname: keyof StampMetadata_Firestore =
+      "playerHeadshot";
+
+    if (payload.stampMetadata.logoURLs !== undefined) {
+      updateRequest[`${stampMetadataFieldname}.${logoURLsFieldname}`] =
+        payload.stampMetadata.logoURLs;
+    }
+
+    if (payload.stampMetadata.playerHeadshot !== undefined) {
+      updateRequest[`${stampMetadataFieldname}.${playerHeadshotFieldname}`] =
+        payload.stampMetadata.playerHeadshot;
+    }
   }
 
   const safetyFeaturesFieldname: keyof Lootbox_Firestore = "safetyFeatures";

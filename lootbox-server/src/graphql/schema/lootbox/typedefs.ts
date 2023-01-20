@@ -346,6 +346,7 @@ const LootboxTypeDefs = gql`
     themeColor: String
     isExclusiveLootbox: Boolean
     maxTicketsPerUser: Int
+    stampMetadata: CreateLootboxPayload_StampMetadata
   }
 
   # input BulkMintWhitelistPayload {

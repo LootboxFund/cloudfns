@@ -9,6 +9,7 @@ import {
   LootboxVariant_Firestore,
   Lootbox_Firestore,
   MintWhitelistSignature_Firestore,
+  StampMetadata_Firestore,
   TournamentID,
   Tournament_Firestore,
   UserID,
@@ -239,6 +240,10 @@ interface EditLootboxServiceRequest {
   status?: LootboxStatus | null;
   symbol?: string | null;
   themeColor?: string | null;
+  stampMetadata?: {
+    playerHeadshot: string | null | undefined;
+    logoURLs: string[] | undefined;
+  };
 }
 
 export const edit = async (
@@ -277,6 +282,7 @@ export const edit = async (
     maxTicketsPerUser: payload.maxTicketsPerUser
       ? Math.round(payload.maxTicketsPerUser)
       : undefined,
+    stampMetadata: payload.stampMetadata ?? undefined,
   };
 
   validateEditLootboxRequest(request);

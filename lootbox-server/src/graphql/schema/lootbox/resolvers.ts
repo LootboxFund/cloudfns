@@ -392,6 +392,13 @@ const LootboxResolvers: Resolvers = {
             themeColor: payload.themeColor,
             isExclusiveLootbox: payload.isExclusiveLootbox,
             maxTicketsPerUser: payload.maxTicketsPerUser,
+            stampMetadata: payload.stampMetadata
+              ? {
+                  playerHeadshot:
+                    payload.stampMetadata.playerHeadshot ?? undefined,
+                  logoURLs: payload.stampMetadata.logoURLs ?? undefined,
+                }
+              : undefined,
           },
           context.userId as unknown as UserID
         );
