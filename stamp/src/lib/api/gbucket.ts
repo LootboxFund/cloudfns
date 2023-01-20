@@ -7,21 +7,18 @@ const encodeURISafe = (stringFragment: string) =>
   encodeURIComponent(stringFragment).replace(/'/g, "%27").replace(/"/g, "%22");
 
 interface GBucketSaveLocalProps {
-  alias: string;
   localFilePath: string;
   fileName: string;
   bucket: BucketId;
 }
 
 interface GBucketSaveFragProps {
-  alias: string;
   fileName: string;
   data: string;
   bucket: string;
 }
 
 export const saveLocalFileToGBucket = async ({
-  alias,
   localFilePath,
   fileName,
   bucket,
@@ -32,7 +29,7 @@ export const saveLocalFileToGBucket = async ({
     manifest.storage.downloadUrl
   }/${bucket}/${encodeURISafe(filePath)}?alt=media`;
   console.log(
-    `⏳ Uploading ${alias} to Cloud Storage Bucket as ${downloadablePath}`
+    `⏳ Uploading ${fileName} to Cloud Storage Bucket as ${downloadablePath}`
   );
   await storage.bucket(bucket).upload(localFilePath, {
     destination: filePath,
@@ -46,7 +43,6 @@ export const saveLocalFileToGBucket = async ({
 };
 
 export const saveTicketMetadataToGBucket = async ({
-  alias,
   fileName,
   data,
   bucket,
@@ -56,7 +52,7 @@ export const saveTicketMetadataToGBucket = async ({
     manifest.storage.downloadUrl
   }/${bucket}/${encodeURISafe(fileName)}?alt=media`;
   console.log(
-    `⏳ Uploading ${alias} to Cloud Storage Bucket as ${fileName} in bucket ${bucket}`
+    `⏳ Uploading ${fileName} to Cloud Storage Bucket as ${fileName} in bucket ${bucket}`
   );
   await storage.bucket(bucket).file(fileName).save(data);
   await storage.bucket(bucket).file(fileName).makePublic();

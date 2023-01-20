@@ -92,6 +92,7 @@ import {
 } from "../../../lib/lootbox";
 import * as claimService from "../../../service/claim";
 import { QueryListAvailableLootboxesForClaimArgs } from "../../generated/types";
+import * as referralService from "../../../service/referral";
 
 // WARNING - this message is stupidly parsed in the frontend for internationalization.
 //           if you change it, make sure you update @lootbox/widgets file OnboardingSignUp.tsx if needed
@@ -312,6 +313,7 @@ const ReferralResolvers: Resolvers = {
   },
 
   Mutation: {
+    /** @todo: refactor logic into service layer */
     bulkCreateReferral: async (
       _,
       { payload }: MutationBulkCreateReferralArgs,
@@ -573,113 +575,27 @@ const ReferralResolvers: Resolvers = {
         };
       }
 
-      const slug = nanoid(10) as ReferralSlug;
-      const requestedReferralType =
-        payload.type == undefined ? ReferralType.Viral : payload.type;
-
       try {
-        const [existingReferral, tournament, lootbox, requestedReferrer] =
-          await Promise.all([
-            getReferralBySlug(slug),
-            getTournamentById(payload.tournamentId as TournamentID),
-            !!payload.lootboxID
-              ? getLootbox(payload.lootboxID as LootboxID)
-              : null,
-            !!payload.referrerId
-              ? getUser(payload.referrerId) // returns undefined if not found
-              : null,
-          ]);
-
-        if (!!payload?.referrerId && !requestedReferrer) {
-          console.error("Referrer not found");
-          throw new Error("Requested referrer not found");
+        if (!payload.tournamentId) {
+          return {
+            error: {
+              code: StatusCode.BadRequest,
+              message: "Event ID is required",
+            },
+          };
         }
-
-        if (!!existingReferral) {
-          // Make sure the slug does not already exist
-          console.error("Referral slug already exists");
-          throw new Error("Please try again");
-        }
-        if (!tournament) {
-          // Make sure the tournament exists
-          throw new Error("Tournament not found");
-        }
-        if (
-          requestedReferralType === ReferralType.OneTime &&
-          (context.userId as unknown as UserID) !== tournament.creatorId
-        ) {
-          throw new Error(
-            "You must own the tournament to make a one time referral"
-          );
-        }
-        if (lootbox === undefined) {
-          // If lootbox=null then it was not requested & the request will go through
-          throw new Error("Lootbox not found");
-        }
-
-        let isSeedLootboxEnabled =
-          !!payload.lootboxID &&
-          !!lootbox &&
-          lootbox.status !== LootboxStatus_Firestore.disabled &&
-          lootbox.status !== LootboxStatus_Firestore.soldOut;
-
-        // we get the lootbox tournament snapshot
-        if (!!isSeedLootboxEnabled && !!lootbox) {
-          const lootboxTournamentSnapshot =
-            await getLootboxTournamentSnapshotByLootboxID(
-              tournament.id,
-              lootbox.id
-            );
-          // Only allow the seed lootbox if it is enabled for the tournament
-          isSeedLootboxEnabled =
-            isSeedLootboxEnabled &&
-            !!lootboxTournamentSnapshot &&
-            !lootboxTournamentSnapshot.timestamps.deletedAt &&
-            lootboxTournamentSnapshot.status ===
-              LootboxTournamentStatus_Firestore.active;
-        }
-
-        if (
-          isSeedLootboxEnabled &&
-          lootbox?.safetyFeatures?.isExclusiveLootbox
-        ) {
-          const callerUserID = context.userId as unknown as UserID;
-          // Dont allow exclusive lootbox referrals if the user is not tournament host or lootbox creator
-          isSeedLootboxEnabled =
-            isSeedLootboxEnabled &&
-            (callerUserID === tournament.creatorId ||
-              callerUserID === lootbox.creatorID);
-        }
-
-        const campaignName = payload.campaignName || `Campaign ${nanoid(5)}`;
-        let referrerIdToSet = payload.referrerId
-          ? (payload.referrerId as UserID)
-          : (context.userId as unknown as UserID);
-        let promoterIdToSet;
-        if (payload.promoterId) {
-          const affiliate = await getAffiliate(
-            payload.promoterId as AffiliateID
-          );
-          if (affiliate) {
-            referrerIdToSet = affiliate.userID;
-            promoterIdToSet = affiliate.id;
-          }
-        }
-
-        const referral = await createReferral({
-          slug,
-          referrerId: referrerIdToSet,
-          promoterId: promoterIdToSet,
-          creatorId: context.userId as unknown as UserID,
-          campaignName,
-          type: convertReferralTypeGQLToDB(requestedReferralType),
-          tournamentId: payload.tournamentId as TournamentID,
-          seedLootboxID: isSeedLootboxEnabled
-            ? (payload.lootboxID as LootboxID)
-            : undefined,
-
-          isPostCosmic: true,
-        });
+        const referral = await referralService.create(
+          {
+            campaignName: payload.campaignName,
+            promoterId: payload.promoterId as AffiliateID | null | undefined,
+            referrerId: payload.referrerId as UserID | null | undefined,
+            tournamentId: payload.tournamentId as TournamentID,
+            type: payload.type,
+            lootboxID: payload.lootboxID as LootboxID | null | undefined,
+            stampMetadata: payload.inviteStampMetadata,
+          },
+          context.userId as unknown as UserID
+        );
         const rf = convertReferralDBToGQL(referral);
 
         return { referral: rf };

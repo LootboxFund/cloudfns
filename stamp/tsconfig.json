@@ -7,17 +7,9 @@
     "jsx": "react-jsx",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "lib": [
-        "es2017"
-    ],
-    "types": [
-        "node", "express"
-    ]
+    "lib": ["es2017"],
+    "types": ["node", "express"]
   },
-  "include": [
-      "src/**/*"
-  ],
-  "exclude": [
-      "node_modules"
-  ]
-} 
+  "include": ["src/**/*", "demo/demo.ts"],
+  "exclude": ["node_modules"]
+}

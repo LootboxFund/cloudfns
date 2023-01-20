@@ -99,6 +99,11 @@ const LootboxTypeDefs = gql`
     isExclusiveLootbox: Boolean
   }
 
+  type LootboxStampMetadata {
+    playerHeadshot: String
+    logoURLs: [String!]
+  }
+
   type Lootbox {
     # Immutable stuff
     id: ID!
@@ -136,6 +141,7 @@ const LootboxTypeDefs = gql`
     type: LootboxType
     airdropMetadata: LootboxAirdropMetadata
     airdropQuestions: [LootboxAirdropMetadataQuestion!]
+    stampMetadata: LootboxStampMetadata
 
     # GQL layer
     userClaims(
@@ -289,6 +295,11 @@ const LootboxTypeDefs = gql`
     ): GetVoucherOfDepositForFanResponse!
   }
 
+  input CreateLootboxPayload_StampMetadata {
+    playerHeadshot: String
+    logoURLs: [String!]
+  }
+
   input CreateLootboxPayload {
     name: String
     description: String
@@ -302,6 +313,9 @@ const LootboxTypeDefs = gql`
     type: LootboxType
     isExclusiveLootbox: Boolean
     airdropMetadata: AirdropMetadataCreateInput
+    # if true, the lootbox will be created with the updated ticket design
+    isStampV2: Boolean
+    stampMetadata: CreateLootboxPayload_StampMetadata
   }
 
   input AirdropMetadataCreateInput {
@@ -332,6 +346,7 @@ const LootboxTypeDefs = gql`
     themeColor: String
     isExclusiveLootbox: Boolean
     maxTicketsPerUser: Int
+    stampMetadata: CreateLootboxPayload_StampMetadata
   }
 
   # input BulkMintWhitelistPayload {

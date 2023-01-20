@@ -62,6 +62,7 @@ export const convertReferralDBToGQL = (
     },
     type: convertReferralTypeDBToGQL(referral.type),
     seedLootboxID: referral.seedLootboxID,
+    inviteGraphic: referral.inviteGraphic ?? null,
   };
 };
 

@@ -270,6 +270,14 @@ const LootboxResolvers: Resolvers = {
             airdropMetadata: payload.airdropMetadata
               ? (payload.airdropMetadata as AirdropMetadataCreateInput)
               : undefined,
+            isStampV2: payload.isStampV2 || false,
+            stampMetadata: payload.stampMetadata
+              ? {
+                  playerHeadshot:
+                    payload.stampMetadata.playerHeadshot ?? undefined,
+                  logoURLs: payload.stampMetadata.logoURLs ?? undefined,
+                }
+              : undefined,
           },
           context.userId as unknown as UserID
         );
@@ -384,6 +392,13 @@ const LootboxResolvers: Resolvers = {
             themeColor: payload.themeColor,
             isExclusiveLootbox: payload.isExclusiveLootbox,
             maxTicketsPerUser: payload.maxTicketsPerUser,
+            stampMetadata: payload.stampMetadata
+              ? {
+                  playerHeadshot:
+                    payload.stampMetadata.playerHeadshot ?? undefined,
+                  logoURLs: payload.stampMetadata.logoURLs ?? undefined,
+                }
+              : undefined,
           },
           context.userId as unknown as UserID
         );

@@ -12,6 +12,7 @@ import {
   CreateLootboxPayload,
   DepositVoucherRewardsPayload,
   VoucherDeposit,
+  CreateLootboxPayload_StampMetadata,
 } from "../../graphql/generated/types";
 import {
   Address,
@@ -42,6 +43,7 @@ import {
   Deposit_Firestore,
   DepositID,
   LootboxSafetyFeatures_Firestore,
+  StampMetadata_Firestore,
 } from "@wormgraph/helpers";
 import { LootboxID, UserIdpID } from "@wormgraph/helpers";
 import { convertLootboxToSnapshot, parseLootboxDB } from "../../lib/lootbox";
@@ -52,7 +54,7 @@ import {
   determineAirdropClaimWithReferrerCredit,
 } from "./airdrop";
 import { CreateLootboxRequest } from "../../service/lootbox";
-import { retrieveRandomColor } from "../storage";
+import { retrieveRandomColor, retrieveRandomDarkColor } from "../storage";
 import {
   getRandomPortraitFromLexicaHardcoded,
   getRandomUserName,
@@ -112,6 +114,10 @@ export interface EditLootboxPayload {
   symbol?: string;
   isExclusiveLootbox?: boolean;
   maxTicketsPerUser?: number;
+  stampMetadata?: {
+    playerHeadshot: string | null | undefined;
+    logoURLs: string[] | undefined;
+  };
 }
 export const editLootbox = async (
   lootboxID: LootboxID,
@@ -161,6 +167,23 @@ export const editLootbox = async (
 
   if (payload.symbol != undefined) {
     updateRequest.symbol = payload.symbol;
+  }
+
+  if (payload.stampMetadata != undefined) {
+    const stampMetadataFieldname: keyof Lootbox_Firestore = "stampMetadata";
+    const logoURLsFieldname: keyof StampMetadata_Firestore = "logoURLs";
+    const playerHeadshotFieldname: keyof StampMetadata_Firestore =
+      "playerHeadshot";
+
+    if (payload.stampMetadata.logoURLs !== undefined) {
+      updateRequest[`${stampMetadataFieldname}.${logoURLsFieldname}`] =
+        payload.stampMetadata.logoURLs;
+    }
+
+    if (payload.stampMetadata.playerHeadshot !== undefined) {
+      updateRequest[`${stampMetadataFieldname}.${playerHeadshotFieldname}`] =
+        payload.stampMetadata.playerHeadshot;
+    }
   }
 
   const safetyFeaturesFieldname: keyof Lootbox_Firestore = "safetyFeatures";
@@ -448,6 +471,7 @@ export interface CreateLootboxPayloadLocalType {
   airdropMetadata?: AirdropMetadataCreateInput;
   maxTicketsPerUser?: number;
   isExclusiveLootbox?: boolean;
+  stampMetadata?: StampMetadata_Firestore | null;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -504,6 +528,9 @@ export const createLootbox = async (
   };
   if (payload.type) {
     lootboxPayload.type = payload.type;
+  }
+  if (payload.stampMetadata) {
+    lootboxPayload.stampMetadata = payload.stampMetadata;
   }
   if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
     const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([
@@ -667,6 +694,8 @@ interface MockLootboxInputPayload {
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
+  isStampV2?: boolean;
+  stampMetadata?: CreateLootboxPayload_StampMetadata;
 }
 
 interface MockLootboxInputPayloadOutput {
@@ -683,6 +712,8 @@ interface MockLootboxInputPayloadOutput {
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
+  isStampV2?: boolean;
+  stampMetadata?: CreateLootboxPayload_StampMetadata;
 }
 
 export const extractOrGenerateLootboxCreateInput = async (
@@ -698,8 +729,10 @@ export const extractOrGenerateLootboxCreateInput = async (
   if (!backgroundImage) {
     backgroundImage = await getRandomBackgroundFromLexicaHardcoded();
   }
+
   let logoImage = payload.logoImage;
-  if (!logoImage) {
+  if (!logoImage && !payload.isStampV2) {
+    // @NOTE: this field is not actually used in stamp v2 ATM
     logoImage = await getRandomPortraitFromLexicaHardcoded();
   }
   // if (!payload.logo && !payload.backgroundImage) {
@@ -709,7 +742,8 @@ export const extractOrGenerateLootboxCreateInput = async (
   // }
   let themeColor = payload.themeColor;
   if (!themeColor || themeColor === DEFAULT_THEME_COLOR) {
-    themeColor = await retrieveRandomColor();
+    // themeColor = await retrieveRandomColor();
+    themeColor = await retrieveRandomDarkColor();
   }
   const trimmedName = name.replace(" ", "");
   const impliedSymbol =
@@ -717,7 +751,7 @@ export const extractOrGenerateLootboxCreateInput = async (
   return {
     description: payload.description || "",
     backgroundImage: backgroundImage,
-    logoImage: logoImage,
+    logoImage: logoImage ?? "", // Not used in stamp v2
     themeColor: themeColor,
     nftBountyValue: payload.nftBountyValue || "Prize",
     maxTickets: payload.maxTickets || 30,
@@ -730,6 +764,8 @@ export const extractOrGenerateLootboxCreateInput = async (
     airdropMetadata: payload.airdropMetadata
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)
       : undefined,
+    isStampV2: payload.isStampV2 ?? false,
+    stampMetadata: payload.stampMetadata,
   };
 };
 

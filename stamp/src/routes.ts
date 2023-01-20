@@ -1,5 +1,12 @@
 import * as express from "express";
-import { generateImage, generateTicketImage } from "./lib/api/stamp";
+import {
+  generateImage,
+  generateInviteStamp,
+  generateLossStamp,
+  generateSimpleTicket,
+  generateTicketImage,
+  generateVictoryStamp,
+} from "./lib/api/stamp";
 import {
   StampNewTicketProps,
   StampNewTicketResponse,
@@ -8,10 +15,20 @@ import {
   StampNewLootboxProps,
   StampNewLootboxResponse,
   LootboxID,
+  StampSimpleTicketProps,
+  StampSimpleTicketResponse,
+  StampInviteTicketProps,
+  StampInviteTicketResponse,
+  StampVictoryTicketProps,
+  StampVictoryTicketResponse,
+  StampLossTicketProps,
+  StampLossTicketResponse,
 } from "@wormgraph/helpers";
 import { saveTicketMetadataToGBucket } from "./lib/api/gbucket";
 import { manifest } from "./manifest";
 import { getAuthenticationSecret } from "./lib/api/secrets";
+import { SimpleTicketProps } from "./lib/components/SimpleTicket";
+import { InviteStampProps } from "./lib/components/InviteStamp";
 
 const router = express.Router();
 
@@ -140,7 +157,7 @@ router.post(
       };
 
       const linkToURI = await saveTicketMetadataToGBucket({
-        alias: `${lootboxAddress}-${ticketID}`,
+        // alias: `${lootboxAddress}-${ticketID}`,
         fileName: `${lootboxID}/${ticketID}.json`,
         data: JSON.stringify(updatedMetadata),
         bucket: manifest.storage.buckets.data.id,
@@ -157,6 +174,218 @@ router.post(
         message: "Internal Server Error",
         stamp: "",
         uri: "",
+      });
+    }
+    return;
+  }
+);
+
+router.post(
+  "/stamp/new/simple",
+  async (
+    req: express.Request<unknown, unknown, StampSimpleTicketProps>,
+    res: express.Response<StampSimpleTicketResponse>,
+    next
+  ) => {
+    try {
+      const { secret } = req.headers;
+      const verifiedSecret = await getAuthenticationSecret();
+      if (secret !== verifiedSecret) {
+        return res.status(401).json({
+          message: "Unauthorized",
+          stamp: "",
+        });
+      }
+      const tempLocalPath = `/tmp/image.png`;
+      const {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        eventName,
+        hostName,
+      } = req.body;
+      const linkToImage = await generateSimpleTicket(tempLocalPath, {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        eventName,
+        hostName,
+      });
+      res.json({
+        message: "Created stamp!",
+        stamp: linkToImage,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Internal Server Error",
+        stamp: "",
+      });
+    }
+    return;
+  }
+);
+
+router.post(
+  "/stamp/new/invite",
+  async (
+    req: express.Request<unknown, unknown, StampInviteTicketProps>,
+    res: express.Response<StampInviteTicketResponse>,
+    next
+  ) => {
+    try {
+      const { secret } = req.headers;
+      const verifiedSecret = await getAuthenticationSecret();
+      if (secret !== verifiedSecret) {
+        return res.status(401).json({
+          message: "Unauthorized",
+          stamp: "",
+        });
+      }
+      const tempLocalPath = `/tmp/image.png`;
+      const {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        ticketValue,
+        qrCodeLink,
+        eventName,
+        hostName,
+      } = req.body;
+      const linkToImage = await generateInviteStamp(tempLocalPath, {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        ticketValue,
+        qrCodeLink,
+        eventName,
+        hostName,
+      });
+      res.json({
+        message: "Created invite stamp!",
+        stamp: linkToImage,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Internal Server Error",
+        stamp: "",
+      });
+    }
+    return;
+  }
+);
+
+router.post(
+  "/stamp/new/victory",
+  async (
+    req: express.Request<unknown, unknown, StampVictoryTicketProps>,
+    res: express.Response<StampVictoryTicketResponse>,
+    next
+  ) => {
+    try {
+      const { secret } = req.headers;
+      const verifiedSecret = await getAuthenticationSecret();
+      if (secret !== verifiedSecret) {
+        return res.status(401).json({
+          message: "Unauthorized",
+          stamp: "",
+        });
+      }
+      const tempLocalPath = `/tmp/image.png`;
+      const {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        ticketValue,
+        qrCodeLink,
+        eventName,
+        hostName,
+      } = req.body;
+      const linkToImage = await generateVictoryStamp(tempLocalPath, {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        ticketValue,
+        qrCodeLink,
+        eventName,
+        hostName,
+      });
+      res.json({
+        message: "Created victory stamp!",
+        stamp: linkToImage,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Internal Server Error",
+        stamp: "",
+      });
+    }
+    return;
+  }
+);
+
+router.post(
+  "/stamp/new/loss",
+  async (
+    req: express.Request<unknown, unknown, StampLossTicketProps>,
+    res: express.Response<StampLossTicketResponse>,
+    next
+  ) => {
+    try {
+      const { secret } = req.headers;
+      const verifiedSecret = await getAuthenticationSecret();
+      if (secret !== verifiedSecret) {
+        return res.status(401).json({
+          message: "Unauthorized",
+          stamp: "",
+        });
+      }
+      const tempLocalPath = `/tmp/image.png`;
+      const {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        ticketValue,
+        qrCodeLink,
+        eventName,
+        hostName,
+      } = req.body;
+      const linkToImage = await generateLossStamp(tempLocalPath, {
+        coverPhoto,
+        sponsorLogos,
+        teamName,
+        playerHeadshot,
+        themeColor,
+        ticketValue,
+        qrCodeLink,
+        eventName,
+        hostName,
+      });
+      res.json({
+        message: "Created loss stamp!",
+        stamp: linkToImage,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Internal Server Error",
+        stamp: "",
       });
     }
     return;

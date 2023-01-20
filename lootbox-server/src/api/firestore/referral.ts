@@ -96,6 +96,7 @@ interface CreateReferralCall {
   type: ReferralType_Firestore;
   seedLootboxID?: LootboxID;
   isPostCosmic: boolean;
+  inviteGraphic?: string;
 }
 export const createReferral = async (
   req: CreateReferralCall
@@ -124,6 +125,10 @@ export const createReferral = async (
 
   if (!!req.seedLootboxID) {
     newReferral.seedLootboxID = req.seedLootboxID;
+  }
+
+  if (!!req.inviteGraphic) {
+    newReferral.inviteGraphic = req.inviteGraphic;
   }
 
   await ref.set(newReferral);

@@ -34,3 +34,18 @@ export const retrieveRandomColor = () => {
     "#" + Math.floor(Math.random() * 16777215).toString(16);
   return randomHexColor;
 };
+
+/**
+ * The function uses a for loop to generate a random 6-digit hex color. It selects a random
+ * character from the letters string, which contains all possible hex digits except for the last 4.
+ * This means that the generated color will have a higher chance of being dark, as it is less likely
+ * to contain the lighter digits 8, 9, A, B, C, D, E, F.
+ */
+export const retrieveRandomDarkColor = () => {
+  var letters = "0123456789ABCDEF";
+  var color = "#";
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 12)];
+  }
+  return color;
+};
