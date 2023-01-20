@@ -944,13 +944,17 @@ export const onLootboxWrite = functions
             return;
         }
 
-        const shouldUpdateStamp =
+        const shouldUpdateStampV2 =
             newLootbox.name !== oldLootbox.name ||
-            newLootbox.logo !== oldLootbox.logo ||
             newLootbox.backgroundImage !== oldLootbox.backgroundImage ||
-            newLootbox.themeColor !== oldLootbox.themeColor;
+            newLootbox.themeColor !== oldLootbox.themeColor ||
+            newLootbox.stampMetadata?.playerHeadshot !== oldLootbox.stampMetadata?.playerHeadshot ||
+            JSON.stringify(newLootbox.stampMetadata?.logoURLs) !== JSON.stringify(oldLootbox.stampMetadata?.logoURLs);
 
-        if (shouldUpdateStamp) {
+        /** @deprecated old design specs */
+        const shouldUpdateStampV1 = shouldUpdateStampV2 || newLootbox.logo !== oldLootbox.logo;
+
+        if (shouldUpdateStampV2 || shouldUpdateStampV1) {
             logger.info("Updating stamp", {
                 lootboxID: newLootbox.id,
                 backgroundImage: newLootbox.backgroundImage,
@@ -959,6 +963,7 @@ export const onLootboxWrite = functions
                 name: newLootbox.name,
                 lootboxAddress: newLootbox.address,
                 chainIdHex: newLootbox.chainIdHex,
+                metadata: newLootbox.stampMetadata,
             });
             try {
                 await lootboxService.updateCallback(newLootbox.id, {
@@ -969,6 +974,7 @@ export const onLootboxWrite = functions
                     lootboxAddress: newLootbox.address,
                     chainIdHex: newLootbox.chainIdHex,
                     description: newLootbox.description,
+                    stampMetadata: newLootbox.stampMetadata,
                 });
             } catch (err) {
                 logger.error(err, {

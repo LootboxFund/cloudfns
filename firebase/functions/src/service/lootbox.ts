@@ -17,6 +17,7 @@ import {
     LootboxTimestamps,
     LootboxVariant_Firestore,
     LootboxTicketID,
+    StampMetadata_Firestore,
 } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
 import { db } from "../api/firebase";
@@ -33,7 +34,7 @@ import {
     getTicketByID,
     finalizeMintV2,
 } from "../api/firestore/lootbox";
-import { stampNewLootbox, stampNewTicket } from "../api/stamp";
+import { stampNewLootbox, stampNewLootboxSimpleTicket, stampNewTicket } from "../api/stamp";
 import { convertLootboxToTicketMetadata } from "../lib/lootbox";
 import { v4 as uuidV4 } from "uuid";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
@@ -228,6 +229,7 @@ interface UpdateCallbackRequest {
     lootboxAddress: Address | null;
     chainIdHex: ChainIDHex | null;
     description: string;
+    stampMetadata?: StampMetadata_Firestore;
 }
 export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallbackRequest): Promise<void> => {
     // This has to update a bunch of potentially duplciated data...
@@ -236,16 +238,30 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
 
     const lootboxTournamentSnaphotRefs = await getAllLootboxTournamentSnapshotRefs(lootboxID);
 
-    // Restamp the lootbox
-    const _stampImageUrl = await stampNewLootbox({
-        backgroundImage: request.backgroundImage,
-        logoImage: request.logoImage,
-        themeColor: request.themeColor,
-        name: request.name,
-        lootboxID: lootboxID,
-        lootboxAddress: request.lootboxAddress || undefined,
-        chainIdHex: request.chainIdHex || undefined,
-    });
+    let _stampImageUrl: string;
+    if (request.stampMetadata) {
+        _stampImageUrl = await stampNewLootboxSimpleTicket({
+            coverPhoto: request.backgroundImage,
+            sponsorLogos: request.stampMetadata.logoURLs ?? [],
+            teamName: request.name,
+            playerHeadshot: request.stampMetadata.playerHeadshot ?? undefined,
+            themeColor: request.themeColor,
+            eventName: request.stampMetadata.eventName ?? "Lootbox Events",
+            hostName: request.stampMetadata.hostName ?? undefined,
+        });
+    } else {
+        // OLD DESIGN
+        // Restamp the lootbox
+        _stampImageUrl = await stampNewLootbox({
+            backgroundImage: request.backgroundImage,
+            logoImage: request.logoImage,
+            themeColor: request.themeColor,
+            name: request.name,
+            lootboxID: lootboxID,
+            lootboxAddress: request.lootboxAddress || undefined,
+            chainIdHex: request.chainIdHex || undefined,
+        });
+    }
     // Ghetto cache bust:
     const nonce = uuidV4();
     const url = new URL(_stampImageUrl);
