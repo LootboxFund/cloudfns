@@ -14,15 +14,12 @@ import {
     LootboxTicketDigest,
     LootboxMintSignatureNonce,
     EnqueueLootboxOnMintCallableRequest,
-    // DepositID_Web3,
-    // EnqueueLootboxOnDepositCallableRequest,
     LootboxStatus_Firestore,
     Collection,
     Lootbox_Firestore,
     LootboxTicketID,
     LootboxTicket_Firestore,
     ReferralType_Firestore,
-    TournamentID,
     UserIdpID,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
@@ -34,7 +31,6 @@ import { retrieveRandomColor } from "./util";
 import {
     associateInviteDataToLootbox,
     createLootboxTournamentSnapshot,
-    getAffiliate,
     getAffiliateByUserIdpID,
     getTicketByID,
 } from "../api/firestore";
@@ -657,7 +653,7 @@ export const onLootboxWrite = functions
 
                 const referralLink = `${manifest.microfrontends.webflow.referral}?r=${officialReferral.slug}`;
 
-                const [tournamentSnapshot, updatedLootboxResponse] = await Promise.all([
+                await Promise.all([
                     createLootboxTournamentSnapshot({
                         tournamentID: newLootbox.tournamentID,
                         lootboxID: newLootbox.id,
