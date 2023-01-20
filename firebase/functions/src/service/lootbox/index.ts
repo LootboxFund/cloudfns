@@ -20,7 +20,7 @@ import {
     StampMetadata_Firestore,
 } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
-import { db } from "../api/firebase";
+import { db } from "../../api/firebase";
 import {
     finalizeMint,
     getAllLootboxTournamentSnapshotRefs,
@@ -33,9 +33,9 @@ import {
     associateLootboxSnapshotsToWeb3,
     getTicketByID,
     finalizeMintV2,
-} from "../api/firestore/lootbox";
-import { stampNewLootbox, stampNewLootboxSimpleTicket, stampNewTicket } from "../api/stamp";
-import { convertLootboxToTicketMetadata } from "../lib/lootbox";
+} from "../../api/firestore/lootbox";
+import { stampNewLootbox, stampNewLootboxSimpleTicket, stampNewTicket } from "../../api/stamp";
+import { convertLootboxToTicketMetadata } from "../../lib/lootbox";
 import { v4 as uuidV4 } from "uuid";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 
