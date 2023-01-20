@@ -35,7 +35,7 @@
         "fluent-ffmpeg": "^2.1.2",
         "mkdirp": "^1.0.4",
         "mkdirp-promise": "^5.0.1",
-        "nanoid": "^4.0.0",
+        "nanoid": "3.3.4",
         "uuid": "^9.0.0"
     },
     "devDependencies": {

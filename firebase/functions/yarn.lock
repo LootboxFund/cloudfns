@@ -2089,7 +2089,7 @@
 
 "@wormgraph/helpers@0.7.24":
   version "0.7.24"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.24.tgz#091041fedee6fd6beea75438a695d8da60456278"
+  resolved "https://registry.npmjs.org/@wormgraph/helpers/-/helpers-0.7.24.tgz"
   integrity sha512-WTi1G4tU4FSHflPmShNdeLVTZ9Mj1ItFXaEwwoRuznPtL1c2/3JQcURsEKxxA61PkgUIakSAJDzkPfh0z88wbw==
   dependencies:
     axios "0.25.0"
@@ -2097,7 +2097,7 @@
 
 "@wormgraph/manifest@0.7.17":
   version "0.7.17"
-  resolved "https://registry.yarnpkg.com/@wormgraph/manifest/-/manifest-0.7.17.tgz#3c3ae6ca98322a7899746064d16121c842516a50"
+  resolved "https://registry.npmjs.org/@wormgraph/manifest/-/manifest-0.7.17.tgz"
   integrity sha512-ysOaAq8Swp7M3zDAAQ5xR9t/IVqQkwW8gFpp+vvOoYKuG6/Ty0wWL/zHgtS5DlDQLPyyNvsa8hDpRaeptFQULg==
   dependencies:
     "@wormgraph/helpers" "0.7.1-demo-3"
@@ -4960,10 +4960,10 @@ mute-stream@0.0.8:
   resolved "https://registry.npmjs.org/mute-stream/-/mute-stream-0.0.8.tgz"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
 
-nanoid@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-4.0.0.tgz#6e144dee117609232c3f415c34b0e550e64999a5"
-  integrity sha512-IgBP8piMxe/gf73RTQx7hmnhwz0aaEXYakvqZyE302IXW3HyVNhdNGC+O2MwMAVhLEnvXlvKtGbtJf6wvHihCg==
+nanoid@3.3.4:
+  version "3.3.4"
+  resolved "https://registry.npmjs.org/nanoid/-/nanoid-3.3.4.tgz"
+  integrity sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==
 
 natural-compare@^1.4.0:
   version "1.4.0"
