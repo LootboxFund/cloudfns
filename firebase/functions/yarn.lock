@@ -2087,10 +2087,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.7.23":
-  version "0.7.23"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.23.tgz#b629b323ef46a61b589ce94da5af0d1178875eb2"
-  integrity sha512-GryhGykn/6q5nyqD9glpDe3nIGnrYFv61PQAnnFgXxmMNqpphzLOJ3qRFeYPO1bsIiJcby9JgJi8Vyds4beCdw==
+"@wormgraph/helpers@0.7.24":
+  version "0.7.24"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.24.tgz#091041fedee6fd6beea75438a695d8da60456278"
+  integrity sha512-WTi1G4tU4FSHflPmShNdeLVTZ9Mj1ItFXaEwwoRuznPtL1c2/3JQcURsEKxxA61PkgUIakSAJDzkPfh0z88wbw==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"

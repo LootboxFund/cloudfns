@@ -130,6 +130,8 @@ interface CreateLootboxTournamentSnapshot {
     name: string;
     stampImage: string;
     type?: LootboxType;
+    inviteStampImage?: string;
+    inviteLinkURL?: string;
 }
 export const createLootboxTournamentSnapshot = async (
     payload: CreateLootboxTournamentSnapshot
@@ -152,6 +154,8 @@ export const createLootboxTournamentSnapshot = async (
         stampImage: payload.stampImage,
         impressionPriority: 0,
         status: LootboxTournamentStatus_Firestore.active,
+        ...(payload.inviteStampImage && { officialInviteStampImage: payload.inviteStampImage }),
+        ...(payload.inviteLinkURL && { officialInviteURL: payload.inviteLinkURL }),
         timestamps: {
             createdAt: Timestamp.now().toMillis(),
             updatedAt: Timestamp.now().toMillis(),

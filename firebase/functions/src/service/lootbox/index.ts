@@ -34,7 +34,7 @@ import {
     getTicketByID,
     finalizeMintV2,
 } from "../../api/firestore/lootbox";
-import { stampNewLootbox, stampNewLootboxSimpleTicket, stampNewTicket } from "../../api/stamp";
+import { createInviteStamp, stampNewLootbox, stampNewLootboxSimpleTicket, stampNewTicket } from "../../api/stamp";
 import { convertLootboxToTicketMetadata } from "../../lib/lootbox";
 import { v4 as uuidV4 } from "uuid";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
@@ -230,6 +230,8 @@ interface UpdateCallbackRequest {
     chainIdHex: ChainIDHex | null;
     description: string;
     stampMetadata?: StampMetadata_Firestore;
+    referralURL: string;
+    lootboxTicketValue: string;
 }
 export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallbackRequest): Promise<void> => {
     // This has to update a bunch of potentially duplciated data...
@@ -239,16 +241,31 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
     const lootboxTournamentSnaphotRefs = await getAllLootboxTournamentSnapshotRefs(lootboxID);
 
     let _stampImageUrl: string;
+    let _stampInviteImageUrl: string | null;
     if (request.stampMetadata) {
-        _stampImageUrl = await stampNewLootboxSimpleTicket({
-            coverPhoto: request.backgroundImage,
-            sponsorLogos: request.stampMetadata.logoURLs ?? [],
-            teamName: request.name,
-            playerHeadshot: request.stampMetadata.playerHeadshot ?? undefined,
-            themeColor: request.themeColor,
-            eventName: request.stampMetadata.eventName ?? "Lootbox Events",
-            hostName: request.stampMetadata.hostName ?? undefined,
-        });
+        // Update invite and simple stamp
+        [_stampImageUrl, _stampInviteImageUrl] = await Promise.all([
+            stampNewLootboxSimpleTicket({
+                coverPhoto: request.backgroundImage,
+                sponsorLogos: request.stampMetadata.logoURLs ?? [],
+                teamName: request.name,
+                playerHeadshot: request.stampMetadata.playerHeadshot ?? undefined,
+                themeColor: request.themeColor,
+                eventName: request.stampMetadata.eventName ?? "Lootbox Events",
+                hostName: request.stampMetadata.hostName ?? undefined,
+            }),
+            createInviteStamp({
+                coverPhoto: request.backgroundImage,
+                sponsorLogos: request.stampMetadata.logoURLs ?? [],
+                teamName: request.name,
+                playerHeadshot: request.stampMetadata.playerHeadshot ?? undefined,
+                themeColor: request.themeColor,
+                eventName: request.stampMetadata.eventName ?? "Lootbox Events",
+                hostName: request.stampMetadata.hostName ?? undefined,
+                qrCodeLink: request.referralURL,
+                ticketValue: request.lootboxTicketValue,
+            }),
+        ]);
     } else {
         // OLD DESIGN
         // Restamp the lootbox
@@ -261,6 +278,7 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
             lootboxAddress: request.lootboxAddress || undefined,
             chainIdHex: request.chainIdHex || undefined,
         });
+        _stampInviteImageUrl = null;
     }
     // Ghetto cache bust:
     const nonce = uuidV4();
@@ -275,6 +293,10 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
     const lootboxUpdateReq: Partial<Lootbox_Firestore> = {
         stampImage: newStampURL,
         [`${lootboxTimestampFieldName}.${lootboxUpdatedAtFieldName}`]: Timestamp.now().toMillis(),
+        ...(_stampInviteImageUrl && {
+            officialInviteGraphic: _stampInviteImageUrl,
+            officialInviteLink: request.referralURL,
+        }),
     };
     const snapshotTimestampFieldName: keyof LootboxTournamentSnapshot_Firestore = "timestamps";
     const snapshotUpdatedAtFieldName: keyof LootboxSnapshotTimestamps = "updatedAt";
@@ -282,6 +304,10 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
         description: request.description,
         name: request.name,
         stampImage: newStampURL,
+        ...(_stampInviteImageUrl && {
+            officialInviteStampImage: _stampInviteImageUrl,
+            officialInviteURL: request.referralURL,
+        }),
         [`${snapshotTimestampFieldName}.${snapshotUpdatedAtFieldName}`]: Timestamp.now().toMillis(),
     };
     batch.update(lootboxRef, lootboxUpdateReq);

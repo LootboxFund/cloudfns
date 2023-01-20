@@ -637,8 +637,27 @@ export const onLootboxWrite = functions
                 // Lootbox created
                 // Create the official invite graphic & referral link
                 const host = await getAffiliateByUserIdpID(newLootbox.creatorID as unknown as UserIdpID);
+                const officialReferral = await referralService.create(
+                    {
+                        campaignName: `${newLootbox.name} Official Invite Link`,
+                        promoterId: host?.id,
+                        referrerId: newLootbox.creatorID,
+                        tournamentId: newLootbox.tournamentID,
+                        type: ReferralType_Firestore.genesis,
+                        lootboxID: newLootbox.id,
+                        stampMetadata: {
+                            playerHeadshot: newLootbox.stampMetadata?.playerHeadshot ?? null,
+                            logoURLs: newLootbox.stampMetadata?.logoURLs ?? [],
+                            eventName: newLootbox.stampMetadata?.eventName || "Lootbox Events",
+                            hostName: newLootbox.stampMetadata?.hostName ?? null,
+                        },
+                    },
+                    newLootbox.creatorID
+                );
 
-                const [tournamentSnapshot, officialReferral] = await Promise.all([
+                const referralLink = `${manifest.microfrontends.webflow.referral}?r=${officialReferral.slug}`;
+
+                const [tournamentSnapshot, updatedLootboxResponse] = await Promise.all([
                     createLootboxTournamentSnapshot({
                         tournamentID: newLootbox.tournamentID,
                         lootboxID: newLootbox.id,
@@ -649,48 +668,39 @@ export const onLootboxWrite = functions
                         name: newLootbox.name,
                         stampImage: newLootbox.stampImage,
                         type: newLootbox.type,
+                        inviteLinkURL: referralLink,
+                        inviteStampImage: officialReferral.inviteGraphic,
                     }),
-                    referralService.create(
-                        {
-                            campaignName: `${newLootbox.name} Official Invite Link`,
-                            promoterId: host?.id,
-                            referrerId: newLootbox.creatorID,
-                            tournamentId: newLootbox.tournamentID,
-                            type: ReferralType_Firestore.genesis,
-                            lootboxID: newLootbox.id,
-                            stampMetadata: {
-                                playerHeadshot: newLootbox.stampMetadata?.playerHeadshot ?? null,
-                                logoURLs: newLootbox.stampMetadata?.logoURLs ?? [],
-                                eventName: newLootbox.stampMetadata?.eventName || "Lootbox Events",
-                                hostName: newLootbox.stampMetadata?.hostName ?? null,
-                            },
-                        },
-                        newLootbox.creatorID
-                    ),
+                    // This will update the invite stamp data on the lootbox (note this will re-trigger this functino...)
+                    associateInviteDataToLootbox(newLootbox.id, {
+                        inviteGraphic: officialReferral.inviteGraphic,
+                        inviteLink: referralLink,
+                    }),
                 ]);
-
-                // This will update the invite stamp data on the lootbox (note this will re-trigger this functino...)
-                await associateInviteDataToLootbox(newLootbox.id, {
-                    inviteGraphic: officialReferral.inviteGraphic,
-                    inviteLink: `${manifest.microfrontends.webflow.referral}?r=${officialReferral.slug}`,
-                });
             }
 
             return;
         }
 
         // Lootbox updated
-        const shouldUpdateStampV2 =
+        const shouldUpdateSimpleStampV2 =
             newLootbox.name !== oldLootbox.name ||
             newLootbox.backgroundImage !== oldLootbox.backgroundImage ||
             newLootbox.themeColor !== oldLootbox.themeColor ||
             newLootbox.stampMetadata?.playerHeadshot !== oldLootbox.stampMetadata?.playerHeadshot ||
             JSON.stringify(newLootbox.stampMetadata?.logoURLs) !== JSON.stringify(oldLootbox.stampMetadata?.logoURLs);
+        const shouldUpdateInviteStampV2 =
+            newLootbox.name !== oldLootbox.name ||
+            newLootbox.backgroundImage !== oldLootbox.backgroundImage ||
+            newLootbox.themeColor !== oldLootbox.themeColor ||
+            newLootbox.stampMetadata?.playerHeadshot !== oldLootbox.stampMetadata?.playerHeadshot ||
+            JSON.stringify(newLootbox.stampMetadata?.logoURLs) !== JSON.stringify(oldLootbox.stampMetadata?.logoURLs) ||
+            newLootbox.nftBountyValue !== oldLootbox.nftBountyValue;
 
         /** @deprecated old design specs */
-        const shouldUpdateStampV1 = shouldUpdateStampV2 || newLootbox.logo !== oldLootbox.logo;
+        const shouldUpdateStampV1 = shouldUpdateSimpleStampV2 || newLootbox.logo !== oldLootbox.logo;
 
-        if (shouldUpdateStampV2 || shouldUpdateStampV1) {
+        if (shouldUpdateSimpleStampV2 || shouldUpdateInviteStampV2 || shouldUpdateStampV1) {
             logger.info("Updating stamp", {
                 lootboxID: newLootbox.id,
                 backgroundImage: newLootbox.backgroundImage,
@@ -711,6 +721,9 @@ export const onLootboxWrite = functions
                     chainIdHex: newLootbox.chainIdHex,
                     description: newLootbox.description,
                     stampMetadata: newLootbox.stampMetadata,
+                    // referralURL: `${manifest.microfrontends.webflow.referral}?r=${officialReferral.slug}`,
+                    referralURL: newLootbox.officialInviteLink || "https://lootbox.tickets",
+                    lootboxTicketValue: newLootbox.nftBountyValue || "Epic Prizes",
                 });
             } catch (err) {
                 logger.error(err, {
