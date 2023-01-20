@@ -109,9 +109,11 @@ export const parseLootboxDB = (
       isExclusiveLootbox: lootbox?.safetyFeatures?.isExclusiveLootbox || false,
       maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
     },
+    ...(lootbox?.stampMetadata && {
+      stampMetadata: lootbox.stampMetadata,
+    }),
   };
   if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
-    // @ts-ignore
     lootboxDB.airdropMetadata = {
       lootboxID: lootbox.airdropMetadata.lootboxID,
       batch: lootbox.airdropMetadata.batch,
@@ -190,107 +192,68 @@ export const convertLootboxStatusGQLToDB = (
 };
 
 export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
-  if (lootbox.variant === LootboxVariant_Firestore.cosmic) {
-    const data: Lootbox = {
-      id: lootbox.id,
-      address: lootbox.address,
-      factory: lootbox.factory,
-      creatorAddress: lootbox.creatorAddress,
-      chainIdHex: lootbox.chainIdHex,
-      variant: convertLootboxVariantDBToGQL(lootbox.variant),
-      creatorID: lootbox.creatorID,
-      timestamps: lootbox.timestamps,
-      chainIdDecimal: lootbox.chainIdDecimal,
-      chainName: lootbox.chainName,
-      transactionHash: lootbox.transactionHash,
-      blockNumber: lootbox.blockNumber,
-      name: lootbox.name,
-      description: lootbox.description,
-      status: lootbox.status
-        ? convertLootboxStatusDBToGQL(lootbox.status)
-        : LootboxStatus.Disabled,
-      nftBountyValue: lootbox.nftBountyValue,
-      joinCommunityUrl: lootbox.joinCommunityUrl,
-      maxTickets: lootbox.maxTickets,
-      stampImage: lootbox.stampImage,
-      logo: lootbox.logo,
-      backgroundImage: lootbox.backgroundImage,
-      // badgeImage: lootbox.badgeImage,
-      themeColor: lootbox.themeColor,
-      // version: lootbox.version,
-      symbol: lootbox.symbol || "",
-      baseTokenURI: lootbox.baseTokenURI || null,
-      runningCompletedClaims: lootbox.runningCompletedClaims || 0,
-      creationNonce: lootbox.creationNonce || null,
-      type: lootbox.type,
-      safetyFeatures: {
-        isExclusiveLootbox:
-          lootbox?.safetyFeatures?.isExclusiveLootbox || false,
-        maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
-      },
-      stampMetadata: lootbox?.stampMetadata ?? null,
-    };
-    if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
-      data.airdropMetadata = {
-        lootboxID: lootbox.airdropMetadata.lootboxID,
-        // @ts-ignore
-        batch: lootbox.airdropMetadata.batch,
-        offerID: lootbox.airdropMetadata.offerID,
-        title: lootbox.airdropMetadata.title,
-        oneLiner: lootbox.airdropMetadata.oneLiner,
-        value: lootbox.airdropMetadata.value,
-        instructionsLink: lootbox.airdropMetadata.instructionsLink,
-        instructionsCallToAction:
-          lootbox.airdropMetadata.instructionsCallToAction,
-        callToActionLink: lootbox.airdropMetadata.callToActionLink,
-        tournamentID: lootbox.airdropMetadata.tournamentID,
-        organizerID: lootbox.airdropMetadata.organizerID,
-        // @ts-ignore
-        advertiserID: lootbox.airdropMetadata.advertiserID,
-        advertiserName: lootbox.airdropMetadata.advertiserName,
-        questions: lootbox.airdropMetadata.questions,
-      };
-    }
-    return data;
-  } else {
-    // this should all be removed soon
-    const deprecatedLootbox = lootbox as unknown as LootboxDeprecated_Firestore; // coerce the deprecated type
-    return {
-      id: "",
-      address: deprecatedLootbox.address,
-      factory: deprecatedLootbox.factory,
-      creatorAddress: "",
-      creatorID: "",
-      chainIdHex: deprecatedLootbox.chainIdHex,
-      variant: convertLootboxVariantDBToGQL(deprecatedLootbox.variant),
-      timestamps: deprecatedLootbox.timestamps,
-      chainIdDecimal:
-        deprecatedLootbox.metadata.lootboxCustomSchema.chain.chainIdDecimal,
-      chainName: deprecatedLootbox.metadata.lootboxCustomSchema.chain.chainName,
-      transactionHash:
-        deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.transactionHash,
-      blockNumber:
-        deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.blockNumber,
-      name: deprecatedLootbox.name,
-      description:
-        deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.description,
-      status: LootboxStatus.Active,
-      nftBountyValue: "",
-      joinCommunityUrl: "",
-      maxTickets: 0,
-      stampImage: deprecatedLootbox.metadata.image,
-      logo: deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.image,
-      backgroundImage:
-        deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.backgroundImage,
-      // badgeImage:
-      //   deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.badgeImage,
-      themeColor:
-        deprecatedLootbox.metadata.lootboxCustomSchema.lootbox.backgroundColor,
-      symbol: "",
-      baseTokenURI: "",
-      runningCompletedClaims: lootbox.runningCompletedClaims || 0,
+  const data: Lootbox = {
+    id: lootbox.id,
+    address: lootbox.address,
+    factory: lootbox.factory,
+    creatorAddress: lootbox.creatorAddress,
+    chainIdHex: lootbox.chainIdHex,
+    variant: lootbox.variant
+      ? convertLootboxVariantDBToGQL(lootbox.variant)
+      : LootboxVariant.Cosmic,
+    creatorID: lootbox.creatorID,
+    timestamps: lootbox.timestamps,
+    chainIdDecimal: lootbox.chainIdDecimal,
+    chainName: lootbox.chainName,
+    transactionHash: lootbox.transactionHash,
+    blockNumber: lootbox.blockNumber,
+    name: lootbox.name,
+    description: lootbox.description,
+    status: lootbox.status
+      ? convertLootboxStatusDBToGQL(lootbox.status)
+      : LootboxStatus.Disabled,
+    nftBountyValue: lootbox.nftBountyValue,
+    joinCommunityUrl: lootbox.joinCommunityUrl,
+    maxTickets: lootbox.maxTickets,
+    stampImage: lootbox.stampImage,
+    logo: lootbox.logo,
+    backgroundImage: lootbox.backgroundImage,
+    // badgeImage: lootbox.badgeImage,
+    themeColor: lootbox.themeColor,
+    // version: lootbox.version,
+    symbol: lootbox.symbol || "",
+    baseTokenURI: lootbox.baseTokenURI || null,
+    runningCompletedClaims: lootbox.runningCompletedClaims || 0,
+    creationNonce: lootbox.creationNonce || null,
+    type: lootbox.type,
+    safetyFeatures: {
+      isExclusiveLootbox: lootbox?.safetyFeatures?.isExclusiveLootbox || false,
+      maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
+    },
+    stampMetadata: lootbox?.stampMetadata ?? null,
+  };
+  if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
+    data.airdropMetadata = {
+      lootboxID: lootbox.airdropMetadata.lootboxID,
+      // @ts-ignore
+      batch: lootbox.airdropMetadata.batch,
+      offerID: lootbox.airdropMetadata.offerID,
+      title: lootbox.airdropMetadata.title,
+      oneLiner: lootbox.airdropMetadata.oneLiner,
+      value: lootbox.airdropMetadata.value,
+      instructionsLink: lootbox.airdropMetadata.instructionsLink,
+      instructionsCallToAction:
+        lootbox.airdropMetadata.instructionsCallToAction,
+      callToActionLink: lootbox.airdropMetadata.callToActionLink,
+      tournamentID: lootbox.airdropMetadata.tournamentID,
+      organizerID: lootbox.airdropMetadata.organizerID,
+      // @ts-ignore
+      advertiserID: lootbox.airdropMetadata.advertiserID,
+      advertiserName: lootbox.airdropMetadata.advertiserName,
+      questions: lootbox.airdropMetadata.questions,
     };
   }
+  return data;
 };
 
 export const convertMintWhitelistSignatureDBToGQL = (
