@@ -24,6 +24,7 @@ import {
   editLootbox,
   EditLootboxPayload,
   extractOrGenerateLootboxCreateInput,
+  getAffiliateByUserIdpID,
   getLootbox,
   getTournamentById,
   getUser,
@@ -76,6 +77,7 @@ export const create = async (
 
   // Make sure the tournament exists
   let tournament: Tournament_Firestore | undefined = undefined;
+
   if (request.tournamentID) {
     tournament = await getTournamentById(request.tournamentID as TournamentID);
     if (!tournament || !!tournament.timestamps.deletedAt) {
@@ -85,7 +87,12 @@ export const create = async (
     }
   }
 
-  const stampSecret = await getStampSecret();
+  const [host, stampSecret] = await Promise.all([
+    tournament
+      ? getAffiliateByUserIdpID(tournament?.creatorId as unknown as UserIdpID)
+      : null,
+    getStampSecret(),
+  ]);
   const lootboxDocumentRef = db
     .collection(Collection.Lootbox)
     .doc() as DocumentReference<Lootbox_Firestore>;
@@ -101,6 +108,7 @@ export const create = async (
       playerHeadshot: request.stampMetadata?.playerHeadshot ?? undefined,
       sponsorLogos: request?.stampMetadata?.logoURLs ?? [],
       eventName: tournament?.title || "Lootbox Events",
+      hostName: host?.name,
     });
   } else {
     stampImageUrl = await stampNewLootbox(stampSecret, {
@@ -134,6 +142,8 @@ export const create = async (
       ? {
           playerHeadshot: request.stampMetadata?.playerHeadshot ?? null,
           logoURLs: request.stampMetadata?.logoURLs ?? [],
+          eventName: tournament?.title || "Lootbox Events",
+          hostName: host?.name ?? null,
         }
       : undefined,
   };
