@@ -642,6 +642,7 @@ export const onLootboxWrite = functions
                         type: ReferralType_Firestore.genesis,
                         lootboxID: newLootbox.id,
                         stampMetadata: {
+                            inviteGraphicCoverPhoto: newLootbox.backgroundImage ?? null,
                             playerHeadshot: newLootbox.stampMetadata?.playerHeadshot ?? null,
                             logoURLs: newLootbox.stampMetadata?.logoURLs ?? [],
                             eventName: newLootbox.stampMetadata?.eventName || "Lootbox Events",
