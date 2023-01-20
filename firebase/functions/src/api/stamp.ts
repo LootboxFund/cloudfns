@@ -7,6 +7,8 @@ import {
     StampNewLootboxResponse,
     StampSimpleTicketProps,
     StampSimpleTicketResponse,
+    StampInviteTicketProps,
+    StampInviteTicketResponse,
 } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
 
@@ -96,6 +98,47 @@ export const stampNewLootboxSimpleTicket = async (props: StampSimpleTicketPropsB
     const secret = process.env.STAMP_SECRET || "";
     const response = await axios.post<StampSimpleTicketResponse>(
         manifest.cloudRun.containers.simpleLootboxStamp.fullRoute,
+        JSON.stringify(stampConfig),
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                secret,
+            },
+        }
+    );
+
+    const { stamp } = response.data;
+    return stamp;
+};
+
+interface InviteStampPropsBE {
+    coverPhoto: string;
+    sponsorLogos: string[];
+    teamName: string;
+    playerHeadshot?: string;
+    themeColor: string;
+    ticketValue: string;
+    qrCodeLink: string;
+    eventName?: string;
+    hostName?: string;
+}
+
+export const createInviteStamp = async (props: InviteStampPropsBE): Promise<string> => {
+    const stampConfig: StampInviteTicketProps = {
+        coverPhoto: props.coverPhoto,
+        sponsorLogos: props.sponsorLogos,
+        teamName: props.teamName,
+        playerHeadshot: props.playerHeadshot,
+        themeColor: props.themeColor,
+        ticketValue: props.ticketValue,
+        qrCodeLink: props.qrCodeLink,
+        eventName: props.eventName,
+        hostName: props.hostName,
+    };
+    const secret = process.env.STAMP_SECRET || "";
+    const response = await axios.post<StampInviteTicketResponse>(
+        manifest.cloudRun.containers.inviteStamp.fullRoute,
         JSON.stringify(stampConfig),
         {
             method: "POST",

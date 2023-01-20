@@ -1,4 +1,5 @@
 import {
+    AffiliateID,
     ClaimID,
     ClaimStatus_Firestore,
     ClaimTimestamps_Firestore,
@@ -10,6 +11,7 @@ import {
     LootboxTicket_Firestore,
     Lootbox_Firestore,
     ReferralID,
+    ReferralSlug,
     ReferralType_Firestore,
     Referral_Firestore,
     TournamentID,
@@ -351,4 +353,67 @@ export const getUserClaimCountForLootbox = async (lootboxID: LootboxID, userID: 
         .get();
 
     return query.docs.length;
+};
+
+interface CreateReferralCall {
+    slug: ReferralSlug;
+    referrerId: UserID;
+    promoterId?: AffiliateID;
+    creatorId: UserID;
+    campaignName: string;
+    tournamentId: TournamentID;
+    type: ReferralType_Firestore;
+    seedLootboxID?: LootboxID;
+    isPostCosmic: boolean;
+    inviteGraphic?: string;
+}
+export const createReferral = async (req: CreateReferralCall): Promise<Referral_Firestore> => {
+    const ref = db.collection(Collection.Referral).doc();
+    const newReferral: Referral_Firestore = {
+        id: ref.id as ReferralID,
+        slug: req.slug,
+        creatorId: req.creatorId,
+        referrerId: req.referrerId,
+        campaignName: req.campaignName,
+        tournamentId: req.tournamentId,
+        type: req.type,
+        isPostCosmic: req.isPostCosmic,
+        timestamps: {
+            createdAt: Timestamp.now().toMillis(),
+            updatedAt: Timestamp.now().toMillis(),
+            deletedAt: null,
+        },
+        nConversions: 0,
+    };
+
+    if (req.promoterId) {
+        newReferral.promoterId = req.promoterId;
+    }
+
+    if (req.seedLootboxID) {
+        newReferral.seedLootboxID = req.seedLootboxID;
+    }
+
+    if (req.inviteGraphic) {
+        newReferral.inviteGraphic = req.inviteGraphic;
+    }
+
+    await ref.set(newReferral);
+
+    return newReferral;
+};
+
+export const getReferralBySlug = async (slug: ReferralSlug): Promise<Referral_Firestore | undefined> => {
+    const collectionRef = db
+        .collection(Collection.Referral)
+        .where("slug", "==", slug)
+        .limit(1) as Query<Referral_Firestore>;
+
+    const collectionSnapshot = await collectionRef.get();
+
+    if (collectionSnapshot.empty || collectionSnapshot?.docs?.length === 0) {
+        return undefined;
+    } else {
+        return collectionSnapshot.docs[0].data();
+    }
 };

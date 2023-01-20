@@ -21,6 +21,9 @@ import {
     Lootbox_Firestore,
     LootboxTicketID,
     LootboxTicket_Firestore,
+    ReferralType_Firestore,
+    TournamentID,
+    UserIdpID,
 } from "@wormgraph/helpers";
 import LootboxCosmicFactoryABI from "@wormgraph/helpers/lib/abi/LootboxCosmicFactory.json";
 import LootboxCosmicABI from "@wormgraph/helpers/lib/abi/LootboxCosmic.json";
@@ -28,7 +31,14 @@ import { db, fun } from "../api/firebase";
 import { manifest, SecretName } from "../manifest";
 import * as lootboxService from "../service/lootbox";
 import { retrieveRandomColor } from "./util";
-import { getTicketByID } from "../api/firestore";
+import {
+    associateInviteDataToLootbox,
+    createLootboxTournamentSnapshot,
+    getAffiliate,
+    getAffiliateByUserIdpID,
+    getTicketByID,
+} from "../api/firestore";
+import * as referralService from "../service/referral";
 
 const REGION = manifest.cloudFunctions.region;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -617,10 +627,59 @@ export const onLootboxWrite = functions
         const oldLootbox = snap.before.data() as Lootbox_Firestore | undefined;
         const newLootbox = snap.after.data() as Lootbox_Firestore | undefined;
 
-        if (!newLootbox || !oldLootbox) {
+        if (!newLootbox) {
             return;
         }
 
+        if (!oldLootbox) {
+            // Create a referral links
+            if (newLootbox.tournamentID) {
+                // Lootbox created
+                // Create the official invite graphic & referral link
+                const host = await getAffiliateByUserIdpID(newLootbox.creatorID as unknown as UserIdpID);
+
+                const [tournamentSnapshot, officialReferral] = await Promise.all([
+                    createLootboxTournamentSnapshot({
+                        tournamentID: newLootbox.tournamentID,
+                        lootboxID: newLootbox.id,
+                        lootboxAddress: newLootbox.address || null,
+                        creatorID: newLootbox.creatorID,
+                        lootboxCreatorID: newLootbox.creatorID,
+                        description: newLootbox.description,
+                        name: newLootbox.name,
+                        stampImage: newLootbox.stampImage,
+                        type: newLootbox.type,
+                    }),
+                    referralService.create(
+                        {
+                            campaignName: `${newLootbox.name} Official Invite Link`,
+                            promoterId: host?.id,
+                            referrerId: newLootbox.creatorID,
+                            tournamentId: newLootbox.tournamentID,
+                            type: ReferralType_Firestore.genesis,
+                            lootboxID: newLootbox.id,
+                            stampMetadata: {
+                                playerHeadshot: newLootbox.stampMetadata?.playerHeadshot ?? null,
+                                logoURLs: newLootbox.stampMetadata?.logoURLs ?? [],
+                                eventName: newLootbox.stampMetadata?.eventName || "Lootbox Events",
+                                hostName: newLootbox.stampMetadata?.hostName ?? null,
+                            },
+                        },
+                        newLootbox.creatorID
+                    ),
+                ]);
+
+                // This will update the invite stamp data on the lootbox (note this will re-trigger this functino...)
+                await associateInviteDataToLootbox(newLootbox.id, {
+                    inviteGraphic: officialReferral.inviteGraphic,
+                    inviteLink: `${manifest.microfrontends.webflow.referral}?r=${officialReferral.slug}`,
+                });
+            }
+
+            return;
+        }
+
+        // Lootbox updated
         const shouldUpdateStampV2 =
             newLootbox.name !== oldLootbox.name ||
             newLootbox.backgroundImage !== oldLootbox.backgroundImage ||
