@@ -100,6 +100,8 @@ const LootboxTypeDefs = gql`
   }
 
   type LootboxStampMetadata {
+    hostName: String
+    eventName: String
     playerHeadshot: String
     logoURLs: [String!]
   }
