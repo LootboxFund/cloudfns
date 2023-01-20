@@ -5,6 +5,7 @@ import {
   Tournament_Firestore,
   UserID,
   UserIdpID,
+  Affiliate_Firestore,
 } from "@wormgraph/helpers";
 import { validate } from "graphql";
 import {
@@ -15,7 +16,6 @@ import {
   updateTournament,
   UpdateTournamentPayload,
 } from "../../api/firestore";
-import { Affiliate_Firestore } from "../../api/firestore/affiliate.type";
 import { getRandomUserName } from "../../api/lexica-images";
 import { TournamentVisibility } from "../../graphql/generated/types";
 import { isInteger } from "../../lib/number";

@@ -40,6 +40,8 @@ import {
   User_Firestore,
   AdvertiserID,
   AffiliateID,
+  AffiliateVisibility_Firestore,
+  Affiliate_Firestore,
   UserIdpID,
 } from "@wormgraph/helpers";
 import { CollectionReference } from "firebase-admin/firestore";
@@ -47,10 +49,6 @@ import {
   AdvertiserVisibility_Firestore,
   Advertiser_Firestore,
 } from "../api/firestore/advertiser.type";
-import {
-  AffiliateVisibility_Firestore,
-  Affiliate_Firestore,
-} from "../api/firestore/affiliate.type";
 import {
   getRandomPortraitFromLexicaHardcoded,
   getRandomUserName,

@@ -15,10 +15,10 @@ import {
   AffiliateID,
   Collection,
   UserIdpID,
+  Affiliate_Firestore,
 } from "@wormgraph/helpers";
 import { DocumentReference } from "firebase-admin/firestore";
 import { Advertiser_Firestore } from "../firestore/advertiser.type";
-import { Affiliate_Firestore } from "../firestore/affiliate.type";
 
 const ERROR_CODE_USER_NOT_FOUND = "auth/user-not-found";
 

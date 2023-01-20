@@ -5,6 +5,8 @@ import {
   Offer_Firestore,
   OrganizerRank,
   rankInfoTable,
+  AffiliateVisibility_Firestore,
+  Affiliate_Firestore,
 } from "@wormgraph/helpers";
 import { Query } from "firebase-admin/firestore";
 import * as _ from "lodash";
@@ -16,10 +18,6 @@ import {
 import { db } from "../firebase";
 import { getAdvertiser } from "./advertiser";
 import { Advertiser_Firestore } from "./advertiser.type";
-import {
-  AffiliateVisibility_Firestore,
-  Affiliate_Firestore,
-} from "./affiliate.type";
 import { listActiveActivationsForOffer } from "./offer";
 
 export const browseAllAffiliates = async (): Promise<
