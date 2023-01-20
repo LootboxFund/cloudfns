@@ -144,6 +144,8 @@ const LootboxTypeDefs = gql`
     airdropMetadata: LootboxAirdropMetadata
     airdropQuestions: [LootboxAirdropMetadataQuestion!]
     stampMetadata: LootboxStampMetadata
+    officialInviteLink: String
+    officialInviteGraphic: String
 
     # GQL layer
     userClaims(
