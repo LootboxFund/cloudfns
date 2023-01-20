@@ -2,16 +2,12 @@ import {
   Address,
   Claim_Firestore,
   Collection,
-  ContractAddress,
   LootboxID,
   LootboxStatus_Firestore,
-  LootboxTicketDigest,
   LootboxVariant_Firestore,
   Lootbox_Firestore,
   MintWhitelistSignature_Firestore,
-  StampMetadata_Firestore,
   TournamentID,
-  Tournament_Firestore,
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
@@ -19,7 +15,7 @@ import { stampNewLootbox, stampNewLootboxSimpleTicket } from "../../api/stamp";
 import {
   createLootbox,
   CreateLootboxPayloadLocalType,
-  createLootboxTournamentSnapshot,
+  // createLootboxTournamentSnapshot,
   createMintWhitelistSignature,
   editLootbox,
   EditLootboxPayload,
@@ -41,9 +37,11 @@ import {
   AirdropMetadataCreateInput,
   Tournament,
   LootboxStatus,
+  ReferralType,
 } from "../../graphql/generated/types";
 import { convertLootboxStatusGQLToDB } from "../../lib/lootbox";
 import { isInteger } from "../../lib/number";
+import * as referralService from "../referral";
 
 export interface CreateLootboxRequest {
   // passed in variables
@@ -76,15 +74,13 @@ export const create = async (
   const request = await extractOrGenerateLootboxCreateInput(_request);
 
   // Make sure the tournament exists
-  let tournament: Tournament_Firestore | undefined = undefined;
-
-  if (request.tournamentID) {
-    tournament = await getTournamentById(request.tournamentID as TournamentID);
-    if (!tournament || !!tournament.timestamps.deletedAt) {
-      throw new Error(
-        "Could not create Lootbox. The Requested tournament was not found."
-      );
-    }
+  const tournament = await getTournamentById(
+    request.tournamentID as TournamentID
+  );
+  if (!tournament || !!tournament.timestamps.deletedAt) {
+    throw new Error(
+      "Could not create Lootbox. The Requested tournament was not found."
+    );
   }
 
   const [host, stampSecret] = await Promise.all([
@@ -151,20 +147,6 @@ export const create = async (
   validateCreateLootboxPayload(payload);
 
   const createdLootbox = await createLootbox(payload, lootboxDocumentRef);
-
-  if (tournament != undefined) {
-    await createLootboxTournamentSnapshot({
-      tournamentID: request.tournamentID,
-      lootboxID: createdLootbox.id,
-      lootboxAddress: createdLootbox.address || null,
-      creatorID: callerUserID,
-      lootboxCreatorID: callerUserID,
-      description: createdLootbox.description,
-      name: createdLootbox.name,
-      stampImage: createdLootbox.stampImage,
-      type: createdLootbox.type,
-    });
-  }
 
   return createdLootbox;
 };

@@ -1,3 +1,7 @@
+/**
+ * WARNING: THIS CODE IS COPIED IN @cloudfns/firebase/functions
+ */
+
 import {
   AffiliateID,
   LootboxID,
@@ -34,7 +38,12 @@ interface CreateReferralServiceRequest {
   tournamentId: TournamentID;
   type?: ReferralType | null;
   lootboxID?: LootboxID | null;
-  stampMetadata?: InviteStampMetadata | null;
+  stampMetadata?: {
+    playerHeadshot?: string | null;
+    logoURLs?: string[] | null;
+    eventName?: string | null;
+    hostName?: string | null;
+  } | null;
 }
 
 export const create = async (
@@ -135,12 +144,11 @@ export const create = async (
       themeColor: lootbox?.themeColor ?? "#000000",
       teamName: lootbox?.name ?? payload.campaignName ?? "Player",
       playerHeadshot: payload.stampMetadata?.playerHeadshot ?? undefined,
-
       ticketValue: lootbox?.nftBountyValue ?? "Prizes",
       qrCodeLink: `${manifest.microfrontends.webflow.referral}?r=${slug}`,
-
-      /** @TODO fill these in with data */
-      sponsorLogos: [],
+      sponsorLogos: payload.stampMetadata?.logoURLs ?? [],
+      eventName: payload.stampMetadata?.eventName ?? undefined,
+      hostName: payload.stampMetadata?.hostName ?? undefined,
     });
   } catch (err) {
     console.error("Error creating stamp", err);

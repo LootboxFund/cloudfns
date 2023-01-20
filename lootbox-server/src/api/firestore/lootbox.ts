@@ -606,53 +606,53 @@ export const createLootbox = async (
   return lootboxPayload;
 };
 
-interface CreateLootboxTournamentSnapshot {
-  tournamentID: TournamentID;
-  lootboxAddress: Address | null;
-  lootboxID: LootboxID;
-  creatorID: UserID;
-  lootboxCreatorID: UserID;
-  description: string;
-  name: string;
-  stampImage: string;
-  type?: LootboxType;
-}
-export const createLootboxTournamentSnapshot = async (
-  payload: CreateLootboxTournamentSnapshot
-): Promise<LootboxTournamentSnapshot_Firestore> => {
-  const doc = db
-    .collection(Collection.Tournament)
-    .doc(payload.tournamentID)
-    .collection(Collection.LootboxTournamentSnapshot)
-    .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+// interface CreateLootboxTournamentSnapshot {
+//   tournamentID: TournamentID;
+//   lootboxAddress: Address | null;
+//   lootboxID: LootboxID;
+//   creatorID: UserID;
+//   lootboxCreatorID: UserID;
+//   description: string;
+//   name: string;
+//   stampImage: string;
+//   type?: LootboxType;
+// }
+// export const createLootboxTournamentSnapshot = async (
+//   payload: CreateLootboxTournamentSnapshot
+// ): Promise<LootboxTournamentSnapshot_Firestore> => {
+//   const doc = db
+//     .collection(Collection.Tournament)
+//     .doc(payload.tournamentID)
+//     .collection(Collection.LootboxTournamentSnapshot)
+//     .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;
 
-  const request: LootboxTournamentSnapshot_Firestore = {
-    id: doc.id as LootboxTournamentSnapshotID,
-    tournamentID: payload.tournamentID as TournamentID,
-    address: payload.lootboxAddress || null,
-    lootboxID: payload.lootboxID,
-    creatorID: payload.creatorID,
-    lootboxCreatorID: payload.lootboxCreatorID,
-    description: payload.description,
-    name: payload.name,
-    stampImage: payload.stampImage,
-    impressionPriority: 0,
-    status: LootboxTournamentStatus_Firestore.active,
-    timestamps: {
-      createdAt: Timestamp.now().toMillis(),
-      updatedAt: Timestamp.now().toMillis(),
-      deletedAt: null,
-      depositEmailSentAt: null,
-    },
-  };
-  if (payload.type) {
-    request.type = payload.type;
-  }
+//   const request: LootboxTournamentSnapshot_Firestore = {
+//     id: doc.id as LootboxTournamentSnapshotID,
+//     tournamentID: payload.tournamentID as TournamentID,
+//     address: payload.lootboxAddress || null,
+//     lootboxID: payload.lootboxID,
+//     creatorID: payload.creatorID,
+//     lootboxCreatorID: payload.lootboxCreatorID,
+//     description: payload.description,
+//     name: payload.name,
+//     stampImage: payload.stampImage,
+//     impressionPriority: 0,
+//     status: LootboxTournamentStatus_Firestore.active,
+//     timestamps: {
+//       createdAt: Timestamp.now().toMillis(),
+//       updatedAt: Timestamp.now().toMillis(),
+//       deletedAt: null,
+//       depositEmailSentAt: null,
+//     },
+//   };
+//   if (payload.type) {
+//     request.type = payload.type;
+//   }
 
-  await doc.set(request);
+//   await doc.set(request);
 
-  return request;
-};
+//   return request;
+// };
 
 export const getLootboxUnassignedClaimForUser = async (
   lootboxID: LootboxID,
