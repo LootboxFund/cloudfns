@@ -277,11 +277,19 @@ const InviteStamp: FunctionComponent<InviteStampProps> = (props) => {
                   style={{
                     margin: "0",
                     position: "relative",
-                    fontSize: "inherit",
+                    fontSize:
+                      !prizeParts.leadingNumber &&
+                      prizeParts.smallText?.length < 8
+                        ? "140px"
+                        : !prizeParts.leadingNumber &&
+                          prizeParts.smallText?.length < 16
+                        ? "80px"
+                        : "inherit",
                     fontWeight: "700",
                     fontFamily: "inherit",
                     // ...(hasNumber && !isBig && { lineHeight: "100px" }),
                     alignSelf: "center",
+                    lineHeight: "108%",
                   }}
                 >
                   {prizeParts.smallText}
