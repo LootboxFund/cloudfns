@@ -23,6 +23,9 @@ import {
   AdID,
   Memo_Firestore,
   OfferStrategy,
+  Activation_Firestore,
+  AffiliateVisibility_Firestore,
+  Affiliate_Firestore,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query } from "firebase-admin/firestore";
 import {
@@ -46,17 +49,12 @@ import {
   OfferStrategyType,
 } from "../../graphql/generated/types";
 import { db } from "../firebase";
-import {
-  AffiliateVisibility_Firestore,
-  Affiliate_Firestore,
-  OrganizerOfferWhitelist_Firestore,
-} from "./affiliate.type";
+import { OrganizerOfferWhitelist_Firestore } from "./affiliate.type";
 import { AdSetStatus, AdSet_Firestore, Ad_Firestore } from "./ad.types";
 // import { TournamentOffers, OfferStrategyType } from '../../graphql/generated/types';
 import { Advertiser_Firestore } from "./advertiser.type";
 import { getOffer, listActiveActivationsForOffer } from "./offer";
 import * as _ from "lodash";
-import { Activation_Firestore } from "@wormgraph/helpers";
 import { getTournamentById } from "./tournament";
 import { getAd, getAdSet } from "./ad";
 import { getAdvertiser } from "./advertiser";

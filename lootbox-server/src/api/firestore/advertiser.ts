@@ -24,9 +24,9 @@ import {
   TournamentID,
   Tournament_Firestore,
   UserIdpID,
+  Affiliate_Firestore,
 } from "@wormgraph/helpers";
 import * as moment from "moment";
-import { Affiliate_Firestore } from "./affiliate.type";
 import { checkIfUserIdpMatchesAdvertiser } from "../identityProvider/firebase";
 import { TournamentPreview } from "../../graphql/generated/types";
 import { getRandomEventCoverFromLexicaHardcoded } from "../lexica-images";

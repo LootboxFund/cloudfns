@@ -2,14 +2,11 @@ import {
   Address,
   Claim_Firestore,
   Collection,
-  ContractAddress,
   LootboxID,
   LootboxStatus_Firestore,
-  LootboxTicketDigest,
   LootboxVariant_Firestore,
   Lootbox_Firestore,
   MintWhitelistSignature_Firestore,
-  StampMetadata_Firestore,
   TournamentID,
   Tournament_Firestore,
   UserID,
@@ -19,7 +16,7 @@ import { stampNewLootbox, stampNewLootboxSimpleTicket } from "../../api/stamp";
 import {
   createLootbox,
   CreateLootboxPayloadLocalType,
-  createLootboxTournamentSnapshot,
+  // createLootboxTournamentSnapshot,
   createMintWhitelistSignature,
   editLootbox,
   EditLootboxPayload,
@@ -41,9 +38,11 @@ import {
   AirdropMetadataCreateInput,
   Tournament,
   LootboxStatus,
+  ReferralType,
 } from "../../graphql/generated/types";
 import { convertLootboxStatusGQLToDB } from "../../lib/lootbox";
 import { isInteger } from "../../lib/number";
+import * as referralService from "../referral";
 
 export interface CreateLootboxRequest {
   // passed in variables
@@ -56,7 +55,7 @@ export interface CreateLootboxRequest {
   joinCommunityUrl?: string;
   symbol?: string | null;
   lootboxName?: string | null;
-  tournamentID: TournamentID;
+  tournamentID?: TournamentID;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
@@ -77,9 +76,8 @@ export const create = async (
 
   // Make sure the tournament exists
   let tournament: Tournament_Firestore | undefined = undefined;
-
   if (request.tournamentID) {
-    tournament = await getTournamentById(request.tournamentID as TournamentID);
+    tournament = await getTournamentById(request.tournamentID);
     if (!tournament || !!tournament.timestamps.deletedAt) {
       throw new Error(
         "Could not create Lootbox. The Requested tournament was not found."
@@ -151,20 +149,6 @@ export const create = async (
   validateCreateLootboxPayload(payload);
 
   const createdLootbox = await createLootbox(payload, lootboxDocumentRef);
-
-  if (tournament != undefined) {
-    await createLootboxTournamentSnapshot({
-      tournamentID: request.tournamentID,
-      lootboxID: createdLootbox.id,
-      lootboxAddress: createdLootbox.address || null,
-      creatorID: callerUserID,
-      lootboxCreatorID: callerUserID,
-      description: createdLootbox.description,
-      name: createdLootbox.name,
-      stampImage: createdLootbox.stampImage,
-      type: createdLootbox.type,
-    });
-  }
 
   return createdLootbox;
 };

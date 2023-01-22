@@ -165,8 +165,9 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           fontFamily: "Open Sans",
           fontStyle: "normal",
           fontWeight: 400,
-          fontSize: "34px",
-          lineHeight: "57px",
+          fontSize: "40px",
+          lineHeight: "60px",
+          gap: "20px",
         }}
       >
         <div
@@ -176,7 +177,7 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             position: "relative",
             textAlign: "left",
             fontFamily: "'Fira Sans'",
-            marginTop: "-24px",
+            marginTop: "-46px",
           }}
         >
           <strong
@@ -188,7 +189,8 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
               fontStyle: "italic",
               fontWeight: "800",
               whiteSpace: "nowrap",
-              opacity: 0.5,
+              opacity: 0.75,
+              marginBottom: "10px",
             }}
           >
             LOOTBOX&nbsp;
@@ -196,12 +198,12 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
               src={LOGO_URL}
               alt="Lootbox Fan Tickets"
               style={{
-                height: "42px",
-                width: "42px",
+                height: "44px",
+                width: "44px",
                 marginBottom: "-10px",
                 fontSize: "20px",
                 fontWeight: "normal",
-                filter: "grayscale(100%)",
+                // filter: "grayscale(100%)",
               }}
             />
           </strong>
@@ -209,12 +211,13 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
             style={{
               margin: "0",
               position: "absolute",
-              top: "32px",
+              top: "38px",
               left: "0px",
               fontFamily: "'Open Sans'",
               display: "inline-block",
               opacity: 0.5,
-              fontSize: "22px",
+              fontSize: "28px",
+              whiteSpace: "nowrap",
             }}
           >
             Gamers win you stuff
@@ -225,10 +228,11 @@ const SimpleTicket: FunctionComponent<SimpleTicketProps> = (props) => {
           <span
             style={{
               opacity: 0.5,
-              width: "70%",
+              width: "65%",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textAlign: "right",
+              fontSize: "32px",
             }}
           >
             {props.eventName || props.hostName}

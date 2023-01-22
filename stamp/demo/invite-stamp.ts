@@ -14,7 +14,6 @@ const demo = async () => {
     playerHeadshot:
       "https://storage.googleapis.com/lootbox-constants-staging/assets/space-girl-headshot-removebg-preview.png",
     // ticketValue: "$1000 USD",
-    ticketValue: "3 FREE 2 Jollibee Fried 4 Chicken Sandwiches",
     qrCodeLink: "https://go.lootbox.fund/r?r=12345678",
     sponsorLogos: [
       "https://uploads-ssl.webflow.com/63bd0f8e51e48f5336cc7adb/63c1b330348341eb29d8ecbe_image%20130%20(Traced).png",
@@ -24,6 +23,7 @@ const demo = async () => {
     ],
     eventName: "Chaos Regime Sports META",
     hostName: "Magneetus Jones III",
+    ticketValue: "32 Free Prizes Bae",
   });
   console.log(`linkToImage = ${linkToImage}`);
 };

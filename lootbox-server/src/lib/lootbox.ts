@@ -109,6 +109,8 @@ export const parseLootboxDB = (
       isExclusiveLootbox: lootbox?.safetyFeatures?.isExclusiveLootbox || false,
       maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
     },
+    officialInviteLink: lootbox.officialInviteLink,
+    officialInviteGraphic: lootbox.officialInviteGraphic,
     ...(lootbox?.stampMetadata && {
       stampMetadata: lootbox.stampMetadata,
     }),
@@ -231,6 +233,8 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
       maxTicketsPerUser: lootbox?.safetyFeatures?.maxTicketsPerUser ?? 5,
     },
     stampMetadata: lootbox?.stampMetadata ?? null,
+    officialInviteLink: lootbox?.officialInviteLink ?? null,
+    officialInviteGraphic: lootbox?.officialInviteGraphic ?? null,
   };
   if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
     data.airdropMetadata = {

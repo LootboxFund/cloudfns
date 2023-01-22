@@ -28,9 +28,10 @@ const Template = () => {
         qrCodeLink="https://go.lootbox.fund/r?r=12345678"
         // ticketValue={"2.1 ETH"}
         // ticketValue={"3 FREE Jollibee Fried Chicken Sandwiches"}
-        ticketValue={"$50 USD (out of 100)"}
         eventName="Chaos Regime Sports META"
         hostName="Magneetus Jones III"
+        // ticketValue={"$50 USD (out of 100)"}
+        ticketValue="Free Prizes Bae"
       />
     </$CardViewport>
   );

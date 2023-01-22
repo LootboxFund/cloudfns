@@ -100,6 +100,8 @@ const LootboxTypeDefs = gql`
   }
 
   type LootboxStampMetadata {
+    hostName: String
+    eventName: String
     playerHeadshot: String
     logoURLs: [String!]
   }
@@ -142,6 +144,8 @@ const LootboxTypeDefs = gql`
     airdropMetadata: LootboxAirdropMetadata
     airdropQuestions: [LootboxAirdropMetadataQuestion!]
     stampMetadata: LootboxStampMetadata
+    officialInviteLink: String
+    officialInviteGraphic: String
 
     # GQL layer
     userClaims(
@@ -309,7 +313,7 @@ const LootboxTypeDefs = gql`
     joinCommunityUrl: String
     maxTickets: Int
     themeColor: String
-    tournamentID: String!
+    tournamentID: String
     type: LootboxType
     isExclusiveLootbox: Boolean
     airdropMetadata: AirdropMetadataCreateInput

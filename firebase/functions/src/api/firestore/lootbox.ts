@@ -21,6 +21,9 @@ import {
     LootboxTimestamps,
     TournamentID,
     LootboxSnapshotTimestamps,
+    LootboxTournamentSnapshotID,
+    LootboxTournamentStatus_Firestore,
+    LootboxType,
 } from "@wormgraph/helpers";
 import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
 import { db } from "../firebase";
@@ -117,49 +120,57 @@ export const getLootboxByChainAddress = async (
 
 //     return lootboxPayload;
 // };
+interface CreateLootboxTournamentSnapshot {
+    tournamentID: TournamentID;
+    lootboxAddress: Address | null;
+    lootboxID: LootboxID;
+    creatorID: UserID;
+    lootboxCreatorID: UserID;
+    description: string;
+    name: string;
+    stampImage: string;
+    type?: LootboxType;
+    inviteStampImage?: string;
+    inviteLinkURL?: string;
+}
+export const createLootboxTournamentSnapshot = async (
+    payload: CreateLootboxTournamentSnapshot
+): Promise<LootboxTournamentSnapshot_Firestore> => {
+    const doc = db
+        .collection(Collection.Tournament)
+        .doc(payload.tournamentID)
+        .collection(Collection.LootboxTournamentSnapshot)
+        .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;
 
-// interface CreateLootboxTournamentSnapshot {
-//     tournamentID: TournamentID;
-//     lootboxAddress: Address;
-//     lootboxID: LootboxID;
-//     creatorID: UserID;
-//     lootboxCreatorID: UserID;
-//     description: string;
-//     name: string;
-//     stampImage: string;
-// }
-// export const createLootboxTournamentSnapshot = async (
-//     payload: CreateLootboxTournamentSnapshot
-// ): Promise<LootboxTournamentSnapshot_Firestore> => {
-//     const doc = db
-//         .collection(Collection.Tournament)
-//         .doc(payload.tournamentID)
-//         .collection(Collection.LootboxTournamentSnapshot)
-//         .doc() as DocumentReference<LootboxTournamentSnapshot_Firestore>;
+    const request: LootboxTournamentSnapshot_Firestore = {
+        id: doc.id as LootboxTournamentSnapshotID,
+        tournamentID: payload.tournamentID as TournamentID,
+        address: payload.lootboxAddress || null,
+        lootboxID: payload.lootboxID,
+        creatorID: payload.creatorID,
+        lootboxCreatorID: payload.lootboxCreatorID,
+        description: payload.description,
+        name: payload.name,
+        stampImage: payload.stampImage,
+        impressionPriority: 0,
+        status: LootboxTournamentStatus_Firestore.active,
+        ...(payload.inviteStampImage && { officialInviteStampImage: payload.inviteStampImage }),
+        ...(payload.inviteLinkURL && { officialInviteURL: payload.inviteLinkURL }),
+        timestamps: {
+            createdAt: Timestamp.now().toMillis(),
+            updatedAt: Timestamp.now().toMillis(),
+            deletedAt: null,
+            depositEmailSentAt: null,
+        },
+    };
+    if (payload.type) {
+        request.type = payload.type;
+    }
 
-//     const request: LootboxTournamentSnapshot_Firestore = {
-//         id: doc.id as LootboxTournamentSnapshotID,
-//         tournamentID: payload.tournamentID as TournamentID,
-//         address: payload.lootboxAddress,
-//         lootboxID: payload.lootboxID,
-//         creatorID: payload.creatorID,
-//         lootboxCreatorID: payload.lootboxCreatorID,
-//         description: payload.description,
-//         name: payload.name,
-//         stampImage: payload.stampImage,
-//         impressionPriority: 0,
-//         status: LootboxTournamentStatus_Firestore.active,
-//         timestamps: {
-//             createdAt: Timestamp.now().toMillis(),
-//             updatedAt: Timestamp.now().toMillis(),
-//             deletedAt: null,
-//         },
-//     };
+    await doc.set(request);
 
-//     await doc.set(request);
-
-//     return request;
-// };
+    return request;
+};
 
 interface CreateTicketRequest {
     minterUserID: UserID;
@@ -585,6 +596,28 @@ export const markDepositEmailAsSent = async (lootboxID: LootboxID, tournamentID:
         [`${timestampFieldName}.${depositEmailSentAtFieldName}`]: Timestamp.now().toMillis(),
     };
     lootboxSnapshotRef.update(updateRequest);
+
+    return;
+};
+
+export const associateInviteDataToLootbox = async (
+    lootboxID: LootboxID,
+    payload: {
+        inviteGraphic?: string;
+        inviteLink?: string;
+    }
+) => {
+    if (!payload.inviteGraphic || !payload.inviteLink) {
+        return;
+    }
+
+    const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
+    const updateReq: Partial<Lootbox_Firestore> = {
+        ...(payload.inviteGraphic && { officialInviteGraphic: payload.inviteGraphic }),
+        ...(payload.inviteLink && { officialInviteLink: payload.inviteLink }),
+    };
+
+    await lootboxRef.update(updateReq);
 
     return;
 };

@@ -1,8 +1,8 @@
-import { OrganizerRank as OrganizerRank_Firestore } from "@wormgraph/helpers";
 import {
+  OrganizerRank as OrganizerRank_Firestore,
   AffiliateVisibility_Firestore,
   Affiliate_Firestore,
-} from "../api/firestore/affiliate.type";
+} from "@wormgraph/helpers";
 import {
   Affiliate,
   AffiliateVisibility,

@@ -23,7 +23,7 @@ import {
     createBonusClaim,
     getUserClaimCountForTournament,
     getUserClaimCountForLootbox,
-} from "../api/firestore";
+} from "../../api/firestore";
 import * as functions from "firebase-functions";
 import { logger } from "firebase-functions";
 
