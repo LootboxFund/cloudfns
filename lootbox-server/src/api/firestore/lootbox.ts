@@ -690,7 +690,7 @@ interface MockLootboxInputPayload {
   joinCommunityUrl?: string;
   symbol?: string | null;
   lootboxName?: string | null;
-  tournamentID: TournamentID;
+  tournamentID?: TournamentID;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;

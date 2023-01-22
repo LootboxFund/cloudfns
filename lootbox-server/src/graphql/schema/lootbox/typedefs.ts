@@ -313,7 +313,7 @@ const LootboxTypeDefs = gql`
     joinCommunityUrl: String
     maxTickets: Int
     themeColor: String
-    tournamentID: String!
+    tournamentID: String
     type: LootboxType
     isExclusiveLootbox: Boolean
     airdropMetadata: AirdropMetadataCreateInput

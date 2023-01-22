@@ -8,6 +8,7 @@ import {
   Lootbox_Firestore,
   MintWhitelistSignature_Firestore,
   TournamentID,
+  Tournament_Firestore,
   UserID,
   UserIdpID,
 } from "@wormgraph/helpers";
@@ -54,7 +55,7 @@ export interface CreateLootboxRequest {
   joinCommunityUrl?: string;
   symbol?: string | null;
   lootboxName?: string | null;
-  tournamentID: TournamentID;
+  tournamentID?: TournamentID;
   type?: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
@@ -74,13 +75,14 @@ export const create = async (
   const request = await extractOrGenerateLootboxCreateInput(_request);
 
   // Make sure the tournament exists
-  const tournament = await getTournamentById(
-    request.tournamentID as TournamentID
-  );
-  if (!tournament || !!tournament.timestamps.deletedAt) {
-    throw new Error(
-      "Could not create Lootbox. The Requested tournament was not found."
-    );
+  let tournament: Tournament_Firestore | undefined = undefined;
+  if (request.tournamentID) {
+    tournament = await getTournamentById(request.tournamentID);
+    if (!tournament || !!tournament.timestamps.deletedAt) {
+      throw new Error(
+        "Could not create Lootbox. The Requested tournament was not found."
+      );
+    }
   }
 
   const [host, stampSecret] = await Promise.all([
