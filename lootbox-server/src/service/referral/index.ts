@@ -158,6 +158,7 @@ export const create = async (
       eventName:
         payload.stampMetadata?.eventName ??
         lootbox?.stampMetadata?.eventName ??
+        tournament?.title ??
         undefined,
       hostName:
         payload.stampMetadata?.hostName ??
