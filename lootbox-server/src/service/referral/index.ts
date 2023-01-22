@@ -134,6 +134,8 @@ export const create = async (
     const [coverPhoto, stampSecret] = await Promise.all([
       lootbox?.backgroundImage
         ? lootbox.backgroundImage
+        : tournament?.coverPhoto
+        ? tournament.coverPhoto
         : getRandomBackgroundFromLexicaHardcoded(),
       getStampSecret(),
     ]);
@@ -143,12 +145,24 @@ export const create = async (
       coverPhoto,
       themeColor: lootbox?.themeColor ?? "#000000",
       teamName: lootbox?.name ?? payload.campaignName ?? "Player",
-      playerHeadshot: payload.stampMetadata?.playerHeadshot ?? undefined,
+      playerHeadshot:
+        payload.stampMetadata?.playerHeadshot ??
+        lootbox?.stampMetadata?.playerHeadshot ??
+        undefined,
       ticketValue: lootbox?.nftBountyValue ?? "Prizes",
       qrCodeLink: `${manifest.microfrontends.webflow.referral}?r=${slug}`,
-      sponsorLogos: payload.stampMetadata?.logoURLs ?? [],
-      eventName: payload.stampMetadata?.eventName ?? undefined,
-      hostName: payload.stampMetadata?.hostName ?? undefined,
+      sponsorLogos:
+        payload.stampMetadata?.logoURLs ??
+        lootbox?.stampMetadata?.logoURLs ??
+        [],
+      eventName:
+        payload.stampMetadata?.eventName ??
+        lootbox?.stampMetadata?.eventName ??
+        undefined,
+      hostName:
+        payload.stampMetadata?.hostName ??
+        lootbox?.stampMetadata?.hostName ??
+        undefined,
     });
   } catch (err) {
     console.error("Error creating stamp", err);
