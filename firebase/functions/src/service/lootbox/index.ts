@@ -34,7 +34,13 @@ import {
     getTicketByID,
     finalizeMintV2,
 } from "../../api/firestore/lootbox";
-import { createInviteStamp, stampNewLootbox, stampNewLootboxSimpleTicket, stampNewTicket } from "../../api/stamp";
+import {
+    createInviteStamp,
+    stampNewLootbox,
+    stampNewLootboxSimpleTicket,
+    stampNewTicket,
+    stampNewVictoryTicket,
+} from "../../api/stamp";
 import { convertLootboxToTicketMetadata } from "../../lib/lootbox";
 import { v4 as uuidV4 } from "uuid";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
@@ -170,17 +176,34 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
     let metadataURL: string;
 
     try {
-        ({ stampURL, metadataURL } = await stampNewTicket({
-            backgroundImage: lootbox.backgroundImage,
-            logoImage: lootbox.logo,
-            themeColor: lootbox.themeColor,
-            name: lootbox.name,
-            ticketID: params.ticketID,
-            lootboxAddress: lootbox.address as Address,
-            chainIdHex: lootbox.chainIdHex,
-            metadata: convertLootboxToTicketMetadata(params.ticketID, lootbox),
-            lootboxID: lootbox.id,
-        }));
+        if (lootbox.stampMetadata) {
+            // NEW DESIGNS
+            stampURL = await stampNewVictoryTicket({
+                eventName: lootbox.stampMetadata?.eventName || "Lootbox Events",
+                hostName: lootbox?.stampMetadata?.hostName ?? undefined,
+                coverPhoto: lootbox.backgroundImage,
+                sponsorLogos: lootbox?.stampMetadata?.logoURLs || [],
+                teamName: lootbox.name,
+                playerHeadshot: lootbox?.stampMetadata?.playerHeadshot ?? undefined,
+                themeColor: lootbox.themeColor,
+                ticketValue: lootbox.nftBountyValue ?? "Free Prizes",
+                qrCodeLink: lootbox?.officialInviteLink || lootbox?.joinCommunityUrl || "https://lootbox.tickets",
+            });
+            metadataURL = "";
+        } else {
+            // OLD DESIGNS
+            ({ stampURL, metadataURL } = await stampNewTicket({
+                backgroundImage: lootbox.backgroundImage,
+                logoImage: lootbox.logo,
+                themeColor: lootbox.themeColor,
+                name: lootbox.name,
+                ticketID: params.ticketID,
+                lootboxAddress: lootbox.address as Address,
+                chainIdHex: lootbox.chainIdHex,
+                metadata: convertLootboxToTicketMetadata(params.ticketID, lootbox),
+                lootboxID: lootbox.id,
+            }));
+        }
     } catch (err) {
         logger.error("Error stamping ticket", err);
         stampURL = lootbox.stampImage;
