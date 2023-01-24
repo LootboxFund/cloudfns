@@ -1,4 +1,5 @@
 import {
+  EventPartnerView,
   LootboxTournamentSnapshot,
   LootboxTournamentStatus,
   Stream,
@@ -11,14 +12,17 @@ import {
   Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
-  LootboxType,
   TournamentVisibility_Firestore,
   TournamentSafetyFeatures_Firestore,
+  EventInviteSlug,
 } from "@wormgraph/helpers";
 import {
   Stream_Firestore,
   StreamType_Firestore,
 } from "../api/firestore/tournament.types";
+import { customAlphabet } from "nanoid";
+
+const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 5);
 
 export const parseLootboxTournamentSnapshotDB = (
   data: LootboxTournamentSnapshot_Firestore
@@ -65,6 +69,7 @@ export const parseTournamentDB = (
     runningCompletedClaims: data.runningCompletedClaims || 0,
     playbookUrl: data.playbookUrl || "",
     privacyScope: data?.privacyScope || [],
+    inviteMetadata: data.inviteMetadata,
     timestamps: {
       createdAt: data.timestamps.createdAt,
       updatedAt: data.timestamps.updatedAt,
@@ -215,6 +220,20 @@ export const convertTournamentVisiblityDB = (
   }
 };
 
+export const convertTournamentDBToParnterViewGQL = (
+  tournament: Tournament_Firestore
+): EventPartnerView => {
+  return {
+    id: tournament.id,
+    title: tournament.title,
+    inviteMetadata: tournament.inviteMetadata,
+    communityURL: tournament.communityURL,
+    prize: tournament.prize,
+    stampMetadata: tournament.stampMetadata,
+    tournamentDate: tournament.tournamentDate,
+  };
+};
+
 export const convertTournamentDBToGQL = (
   tournament: Tournament_Firestore
 ): Tournament => {
@@ -296,4 +315,17 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
   };
 
   return res;
+};
+
+export const toSlug = (str: string): string => {
+  // Remove special characters and replace whitespace with "_"
+  const cleaned = str.replace(/[^a-zA-Z0-9_\s]/g, "").replace(/\s/g, "_");
+  // Convert to lowercase
+  return cleaned.toLowerCase();
+};
+
+export const createEventInviteSlug = (eventName: string): EventInviteSlug => {
+  const _slug = toSlug(eventName);
+  const id = nanoid(5);
+  return `${_slug}_${id}` as EventInviteSlug;
 };

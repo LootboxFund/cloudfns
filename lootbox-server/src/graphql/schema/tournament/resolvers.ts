@@ -31,6 +31,7 @@ import {
   getLootboxTournamentSnapshot,
   bulkEditLootboxTournamentSnapshots,
   bulkDeleteLootboxTournamentSnapshots,
+  getTournamentByInviteSlug,
 } from "../../../api/firestore";
 import {
   addOfferAdSetToTournament,
@@ -85,6 +86,9 @@ import {
   MutationClaimerCsvDataArgs,
   MutationOfferEventClaimsCsvArgs,
   OfferEventClaimsCsvResponse,
+  QueryEventPartnerViewArgs,
+  EventPartnerViewResponse,
+  EventPartnerView,
 } from "../../generated/types";
 import { Context } from "../../server";
 import {
@@ -102,6 +106,7 @@ import {
   convertLootboxTournamentSnapshotStatusGQLToDB,
   convertStreamDBToGQL,
   convertTournamentDBToGQL,
+  convertTournamentDBToParnterViewGQL,
 } from "../../../lib/tournament";
 import { convertLootboxDBToGQL } from "../../../lib/lootbox";
 import { listPotentialAirdropClaimers } from "../../../api/firestore/airdrop";
@@ -226,6 +231,35 @@ const TournamentResolvers = {
           };
         }
         return { offer, potentialClaimers };
+      } catch (err) {
+        return {
+          error: {
+            code: StatusCode.ServerError,
+            message: err instanceof Error ? err.message : "",
+          },
+        };
+      }
+    },
+    eventPartnerView: async (
+      _,
+      { slug }: QueryEventPartnerViewArgs,
+      context: Context
+    ): Promise<EventPartnerViewResponse> => {
+      try {
+        const event = await getTournamentByInviteSlug(slug);
+
+        if (!event) {
+          return {
+            error: {
+              code: StatusCode.NotFound,
+              message: `Event not found`,
+            },
+          };
+        }
+
+        return {
+          event: convertTournamentDBToParnterViewGQL(event),
+        };
       } catch (err) {
         return {
           error: {
@@ -1177,6 +1211,20 @@ const TournamentResolvers = {
     __resolveType: (obj: OfferEventClaimsCsvResponse) => {
       if ("csvDownloadURL" in obj) {
         return "OfferEventClaimsCSVResponseSuccess";
+      }
+
+      if ("error" in obj) {
+        return "ResponseError";
+      }
+
+      return null;
+    },
+  },
+
+  EventPartnerViewResponse: {
+    __resolveType: (obj: EventPartnerViewResponse) => {
+      if ("event" in obj) {
+        return "EventPartnerViewResponseSuccess";
       }
 
       if ("error" in obj) {

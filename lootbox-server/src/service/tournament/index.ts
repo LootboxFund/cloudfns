@@ -21,7 +21,7 @@ import { TournamentVisibility } from "../../graphql/generated/types";
 import { isInteger } from "../../lib/number";
 import {
   convertTournamentVisiblityDB,
-  convertTournamentVisiblityGQL,
+  createEventInviteSlug,
 } from "../../lib/tournament";
 
 interface CreateTournamentServiceRequest {
@@ -79,6 +79,7 @@ export const create = async (
     seedMaxLootboxTicketsPerUser: payload.seedMaxLootboxTicketsPerUser
       ? Math.round(payload.seedMaxLootboxTicketsPerUser)
       : 5,
+    inviteSlug: createEventInviteSlug(title),
   };
 
   validateTournamentCreationRequest(creationRequest);

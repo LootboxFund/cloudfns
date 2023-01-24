@@ -82,6 +82,29 @@ const TournamentTypeDefs = gql`
     seedMaxLootboxTicketsPerUser: Int
   }
 
+  type EventInviteMetadata {
+    slug: String!
+    playerDestinationURL: String
+    promoterDestinationURL: String
+    maxPlayerLootbox: Int!
+    maxPromoterLootbox: Int!
+  }
+
+  type EventStampMetadata {
+    logoURLs: [String!]!
+  }
+
+  # view for players or promoters in the create lootbox loop
+  type EventPartnerView {
+    id: ID! # same as TournamentID
+    title: String!
+    inviteMetadata: EventInviteMetadata!
+    stampMetadata: EventStampMetadata
+    tournamentDate: Timestamp
+    prize: String
+    communityURL: String
+  }
+
   type Tournament {
     id: ID!
     title: String!
@@ -205,6 +228,14 @@ const TournamentTypeDefs = gql`
   type MyTournamentResponseSuccess {
     tournament: Tournament!
   }
+
+  type EventPartnerViewResponseSuccess {
+    event: EventPartnerView
+  }
+
+  union EventPartnerViewResponse =
+      EventPartnerViewResponseSuccess
+    | ResponseError
 
   type BattleFeedEdge {
     node: Tournament!
@@ -403,6 +434,7 @@ const TournamentTypeDefs = gql`
     listPotentialAirdropClaimers(
       payload: ListPotentialAirdropClaimersPayload!
     ): ListPotentialAirdropClaimersResponse!
+    eventPartnerView(slug: String!): EventPartnerViewResponse!
     # get the private promoter affiliate view of a tournament with earnings report
     #myMonetizedPromoterTournament(
     #  id: ID!

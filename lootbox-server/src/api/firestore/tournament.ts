@@ -7,12 +7,8 @@ import {
 import { db } from "../firebase";
 import {
   BattleFeedEdge,
-  EditTournamentPayload,
-  Lootbox,
   LootboxTournamentSnapshot,
-  Tournament,
   PageInfo,
-  Stream,
   StreamInput,
   EditStreamPayload,
   StreamType,
@@ -20,7 +16,6 @@ import {
   PaginateLootboxTournamentSnapshotEdge,
   PaginatedLootboxTournamentSnapshotPageInfo,
   LootboxTournamentSnapshotCursor,
-  TournamentVisibility,
 } from "../../graphql/generated/types";
 import {
   UserID,
@@ -34,6 +29,7 @@ import {
   TournamentPrivacyScope,
   TournamentSafetyFeatures_Firestore,
   TournamentVisibility_Firestore,
+  EventInviteSlug,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -350,6 +346,7 @@ export interface CreateTournamentArgs {
   privacyScope?: TournamentPrivacyScope[];
   seedMaxLootboxTicketsPerUser?: number;
   maxTicketsPerUser?: number;
+  inviteSlug: EventInviteSlug;
 }
 
 export const createTournament = async ({
@@ -363,6 +360,7 @@ export const createTournament = async ({
   communityURL,
   organizer,
   privacyScope,
+  inviteSlug,
   seedMaxLootboxTicketsPerUser = 5,
   maxTicketsPerUser = 100,
 }: CreateTournamentArgs): Promise<Tournament_Firestore> => {
@@ -392,6 +390,11 @@ export const createTournament = async ({
     },
     visibility: TournamentVisibility_Firestore.Private,
     runningCompletedClaims: 0,
+    inviteMetadata: {
+      slug: inviteSlug,
+      maxPlayerLootbox: 1,
+      maxPromoterLootbox: 1,
+    },
   };
 
   if (!!prize) {
@@ -731,4 +734,27 @@ export const bulkEditLootboxTournamentSnapshots = async (
   }
 
   await batch.commit();
+};
+
+export const getTournamentByInviteSlug = async (
+  slug: EventInviteSlug
+): Promise<Tournament_Firestore | undefined> => {
+  const inviteMetadataFieldName: keyof Tournament_Firestore = "inviteMetadata";
+  const inviteSlugFieldName: keyof Tournament_Firestore["inviteMetadata"] =
+    "slug";
+  const tournamentRef = db
+    .collection(Collection.Tournament)
+    .where(
+      `${inviteMetadataFieldName}.${inviteSlugFieldName}`,
+      "==",
+      slug
+    ) as Query<Tournament_Firestore>;
+
+  const tournamentSnapshot = await tournamentRef.get();
+
+  if (tournamentSnapshot.empty || tournamentSnapshot.docs.length === 0) {
+    return undefined;
+  } else {
+    return tournamentSnapshot.docs[0].data();
+  }
 };
