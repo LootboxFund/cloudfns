@@ -189,6 +189,7 @@ export const _createClaim = async (
     ticketID: null,
     ticketWeb3ID: null,
     privacyScope: req.privacyScope,
+    exemptFromEventLimit: null,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -277,6 +278,7 @@ export const _createAirdropClaim = async (
     ticketWeb3ID: null,
     claimerUserId: req.claimerUserId,
     privacyScope: req.privacyScope || {},
+    exemptFromEventLimit: null,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -368,6 +370,7 @@ interface CompleteClaimReq {
   lootboxName: string;
   lootboxNFTBountyValue?: string;
   lootboxMaxTickets?: number;
+  isExemptFromEventLimit?: boolean;
 }
 export const completeClaim = async (
   req: CompleteClaimReq
@@ -382,6 +385,7 @@ export const completeClaim = async (
     claimerUserId: req.claimerUserId,
     lootboxID: req.lootboxID,
     lootboxName: req.lootboxName,
+    exemptFromEventLimit: req.isExemptFromEventLimit || false,
   };
 
   if (req.lootboxAddress) {
@@ -433,6 +437,7 @@ interface CompleteAnonClaimReq {
   lootboxName: string;
   lootboxNFTBountyValue?: string;
   lootboxMaxTickets?: number;
+  isClaimExemptFromEventLimit?: boolean;
 }
 export const completeAnonClaim = async (
   req: CompleteAnonClaimReq
@@ -447,6 +452,7 @@ export const completeAnonClaim = async (
     claimerUserId: req.claimerUserId,
     lootboxID: req.lootboxID,
     lootboxName: req.lootboxName,
+    exemptFromEventLimit: req.isClaimExemptFromEventLimit || false,
   };
 
   if (req.lootboxAddress) {

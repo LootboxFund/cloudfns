@@ -2022,10 +2022,10 @@
     axios "0.25.0"
     lodash "4.17.21"
 
-"@wormgraph/helpers@0.7.29":
-  version "0.7.29"
-  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.29.tgz#7ed6d2f3235926f4dbaeca4aade8ea00fccbecac"
-  integrity sha512-gJHBOtvwedjCcbikwG4JQVtcR2eWmd7UmZiqbgw7cUBTqq1NvLqutlQQuU/bs2pBFSrnrpEwKdeUcrGOlyP1pQ==
+"@wormgraph/helpers@0.7.31":
+  version "0.7.31"
+  resolved "https://registry.yarnpkg.com/@wormgraph/helpers/-/helpers-0.7.31.tgz#5ba501a7d9beeea75a33277fa19b3de4a5cfca98"
+  integrity sha512-JKz4ou+ot85UcQim1pecnfagRG+a+WAdB8gFBrXBIkZol5el/s7eaRQ4RqwwmilGDy44MrvHos7YCUk8f8eBZA==
   dependencies:
     axios "0.25.0"
     lodash "4.17.21"
