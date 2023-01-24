@@ -1,4 +1,10 @@
-import { DocumentReference, Query, Timestamp } from "firebase-admin/firestore";
+import {
+  CollectionReference,
+  DocumentReference,
+  Query,
+  QuerySnapshot,
+  Timestamp,
+} from "firebase-admin/firestore";
 import * as _ from "lodash";
 import {
   User,
@@ -542,4 +548,22 @@ export const getAdvertiser = async (
     return undefined;
   }
   return advertiserSnapshot.data();
+};
+
+export const getAdvertiserByUserID = async (
+  userID: UserID
+): Promise<Advertiser_Firestore | undefined> => {
+  if (userID === null) {
+    throw new Error(`No userID provided`);
+  }
+  const advertiserRef = db
+    .collection(Collection.Advertiser)
+    .where("userID", "==", userID) as Query<Advertiser_Firestore>;
+
+  const advertiserSnapshot = await advertiserRef.get();
+
+  if (advertiserSnapshot.empty) {
+    throw new Error(`No advertiser found for userID: ${userID}`);
+  }
+  return advertiserSnapshot.docs[0].data();
 };
