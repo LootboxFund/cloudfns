@@ -86,6 +86,7 @@ export const create = async (
     }
   }
 
+  // TODO: make sure user does not make more lootboxes than allowed in event.inviteMetadata
   const [host, stampSecret] = await Promise.all([
     tournament
       ? getAffiliateByUserIdpID(tournament?.creatorId as unknown as UserIdpID)

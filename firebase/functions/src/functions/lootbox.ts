@@ -628,10 +628,9 @@ export const onLootboxWrite = functions
         }
 
         if (!oldLootbox) {
-            // Create a referral links
+            // Lootbox created
             if (newLootbox.tournamentID) {
-                // Lootbox created
-                // Create the official invite graphic & referral link
+                // Create a referral link & the official invite graphic
                 const host = await getAffiliateByUserIdpID(newLootbox.creatorID as unknown as UserIdpID);
                 const officialReferral = await referralService.create(
                     {

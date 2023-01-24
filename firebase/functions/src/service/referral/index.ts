@@ -138,7 +138,6 @@ export const create = async (payload: CreateReferralServiceRequest, callerUserID
         type: requestedReferralType,
         tournamentId: payload.tournamentId as TournamentID,
         seedLootboxID: isSeedLootboxEnabled ? (payload.lootboxID as LootboxID) : undefined,
-
         isPostCosmic: true,
         inviteGraphic: stampImageUrl,
     });
