@@ -273,10 +273,12 @@ const _validateBaseClaimForCompletionStep = async (
   // get user tickets for this lootbox & tournamet
   const [userTournamentTicketCount, userLootboxTicketCount] = await Promise.all(
     [
-      getUserClaimCountForTournament(
-        tournament.id,
-        claimer.id as unknown as UserID
-      ),
+      lootbox?.safetyFeatures?.excludeFromEventLimits
+        ? 0
+        : getUserClaimCountForTournament(
+            tournament.id,
+            claimer.id as unknown as UserID
+          ),
       getUserClaimCountForLootbox(lootbox.id, claimer.id as unknown as UserID),
     ]
   );
@@ -288,7 +290,10 @@ const _validateBaseClaimForCompletionStep = async (
     );
   }
   const maxEventTicketsAllowed = tournamentSafety?.maxTicketsPerUser ?? 100;
-  if (userTournamentTicketCount >= maxEventTicketsAllowed) {
+  if (
+    !lootbox?.safetyFeatures?.excludeFromEventLimits &&
+    userTournamentTicketCount >= maxEventTicketsAllowed
+  ) {
     throw new Error(
       `You already have the maximum number of tickets for this Event (${maxEventTicketsAllowed}).`
     );

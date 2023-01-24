@@ -321,5 +321,6 @@ const handleBonusRewardClaim = async (payload: BonusRewardClaimServiceRequest) =
         lootbox: payload.lootbox,
         tournament: payload.tournament,
         bonusRewardReceiver,
+        isExemptFromEventLimits: payload.lootbox.safetyFeatures?.excludeFromEventLimits || false,
     });
 };

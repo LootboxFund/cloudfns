@@ -524,7 +524,8 @@ export const getCompletedUserReferralClaimsForTournament = async (
     .where("tournamentId", "==", tournamentId)
     .where("claimerUserId", "==", userId)
     .where("type", "==", ClaimType.Referral)
-    .where("status", "==", ClaimStatus.Complete) as Query<Claim_Firestore>;
+    .where("status", "==", ClaimStatus.Complete)
+    .where("exemptFromEventLimit", "==", false) as Query<Claim_Firestore>;
 
   if (limit !== undefined) {
     collectionRef = collectionRef.limit(limit);
@@ -1083,11 +1084,14 @@ export const getUserClaimCountForTournament = async (
   const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
   const statusField: keyof Claim_Firestore = "status";
   const tournamentIDField: keyof Claim_Firestore = "tournamentId";
+  const exemptFromEventLimitField: keyof Claim_Firestore =
+    "exemptFromEventLimit";
   const query = await db
     .collectionGroup(Collection.Claim)
     .where(tournamentIDField, "==", tournamentID)
     .where(claimerUserIDField, "==", userID)
     .where(statusField, "==", ClaimStatus_Firestore.complete)
+    .where(exemptFromEventLimitField, "==", false)
     .get();
 
   return query.docs.length;
