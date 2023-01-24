@@ -265,7 +265,6 @@ const _validateBaseClaimForCompletionStep = async (
     lootboxSafety?.isExclusiveLootbox &&
     (!isOwnerMadeReferral || referral.seedLootboxID !== lootbox.id)
   ) {
-    // If sharing is disabled, users can only claim genesis referrals
     throw new Error(
       "Sharing is disabled for this Lootbox. Please ask the event host for a different referral link."
     );

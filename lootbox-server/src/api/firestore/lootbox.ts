@@ -472,6 +472,8 @@ export interface CreateLootboxPayloadLocalType {
   maxTicketsPerUser?: number;
   isExclusiveLootbox?: boolean;
   stampMetadata?: StampMetadata_Firestore | null;
+  createdOnBehalfOf?: UserID;
+  excludeFromEventLimits?: boolean;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -518,6 +520,7 @@ export const createLootbox = async (
     safetyFeatures: {
       maxTicketsPerUser: payload.maxTicketsPerUser ?? 5,
       isExclusiveLootbox: payload.isExclusiveLootbox || false,
+      excludeFromEventLimits: payload.excludeFromEventLimits || false,
     },
     timestamps: {
       createdAt: Timestamp.now().toMillis(),
@@ -531,6 +534,10 @@ export const createLootbox = async (
   }
   if (payload.stampMetadata) {
     lootboxPayload.stampMetadata = payload.stampMetadata;
+  }
+  if (payload.createdOnBehalfOf) {
+    // hack - gives this user permissinos to edit the lootbox
+    lootboxPayload.createdOnBehalfOf = payload.createdOnBehalfOf;
   }
   if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
     const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([
@@ -594,8 +601,7 @@ export const createLootbox = async (
         return await createAirdropClaim(
           claim,
           lootboxPayload,
-          // @ts-ignore
-          payload.airdropMetadata.offerID as OfferID
+          payload?.airdropMetadata?.offerID as OfferID
         );
       })
     );
@@ -696,6 +702,7 @@ interface MockLootboxInputPayload {
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
   stampMetadata?: CreateLootboxPayload_StampMetadata;
+  isPromoterLootbox?: boolean;
 }
 
 interface MockLootboxInputPayloadOutput {
@@ -714,6 +721,7 @@ interface MockLootboxInputPayloadOutput {
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
   stampMetadata?: CreateLootboxPayload_StampMetadata;
+  isPromoterLootbox: boolean;
 }
 
 export const extractOrGenerateLootboxCreateInput = async (
@@ -766,6 +774,7 @@ export const extractOrGenerateLootboxCreateInput = async (
       : undefined,
     isStampV2: payload.isStampV2 ?? false,
     stampMetadata: payload.stampMetadata,
+    isPromoterLootbox: payload.isPromoterLootbox ?? false,
   };
 };
 

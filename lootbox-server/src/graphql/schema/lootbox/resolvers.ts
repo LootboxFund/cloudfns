@@ -271,6 +271,7 @@ const LootboxResolvers: Resolvers = {
               ? (payload.airdropMetadata as AirdropMetadataCreateInput)
               : undefined,
             isStampV2: payload.isStampV2 || false,
+            isPromoterLootbox: payload.isPromoterLootbox || false,
             stampMetadata: payload.stampMetadata
               ? {
                   playerHeadshot:

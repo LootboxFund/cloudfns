@@ -60,6 +60,7 @@ export interface CreateLootboxRequest {
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
+  isPromoterLootbox?: boolean;
   stampMetadata?: {
     playerHeadshot?: string;
     logoURLs?: string[];
@@ -136,6 +137,9 @@ export const create = async (
     airdropMetadata: request.airdropMetadata,
     maxTicketsPerUser: tournament?.safetyFeatures?.seedMaxLootboxTicketsPerUser,
     isExclusiveLootbox: request.isExclusiveLootbox,
+    excludeFromEventLimits: request.isPromoterLootbox,
+    // Gives hosts edit access
+    createdOnBehalfOf: host?.userID ?? undefined,
     stampMetadata: _request.isStampV2
       ? {
           playerHeadshot: request.stampMetadata?.playerHeadshot ?? null,
