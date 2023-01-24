@@ -99,13 +99,18 @@ export const create = async (
   // stamp lootbox image
   let stampImageUrl: string;
 
+  const lootboxLogoURLS =
+    request?.stampMetadata?.logoURLs ??
+    tournament?.stampMetadata?.logoURLs ??
+    [];
+
   if (_request.isStampV2) {
     stampImageUrl = await stampNewLootboxSimpleTicket(stampSecret, {
       coverPhoto: request.backgroundImage,
       themeColor: request.themeColor,
       teamName: request.lootboxName,
       playerHeadshot: request.stampMetadata?.playerHeadshot ?? undefined,
-      sponsorLogos: request?.stampMetadata?.logoURLs ?? [],
+      sponsorLogos: lootboxLogoURLS,
       eventName: tournament?.title || "Lootbox Events",
       hostName: host?.name,
     });
@@ -143,7 +148,7 @@ export const create = async (
     stampMetadata: _request.isStampV2
       ? {
           playerHeadshot: request.stampMetadata?.playerHeadshot ?? null,
-          logoURLs: request.stampMetadata?.logoURLs ?? [],
+          logoURLs: lootboxLogoURLS,
           eventName: tournament?.title || "Lootbox Events",
           hostName: host?.name ?? null,
         }
