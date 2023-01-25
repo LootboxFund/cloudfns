@@ -1,5 +1,6 @@
 import {
   EventPartnerView,
+  EventStampMetadata,
   LootboxTournamentSnapshot,
   LootboxTournamentStatus,
   Stream,
@@ -15,6 +16,7 @@ import {
   TournamentVisibility_Firestore,
   TournamentSafetyFeatures_Firestore,
   EventInviteSlug,
+  StampMetadata,
 } from "@wormgraph/helpers";
 import {
   Stream_Firestore,
@@ -92,6 +94,10 @@ export const parseTournamentDB = (
     res.safetyFeatures = data.safetyFeatures;
   }
 
+  if (data.stampMetadata) {
+    res.stampMetadata = data.stampMetadata;
+  }
+
   return res;
 };
 
@@ -113,6 +119,15 @@ export const parseTournamentStreamDB = (
   };
 
   return stream;
+};
+
+export const convertStampMetadataDBToGQL = (
+  stampMetadata: StampMetadata
+): EventStampMetadata => {
+  return {
+    logoURLs: stampMetadata.logoURLs ?? [],
+    seedLootboxFanTicketValue: stampMetadata.seedLootboxFanTicketValue,
+  };
 };
 
 export const convertLootboxTournamentSnapshotStatusGQLToDB = (
@@ -229,7 +244,9 @@ export const convertTournamentDBToParnterViewGQL = (
     inviteMetadata: tournament.inviteMetadata,
     communityURL: tournament.communityURL,
     prize: tournament.prize,
-    stampMetadata: tournament.stampMetadata,
+    stampMetadata: tournament.stampMetadata
+      ? convertStampMetadataDBToGQL(tournament.stampMetadata)
+      : null,
     tournamentDate: tournament.tournamentDate,
   };
 };
@@ -283,6 +300,12 @@ export const convertTournamentDBToGQL = (
 
   if (!!tournament.safetyFeatures) {
     res.safetyFeatures = tournament.safetyFeatures;
+  }
+
+  if (!!tournament.stampMetadata) {
+    res.stampMetadata = tournament.stampMetadata
+      ? convertStampMetadataDBToGQL(tournament.stampMetadata)
+      : null;
   }
 
   return res as unknown as Tournament;

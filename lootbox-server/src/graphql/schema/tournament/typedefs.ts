@@ -90,10 +90,6 @@ const TournamentTypeDefs = gql`
     maxPromoterLootbox: Int!
   }
 
-  type EventStampMetadata {
-    logoURLs: [String!]!
-  }
-
   # view for players or promoters in the create lootbox loop
   type EventPartnerView {
     id: ID! # same as TournamentID
@@ -111,6 +107,11 @@ const TournamentTypeDefs = gql`
     promoterDestinationURL: String
     maxPlayerLootbox: Int!
     maxPromoterLootbox: Int!
+  }
+
+  type EventStampMetadata {
+    logoURLs: [String!]
+    seedLootboxFanTicketValue: String
   }
 
   type Tournament {
@@ -148,6 +149,7 @@ const TournamentTypeDefs = gql`
       status: LootboxTournamentStatus
     ): [LootboxTournamentSnapshot!]
     inviteMetadata: EventInviteMetadata
+    stampMetadata: EventStampMetadata
   }
 
   type OrganizerProfile {
