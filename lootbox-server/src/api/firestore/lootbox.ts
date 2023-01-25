@@ -64,6 +64,28 @@ import { getAdvertiser } from "./advertiser";
 import { LootboxVoucherDeposits } from "../../graphql/generated/types";
 const DEFAULT_THEME_COLOR = "#000001";
 
+export const getLootboxCountForUserInTournament = async (
+  userID: UserID,
+  eventID: TournamentID
+): Promise<number> => {
+  const lootboxCreatorIDFieldName: keyof LootboxTournamentSnapshot_Firestore =
+    "lootboxCreatorID";
+  const tournamentIDField: keyof LootboxTournamentSnapshot_Firestore =
+    "tournamentID";
+  const lootboxRef = db
+    .collectionGroup(Collection.LootboxTournamentSnapshot)
+    .where(lootboxCreatorIDFieldName, "==", userID)
+    .where(
+      tournamentIDField,
+      "==",
+      eventID
+    ) as CollectionGroup<Lootbox_Firestore>;
+
+  const lootboxSnapshot = await lootboxRef.get();
+
+  return lootboxSnapshot.size;
+};
+
 export const getLootbox = async (
   id: LootboxID
 ): Promise<Lootbox_Firestore | undefined> => {

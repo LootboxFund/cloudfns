@@ -23,6 +23,7 @@ import {
   extractOrGenerateLootboxCreateInput,
   getAffiliateByUserIdpID,
   getLootbox,
+  getLootboxCountForUserInTournament,
   getTournamentById,
   getUser,
   getWhitelistByDigest,
@@ -86,13 +87,32 @@ export const create = async (
     }
   }
 
-  // TODO: make sure user does not make more lootboxes than allowed in event.inviteMetadata
   const [host, stampSecret] = await Promise.all([
     tournament
       ? getAffiliateByUserIdpID(tournament?.creatorId as unknown as UserIdpID)
       : null,
     getStampSecret(),
   ]);
+
+  if (tournament && host?.userID !== callerUserID) {
+    // This is a player or promoter making the lootbox for the event
+    // Make sure user does not make more lootboxes than allowed in event.inviteMetadata
+    const maxAmount = request.isPromoterLootbox
+      ? tournament.inviteMetadata?.maxPromoterLootbox ?? 5
+      : tournament.inviteMetadata?.maxPlayerLootbox ?? 5;
+
+    const lootboxCount = await getLootboxCountForUserInTournament(
+      callerUserID,
+      tournament.id
+    );
+
+    if (lootboxCount >= maxAmount) {
+      throw new Error(
+        `You have already created a Lootbox for this event. Ask the event host if you want to make more.`
+      );
+    }
+  }
+
   const lootboxDocumentRef = db
     .collection(Collection.Lootbox)
     .doc() as DocumentReference<Lootbox_Firestore>;
