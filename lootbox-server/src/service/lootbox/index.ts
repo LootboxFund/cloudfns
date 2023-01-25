@@ -285,8 +285,11 @@ export const edit = async (
   if (!lootbox || !!lootbox.timestamps.deletedAt) {
     throw new Error("Lootbox not found");
   }
-  if (callerUserID !== lootbox.creatorID) {
-    throw new Error("You do not own this Lootbox");
+  if (
+    callerUserID !== lootbox.creatorID &&
+    callerUserID !== lootbox.createdOnBehalfOf
+  ) {
+    throw new Error("You do not have permission to edit this Lootbox");
   }
 
   const request: EditLootboxPayload = {
