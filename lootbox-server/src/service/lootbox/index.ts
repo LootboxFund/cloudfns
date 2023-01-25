@@ -74,18 +74,27 @@ export const create = async (
 ): Promise<Lootbox_Firestore> => {
   console.log("creating lootbox", _request);
 
-  const request = await extractOrGenerateLootboxCreateInput(_request);
-
   // Make sure the tournament exists
   let tournament: Tournament_Firestore | undefined = undefined;
-  if (request.tournamentID) {
-    tournament = await getTournamentById(request.tournamentID);
+  if (_request.tournamentID) {
+    tournament = await getTournamentById(_request.tournamentID);
     if (!tournament || !!tournament.timestamps.deletedAt) {
       throw new Error(
         "Could not create Lootbox. The Requested tournament was not found."
       );
     }
   }
+
+  if (
+    _request.nftBountyValue == undefined &&
+    tournament?.stampMetadata?.seedLootboxFanTicketValue
+  ) {
+    // use event seed value if it exists
+    _request.nftBountyValue =
+      tournament.stampMetadata.seedLootboxFanTicketValue;
+  }
+
+  const request = await extractOrGenerateLootboxCreateInput(_request);
 
   const [host, stampSecret] = await Promise.all([
     tournament
