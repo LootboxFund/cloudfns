@@ -563,7 +563,7 @@ export const getAdvertiserByUserID = async (
   const advertiserSnapshot = await advertiserRef.get();
 
   if (advertiserSnapshot.empty) {
-    throw new Error(`No advertiser found for userID: ${userID}`);
+    return undefined;
   }
   return advertiserSnapshot.docs[0].data();
 };

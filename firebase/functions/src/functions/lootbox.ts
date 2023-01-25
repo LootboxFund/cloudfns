@@ -639,7 +639,6 @@ export const onLootboxWrite = functions
                         referrerId: newLootbox.creatorID,
                         tournamentId: newLootbox.tournamentID,
                         type: ReferralType_Firestore.genesis,
-                        lootboxID: newLootbox.id,
                         stampMetadata: {
                             inviteGraphicCoverPhoto: newLootbox.backgroundImage ?? null,
                             playerHeadshot: newLootbox.stampMetadata?.playerHeadshot ?? null,
@@ -648,7 +647,8 @@ export const onLootboxWrite = functions
                             hostName: newLootbox.stampMetadata?.hostName ?? null,
                         },
                     },
-                    newLootbox.creatorID
+                    newLootbox.creatorID,
+                    newLootbox
                 );
 
                 const referralLink = `${manifest.microfrontends.webflow.referral}?r=${officialReferral.slug}`;

@@ -44,6 +44,7 @@ import {
   getAdvertiser,
   getAdvertiserByUserID,
   getAffiliateByUserIdpID,
+  getAffiliateByUserID,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../lib/whitelist";
 import { Address } from "@wormgraph/helpers";
@@ -148,7 +149,7 @@ const UserResolvers = {
             getUser(userID),
             getUserWallets(userID as unknown as UserID, 1),
             getAdvertiserByUserID(userID as UserID),
-            getAffiliateByUserIdpID(userID as UserIdpID),
+            getAffiliateByUserID(userID as UserID),
           ]);
 
         /**
@@ -201,6 +202,7 @@ const UserResolvers = {
           email: userDB.email || "",
         };
       } catch (err) {
+        console.error("Error fetching anon token v2", err);
         return {
           error: {
             code: StatusCode.ServerError,
