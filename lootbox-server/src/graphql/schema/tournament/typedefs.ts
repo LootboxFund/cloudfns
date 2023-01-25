@@ -105,6 +105,14 @@ const TournamentTypeDefs = gql`
     communityURL: String
   }
 
+  type EventInviteMetadata {
+    slug: String!
+    playerDestinationURL: String
+    promoterDestinationURL: String
+    maxPlayerLootbox: Int!
+    maxPromoterLootbox: Int!
+  }
+
   type Tournament {
     id: ID!
     title: String!
@@ -139,6 +147,7 @@ const TournamentTypeDefs = gql`
     lootboxSnapshots(
       status: LootboxTournamentStatus
     ): [LootboxTournamentSnapshot!]
+    inviteMetadata: EventInviteMetadata
   }
 
   type OrganizerProfile {

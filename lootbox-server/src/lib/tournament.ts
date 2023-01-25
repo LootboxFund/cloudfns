@@ -254,6 +254,7 @@ export const convertTournamentDBToGQL = (
       : null,
     visibility: convertTournamentVisiblityGQL(tournament.visibility),
     dealConfigs: [], // Gets fetched in gql layer
+    inviteMetadata: tournament.inviteMetadata,
   };
 
   if (!!tournament.magicLink) {
