@@ -365,6 +365,10 @@ const TournamentTypeDefs = gql`
     seedMaxLootboxTicketsPerUser: Int
     maxTicketsPerUser: Int
     visibility: String
+    maxPlayerLootboxes: Int
+    maxPromoterLootboxes: Int
+    seedLootboxLogoURLs: [String!]
+    seedLootboxFanTicketPrize: String
   }
 
   input AddStreamPayload {

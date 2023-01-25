@@ -30,6 +30,7 @@ import {
   TournamentSafetyFeatures_Firestore,
   TournamentVisibility_Firestore,
   EventInviteSlug,
+  StampMetadata,
 } from "@wormgraph/helpers";
 import {
   Collection,
@@ -438,6 +439,12 @@ export interface UpdateTournamentPayload {
   tournamentDate?: number | null;
   tournamentLink?: string | null;
   visibility?: TournamentVisibility_Firestore | null;
+  maxPlayerLootboxes?: number | null;
+  maxPromoterLootboxes?: number | null;
+  // playerDestinationURL?: string | null;
+  // promoterDestinationURL?: string | null;
+  seedLootboxLogoURLs?: string[] | null;
+  seedLootboxFanTicketPrize?: string | null;
 }
 export const updateTournament = async (
   id: TournamentID,
@@ -512,6 +519,35 @@ export const updateTournament = async (
       "maxTicketsPerUser";
     updatePayload[`${safetyFeaturesFieldname}.${maxTicketsFieldname}`] =
       payload.maxTicketsPerUser;
+  }
+
+  const inviteMetadataFieldName: keyof Tournament_Firestore = "inviteMetadata";
+  if (payload.maxPlayerLootboxes != undefined) {
+    const maxPlayerLootboxFieldName: keyof Tournament_Firestore["inviteMetadata"] =
+      "maxPlayerLootbox";
+    updatePayload[`${inviteMetadataFieldName}.${maxPlayerLootboxFieldName}`] =
+      payload.maxPlayerLootboxes;
+  }
+
+  if (payload.maxPromoterLootboxes != undefined) {
+    const maxPromoterLootboxFieldName: keyof Tournament_Firestore["inviteMetadata"] =
+      "maxPromoterLootbox";
+    updatePayload[`${inviteMetadataFieldName}.${maxPromoterLootboxFieldName}`] =
+      payload.maxPromoterLootboxes;
+  }
+
+  const stampMetadataFieldName: keyof Tournament_Firestore = "stampMetadata";
+  if (payload.seedLootboxLogoURLs != undefined) {
+    const seedLootboxLogoURLsFieldName: keyof StampMetadata = "logoURLs";
+    updatePayload[`${stampMetadataFieldName}.${seedLootboxLogoURLsFieldName}`] =
+      payload.seedLootboxLogoURLs ?? [];
+  }
+  if (payload.seedLootboxFanTicketPrize != undefined) {
+    const seedLootboxFanTicketPrizeFieldName: keyof StampMetadata =
+      "seedLootboxFanTicketValue";
+    updatePayload[
+      `${stampMetadataFieldName}.${seedLootboxFanTicketPrizeFieldName}`
+    ] = payload.seedLootboxFanTicketPrize;
   }
 
   await tournamentRef.update(updatePayload);

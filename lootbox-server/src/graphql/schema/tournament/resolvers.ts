@@ -460,6 +460,10 @@ const TournamentResolvers = {
             tournamentDate: rest.tournamentDate,
             tournamentLink: rest.tournamentLink,
             visibility: rest.visibility,
+            maxPlayerLootboxes: rest.maxPlayerLootboxes,
+            maxPromoterLootboxes: rest.maxPromoterLootboxes,
+            seedLootboxLogoURLs: rest.seedLootboxLogoURLs,
+            seedLootboxFanTicketPrize: rest.seedLootboxFanTicketPrize,
           },
           context.userId
         );

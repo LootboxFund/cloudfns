@@ -7,7 +7,6 @@ import {
   UserIdpID,
   Affiliate_Firestore,
 } from "@wormgraph/helpers";
-import { validate } from "graphql";
 import {
   createTournament,
   CreateTournamentArgs,
@@ -147,6 +146,10 @@ interface EditTournamentServiceRequest {
   tournamentDate?: number | null;
   tournamentLink?: string | null;
   visibility?: string | null;
+  maxPlayerLootboxes?: number | null;
+  maxPromoterLootboxes?: number | null;
+  seedLootboxLogoURLs?: string[] | null;
+  seedLootboxFanTicketPrize?: string | null;
 }
 
 export const edit = async (
@@ -174,6 +177,10 @@ export const edit = async (
     throw new Error("You do not own this tournament");
   } else if (!!tournamentDB?.timestamps?.deletedAt) {
     throw new Error("Tournament is deleted");
+  }
+
+  if (!affiliate) {
+    throw new Error("Could not find affiliate for user");
   }
 
   const request: UpdateTournamentPayload = {};
@@ -232,6 +239,22 @@ export const edit = async (
     );
   }
 
+  if (req.maxPlayerLootboxes != undefined) {
+    request.maxPlayerLootboxes = req.maxPlayerLootboxes;
+  }
+
+  if (req.maxPromoterLootboxes != undefined) {
+    request.maxPromoterLootboxes = req.maxPromoterLootboxes;
+  }
+
+  if (req.seedLootboxLogoURLs !== undefined) {
+    request.seedLootboxLogoURLs = req.seedLootboxLogoURLs || [];
+  }
+
+  if (req.seedLootboxFanTicketPrize !== undefined) {
+    request.seedLootboxFanTicketPrize = req.seedLootboxFanTicketPrize;
+  }
+
   validateTournamentEditRequest(request);
 
   const updatedTournamentDB = await updateTournament(tournamentID, request);
@@ -253,7 +276,7 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
     req.visibility &&
     !Object.values(TournamentVisibility_Firestore).includes(req.visibility)
   ) {
-    throw new Error("Invalid visibility");
+    throw new Error("Invalid event visibility");
   }
 
   if (req.maxTicketsPerUser != undefined && req.maxTicketsPerUser < 0) {
@@ -282,6 +305,22 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
 
   if ("id" in req) {
     throw new Error("Cannot edit tournament ID");
+  }
+
+  if (req.maxPlayerLootboxes && req.maxPlayerLootboxes < 0) {
+    throw new Error("Max Player Lootboxes must be greater than zero");
+  }
+
+  if (req.maxPlayerLootboxes && !isInteger(req.maxPlayerLootboxes)) {
+    throw new Error("Max Player Lootboxes must be an integer");
+  }
+
+  if (req.maxPromoterLootboxes && req.maxPromoterLootboxes < 0) {
+    throw new Error("Max Promoter Lootboxes must be greater than zero");
+  }
+
+  if (req.maxPromoterLootboxes && !isInteger(req.maxPromoterLootboxes)) {
+    throw new Error("Max Promoter Lootboxes must be an integer");
   }
 
   return true;
