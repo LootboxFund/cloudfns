@@ -114,6 +114,7 @@ export const parseLootboxDB = (
     ...(lootbox?.stampMetadata && {
       stampMetadata: lootbox.stampMetadata,
     }),
+    createdOnBehalfOf: lootbox.createdOnBehalfOf,
   };
   if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
     lootboxDB.airdropMetadata = {
@@ -235,6 +236,7 @@ export const convertLootboxDBToGQL = (lootbox: Lootbox_Firestore): Lootbox => {
     stampMetadata: lootbox?.stampMetadata ?? null,
     officialInviteLink: lootbox?.officialInviteLink ?? null,
     officialInviteGraphic: lootbox?.officialInviteGraphic ?? null,
+    createdOnBehalfOf: lootbox?.createdOnBehalfOf ?? null,
   };
   if (lootbox.type === LootboxType.Airdrop && lootbox.airdropMetadata) {
     data.airdropMetadata = {
