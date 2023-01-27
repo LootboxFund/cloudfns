@@ -150,6 +150,8 @@ interface EditTournamentServiceRequest {
   maxPromoterLootboxes?: number | null;
   seedLootboxLogoURLs?: string[] | null;
   seedLootboxFanTicketPrize?: string | null;
+  playerDestinationURL?: string | null;
+  promoterDestinationURL?: string | null;
 }
 
 export const edit = async (
@@ -253,6 +255,14 @@ export const edit = async (
 
   if (req.seedLootboxFanTicketPrize !== undefined) {
     request.seedLootboxFanTicketPrize = req.seedLootboxFanTicketPrize;
+  }
+
+  if (req.playerDestinationURL !== undefined) {
+    request.playerDestinationURL = req.playerDestinationURL;
+  }
+
+  if (req.promoterDestinationURL !== undefined) {
+    request.promoterDestinationURL = req.promoterDestinationURL;
   }
 
   validateTournamentEditRequest(request);

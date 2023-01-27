@@ -371,6 +371,8 @@ const TournamentTypeDefs = gql`
     maxPromoterLootboxes: Int
     seedLootboxLogoURLs: [String!]
     seedLootboxFanTicketPrize: String
+    playerDestinationURL: String
+    promoterDestinationURL: String
   }
 
   input AddStreamPayload {

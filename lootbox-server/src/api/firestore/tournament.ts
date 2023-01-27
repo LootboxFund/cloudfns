@@ -445,6 +445,8 @@ export interface UpdateTournamentPayload {
   // promoterDestinationURL?: string | null;
   seedLootboxLogoURLs?: string[] | null;
   seedLootboxFanTicketPrize?: string | null;
+  playerDestinationURL?: string | null;
+  promoterDestinationURL?: string | null;
 }
 export const updateTournament = async (
   id: TournamentID,
@@ -534,6 +536,22 @@ export const updateTournament = async (
       "maxPromoterLootbox";
     updatePayload[`${inviteMetadataFieldName}.${maxPromoterLootboxFieldName}`] =
       payload.maxPromoterLootboxes;
+  }
+
+  if (payload.playerDestinationURL !== undefined) {
+    const playerDestinationURLFieldName: keyof Tournament_Firestore["inviteMetadata"] =
+      "playerDestinationURL";
+    updatePayload[
+      `${inviteMetadataFieldName}.${playerDestinationURLFieldName}`
+    ] = payload.playerDestinationURL;
+  }
+
+  if (payload.promoterDestinationURL !== undefined) {
+    const promoterDestinationURLFieldName: keyof Tournament_Firestore["inviteMetadata"] =
+      "promoterDestinationURL";
+    updatePayload[
+      `${inviteMetadataFieldName}.${promoterDestinationURLFieldName}`
+    ] = payload.promoterDestinationURL;
   }
 
   const stampMetadataFieldName: keyof Tournament_Firestore = "stampMetadata";

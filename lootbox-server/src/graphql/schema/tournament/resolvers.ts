@@ -464,6 +464,8 @@ const TournamentResolvers = {
             maxPromoterLootboxes: rest.maxPromoterLootboxes,
             seedLootboxLogoURLs: rest.seedLootboxLogoURLs,
             seedLootboxFanTicketPrize: rest.seedLootboxFanTicketPrize,
+            playerDestinationURL: rest.playerDestinationURL,
+            promoterDestinationURL: rest.promoterDestinationURL,
           },
           context.userId
         );
