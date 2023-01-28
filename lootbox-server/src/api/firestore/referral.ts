@@ -20,9 +20,7 @@ import {
   ReferralType_Firestore,
   Referral_Firestore,
   Claim_Firestore,
-  LootboxMintWhitelistID,
   AffiliateID,
-  ClaimTimestamps_Firestore,
   OfferID,
   QuestionAnswerID,
   LootboxTournamentSnapshot_Firestore,
@@ -47,12 +45,10 @@ import { getUser } from "./user";
 import { getUserWallets } from "./wallet";
 import {
   convertClaimDBToGQL,
-  convertClaimPrivacyScopeGQLToDB,
   convertClaimStatusDBToGQL,
   convertClaimTypeDBToGQL,
 } from "../../lib/referral";
 import { parseLootboxTournamentSnapshotDB } from "../../lib/tournament";
-import { LootboxStatus } from "../../graphql/generated/types";
 
 export const getReferralBySlug = async (
   slug: ReferralSlug
@@ -189,7 +185,7 @@ export const _createClaim = async (
     ticketID: null,
     ticketWeb3ID: null,
     privacyScope: req.privacyScope,
-    exemptFromEventLimit: null,
+    lootboxType: null,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -278,7 +274,7 @@ export const _createAirdropClaim = async (
     ticketWeb3ID: null,
     claimerUserId: req.claimerUserId,
     privacyScope: req.privacyScope || {},
-    exemptFromEventLimit: null,
+    lootboxType: LootboxType.Airdrop,
     timestamps: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -370,7 +366,7 @@ interface CompleteClaimReq {
   lootboxName: string;
   lootboxNFTBountyValue?: string;
   lootboxMaxTickets?: number;
-  isExemptFromEventLimit?: boolean;
+  lootboxType: LootboxType;
 }
 export const completeClaim = async (
   req: CompleteClaimReq
@@ -385,7 +381,7 @@ export const completeClaim = async (
     claimerUserId: req.claimerUserId,
     lootboxID: req.lootboxID,
     lootboxName: req.lootboxName,
-    exemptFromEventLimit: req.isExemptFromEventLimit || false,
+    lootboxType: req.lootboxType,
   };
 
   if (req.lootboxAddress) {
@@ -438,6 +434,7 @@ interface CompleteAnonClaimReq {
   lootboxNFTBountyValue?: string;
   lootboxMaxTickets?: number;
   isClaimExemptFromEventLimit?: boolean;
+  lootboxType: LootboxType;
 }
 export const completeAnonClaim = async (
   req: CompleteAnonClaimReq
@@ -452,7 +449,7 @@ export const completeAnonClaim = async (
     claimerUserId: req.claimerUserId,
     lootboxID: req.lootboxID,
     lootboxName: req.lootboxName,
-    exemptFromEventLimit: req.isClaimExemptFromEventLimit || false,
+    lootboxType: req.lootboxType,
   };
 
   if (req.lootboxAddress) {
@@ -519,13 +516,23 @@ export const getCompletedUserReferralClaimsForTournament = async (
   tournamentId: TournamentID,
   limit?: number
 ): Promise<Claim_Firestore[]> => {
+  const tournamentIDField: keyof Claim_Firestore = "tournamentId";
+  const claimerIDField: keyof Claim_Firestore = "claimerUserId";
+  const claimTypeField: keyof Claim_Firestore = "type";
+  const claimStatusField: keyof Claim_Firestore = "status";
+  const lootboxTypeField: keyof Claim_Firestore = "lootboxType";
+
   let collectionRef = db
     .collectionGroup(Collection.Claim)
-    .where("tournamentId", "==", tournamentId)
-    .where("claimerUserId", "==", userId)
-    .where("type", "==", ClaimType.Referral)
-    .where("status", "==", ClaimStatus.Complete)
-    .where("exemptFromEventLimit", "==", false) as Query<Claim_Firestore>;
+    .where(tournamentIDField, "==", tournamentId)
+    .where(claimerIDField, "==", userId)
+    .where(claimTypeField, "==", ClaimType.Referral)
+    .where(claimStatusField, "==", ClaimStatus.Complete)
+    .where(
+      lootboxTypeField,
+      "==",
+      LootboxType.Player
+    ) as Query<Claim_Firestore>;
 
   if (limit !== undefined) {
     collectionRef = collectionRef.limit(limit);
@@ -1077,21 +1084,20 @@ export const checkIfClaimRedemptionStatusIsSenior = (
   }
 };
 
-export const getUserClaimCountForTournament = async (
+export const getUserPlayerClaimCountForTournament = async (
   tournamentID: TournamentID,
   userID: UserID
 ): Promise<number> => {
   const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
   const statusField: keyof Claim_Firestore = "status";
   const tournamentIDField: keyof Claim_Firestore = "tournamentId";
-  const exemptFromEventLimitField: keyof Claim_Firestore =
-    "exemptFromEventLimit";
+  const lootboxTypeField: keyof Claim_Firestore = "lootboxType";
   const query = await db
     .collectionGroup(Collection.Claim)
     .where(tournamentIDField, "==", tournamentID)
     .where(claimerUserIDField, "==", userID)
     .where(statusField, "==", ClaimStatus_Firestore.complete)
-    .where(exemptFromEventLimitField, "==", false)
+    .where(lootboxTypeField, "==", LootboxType.Player)
     .get();
 
   return query.docs.length;

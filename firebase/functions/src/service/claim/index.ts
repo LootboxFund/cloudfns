@@ -9,6 +9,7 @@ import {
     LootboxTournamentStatus_Firestore,
     Lootbox_Firestore,
     Tournament_Firestore,
+    isLootboxClaimsExcludedFromEventLimits,
 } from "@wormgraph/helpers";
 import {
     getCompletedUserReferralClaimsForTournament,
@@ -21,11 +22,14 @@ import {
     transitionClaimToExpired,
     handleClaimCompletedBatchUpdate,
     createBonusClaim,
-    getUserClaimCountForTournament,
+    getUserPlayerClaimCountForTournament,
     getUserClaimCountForLootbox,
 } from "../../api/firestore";
 import * as functions from "firebase-functions";
 import { logger } from "firebase-functions";
+
+const DEFAULT_MAX_LOOTBOX_CLAIMS = 5;
+const DEFAULT_MAX_EVENT_CLAIMS = 10;
 
 export const validateUnverifiedUserClaim = async (user: User_Firestore, claim: Claim_Firestore) => {
     if (!claim.lootboxID || !claim.claimerUserId) {
@@ -125,20 +129,20 @@ export const validateUnverifiedUserClaim = async (user: User_Firestore, claim: C
 
     // get user tickets for this lootbox & tournamet
     const [userLootboxTicketCount, userTournamentTicketCount] = await Promise.all([
-        getUserClaimCountForTournament(tournament.id, user.id),
         getUserClaimCountForLootbox(lootbox.id, user.id),
+        getUserPlayerClaimCountForTournament(tournament.id, user.id),
     ]);
 
     if (
-        userLootboxTicketCount >= (lootboxSafety?.maxTicketsPerUser || 5) ||
-        userTournamentTicketCount >= (tournamentSafety?.maxTicketsPerUser || 100)
+        userLootboxTicketCount >= (lootboxSafety?.maxTicketsPerUser || DEFAULT_MAX_LOOTBOX_CLAIMS) ||
+        userTournamentTicketCount >= (tournamentSafety?.maxTicketsPerUser || DEFAULT_MAX_EVENT_CLAIMS)
     ) {
         // If user has already claimed max tickets for this lootbox or tournament, no bonus reward
         logger.warn("User already has max amount of allowed tickets", {
             userLootboxTicketCount,
             userTournamentTicketCount,
-            maxTicketsPerUser: lootboxSafety?.maxTicketsPerUser || 5,
-            maxTicketsPerUserTournament: tournamentSafety?.maxTicketsPerUser || 100,
+            maxTicketsPerUser: lootboxSafety?.maxTicketsPerUser || DEFAULT_MAX_LOOTBOX_CLAIMS,
+            maxTicketsPerUserTournament: tournamentSafety?.maxTicketsPerUser || DEFAULT_MAX_EVENT_CLAIMS,
             claimID: claim.id,
             referralID: claim.referralId,
         });
@@ -293,22 +297,24 @@ const handleBonusRewardClaim = async (payload: BonusRewardClaimServiceRequest) =
         return;
     }
 
+    const isClaimExcluded = isLootboxClaimsExcludedFromEventLimits(payload.lootbox);
+
     // get user tickets for this lootbox & tournamet
     const [userLootboxTicketCount, userTournamentTicketCount] = await Promise.all([
         getUserClaimCountForLootbox(payload.lootbox.id, bonusRewardReceiver),
-        getUserClaimCountForTournament(payload.tournament.id, bonusRewardReceiver),
+        isClaimExcluded ? 0 : getUserPlayerClaimCountForTournament(payload.tournament.id, bonusRewardReceiver),
     ]);
 
     if (
-        userLootboxTicketCount >= (lootboxSafety?.maxTicketsPerUser || 5) ||
-        userTournamentTicketCount >= (tournamentSafety?.maxTicketsPerUser || 100)
+        userLootboxTicketCount >= (lootboxSafety?.maxTicketsPerUser || DEFAULT_MAX_LOOTBOX_CLAIMS) ||
+        userTournamentTicketCount >= (tournamentSafety?.maxTicketsPerUser || DEFAULT_MAX_EVENT_CLAIMS)
     ) {
         // If user has already claimed max tickets for this lootbox or tournament, no bonus reward
         logger.warn("User already has max amount of allowed tickets", {
             userLootboxTicketCount,
             userTournamentTicketCount,
-            maxTicketsPerUser: lootboxSafety?.maxTicketsPerUser || 5,
-            maxTicketsPerUserTournament: tournamentSafety?.maxTicketsPerUser || 100,
+            maxTicketsPerUser: lootboxSafety?.maxTicketsPerUser || DEFAULT_MAX_LOOTBOX_CLAIMS,
+            maxTicketsPerUserTournament: tournamentSafety?.maxTicketsPerUser || DEFAULT_MAX_LOOTBOX_CLAIMS,
             claimID: payload.claim.id,
             referralID: payload.claim.referralId,
         });
@@ -321,6 +327,5 @@ const handleBonusRewardClaim = async (payload: BonusRewardClaimServiceRequest) =
         lootbox: payload.lootbox,
         tournament: payload.tournament,
         bonusRewardReceiver,
-        isExemptFromEventLimits: payload.lootbox.safetyFeatures?.excludeFromEventLimits || false,
     });
 };

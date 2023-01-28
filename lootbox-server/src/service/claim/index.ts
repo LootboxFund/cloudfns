@@ -25,7 +25,7 @@ import {
   getTournamentById,
   getUnverifiedClaimsForUser,
   getUserClaimCountForLootbox,
-  getUserClaimCountForTournament,
+  getUserPlayerClaimCountForTournament,
   createStartingClaim,
 } from "../../api/firestore";
 import { IIdpUser } from "../../api/identityProvider/interface";
@@ -279,7 +279,7 @@ const _validateBaseClaimForCompletionStep = async (
       // Promoter lootboxes are excluded from event limits
       isExcludedFromEventLimits
         ? 0
-        : getUserClaimCountForTournament(
+        : getUserPlayerClaimCountForTournament(
             tournament.id,
             claimer.id as unknown as UserID
           ),

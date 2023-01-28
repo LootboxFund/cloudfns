@@ -734,7 +734,7 @@ interface MockLootboxInputPayloadOutput {
   symbol: string;
   lootboxName: string;
   tournamentID: TournamentID;
-  type?: LootboxType;
+  type: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
@@ -785,7 +785,7 @@ export const extractOrGenerateLootboxCreateInput = async (
     symbol: impliedSymbol || "LOOTBOX",
     lootboxName: name,
     tournamentID: payload.tournamentID as TournamentID,
-    type: payload.type ? (payload.type as LootboxType) : undefined,
+    type: payload.type ? payload.type : LootboxType.Player,
     isExclusiveLootbox: payload.isExclusiveLootbox || false,
     airdropMetadata: payload.airdropMetadata
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)

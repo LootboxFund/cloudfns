@@ -701,8 +701,7 @@ const ReferralResolvers: Resolvers = {
             lootboxNFTBountyValue: targetLootbox.nftBountyValue,
             lootboxMaxTickets: targetLootbox.maxTickets,
             claimerUserId: context.userId as unknown as UserID,
-            isExemptFromEventLimit:
-              isLootboxClaimsExcludedFromEventLimits(targetLootbox),
+            lootboxType: targetLootbox.type,
           });
         } else {
           const { targetLootbox } =
@@ -723,6 +722,7 @@ const ReferralResolvers: Resolvers = {
             lootboxNFTBountyValue: targetLootbox.nftBountyValue,
             lootboxMaxTickets: targetLootbox.maxTickets,
             claimerUserId: context.userId as unknown as UserID,
+            lootboxType: targetLootbox.type,
           });
         }
 
