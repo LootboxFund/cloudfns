@@ -52,6 +52,8 @@ const LootboxTypeDefs = gql`
   enum LootboxType {
     Compete
     Airdrop
+    Player
+    Promoter
   }
 
   # Subcollection under the Lootbox

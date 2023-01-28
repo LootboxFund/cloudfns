@@ -495,7 +495,6 @@ export interface CreateLootboxPayloadLocalType {
   isExclusiveLootbox?: boolean;
   stampMetadata?: StampMetadata_Firestore | null;
   createdOnBehalfOf?: UserID;
-  excludeFromEventLimits?: boolean;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -542,7 +541,6 @@ export const createLootbox = async (
     safetyFeatures: {
       maxTicketsPerUser: payload.maxTicketsPerUser ?? 5,
       isExclusiveLootbox: payload.isExclusiveLootbox || false,
-      excludeFromEventLimits: payload.excludeFromEventLimits || false,
     },
     timestamps: {
       createdAt: Timestamp.now().toMillis(),

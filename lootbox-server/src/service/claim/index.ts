@@ -2,9 +2,11 @@ import {
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
+  isLootboxClaimsExcludedFromEventLimits,
   LootboxID,
   LootboxStatus_Firestore,
   LootboxTournamentStatus_Firestore,
+  LootboxType,
   Lootbox_Firestore,
   ReferralID,
   ReferralSlug,
@@ -269,11 +271,13 @@ const _validateBaseClaimForCompletionStep = async (
       "Sharing is disabled for this Lootbox. Please ask the event host for a different referral link."
     );
   }
-
+  const isExcludedFromEventLimits =
+    isLootboxClaimsExcludedFromEventLimits(lootbox);
   // get user tickets for this lootbox & tournamet
   const [userTournamentTicketCount, userLootboxTicketCount] = await Promise.all(
     [
-      lootbox?.safetyFeatures?.excludeFromEventLimits
+      // Promoter lootboxes are excluded from event limits
+      isExcludedFromEventLimits
         ? 0
         : getUserClaimCountForTournament(
             tournament.id,
@@ -291,7 +295,7 @@ const _validateBaseClaimForCompletionStep = async (
   }
   const maxEventTicketsAllowed = tournamentSafety?.maxTicketsPerUser ?? 100;
   if (
-    !lootbox?.safetyFeatures?.excludeFromEventLimits &&
+    !isExcludedFromEventLimits &&
     userTournamentTicketCount >= maxEventTicketsAllowed
   ) {
     throw new Error(

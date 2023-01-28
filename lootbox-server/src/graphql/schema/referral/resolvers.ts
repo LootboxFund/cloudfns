@@ -54,11 +54,13 @@ import {
   AffiliateID,
   ClaimID,
   Claim_Firestore,
+  isLootboxClaimsExcludedFromEventLimits,
   LootboxID,
   LootboxMintWhitelistID,
   LootboxStatus_Firestore,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
+  LootboxType,
   Lootbox_Firestore,
   ReferralID,
   ReferralSlug,
@@ -700,7 +702,7 @@ const ReferralResolvers: Resolvers = {
             lootboxMaxTickets: targetLootbox.maxTickets,
             claimerUserId: context.userId as unknown as UserID,
             isExemptFromEventLimit:
-              targetLootbox?.safetyFeatures?.excludeFromEventLimits || false,
+              isLootboxClaimsExcludedFromEventLimits(targetLootbox),
           });
         } else {
           const { targetLootbox } =
