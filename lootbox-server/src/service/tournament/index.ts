@@ -74,7 +74,7 @@ export const create = async (
         : payload.privacyScope,
     maxTicketsPerUser: payload.maxTicketsPerUser
       ? Math.round(payload.maxTicketsPerUser)
-      : 100,
+      : 5,
     seedMaxLootboxTicketsPerUser: payload.seedMaxLootboxTicketsPerUser
       ? Math.round(payload.seedMaxLootboxTicketsPerUser)
       : 5,
