@@ -67,14 +67,13 @@ export const create = async (
     privacyScope:
       payload.privacyScope == undefined
         ? [
-            // Default to full permissions
+            // Default to allow datasharing
             TournamentPrivacyScope.DataSharing,
-            TournamentPrivacyScope.MarketingEmails,
           ]
         : payload.privacyScope,
     maxTicketsPerUser: payload.maxTicketsPerUser
       ? Math.round(payload.maxTicketsPerUser)
-      : 5,
+      : 10,
     seedMaxLootboxTicketsPerUser: payload.seedMaxLootboxTicketsPerUser
       ? Math.round(payload.seedMaxLootboxTicketsPerUser)
       : 5,

@@ -548,10 +548,8 @@ export const createLootbox = async (
       deletedAt: null,
       deployedAt: null,
     },
+    type: payload.type ?? LootboxType.Player,
   };
-  if (payload.type) {
-    lootboxPayload.type = payload.type;
-  }
   if (payload.stampMetadata) {
     lootboxPayload.stampMetadata = payload.stampMetadata;
   }
