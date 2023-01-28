@@ -333,5 +333,12 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
     throw new Error("Max Promoter Lootboxes must be an integer");
   }
 
+  if (
+    req.seedLootboxLogoURLs !== undefined &&
+    !Array.isArray(req.seedLootboxLogoURLs)
+  ) {
+    throw new Error("Seed Logo URLs must be an array");
+  }
+
   return true;
 };
