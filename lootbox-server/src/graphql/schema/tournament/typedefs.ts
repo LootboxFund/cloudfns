@@ -82,6 +82,38 @@ const TournamentTypeDefs = gql`
     seedMaxLootboxTicketsPerUser: Int
   }
 
+  type EventInviteMetadata {
+    slug: String!
+    playerDestinationURL: String
+    promoterDestinationURL: String
+    maxPlayerLootbox: Int!
+    maxPromoterLootbox: Int!
+  }
+
+  # view for players or promoters in the create lootbox loop
+  type EventPartnerView {
+    id: ID! # same as TournamentID
+    title: String!
+    inviteMetadata: EventInviteMetadata!
+    stampMetadata: EventStampMetadata
+    tournamentDate: Timestamp
+    prize: String
+    communityURL: String
+  }
+
+  type EventInviteMetadata {
+    slug: String!
+    playerDestinationURL: String
+    promoterDestinationURL: String
+    maxPlayerLootbox: Int!
+    maxPromoterLootbox: Int!
+  }
+
+  type EventStampMetadata {
+    logoURLs: [String!]
+    seedLootboxFanTicketValue: String
+  }
+
   type Tournament {
     id: ID!
     title: String!
@@ -116,6 +148,8 @@ const TournamentTypeDefs = gql`
     lootboxSnapshots(
       status: LootboxTournamentStatus
     ): [LootboxTournamentSnapshot!]
+    inviteMetadata: EventInviteMetadata
+    stampMetadata: EventStampMetadata
   }
 
   type OrganizerProfile {
@@ -205,6 +239,14 @@ const TournamentTypeDefs = gql`
   type MyTournamentResponseSuccess {
     tournament: Tournament!
   }
+
+  type EventPartnerViewResponseSuccess {
+    event: EventPartnerView
+  }
+
+  union EventPartnerViewResponse =
+      EventPartnerViewResponseSuccess
+    | ResponseError
 
   type BattleFeedEdge {
     node: Tournament!
@@ -325,6 +367,12 @@ const TournamentTypeDefs = gql`
     seedMaxLootboxTicketsPerUser: Int
     maxTicketsPerUser: Int
     visibility: String
+    maxPlayerLootboxes: Int
+    maxPromoterLootboxes: Int
+    seedLootboxLogoURLs: [String!]
+    seedLootboxFanTicketPrize: String
+    playerDestinationURL: String
+    promoterDestinationURL: String
   }
 
   input AddStreamPayload {
@@ -403,6 +451,7 @@ const TournamentTypeDefs = gql`
     listPotentialAirdropClaimers(
       payload: ListPotentialAirdropClaimersPayload!
     ): ListPotentialAirdropClaimersResponse!
+    eventPartnerView(slug: String!): EventPartnerViewResponse!
     # get the private promoter affiliate view of a tournament with earnings report
     #myMonetizedPromoterTournament(
     #  id: ID!

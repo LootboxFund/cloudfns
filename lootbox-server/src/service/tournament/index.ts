@@ -7,7 +7,6 @@ import {
   UserIdpID,
   Affiliate_Firestore,
 } from "@wormgraph/helpers";
-import { validate } from "graphql";
 import {
   createTournament,
   CreateTournamentArgs,
@@ -21,7 +20,7 @@ import { TournamentVisibility } from "../../graphql/generated/types";
 import { isInteger } from "../../lib/number";
 import {
   convertTournamentVisiblityDB,
-  convertTournamentVisiblityGQL,
+  createEventInviteSlug,
 } from "../../lib/tournament";
 
 interface CreateTournamentServiceRequest {
@@ -68,17 +67,17 @@ export const create = async (
     privacyScope:
       payload.privacyScope == undefined
         ? [
-            // Default to full permissions
+            // Default to allow datasharing
             TournamentPrivacyScope.DataSharing,
-            TournamentPrivacyScope.MarketingEmails,
           ]
         : payload.privacyScope,
     maxTicketsPerUser: payload.maxTicketsPerUser
       ? Math.round(payload.maxTicketsPerUser)
-      : 100,
+      : 10,
     seedMaxLootboxTicketsPerUser: payload.seedMaxLootboxTicketsPerUser
       ? Math.round(payload.seedMaxLootboxTicketsPerUser)
       : 5,
+    inviteSlug: createEventInviteSlug(title),
   };
 
   validateTournamentCreationRequest(creationRequest);
@@ -146,6 +145,12 @@ interface EditTournamentServiceRequest {
   tournamentDate?: number | null;
   tournamentLink?: string | null;
   visibility?: string | null;
+  maxPlayerLootboxes?: number | null;
+  maxPromoterLootboxes?: number | null;
+  seedLootboxLogoURLs?: string[] | null;
+  seedLootboxFanTicketPrize?: string | null;
+  playerDestinationURL?: string | null;
+  promoterDestinationURL?: string | null;
 }
 
 export const edit = async (
@@ -173,6 +178,10 @@ export const edit = async (
     throw new Error("You do not own this tournament");
   } else if (!!tournamentDB?.timestamps?.deletedAt) {
     throw new Error("Tournament is deleted");
+  }
+
+  if (!affiliate) {
+    throw new Error("Could not find affiliate for user");
   }
 
   const request: UpdateTournamentPayload = {};
@@ -231,6 +240,30 @@ export const edit = async (
     );
   }
 
+  if (req.maxPlayerLootboxes != undefined) {
+    request.maxPlayerLootboxes = req.maxPlayerLootboxes;
+  }
+
+  if (req.maxPromoterLootboxes != undefined) {
+    request.maxPromoterLootboxes = req.maxPromoterLootboxes;
+  }
+
+  if (req.seedLootboxLogoURLs !== undefined) {
+    request.seedLootboxLogoURLs = req.seedLootboxLogoURLs || [];
+  }
+
+  if (req.seedLootboxFanTicketPrize !== undefined) {
+    request.seedLootboxFanTicketPrize = req.seedLootboxFanTicketPrize;
+  }
+
+  if (req.playerDestinationURL !== undefined) {
+    request.playerDestinationURL = req.playerDestinationURL;
+  }
+
+  if (req.promoterDestinationURL !== undefined) {
+    request.promoterDestinationURL = req.promoterDestinationURL;
+  }
+
   validateTournamentEditRequest(request);
 
   const updatedTournamentDB = await updateTournament(tournamentID, request);
@@ -252,7 +285,7 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
     req.visibility &&
     !Object.values(TournamentVisibility_Firestore).includes(req.visibility)
   ) {
-    throw new Error("Invalid visibility");
+    throw new Error("Invalid event visibility");
   }
 
   if (req.maxTicketsPerUser != undefined && req.maxTicketsPerUser < 0) {
@@ -281,6 +314,29 @@ const validateTournamentEditRequest = (req: UpdateTournamentPayload) => {
 
   if ("id" in req) {
     throw new Error("Cannot edit tournament ID");
+  }
+
+  if (req.maxPlayerLootboxes && req.maxPlayerLootboxes < 0) {
+    throw new Error("Max Player Lootboxes must be greater than zero");
+  }
+
+  if (req.maxPlayerLootboxes && !isInteger(req.maxPlayerLootboxes)) {
+    throw new Error("Max Player Lootboxes must be an integer");
+  }
+
+  if (req.maxPromoterLootboxes && req.maxPromoterLootboxes < 0) {
+    throw new Error("Max Promoter Lootboxes must be greater than zero");
+  }
+
+  if (req.maxPromoterLootboxes && !isInteger(req.maxPromoterLootboxes)) {
+    throw new Error("Max Promoter Lootboxes must be an integer");
+  }
+
+  if (
+    req.seedLootboxLogoURLs !== undefined &&
+    !Array.isArray(req.seedLootboxLogoURLs)
+  ) {
+    throw new Error("Seed Logo URLs must be an array");
   }
 
   return true;

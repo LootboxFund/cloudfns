@@ -1,4 +1,6 @@
 import {
+  EventPartnerView,
+  EventStampMetadata,
   LootboxTournamentSnapshot,
   LootboxTournamentStatus,
   Stream,
@@ -11,14 +13,18 @@ import {
   Tournament_Firestore,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
-  LootboxType,
   TournamentVisibility_Firestore,
   TournamentSafetyFeatures_Firestore,
+  EventInviteSlug,
+  StampMetadata,
 } from "@wormgraph/helpers";
 import {
   Stream_Firestore,
   StreamType_Firestore,
 } from "../api/firestore/tournament.types";
+import { customAlphabet } from "nanoid";
+
+const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 5);
 
 export const parseLootboxTournamentSnapshotDB = (
   data: LootboxTournamentSnapshot_Firestore
@@ -65,6 +71,7 @@ export const parseTournamentDB = (
     runningCompletedClaims: data.runningCompletedClaims || 0,
     playbookUrl: data.playbookUrl || "",
     privacyScope: data?.privacyScope || [],
+    inviteMetadata: data.inviteMetadata,
     timestamps: {
       createdAt: data.timestamps.createdAt,
       updatedAt: data.timestamps.updatedAt,
@@ -85,6 +92,10 @@ export const parseTournamentDB = (
 
   if (data.safetyFeatures) {
     res.safetyFeatures = data.safetyFeatures;
+  }
+
+  if (data.stampMetadata) {
+    res.stampMetadata = data.stampMetadata;
   }
 
   return res;
@@ -108,6 +119,15 @@ export const parseTournamentStreamDB = (
   };
 
   return stream;
+};
+
+export const convertStampMetadataDBToGQL = (
+  stampMetadata: StampMetadata
+): EventStampMetadata => {
+  return {
+    logoURLs: stampMetadata.logoURLs ?? [],
+    seedLootboxFanTicketValue: stampMetadata.seedLootboxFanTicketValue,
+  };
 };
 
 export const convertLootboxTournamentSnapshotStatusGQLToDB = (
@@ -215,6 +235,22 @@ export const convertTournamentVisiblityDB = (
   }
 };
 
+export const convertTournamentDBToParnterViewGQL = (
+  tournament: Tournament_Firestore
+): EventPartnerView => {
+  return {
+    id: tournament.id,
+    title: tournament.title,
+    inviteMetadata: tournament.inviteMetadata,
+    communityURL: tournament.communityURL,
+    prize: tournament.prize,
+    stampMetadata: tournament.stampMetadata
+      ? convertStampMetadataDBToGQL(tournament.stampMetadata)
+      : null,
+    tournamentDate: tournament.tournamentDate,
+  };
+};
+
 export const convertTournamentDBToGQL = (
   tournament: Tournament_Firestore
 ): Tournament => {
@@ -235,6 +271,7 @@ export const convertTournamentDBToGQL = (
       : null,
     visibility: convertTournamentVisiblityGQL(tournament.visibility),
     dealConfigs: [], // Gets fetched in gql layer
+    inviteMetadata: tournament.inviteMetadata,
   };
 
   if (!!tournament.magicLink) {
@@ -263,6 +300,12 @@ export const convertTournamentDBToGQL = (
 
   if (!!tournament.safetyFeatures) {
     res.safetyFeatures = tournament.safetyFeatures;
+  }
+
+  if (!!tournament.stampMetadata) {
+    res.stampMetadata = tournament.stampMetadata
+      ? convertStampMetadataDBToGQL(tournament.stampMetadata)
+      : null;
   }
 
   return res as unknown as Tournament;
@@ -296,4 +339,17 @@ export const convertLootboxTournamentSnapshotDBToGQL = (
   };
 
   return res;
+};
+
+export const toSlug = (str: string): string => {
+  // Remove special characters and replace whitespace with "_"
+  const cleaned = str.replace(/[^a-zA-Z0-9_\s]/g, "").replace(/\s/g, "_");
+  // Convert to lowercase
+  return cleaned.toLowerCase();
+};
+
+export const createEventInviteSlug = (eventName: string): EventInviteSlug => {
+  const _slug = toSlug(eventName);
+  const id = nanoid(5);
+  return `${_slug}_${id}` as EventInviteSlug;
 };

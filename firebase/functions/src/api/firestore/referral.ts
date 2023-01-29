@@ -9,6 +9,7 @@ import {
     LootboxID,
     LootboxTicketID,
     LootboxTicket_Firestore,
+    LootboxType,
     Lootbox_Firestore,
     ReferralID,
     ReferralSlug,
@@ -108,12 +109,19 @@ export const getCompletedUserReferralClaimsForTournament = async (
     tournamentId: TournamentID,
     limit?: number
 ): Promise<Claim_Firestore[]> => {
+    const tournamentIDField: keyof Claim_Firestore = "tournamentId";
+    const claimerIDField: keyof Claim_Firestore = "claimerUserId";
+    const claimTypeField: keyof Claim_Firestore = "type";
+    const claimStatusField: keyof Claim_Firestore = "status";
+    const lootboxTypeField: keyof Claim_Firestore = "lootboxType";
+
     let collectionRef = db
         .collectionGroup(Collection.Claim)
-        .where("tournamentId", "==", tournamentId)
-        .where("claimerUserId", "==", userId)
-        .where("type", "==", ClaimType.Referral)
-        .where("status", "==", ClaimStatus.Complete) as Query<Claim_Firestore>;
+        .where(tournamentIDField, "==", tournamentId)
+        .where(claimerIDField, "==", userId)
+        .where(claimTypeField, "==", ClaimType.Referral)
+        .where(claimStatusField, "==", ClaimStatus.Complete)
+        .where(lootboxTypeField, "==", LootboxType.Player) as Query<Claim_Firestore>;
 
     if (limit !== undefined) {
         collectionRef = collectionRef.limit(limit);
@@ -297,6 +305,7 @@ export const createBonusClaim = async (payload: CreateBonusClaimPayload): Promis
         whitelistId: null,
         isPostCosmic: true,
         status: ClaimStatus_Firestore.complete,
+        lootboxType: payload.lootbox.type,
         type: ClaimType_Firestore.reward,
         referralType: ReferralType_Firestore.viral,
         lootboxID: payload.lootbox.id,
@@ -327,15 +336,20 @@ export const createBonusClaim = async (payload: CreateBonusClaimPayload): Promis
     return;
 };
 
-export const getUserClaimCountForTournament = async (tournamentID: TournamentID, userID: UserID): Promise<number> => {
+export const getUserPlayerClaimCountForTournament = async (
+    tournamentID: TournamentID,
+    userID: UserID
+): Promise<number> => {
     const claimerUserIDField: keyof Claim_Firestore = "claimerUserId";
     const statusField: keyof Claim_Firestore = "status";
     const tournamentIDField: keyof Claim_Firestore = "tournamentId";
+    const lootboxTypeField: keyof Claim_Firestore = "lootboxType";
     const query = await db
         .collectionGroup(Collection.Claim)
         .where(tournamentIDField, "==", tournamentID)
         .where(claimerUserIDField, "==", userID)
         .where(statusField, "==", ClaimStatus_Firestore.complete)
+        .where(lootboxTypeField, "==", LootboxType.Player)
         .get();
 
     return query.docs.length;

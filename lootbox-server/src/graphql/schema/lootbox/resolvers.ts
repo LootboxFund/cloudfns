@@ -31,6 +31,7 @@ import {
   MutationDepositVoucherRewardsArgs,
   GetVoucherOfDepositForFanResponse,
   QueryGetVoucherOfDepositForFanArgs,
+  PublicUser,
 } from "../../generated/types";
 import {
   getLootbox,
@@ -82,6 +83,7 @@ import {
   DepositVoucherRewardsResponse,
   GetLootboxDepositsResponse,
 } from "../../generated/types";
+import { convertUserToPublicUser } from "../user/utils";
 
 const LootboxResolvers: Resolvers = {
   Query: {
@@ -258,7 +260,7 @@ const LootboxResolvers: Resolvers = {
           {
             description: payload.description,
             backgroundImage: payload.backgroundImage,
-            logoImage: payload.logo,
+            logoImage: payload.logo, // this is deprecated
             themeColor: payload.themeColor,
             nftBountyValue: payload.nftBountyValue,
             maxTickets: payload.maxTickets,
@@ -595,6 +597,19 @@ const LootboxResolvers: Resolvers = {
   },
 
   Lootbox: {
+    creator: async (lootbox: Lootbox): Promise<PublicUser | null> => {
+      if (!lootbox.creatorID) {
+        return null;
+      }
+
+      const user = await getUser(lootbox.creatorID as UserID);
+
+      if (!user) {
+        return null;
+      }
+
+      return convertUserToPublicUser(user);
+    },
     tournamentSnapshot: async (
       lootbox: Lootbox,
       { tournamentID }: LootboxTournamentSnapshotArgs

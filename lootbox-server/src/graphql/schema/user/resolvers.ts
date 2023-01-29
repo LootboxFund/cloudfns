@@ -41,6 +41,10 @@ import {
   getUserTournaments,
   updateUser,
   getUsersByEmail,
+  getAdvertiser,
+  getAdvertiserByUserID,
+  getAffiliateByUserIdpID,
+  getAffiliateByUserID,
 } from "../../../api/firestore";
 import { validateSignature } from "../../../lib/whitelist";
 import { Address } from "@wormgraph/helpers";
@@ -139,11 +143,14 @@ const UserResolvers = {
       { userID }: QueryGetAnonTokenV2Args
     ): Promise<GetAnonTokenResponse> => {
       try {
-        const [userIDP, userDB, userWallets] = await Promise.all([
-          identityProvider.getUserById(userID),
-          getUser(userID),
-          getUserWallets(userID as unknown as UserID, 1),
-        ]);
+        const [userIDP, userDB, userWallets, advertiser, affiliate] =
+          await Promise.all([
+            identityProvider.getUserById(userID),
+            getUser(userID),
+            getUserWallets(userID as unknown as UserID, 1),
+            getAdvertiserByUserID(userID as UserID),
+            getAffiliateByUserID(userID as UserID),
+          ]);
 
         /**
          *  This method should not return a token if ANY of the conditions are met
@@ -166,7 +173,7 @@ const UserResolvers = {
           };
         }
 
-        if (!isAnon(userIDP, userDB, userWallets)) {
+        if (!isAnon(userIDP, userDB, userWallets) || advertiser || affiliate) {
           return {
             error: {
               code: StatusCode.Unauthorized,
@@ -195,6 +202,7 @@ const UserResolvers = {
           email: userDB.email || "",
         };
       } catch (err) {
+        console.error("Error fetching anon token v2", err);
         return {
           error: {
             code: StatusCode.ServerError,
@@ -218,72 +226,12 @@ const UserResolvers = {
       _,
       { idToken }: QueryGetAnonTokenArgs
     ): Promise<GetAnonTokenResponse> => {
-      let uid: UserIdpID | null;
-      try {
-        uid = await identityProvider.verifyIDToken(idToken);
-        if (uid == null) {
-          throw "invalid token";
-        }
-      } catch (err) {
-        console.error("Error verifying token", err);
-        return {
-          error: {
-            code: StatusCode.Unauthorized,
-            message: "Invalid ID token",
-          },
-        };
-      }
-
-      try {
-        const [userIDP, userDB, userWallets] = await Promise.all([
-          identityProvider.getUserById(uid),
-          getUser(uid),
-          getUserWallets(uid as unknown as UserID, 1),
-        ]);
-
-        /**
-         *  This method should not return a token if ANY of the conditions are met
-         *  1. User has a VERIFIED email (unverified is fine)
-         *  2. User has phoneNumber attached to account
-         *  3. User has a wallet attached to account
-         *  4. User IDP has ANY providerData
-         *
-         *  If none of these conditions are met, then the user is mostlikely a new / anonymous user
-         *  and we can return a sign in token
-         */
-
-        if (!userIDP || !userDB) {
-          return {
-            error: {
-              code: StatusCode.NotFound,
-              message: "User not found",
-            },
-          };
-        }
-
-        if (!isAnon(userIDP, userDB, userWallets)) {
-          return {
-            error: {
-              code: StatusCode.Unauthorized,
-              message: "Not Allowed",
-            },
-          };
-        }
-
-        const token = await identityProvider.getSigninToken(uid);
-
-        return {
-          token,
-          email: userDB.email || "",
-        };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: "An error ocurred",
-          },
-        };
-      }
+      return {
+        error: {
+          code: StatusCode.ServerError,
+          message: "This method is no longer allowed",
+        },
+      };
     },
     /**
      * Cheks if a given email has any phone association to the user account

@@ -64,6 +64,28 @@ import { getAdvertiser } from "./advertiser";
 import { LootboxVoucherDeposits } from "../../graphql/generated/types";
 const DEFAULT_THEME_COLOR = "#000001";
 
+export const getLootboxCountForUserInTournament = async (
+  userID: UserID,
+  eventID: TournamentID
+): Promise<number> => {
+  const lootboxCreatorIDFieldName: keyof LootboxTournamentSnapshot_Firestore =
+    "lootboxCreatorID";
+  const tournamentIDField: keyof LootboxTournamentSnapshot_Firestore =
+    "tournamentID";
+  const lootboxRef = db
+    .collectionGroup(Collection.LootboxTournamentSnapshot)
+    .where(lootboxCreatorIDFieldName, "==", userID)
+    .where(
+      tournamentIDField,
+      "==",
+      eventID
+    ) as CollectionGroup<Lootbox_Firestore>;
+
+  const lootboxSnapshot = await lootboxRef.get();
+
+  return lootboxSnapshot.size;
+};
+
 export const getLootbox = async (
   id: LootboxID
 ): Promise<Lootbox_Firestore | undefined> => {
@@ -472,6 +494,7 @@ export interface CreateLootboxPayloadLocalType {
   maxTicketsPerUser?: number;
   isExclusiveLootbox?: boolean;
   stampMetadata?: StampMetadata_Firestore | null;
+  createdOnBehalfOf?: UserID;
 }
 export const createLootbox = async (
   payload: CreateLootboxPayloadLocalType,
@@ -525,12 +548,14 @@ export const createLootbox = async (
       deletedAt: null,
       deployedAt: null,
     },
+    type: payload.type ?? LootboxType.Player,
   };
-  if (payload.type) {
-    lootboxPayload.type = payload.type;
-  }
   if (payload.stampMetadata) {
     lootboxPayload.stampMetadata = payload.stampMetadata;
+  }
+  if (payload.createdOnBehalfOf) {
+    // hack - gives this user permissinos to edit the lootbox
+    lootboxPayload.createdOnBehalfOf = payload.createdOnBehalfOf;
   }
   if (payload.airdropMetadata && payload.type === LootboxType.Airdrop) {
     const [offerInfo, tournamentInfo, airdropClaimers] = await Promise.all([
@@ -594,8 +619,7 @@ export const createLootbox = async (
         return await createAirdropClaim(
           claim,
           lootboxPayload,
-          // @ts-ignore
-          payload.airdropMetadata.offerID as OfferID
+          payload?.airdropMetadata?.offerID as OfferID
         );
       })
     );
@@ -709,7 +733,7 @@ interface MockLootboxInputPayloadOutput {
   symbol: string;
   lootboxName: string;
   tournamentID: TournamentID;
-  type?: LootboxType;
+  type: LootboxType;
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
@@ -759,7 +783,7 @@ export const extractOrGenerateLootboxCreateInput = async (
     symbol: impliedSymbol || "LOOTBOX",
     lootboxName: name,
     tournamentID: payload.tournamentID as TournamentID,
-    type: payload.type ? (payload.type as LootboxType) : undefined,
+    type: payload.type ? payload.type : LootboxType.Player,
     isExclusiveLootbox: payload.isExclusiveLootbox || false,
     airdropMetadata: payload.airdropMetadata
       ? (payload.airdropMetadata as AirdropMetadataCreateInput)

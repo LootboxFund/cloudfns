@@ -2,9 +2,11 @@ import {
   ClaimStatus_Firestore,
   ClaimType_Firestore,
   Claim_Firestore,
+  isLootboxClaimsExcludedFromEventLimits,
   LootboxID,
   LootboxStatus_Firestore,
   LootboxTournamentStatus_Firestore,
+  LootboxType,
   Lootbox_Firestore,
   ReferralID,
   ReferralSlug,
@@ -23,7 +25,7 @@ import {
   getTournamentById,
   getUnverifiedClaimsForUser,
   getUserClaimCountForLootbox,
-  getUserClaimCountForTournament,
+  getUserPlayerClaimCountForTournament,
   createStartingClaim,
 } from "../../api/firestore";
 import { IIdpUser } from "../../api/identityProvider/interface";
@@ -265,19 +267,22 @@ const _validateBaseClaimForCompletionStep = async (
     lootboxSafety?.isExclusiveLootbox &&
     (!isOwnerMadeReferral || referral.seedLootboxID !== lootbox.id)
   ) {
-    // If sharing is disabled, users can only claim genesis referrals
     throw new Error(
       "Sharing is disabled for this Lootbox. Please ask the event host for a different referral link."
     );
   }
-
+  const isExcludedFromEventLimits =
+    isLootboxClaimsExcludedFromEventLimits(lootbox);
   // get user tickets for this lootbox & tournamet
   const [userTournamentTicketCount, userLootboxTicketCount] = await Promise.all(
     [
-      getUserClaimCountForTournament(
-        tournament.id,
-        claimer.id as unknown as UserID
-      ),
+      // Promoter lootboxes are excluded from event limits
+      isExcludedFromEventLimits
+        ? 0
+        : getUserPlayerClaimCountForTournament(
+            tournament.id,
+            claimer.id as unknown as UserID
+          ),
       getUserClaimCountForLootbox(lootbox.id, claimer.id as unknown as UserID),
     ]
   );
@@ -289,7 +294,10 @@ const _validateBaseClaimForCompletionStep = async (
     );
   }
   const maxEventTicketsAllowed = tournamentSafety?.maxTicketsPerUser ?? 100;
-  if (userTournamentTicketCount >= maxEventTicketsAllowed) {
+  if (
+    !isExcludedFromEventLimits &&
+    userTournamentTicketCount >= maxEventTicketsAllowed
+  ) {
     throw new Error(
       `You already have the maximum number of tickets for this Event (${maxEventTicketsAllowed}).`
     );

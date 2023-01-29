@@ -1400,3 +1400,18 @@ export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {
   }
   return affiliateSnapshot.docs[0].data();
 };
+
+// Does NOT throw if no affiliate found
+export const getAffiliateByUserID = async (userID: UserID) => {
+  const claimerUserIDField: keyof Affiliate_Firestore = "userID";
+  const affiliateRef = db
+    .collection(Collection.Affiliate)
+    .where(claimerUserIDField, "==", userID) as Query<Affiliate_Firestore>;
+
+  const affiliateSnapshot = await affiliateRef.get();
+
+  if (affiliateSnapshot.empty) {
+    return undefined;
+  }
+  return affiliateSnapshot.docs[0].data();
+};

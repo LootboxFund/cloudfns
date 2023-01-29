@@ -52,6 +52,8 @@ const LootboxTypeDefs = gql`
   enum LootboxType {
     Compete
     Airdrop
+    Player
+    Promoter
   }
 
   # Subcollection under the Lootbox
@@ -123,12 +125,13 @@ const LootboxTypeDefs = gql`
     themeColor: String!
     runningCompletedClaims: Int!
     safetyFeatures: LootboxSafetyFeatures
+    creatorID: ID
+    createdOnBehalfOf: ID
 
     # Web3 stuff
     address: ID
     factory: ID
     creatorAddress: ID
-    creatorID: ID
     chainIdHex: String
     variant: LootboxVariant
     timestamps: LootboxTimestamps
@@ -148,6 +151,7 @@ const LootboxTypeDefs = gql`
     officialInviteGraphic: String
 
     # GQL layer
+    creator: PublicUser
     userClaims(
       first: Int!
       cursor: UserClaimsCursor

@@ -2,6 +2,7 @@ import {
   Address,
   Claim_Firestore,
   Collection,
+  doesUserHaveLootboxEditPermission,
   LootboxID,
   LootboxStatus_Firestore,
   LootboxVariant_Firestore,
@@ -23,6 +24,7 @@ import {
   extractOrGenerateLootboxCreateInput,
   getAffiliateByUserIdpID,
   getLootbox,
+  getLootboxCountForUserInTournament,
   getTournamentById,
   getUser,
   getWhitelistByDigest,
@@ -72,12 +74,10 @@ export const create = async (
 ): Promise<Lootbox_Firestore> => {
   console.log("creating lootbox", _request);
 
-  const request = await extractOrGenerateLootboxCreateInput(_request);
-
   // Make sure the tournament exists
   let tournament: Tournament_Firestore | undefined = undefined;
-  if (request.tournamentID) {
-    tournament = await getTournamentById(request.tournamentID);
+  if (_request.tournamentID) {
+    tournament = await getTournamentById(_request.tournamentID);
     if (!tournament || !!tournament.timestamps.deletedAt) {
       throw new Error(
         "Could not create Lootbox. The Requested tournament was not found."
@@ -85,12 +85,44 @@ export const create = async (
     }
   }
 
+  if (
+    _request.nftBountyValue == undefined &&
+    tournament?.stampMetadata?.seedLootboxFanTicketValue
+  ) {
+    // use event seed value if it exists
+    _request.nftBountyValue =
+      tournament.stampMetadata.seedLootboxFanTicketValue;
+  }
+
+  const request = await extractOrGenerateLootboxCreateInput(_request);
+
   const [host, stampSecret] = await Promise.all([
     tournament
       ? getAffiliateByUserIdpID(tournament?.creatorId as unknown as UserIdpID)
       : null,
     getStampSecret(),
   ]);
+
+  if (tournament && host?.userID !== callerUserID) {
+    // This is a player or promoter making the lootbox for the event
+    // Make sure user does not make more lootboxes than allowed in event.inviteMetadata
+    const maxAmount =
+      request.type === LootboxType.Promoter
+        ? tournament.inviteMetadata?.maxPromoterLootbox ?? 5
+        : tournament.inviteMetadata?.maxPlayerLootbox ?? 5;
+
+    const lootboxCount = await getLootboxCountForUserInTournament(
+      callerUserID,
+      tournament.id
+    );
+
+    if (lootboxCount >= maxAmount) {
+      throw new Error(
+        `You have already created a Lootbox for this event. Ask the event host if you want to make more.`
+      );
+    }
+  }
+
   const lootboxDocumentRef = db
     .collection(Collection.Lootbox)
     .doc() as DocumentReference<Lootbox_Firestore>;
@@ -98,13 +130,20 @@ export const create = async (
   // stamp lootbox image
   let stampImageUrl: string;
 
+  const lootboxLogoURLS = [
+    ...(request?.stampMetadata?.logoURLs ? request.stampMetadata.logoURLs : []),
+    ...(tournament?.stampMetadata?.logoURLs
+      ? tournament.stampMetadata.logoURLs
+      : []),
+  ];
+
   if (_request.isStampV2) {
     stampImageUrl = await stampNewLootboxSimpleTicket(stampSecret, {
       coverPhoto: request.backgroundImage,
       themeColor: request.themeColor,
       teamName: request.lootboxName,
       playerHeadshot: request.stampMetadata?.playerHeadshot ?? undefined,
-      sponsorLogos: request?.stampMetadata?.logoURLs ?? [],
+      sponsorLogos: lootboxLogoURLS,
       eventName: tournament?.title || "Lootbox Events",
       hostName: host?.name,
     });
@@ -136,10 +175,12 @@ export const create = async (
     airdropMetadata: request.airdropMetadata,
     maxTicketsPerUser: tournament?.safetyFeatures?.seedMaxLootboxTicketsPerUser,
     isExclusiveLootbox: request.isExclusiveLootbox,
+    // Gives hosts edit access
+    createdOnBehalfOf: host?.userID ?? undefined,
     stampMetadata: _request.isStampV2
       ? {
           playerHeadshot: request.stampMetadata?.playerHeadshot ?? null,
-          logoURLs: request.stampMetadata?.logoURLs ?? [],
+          logoURLs: lootboxLogoURLS,
           eventName: tournament?.title || "Lootbox Events",
           hostName: host?.name ?? null,
         }
@@ -255,8 +296,8 @@ export const edit = async (
   if (!lootbox || !!lootbox.timestamps.deletedAt) {
     throw new Error("Lootbox not found");
   }
-  if (callerUserID !== lootbox.creatorID) {
-    throw new Error("You do not own this Lootbox");
+  if (!doesUserHaveLootboxEditPermission(lootbox, callerUserID)) {
+    throw new Error("You do not have permission to edit this Lootbox");
   }
 
   const request: EditLootboxPayload = {

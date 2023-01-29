@@ -54,11 +54,13 @@ import {
   AffiliateID,
   ClaimID,
   Claim_Firestore,
+  isLootboxClaimsExcludedFromEventLimits,
   LootboxID,
   LootboxMintWhitelistID,
   LootboxStatus_Firestore,
   LootboxTournamentSnapshot_Firestore,
   LootboxTournamentStatus_Firestore,
+  LootboxType,
   Lootbox_Firestore,
   ReferralID,
   ReferralSlug,
@@ -699,6 +701,7 @@ const ReferralResolvers: Resolvers = {
             lootboxNFTBountyValue: targetLootbox.nftBountyValue,
             lootboxMaxTickets: targetLootbox.maxTickets,
             claimerUserId: context.userId as unknown as UserID,
+            lootboxType: targetLootbox.type,
           });
         } else {
           const { targetLootbox } =
@@ -719,6 +722,7 @@ const ReferralResolvers: Resolvers = {
             lootboxNFTBountyValue: targetLootbox.nftBountyValue,
             lootboxMaxTickets: targetLootbox.maxTickets,
             claimerUserId: context.userId as unknown as UserID,
+            lootboxType: targetLootbox.type,
           });
         }
 

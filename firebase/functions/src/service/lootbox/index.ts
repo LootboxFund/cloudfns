@@ -18,6 +18,7 @@ import {
     LootboxVariant_Firestore,
     LootboxTicketID,
     StampMetadata_Firestore,
+    doesUserHaveLootboxEditPermission,
 } from "@wormgraph/helpers";
 import { logger } from "firebase-functions";
 import { db } from "../../api/firebase";
@@ -86,7 +87,7 @@ export const createWeb3 = async (request: CreateLootboxRequest, chain: ChainInfo
         });
         throw new Error("Lootbox already created");
     }
-    if (lootbox.creatorID !== request.creatorID) {
+    if (!doesUserHaveLootboxEditPermission(lootbox, request.creatorID)) {
         logger.error("User does not own Lootbox", {
             lootboxID: request.lootboxID,
             callerID: request.creatorID,
