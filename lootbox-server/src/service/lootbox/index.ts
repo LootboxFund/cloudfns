@@ -2,6 +2,7 @@ import {
   Address,
   Claim_Firestore,
   Collection,
+  doesUserHaveLootboxEditPermission,
   LootboxID,
   LootboxStatus_Firestore,
   LootboxVariant_Firestore,
@@ -295,10 +296,7 @@ export const edit = async (
   if (!lootbox || !!lootbox.timestamps.deletedAt) {
     throw new Error("Lootbox not found");
   }
-  if (
-    callerUserID !== lootbox.creatorID &&
-    callerUserID !== lootbox.createdOnBehalfOf
-  ) {
+  if (!doesUserHaveLootboxEditPermission(lootbox, callerUserID)) {
     throw new Error("You do not have permission to edit this Lootbox");
   }
 
