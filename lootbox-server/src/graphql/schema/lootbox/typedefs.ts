@@ -321,7 +321,6 @@ const LootboxTypeDefs = gql`
     type: LootboxType
     isExclusiveLootbox: Boolean
     airdropMetadata: AirdropMetadataCreateInput
-    isPromoterLootbox: Boolean
     # if true, the lootbox will be created with the updated ticket design
     isStampV2: Boolean
     stampMetadata: CreateLootboxPayload_StampMetadata

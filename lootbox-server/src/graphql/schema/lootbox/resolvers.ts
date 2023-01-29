@@ -260,7 +260,7 @@ const LootboxResolvers: Resolvers = {
           {
             description: payload.description,
             backgroundImage: payload.backgroundImage,
-            logoImage: payload.logo,
+            logoImage: payload.logo, // this is deprecated
             themeColor: payload.themeColor,
             nftBountyValue: payload.nftBountyValue,
             maxTickets: payload.maxTickets,
@@ -273,7 +273,6 @@ const LootboxResolvers: Resolvers = {
               ? (payload.airdropMetadata as AirdropMetadataCreateInput)
               : undefined,
             isStampV2: payload.isStampV2 || false,
-            isPromoterLootbox: payload.isPromoterLootbox || false,
             stampMetadata: payload.stampMetadata
               ? {
                   playerHeadshot:

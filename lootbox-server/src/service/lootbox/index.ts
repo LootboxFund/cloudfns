@@ -61,7 +61,6 @@ export interface CreateLootboxRequest {
   airdropMetadata?: AirdropMetadataCreateInput;
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
-  isPromoterLootbox?: boolean;
   stampMetadata?: {
     playerHeadshot?: string;
     logoURLs?: string[];
@@ -106,9 +105,10 @@ export const create = async (
   if (tournament && host?.userID !== callerUserID) {
     // This is a player or promoter making the lootbox for the event
     // Make sure user does not make more lootboxes than allowed in event.inviteMetadata
-    const maxAmount = request.isPromoterLootbox
-      ? tournament.inviteMetadata?.maxPromoterLootbox ?? 5
-      : tournament.inviteMetadata?.maxPlayerLootbox ?? 5;
+    const maxAmount =
+      request.type === LootboxType.Promoter
+        ? tournament.inviteMetadata?.maxPromoterLootbox ?? 5
+        : tournament.inviteMetadata?.maxPlayerLootbox ?? 5;
 
     const lootboxCount = await getLootboxCountForUserInTournament(
       callerUserID,
@@ -129,10 +129,12 @@ export const create = async (
   // stamp lootbox image
   let stampImageUrl: string;
 
-  const lootboxLogoURLS =
-    request?.stampMetadata?.logoURLs ??
-    tournament?.stampMetadata?.logoURLs ??
-    [];
+  const lootboxLogoURLS = [
+    ...(request?.stampMetadata?.logoURLs ? request.stampMetadata.logoURLs : []),
+    ...(tournament?.stampMetadata?.logoURLs
+      ? tournament.stampMetadata.logoURLs
+      : []),
+  ];
 
   if (_request.isStampV2) {
     stampImageUrl = await stampNewLootboxSimpleTicket(stampSecret, {

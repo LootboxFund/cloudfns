@@ -720,7 +720,6 @@ interface MockLootboxInputPayload {
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
   stampMetadata?: CreateLootboxPayload_StampMetadata;
-  isPromoterLootbox?: boolean;
 }
 
 interface MockLootboxInputPayloadOutput {
@@ -739,7 +738,6 @@ interface MockLootboxInputPayloadOutput {
   isExclusiveLootbox?: boolean;
   isStampV2?: boolean;
   stampMetadata?: CreateLootboxPayload_StampMetadata;
-  isPromoterLootbox: boolean;
 }
 
 export const extractOrGenerateLootboxCreateInput = async (
@@ -792,7 +790,6 @@ export const extractOrGenerateLootboxCreateInput = async (
       : undefined,
     isStampV2: payload.isStampV2 ?? false,
     stampMetadata: payload.stampMetadata,
-    isPromoterLootbox: payload.isPromoterLootbox ?? false,
   };
 };
 
