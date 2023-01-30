@@ -1,6 +1,6 @@
 {
   "name": "lootbox-server",
-  "version": "0.7.9-prod",
+  "version": "0.7.10-demo",
   "main": "dist/server.js",
   "license": "MIT",
   "scripts": {

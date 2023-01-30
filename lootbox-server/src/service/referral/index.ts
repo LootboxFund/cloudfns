@@ -96,17 +96,17 @@ export const create = async (
     lootbox.status !== LootboxStatus_Firestore.soldOut;
 
   // we get the lootbox tournament snapshot
-  if (!!isSeedLootboxEnabled && !!lootbox) {
-    const lootboxTournamentSnapshot =
-      await getLootboxTournamentSnapshotByLootboxID(tournament.id, lootbox.id);
-    // Only allow the seed lootbox if it is enabled for the tournament
-    isSeedLootboxEnabled =
-      isSeedLootboxEnabled &&
-      !!lootboxTournamentSnapshot &&
-      !lootboxTournamentSnapshot.timestamps.deletedAt &&
-      lootboxTournamentSnapshot.status ===
-        LootboxTournamentStatus_Firestore.active;
-  }
+  // if (!!isSeedLootboxEnabled && !!lootbox) {
+  //   const lootboxTournamentSnapshot =
+  //     await getLootboxTournamentSnapshotByLootboxID(tournament.id, lootbox.id);
+  //   // Only allow the seed lootbox if it is enabled for the tournament
+  //   isSeedLootboxEnabled =
+  //     isSeedLootboxEnabled &&
+  //     !!lootboxTournamentSnapshot &&
+  //     !lootboxTournamentSnapshot.timestamps.deletedAt &&
+  //     lootboxTournamentSnapshot.status ===
+  //       LootboxTournamentStatus_Firestore.active;
+  // }
 
   if (isSeedLootboxEnabled && lootbox?.safetyFeatures?.isExclusiveLootbox) {
     // Dont allow exclusive lootbox referrals if the user is not tournament host or lootbox creator
