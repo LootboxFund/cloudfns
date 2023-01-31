@@ -845,7 +845,6 @@ const TournamentResolvers = {
       context: Context
     ): Promise<AddOfferAdSetToTournamentResponse> => {
       try {
-        // Make sure the user owns the tournament
         const tournament = await addOfferAdSetToTournament(
           payload,
           context.userId

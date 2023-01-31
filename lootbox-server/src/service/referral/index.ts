@@ -31,7 +31,7 @@ import {
 import { convertReferralTypeGQLToDB } from "../../lib/referral";
 import { manifest } from "../../manifest";
 
-interface CreateReferralServiceRequest {
+export interface CreateReferralServiceRequest {
   campaignName?: string | null;
   promoterId?: AffiliateID | null;
   referrerId?: UserID | null;
