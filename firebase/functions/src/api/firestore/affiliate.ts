@@ -13,9 +13,11 @@ export const getAffiliate = async (affiliateID: AffiliateID) => {
     return affiliateSnapshot.data();
 };
 
-export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {
+export const getAffiliateByUserIdpID = async (
+    userIdpID: UserIdpID | null
+): Promise<Affiliate_Firestore | undefined> => {
     if (userIdpID === null) {
-        throw new Error("No userIdpID provided");
+        return undefined;
     }
     const affiliateRef = db
         .collection(Collection.Affiliate)
@@ -24,7 +26,7 @@ export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {
     const affiliateSnapshot = await affiliateRef.get();
 
     if (affiliateSnapshot.empty) {
-        throw new Error(`No affiliate found for userIdpID: ${userIdpID}`);
+        return undefined;
     }
-    return affiliateSnapshot.docs[0].data();
+    return affiliateSnapshot?.docs?.[0]?.data();
 };
