@@ -101,6 +101,10 @@
       "type": "string"
     },
     {
+      "name": "lootboxType",
+      "type": "string"
+    },
+    {
       "name": "timestamps",
       "type": "map",
       "fields": [
