@@ -14,6 +14,7 @@ const CommonTypeDefs = gql`
     InvalidOperation
     Forbidden
     Unauthorized
+    AffiliateNotFound
   }
 
   enum OrganizerRank {

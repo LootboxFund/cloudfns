@@ -119,6 +119,7 @@ import { manifest } from "../../../manifest";
 import { parseCSVRows } from "../../../lib/csv";
 import { toFilename } from "../../../lib/parser";
 import * as tournamentService from "../../../service/tournament";
+import { NoAffiliateError } from "../../../api/firestore/affiliate.errorCodes";
 
 const TournamentResolvers = {
   Query: {
@@ -418,13 +419,23 @@ const TournamentResolvers = {
         );
 
         return { tournament: convertTournamentDBToGQL(tournamentDB) };
-      } catch (err) {
-        return {
-          error: {
-            code: StatusCode.ServerError,
-            message: err instanceof Error ? err.message : "",
-          },
-        };
+      } catch (err: any) {
+        // if (err instanceof NoAffiliateError) {  // Why does this not work?!?!
+        if (err?.name === "NoAffiliateError") {
+          return {
+            error: {
+              code: StatusCode.AffiliateNotFound,
+              message: "You must be an affiliate to create a tournament",
+            },
+          };
+        } else {
+          return {
+            error: {
+              code: StatusCode.ServerError,
+              message: err instanceof Error ? err.message : "",
+            },
+          };
+        }
       }
     },
     editTournament: async (

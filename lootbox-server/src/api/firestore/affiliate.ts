@@ -68,6 +68,7 @@ import {
 } from "../lexica-images";
 import { retrieveRandomColor } from "../storage";
 import { convertAffiliateVisibilityGQLToDB } from "../../lib/affiliate";
+import { NoAffiliateError } from "./affiliate.errorCodes";
 
 export const upgradeToAffiliate = async (
   userIdpID: UserIdpID
@@ -1396,7 +1397,7 @@ export const getAffiliateByUserIdpID = async (userIdpID: UserIdpID | null) => {
   const affiliateSnapshot = await affiliateRef.get();
 
   if (affiliateSnapshot.empty) {
-    throw new Error(`No affiliate found for userIdpID: ${userIdpID}`);
+    throw new NoAffiliateError("No affiliate found", userIdpID);
   }
   return affiliateSnapshot.docs[0].data();
 };
