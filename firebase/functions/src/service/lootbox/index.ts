@@ -257,12 +257,10 @@ interface UpdateCallbackRequest {
     referralURL: string;
     lootboxTicketValue: string;
 }
+
 export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallbackRequest): Promise<void> => {
     // This has to update a bunch of potentially duplciated data...
     // - Lootbox tournament snapshots
-    // - Lootbox tickets
-
-    const lootboxTournamentSnaphotRefs = await getAllLootboxTournamentSnapshotRefs(lootboxID);
 
     let _stampImageUrl: string;
     let _stampInviteImageUrl: string | null;
@@ -321,22 +319,28 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
             officialInviteGraphic: _stampInviteImageUrl,
             officialInviteLink: request.referralURL,
         }),
-    };
-    const snapshotTimestampFieldName: keyof LootboxTournamentSnapshot_Firestore = "timestamps";
-    const snapshotUpdatedAtFieldName: keyof LootboxSnapshotTimestamps = "updatedAt";
-    const updateLootboxTournamentSnapshotReq: Partial<LootboxTournamentSnapshot_Firestore> = {
-        description: request.description,
-        name: request.name,
-        stampImage: newStampURL,
-        ...(_stampInviteImageUrl && {
-            officialInviteStampImage: _stampInviteImageUrl,
-            officialInviteURL: request.referralURL,
-        }),
-        [`${snapshotTimestampFieldName}.${snapshotUpdatedAtFieldName}`]: Timestamp.now().toMillis(),
+        stampMetadata: request.stampMetadata,
     };
     batch.update(lootboxRef, lootboxUpdateReq);
-    for (const ref of lootboxTournamentSnaphotRefs) {
-        batch.update(ref, updateLootboxTournamentSnapshotReq);
+    try {
+        const lootboxTournamentSnaphotRefs = await getAllLootboxTournamentSnapshotRefs(lootboxID);
+        const snapshotTimestampFieldName: keyof LootboxTournamentSnapshot_Firestore = "timestamps";
+        const snapshotUpdatedAtFieldName: keyof LootboxSnapshotTimestamps = "updatedAt";
+        const updateLootboxTournamentSnapshotReq: Partial<LootboxTournamentSnapshot_Firestore> = {
+            description: request.description,
+            name: request.name,
+            stampImage: newStampURL,
+            ...(_stampInviteImageUrl && {
+                officialInviteStampImage: _stampInviteImageUrl,
+                officialInviteURL: request.referralURL,
+            }),
+            [`${snapshotTimestampFieldName}.${snapshotUpdatedAtFieldName}`]: Timestamp.now().toMillis(),
+        };
+        for (const ref of lootboxTournamentSnaphotRefs) {
+            batch.update(ref, updateLootboxTournamentSnapshotReq);
+        }
+    } catch (err) {
+        console.error("Error updating tournament snapshots", err);
     }
     await batch.commit();
 
