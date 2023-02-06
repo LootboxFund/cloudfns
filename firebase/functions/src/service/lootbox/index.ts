@@ -44,6 +44,7 @@ import {
 } from "../../api/stamp";
 import { convertLootboxToTicketMetadata } from "../../lib/lootbox";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
+import { v4 as uuidV4 } from "uuid";
 
 interface CreateLootboxRequest {
     // passed in variables
@@ -300,13 +301,12 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
             chainIdHex: request.chainIdHex || undefined,
         });
         _stampInviteImageUrl = null;
+        // Ghetto cache bust:
+        const nonce = uuidV4();
+        const url = new URL(_stampImageUrl);
+        url.searchParams.append("n", nonce);
+        _stampImageUrl = url.href;
     }
-    // Ghetto cache bust:
-    // const nonce = uuidV4();
-    // const url = new URL(_stampImageUrl);
-    // url.searchParams.append("n", nonce);
-    // const newStampURL = url.href;
-
     const batch = db.batch();
     const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
     const lootboxTimestampFieldName: keyof Lootbox_Firestore = "timestamps";
