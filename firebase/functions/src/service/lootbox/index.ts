@@ -43,7 +43,6 @@ import {
     stampNewVictoryTicket,
 } from "../../api/stamp";
 import { convertLootboxToTicketMetadata } from "../../lib/lootbox";
-import { v4 as uuidV4 } from "uuid";
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 
 interface CreateLootboxRequest {
@@ -245,7 +244,7 @@ export const mintNewTicketCallback = async (params: MintNewTicketCallbackRequest
     return;
 };
 
-interface UpdateCallbackRequest {
+export interface UpdateCallbackRequest {
     backgroundImage: string;
     logoImage: string;
     themeColor: string;
@@ -303,17 +302,17 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
         _stampInviteImageUrl = null;
     }
     // Ghetto cache bust:
-    const nonce = uuidV4();
-    const url = new URL(_stampImageUrl);
-    url.searchParams.append("n", nonce);
-    const newStampURL = url.href;
+    // const nonce = uuidV4();
+    // const url = new URL(_stampImageUrl);
+    // url.searchParams.append("n", nonce);
+    // const newStampURL = url.href;
 
     const batch = db.batch();
     const lootboxRef = db.collection(Collection.Lootbox).doc(lootboxID) as DocumentReference<Lootbox_Firestore>;
     const lootboxTimestampFieldName: keyof Lootbox_Firestore = "timestamps";
     const lootboxUpdatedAtFieldName: keyof LootboxTimestamps = "updatedAt";
     const lootboxUpdateReq: Partial<Lootbox_Firestore> = {
-        stampImage: newStampURL,
+        stampImage: _stampImageUrl,
         [`${lootboxTimestampFieldName}.${lootboxUpdatedAtFieldName}`]: Timestamp.now().toMillis(),
         ...(_stampInviteImageUrl && {
             officialInviteGraphic: _stampInviteImageUrl,
@@ -329,7 +328,7 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
         const updateLootboxTournamentSnapshotReq: Partial<LootboxTournamentSnapshot_Firestore> = {
             description: request.description,
             name: request.name,
-            stampImage: newStampURL,
+            stampImage: _stampImageUrl,
             ...(_stampInviteImageUrl && {
                 officialInviteStampImage: _stampInviteImageUrl,
                 officialInviteURL: request.referralURL,
@@ -343,10 +342,6 @@ export const updateCallback = async (lootboxID: LootboxID, request: UpdateCallba
         console.error("Error updating tournament snapshots", err);
     }
     await batch.commit();
-
-    // // TODO Now we have to do the same for all of the NFT stamp images ... :( Note: Firestore has a 500 document limit for batch.commit, so we will have to batch this if needed
-    // const lootboxTicketRefs = await getAllLootboxTicketRefs(lootboxID);
-    // const lootboxTicketBatch = db.batch()
 };
 
 // export const create = async (request: CreateLootboxRequest, chain: ChainInfo): Promise<Lootbox_Firestore> => {

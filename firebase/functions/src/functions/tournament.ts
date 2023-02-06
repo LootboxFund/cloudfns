@@ -5,6 +5,7 @@ import { db } from "../api/firebase";
 import { manifest, SecretName } from "../manifest";
 import * as lootboxService from "../service/lootbox";
 import { retrieveRandomColor } from "./util";
+import { UpdateCallbackRequest } from "../service/lootbox";
 
 const REGION = manifest.cloudFunctions.region;
 const stampSecretName: SecretName = "STAMP_SECRET";
@@ -70,7 +71,7 @@ export const onTournamentWrite = functions
                                 ...lootbox.stampMetadata,
                                 eventName: newTournament.title ?? null,
                             };
-                            return lootboxService.updateCallback(lootbox.id, {
+                            const payload: UpdateCallbackRequest = {
                                 backgroundImage: lootbox.backgroundImage,
                                 logoImage: lootbox.logo,
                                 themeColor: lootbox.themeColor || retrieveRandomColor(),
@@ -82,11 +83,14 @@ export const onTournamentWrite = functions
                                 // referralURL: `${manifest.microfrontends.webflow.referral}?r=${officialReferral.slug}`,
                                 referralURL: lootbox.officialInviteLink || "https://lootbox.tickets",
                                 lootboxTicketValue: lootbox.nftBountyValue || "Epic Prizes",
-                            });
+                            };
+                            console.log("Update Lootbox callback", { payload });
+                            return lootboxService.updateCallback(lootbox.id, payload);
                         })
                     );
-                } catch (err) {
-                    console.error("Error updating lootbox stamp");
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } catch (err: any) {
+                    console.error("Error updating lootbox stamp", { error: err?.message });
                 }
             }
         }
