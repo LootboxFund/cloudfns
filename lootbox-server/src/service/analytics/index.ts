@@ -358,7 +358,7 @@ export const fansListForTournament = async (
   const claims = await getAllClaimsForTournament(
     payload.tournamentID as TournamentID
   );
-  claims.forEach((c) => console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`));
+  // claims.forEach((c) => console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`));
   // get unique users
   const recentSortedClaims = claims
     .sort((a, b) => a.timestamps.createdAt - b.timestamps.createdAt)
@@ -573,7 +573,7 @@ export const fansListForLootbox = async (
   }
   // get all claims for tournament
   const claims = await getAllClaimsForLootbox(payload.lootboxID as LootboxID);
-  claims.forEach((c) => console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`));
+  // claims.forEach((c) => console.log(`c = ${c.id}, c.u = ${c.claimerUserId}`));
   // console.log(`claims count = ${claims.length}`);
   // get unique users
   const recentSortedClaims = claims

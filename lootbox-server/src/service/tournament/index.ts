@@ -40,12 +40,8 @@ export const create = async (
   payload: CreateTournamentServiceRequest,
   callerUserID: UserIdpID
 ) => {
-  let affiliate: Affiliate_Firestore;
-  try {
-    affiliate = await getAffiliateByUserIdpID(callerUserID);
-  } catch (err) {
-    throw new Error("You must be an affiliate to create a tournament");
-  }
+  // This will throw if not found
+  const affiliate = await getAffiliateByUserIdpID(callerUserID);
 
   let title = payload.title;
   if (!title) {

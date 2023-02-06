@@ -34,6 +34,10 @@ const convertBaseClaimStatisticsForTournamentRow = (
     airdropCompletionRate: data?.airdropCompletionRate || 0,
     totalMaxTickets: data?.totalMaxTickets || 0,
     participationFans: data?.participationFans || 0,
+    completedPlayerClaimCount: data?.completedPlayerClaimCount || 0,
+    completedPromoterClaimCount: data?.completedPromoterClaimCount || 0,
+    totalPlayerMaxTickets: data?.totalPlayerMaxTickets || 0,
+    totalPromoterMaxTickets: data?.totalPromoterMaxTickets || 0,
   };
 };
 
@@ -57,7 +61,12 @@ export interface BaseClaimStatisticsForTournamentResponse {
   // oneTimeClaimCount: number;
   // completionRate: number;
   totalClaimCount: number;
+  /** All completed claims */
   completedClaimCount: number;
+  /** Only completed claims for player lootboxes */
+  completedPlayerClaimCount: number;
+  /** Only completed claims for promoter lootboxes */
+  completedPromoterClaimCount: number;
   viralClaimCount: number;
   referralBonusClaimCount: number;
   participationRewardCount: number;
@@ -71,6 +80,8 @@ export interface BaseClaimStatisticsForTournamentResponse {
   completionRate: number;
   airdropCompletionRate: number;
   totalMaxTickets: number;
+  totalPlayerMaxTickets: number;
+  totalPromoterMaxTickets: number;
   participationFans: number;
 }
 /**
@@ -130,14 +141,16 @@ export const baseClaimStatisticsForTournament = async ({
         claim.claimerUserId AS claimerUserID,
         claim.referralType AS claimReferralType,
         claim.type AS claimType,
-        claim.lootboxId AS claimLootboxID
+        claim.lootboxId AS claimLootboxID,
+        claim.lootboxType AS claimLootboxType
       FROM \`${claimTable}\` as claim
       LEFT JOIN \`${userTable}\` as user
       ON claim.claimerUserId = user.id
       WHERE claim.tournamentId = @eventID
     ), LootboxTable AS (
       SELECT lootbox.id AS lootboxID,
-        lootbox.maxTickets AS lootboxMaxTickets
+        lootbox.maxTickets AS lootboxMaxTickets,
+        lootbox.type AS lootboxType
         FROM \`${lootboxTournamentSnapshotTable}\` AS snapshot
         INNER JOIN \`${lootboxTable}\` AS lootbox
         ON lootbox.id = snapshot.lootboxId
@@ -146,6 +159,8 @@ export const baseClaimStatisticsForTournament = async ({
     SELECT
       COUNT(*) AS totalClaimCount,
       SUM(CASE WHEN claimStatus = 'complete' THEN 1 ELSE 0 END) AS completedClaimCount,
+      SUM(CASE WHEN claimStatus = 'complete' AND claimLootboxType = 'Promoter' THEN 1 ELSE 0 END) AS completedPromoterClaimCount,
+      SUM(CASE WHEN claimStatus = 'complete' AND claimLootboxType = 'Player' THEN 1 ELSE 0 END) AS completedPlayerClaimCount,
       SUM(CASE WHEN claimReferralType = 'viral' AND claimStatus = 'complete' AND claimType = 'referral' THEN 1 ELSE 0 END) AS viralClaimCount,
       SUM(CASE WHEN claimReferralType = 'viral' AND claimStatus = 'complete' AND claimType = 'reward' THEN 1 ELSE 0 END) AS referralBonusClaimCount,
       SUM(CASE WHEN claimReferralType = 'one_time' AND claimStatus = 'complete' AND claimType = 'one_time' THEN 1 ELSE 0 END) AS participationRewardCount,
@@ -200,7 +215,15 @@ export const baseClaimStatisticsForTournament = async ({
         (
           SELECT 
           SUM(lootboxMaxTickets) FROM LootboxTable -- WHERE LootboxTable.lootboxID IN (SELECT DataTable.claimLootboxID from DataTable)
-        )  as totalMaxTickets
+        )  as totalMaxTickets,
+        (
+          SELECT 
+          SUM(lootboxMaxTickets) FROM LootboxTable where lootboxType = 'Player' -- WHERE LootboxTable.lootboxID IN (SELECT DataTable.claimLootboxID from DataTable)
+        )  as totalPlayerMaxTickets,
+        (
+          SELECT 
+          SUM(lootboxMaxTickets) FROM LootboxTable where lootboxType = 'Promoter' -- WHERE LootboxTable.lootboxID IN (SELECT DataTable.claimLootboxID from DataTable)
+        )  as totalPromoterMaxTickets,
     FROM DataTable
     LIMIT 1;
   `;

@@ -112,12 +112,6 @@ const AnalyticsTypeDefs = gql`
     | ResponseError
 
   type BaseClaimStatsForTournament {
-    # totalClaimCount: Int!
-    # completedClaimCount: Int!
-    # viralClaimCount: Int!
-    # bonusRewardClaimCount: Int!
-    # oneTimeClaimCount: Int!
-    # completionRate: Int!
     totalClaimCount: Int!
     completedClaimCount: Int!
     viralClaimCount: Int!
@@ -134,6 +128,10 @@ const AnalyticsTypeDefs = gql`
     airdropCompletionRate: Int!
     totalMaxTickets: Int!
     participationFans: Int!
+    completedPlayerClaimCount: Int!
+    completedPromoterClaimCount: Int!
+    totalPlayerMaxTickets: Int!
+    totalPromoterMaxTickets: Int!
   }
   type BaseClaimStatsForTournamentResponseSuccess {
     stats: BaseClaimStatsForTournament!
