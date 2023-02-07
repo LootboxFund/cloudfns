@@ -232,10 +232,7 @@ export const eventClaimerData = async ({
     ORDER BY
       completedClaimCount DESC
     LIMIT
-      100000
-
-
-
+      100000;
   `;
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
